@@ -1,15 +1,15 @@
 package com.sdc;
 
 import com.beust.jcommander.JCommander;
-//import com.sdc.cpp.CppClassVisitor;
 import com.sdc.java.JavaClassVisitor;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.util.TraceClassVisitor;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.InputStream;
+
+//import com.sdc.cpp.CppClassVisitor;
 
 public class Decompiler {
     public static void main(String[] args) throws IOException {
