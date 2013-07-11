@@ -15,9 +15,9 @@ import com.intellij.testFramework.LightVirtualFile;
 import com.sdc.java.JavaClassVisitor;
 import org.objectweb.asm.ClassReader;
 
-import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 
 /**
  * Action for triggering decompilation.
@@ -25,20 +25,24 @@ import java.io.InputStream;
  */
 
 public class Decompile extends AnAction {
+    private final static int LEN = 4;
 
     public void actionPerformed(AnActionEvent e) {
-        final Project currentProject = e.getData(PlatformDataKeys.PROJECT);
-        final VirtualFile virtualFile = DataKeys.VIRTUAL_FILE.getData(e.getDataContext());
+        VirtualFile virtualFile = DataKeys.VIRTUAL_FILE.getData(e.getDataContext());
         if (virtualFile != null && !virtualFile.isDirectory()) {
             try {
-                assert currentProject != null;
                 // Detection class file with any file extension
-                DataInputStream data = new DataInputStream(virtualFile.getInputStream());
-                final int magic = data.readInt();
+                InputStream is = virtualFile.getInputStream();
+                byte[] bytes = new byte[LEN];
+                is.mark(LEN);
+                is.read(bytes);
+                final int magic = ByteBuffer.wrap(bytes).getInt();
                 if (magic == 0xCAFEBABE) {
-                    // TODO: how to reset InputStream? don't call virtualFile.getInputStream() second time
-                    final LightVirtualFile file = new LightVirtualFile(virtualFile.getNameWithoutExtension() + ".java", decompile(virtualFile.getInputStream()));
-                    final PsiFile psiFile = PsiManager.getInstance(currentProject).findFile(file);
+                    is.reset();
+                    LightVirtualFile decompiledFile = new LightVirtualFile(virtualFile.getNameWithoutExtension() + ".java", decompile(is));
+                    final Project currentProject = e.getData(PlatformDataKeys.PROJECT);
+                    assert currentProject != null;
+                    final PsiFile psiFile = PsiManager.getInstance(currentProject).findFile(decompiledFile);
                     // Reformat decompiled code by IDEA
                     ApplicationManager.getApplication().runWriteAction(new Runnable() {
                         @Override
@@ -47,16 +51,16 @@ public class Decompile extends AnAction {
                             CodeStyleManager.getInstance(currentProject).reformat(psiFile);
                         }
                     });
-                    FileEditorManager.getInstance(currentProject).openFile(file, true);
+                    FileEditorManager.getInstance(currentProject).openFile(decompiledFile, true);
                 }
-                data.close();
+                is.close();
             } catch (IOException e1) {
                 e1.printStackTrace();
             }
         }
     }
 
-    public String decompile(InputStream is) throws IOException {
+    public String decompile(final InputStream is) throws IOException {
         ClassReader cr = new ClassReader(is);
         // params
         final int tabSize = 4;
