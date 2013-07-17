@@ -222,9 +222,11 @@ public class JavaClassVisitor extends AbstractClassVisitor {
                 final String className = descriptor.substring(pos + 1, descriptor.indexOf(";", pos));
                 myDecompiledJavaClass.appendImport(getDecompiledFullClassName(className));
                 return getClassName(className) + " ";
-            //case 'T'
-            default:
+            case 'T':
                 return descriptor.substring(pos + 1, descriptor.indexOf(";", pos)) + " ";
+            //case '[':
+            default:
+                return getDescriptor(descriptor, pos + 1).trim() + "[] ";
         }
     }
 
@@ -276,6 +278,17 @@ public class JavaClassVisitor extends AbstractClassVisitor {
                 case 'T':
                     count++;
                     pos = descriptor.indexOf(";", pos) + 1;
+                    break;
+                case '[':
+                    while (descriptor.charAt(pos) == '[') {
+                        pos++;
+                    }
+                    if (descriptor.charAt(pos) == 'L' || descriptor.charAt(pos) == 'T') {
+                        pos = descriptor.indexOf(";", pos) + 1;
+                    } else {
+                        pos++;
+                    }
+                    count++;
                     break;
             }
 

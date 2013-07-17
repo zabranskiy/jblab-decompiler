@@ -18,6 +18,7 @@ import com.sdc.java.JavaClassMethod
 import com.sdc.ast.controlflow.Throw
 import com.sdc.ast.expressions.New
 import com.sdc.ast.controlflow.InstanceInvocation
+import com.sdc.ast.expressions.NewArray
 
 
 fun printExpression(expression: Expression?, nestSize: Int): PrimeDoc =
@@ -87,6 +88,15 @@ fun printExpression(expression: Expression?, nestSize: Int): PrimeDoc =
                       text("new") + nest(nestSize, line()
                       + printExpression(expression.getConstructor(), nestSize))
                   )
+        is NewArray -> {
+            var newArray = group(text("new") + nest(nestSize, line() + text(expression.getType())))
+            for (dimension in expression.getDimensions()!!.toList()) {
+                newArray = group(newArray + text("[") + printExpression(dimension, nestSize) + text("]"))
+            }
+            newArray
+        }
+
+
         is TernaryExpression -> {
             val condition = expression.getCondition()
             val printCondition = printExpression(condition, nestSize)

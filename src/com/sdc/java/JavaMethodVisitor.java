@@ -128,7 +128,7 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
         } else if (opString.contains("NEG")) {
             myBodyStack.push(new UnaryExpression(UnaryExpression.OperationType.NEGATE, getTopOfBodyStack()));
         } else if (opString.contains("CONST_")) {
-            myBodyStack.push(new Constant(opString.substring(7)));
+            myBodyStack.push(new Constant(opString.substring(7).toLowerCase()));
         } else if (opString.equals("RETURN")) {
             myStatements.add(new Return());
         } else if (opString.contains("RETURN")) {
@@ -161,6 +161,10 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
 
         if (opString.contains("IPUSH")) {
             myBodyStack.push(new Constant(operand));
+        } else if (opString.contains("NEWARRAY")) {
+            List<Expression> dimensions = new ArrayList<Expression>();
+            dimensions.add(getTopOfBodyStack());
+            myBodyStack.push(new NewArray(1, Printer.TYPES[operand].substring(2).toLowerCase(), dimensions));
         }
     }
 
@@ -212,6 +216,13 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
 
     @Override
     public void visitTypeInsn(final int opcode, final String type) {
+        final String opString = Printer.OPCODES[opcode];
+
+        if (opString.contains("NEWARRAY")) {
+            List<Expression> dimensions = new ArrayList<Expression>();
+            dimensions.add(getTopOfBodyStack());
+            myBodyStack.push(new NewArray(1, getClassName(type), dimensions));
+        }
     }
 
     @Override
@@ -352,6 +363,13 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
 
     @Override
     public void visitMultiANewArrayInsn(final String desc, final int dims) {
+        List<Expression> dimensions = new ArrayList<Expression>();
+        for (int i = 0; i < dims; i++) {
+            dimensions.add(0, getTopOfBodyStack());
+        }
+
+        final String className = getDescriptor(desc, 0).trim();
+        myBodyStack.push(new NewArray(dims, className.substring(0, className.length() - 2 * dims), dimensions));
     }
 
     @Override
@@ -527,6 +545,8 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
                 return "? super " + getDescriptor(descriptor, pos + 1);
             case '*':
                 return "? ";
+            case '[':
+                return getDescriptor(descriptor, pos + 1).trim() + "[] ";
             default:
                 return "Object ";
         }
