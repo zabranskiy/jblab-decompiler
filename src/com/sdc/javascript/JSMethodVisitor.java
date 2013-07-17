@@ -77,7 +77,7 @@ public class JSMethodVisitor extends AbstractMethodVisitor {
         } else if (opString.contains("NEG")) {
             myBodyDecompilationStack.push(new UnaryExpression(UnaryExpression.OperationType.NEGATE, getTopOfBodyStack()));
         } else if (opString.contains("CONST_")) {
-            myBodyDecompilationStack.push(new Constant(opString.substring(7)));
+            myBodyDecompilationStack.push(new Constant(opString.substring(7), false));
         } else if (opString.equals("RETURN")) {
             myStatements.add(new Return());
         } else if (opString.contains("RETURN")) {
@@ -96,7 +96,7 @@ public class JSMethodVisitor extends AbstractMethodVisitor {
         final String opString = Printer.OPCODES[opcode];
 
         if (opString.contains("IPUSH")) {
-            myBodyDecompilationStack.push(new Constant(operand));
+            myBodyDecompilationStack.push(new Constant(operand, false));
         }
     }
 
@@ -218,7 +218,7 @@ public class JSMethodVisitor extends AbstractMethodVisitor {
 
     @Override
     public void visitLdcInsn(final Object cst) {
-        myBodyDecompilationStack.push(new Constant(cst));
+        myBodyDecompilationStack.push(new Constant(cst, cst instanceof String));
     }
 
     @Override

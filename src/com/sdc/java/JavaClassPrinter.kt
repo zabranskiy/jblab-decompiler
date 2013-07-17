@@ -23,8 +23,11 @@ import com.sdc.ast.expressions.NewArray
 
 fun printExpression(expression: Expression?, nestSize: Int): PrimeDoc =
     when (expression) {
-        is Constant -> text(expression.getValue().toString())
-
+        is Constant ->
+            if (!expression.isStringValue())
+                text(expression.getValue().toString())
+            else
+                text("\"" + expression.getValue().toString() + "\"")
         is BinaryExpression -> {
             val opPriority = expression.getPriority()
 

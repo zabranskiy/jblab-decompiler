@@ -128,7 +128,7 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
         } else if (opString.contains("NEG")) {
             myBodyStack.push(new UnaryExpression(UnaryExpression.OperationType.NEGATE, getTopOfBodyStack()));
         } else if (opString.contains("CONST_")) {
-            myBodyStack.push(new Constant(opString.substring(7).toLowerCase()));
+            myBodyStack.push(new Constant(opString.substring(7).toLowerCase(), false));
         } else if (opString.equals("RETURN")) {
             myStatements.add(new Return());
         } else if (opString.contains("RETURN")) {
@@ -169,7 +169,7 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
         final String opString = Printer.OPCODES[opcode];
 
         if (opString.contains("IPUSH")) {
-            myBodyStack.push(new Constant(operand));
+            myBodyStack.push(new Constant(operand, false));
         } else if (opString.contains("NEWARRAY")) {
             List<Expression> dimensions = new ArrayList<Expression>();
             dimensions.add(getTopOfBodyStack());
@@ -335,7 +335,7 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
 
     @Override
     public void visitLdcInsn(final Object cst) {
-        myBodyStack.push(new Constant(cst));
+        myBodyStack.push(new Constant(cst, cst instanceof String));
     }
 
     @Override
