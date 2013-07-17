@@ -7,6 +7,7 @@ public class Field extends Identifier {
         this.myName = name;
     }
 
+    @Override
     public String getName() {
         return myName;
     }

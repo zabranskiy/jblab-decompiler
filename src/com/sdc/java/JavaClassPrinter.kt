@@ -65,7 +65,16 @@ fun printExpression(expression: Expression?, nestSize: Int): PrimeDoc =
         }
 
         is Field -> text(expression.getName())
-        is Variable -> text(expression.getName())
+        is Variable -> {
+            if (expression.getArrayIndex() == null)
+                text(expression.getName())
+            else {
+                group(
+                    printExpression(expression.getArrayVariable(), nestSize)
+                    + text("[") + printExpression(expression.getArrayIndex(), nestSize) + text("]")
+                )
+            }
+        }
 
         is com.sdc.ast.expressions.Invocation -> {
             var funName = group(text(expression.getFunction() + "("))

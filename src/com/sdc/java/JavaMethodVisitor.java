@@ -152,6 +152,15 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
             myBodyStack.push(expr1);
             myBodyStack.push(expr2);
             myBodyStack.push(expr1);
+        } else if (opString.contains("ALOAD")) {
+            final Expression arrayIndex = getTopOfBodyStack();
+            myBodyStack.push(new Variable(arrayIndex, (Identifier) getTopOfBodyStack()));
+        } else if (opString.contains("ASTORE")) {
+            final Expression expr = getTopOfBodyStack();
+            final Expression arrayIndex = getTopOfBodyStack();
+            final Identifier v = new Variable(arrayIndex, (Identifier) getTopOfBodyStack());
+
+            myStatements.add(new Assignment(v, expr));
         }
     }
 
