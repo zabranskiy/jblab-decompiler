@@ -2,7 +2,7 @@ package com.sdc.abstractLangauge;
 
 import org.objectweb.asm.*;
 
-public abstract class AbstractClassVisitor  extends  ClassVisitor {
+public abstract class AbstractClassVisitor extends ClassVisitor {
     public AbstractClassVisitor(int api) {
         super(api);
     }
@@ -50,5 +50,9 @@ public abstract class AbstractClassVisitor  extends  ClassVisitor {
     @Override
     public void visitEnd() {
         super.visitEnd();    //To change body of overridden methods use File | Settings | File Templates.
+    }
+
+    public String getDecompiledCode() {
+        return null;
     }
 }

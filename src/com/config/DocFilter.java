@@ -1,0 +1,65 @@
+package com.config;
+
+import org.jetbrains.annotations.NotNull;
+
+import javax.swing.text.*;
+
+public class DocFilter extends DocumentFilter {
+    @Override
+    public void insertString(@NotNull FilterBypass fb, int offset, @NotNull String string,
+                             AttributeSet attr) throws BadLocationException {
+
+        Document doc = fb.getDocument();
+        StringBuilder sb = new StringBuilder();
+        sb.append(doc.getText(0, doc.getLength()));
+        sb.insert(offset, string);
+
+        if (test(sb.toString()) || (sb.toString().equals(""))) {
+            super.insertString(fb, offset, string, attr);
+        } else {
+            // warn the user and don't allow the insert
+        }
+    }
+
+    private boolean test(String text) {
+        try {
+            Integer.parseInt(text);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    @Override
+    public void replace(@NotNull FilterBypass fb, int offset, int length, @NotNull String text,
+                        AttributeSet attrs) throws BadLocationException {
+
+        Document doc = fb.getDocument();
+        StringBuilder sb = new StringBuilder();
+        sb.append(doc.getText(0, doc.getLength()));
+        sb.replace(offset, offset + length, text);
+
+        if (test(sb.toString()) || (sb.toString().equals(""))) {
+            super.replace(fb, offset, length, text, attrs);
+        } else {
+            // warn the user and don't allow the insert
+        }
+
+    }
+
+    @Override
+    public void remove(@NotNull FilterBypass fb, int offset, int length)
+            throws BadLocationException {
+        Document doc = fb.getDocument();
+        StringBuilder sb = new StringBuilder();
+        sb.append(doc.getText(0, doc.getLength()));
+        sb.delete(offset, offset + length);
+
+        if (test(sb.toString()) || (sb.toString().equals(""))) {
+            super.remove(fb, offset, length);
+        } else {
+            // warn the user and don't allow the insert
+        }
+
+    }
+}
