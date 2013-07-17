@@ -500,6 +500,7 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
                 } else {
                     final String className = descriptor.substring(pos + 1, descriptor.indexOf("<", pos));
                     final String[] genericList = descriptor.substring(descriptor.indexOf("<") + 1, descriptor.indexOf(">")).split(";");
+                    myJavaClassMethod.addImport(getDecompiledFullClassName(className));
 
                     StringBuilder result = new StringBuilder(getClassName(className));
                     boolean isSingleType = true;
@@ -520,6 +521,10 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
                 }
             case 'T':
                 return descriptor.substring(pos + 1, descriptor.indexOf(";", pos)) + " ";
+            case '+':
+                return "? extends " + getDescriptor(descriptor, pos + 1);
+            case '-':
+                return "? super " + getDescriptor(descriptor, pos + 1);
             default:
                 return "Object ";
         }
