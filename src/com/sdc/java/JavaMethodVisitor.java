@@ -525,6 +525,8 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
                 return "? extends " + getDescriptor(descriptor, pos + 1);
             case '-':
                 return "? super " + getDescriptor(descriptor, pos + 1);
+            case '*':
+                return "? ";
             default:
                 return "Object ";
         }

@@ -300,7 +300,7 @@ public class JavaClassVisitor extends AbstractClassVisitor {
     private void parseGenericDeclaration(final String signature, List<String> genericTypesList,
         List<String> genericIdentifiersList, List<String> genericTypesImports)
     {
-        if (signature != null && signature.contains("<")) {
+        if (signature != null && signature.indexOf('<') == 0) {
             final String genericDeclaration = signature.substring(signature.indexOf("<") + 1, signature.indexOf(">"));
             final String[] genericTypes = genericDeclaration.split(";");
             for (final String genericType : genericTypes) {
