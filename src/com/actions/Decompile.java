@@ -7,7 +7,7 @@ import com.intellij.openapi.actionSystem.DataKeys;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.sdc.DecompilerService;
+//import com.sdc.DecompilerService;
 import sun.misc.IOUtils;
 
 import java.io.DataInputStream;
@@ -51,8 +51,8 @@ public class Decompile extends AnAction {
             DataInputStream data = new DataInputStream(in);
             int magic = data.readInt();
             if (magic == 0xCAFEBABE) {
-                DecompilerService decompilerService = new DecompilerService();
-                decompilerService.decompile(in);
+//                DecompilerService decompilerService = new DecompilerService();
+//                decompilerService.decompile(in);
             }
         } catch (IOException e1) {
             e1.printStackTrace();

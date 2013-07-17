@@ -170,6 +170,7 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
         //System.out.println(opString + " " + var);
 
         final boolean currentFrameHasStack = getCurrentFrame().checkStack();
+        String variableType = null;
 
         if (opString.contains("ALOAD") && var == 0) {
             return;
@@ -177,19 +178,35 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
             myBodyStack.push(new Variable(var, getCurrentFrame()));
         } else if (opString.contains("STORE") && !currentFrameHasStack) {
             Identifier v = new Variable(var, getCurrentFrame());
-            myStatements.add(new Assignment(v, getTopOfBodyStack()));
+            final Expression expr = getTopOfBodyStack();
+            myStatements.add(new Assignment(v, expr));
+            if (expr instanceof com.sdc.ast.expressions.Invocation) {
+                variableType = ((com.sdc.ast.expressions.Invocation) expr).getReturnType();
+            } else if (expr instanceof New) {
+                variableType = ((New) expr).getReturnType();
+            } else if (expr instanceof Variable) {
+                final String name = ((Variable) expr).getName();
+                variableType = name.substring(0, name.lastIndexOf(" ") + 1);
+            }
         }
 
-        if (var > myJavaClassMethod.getLastLocalVariableIndex()) {
+        if (!opString.contains("LOAD") && var > myJavaClassMethod.getLastLocalVariableIndex()) {
             final String name = "y" + var;
             myJavaClassMethod.addLocalVariableName(var, name);
 
+            String descriptorType;
             if (currentFrameHasStack) {
-                myJavaClassMethod.addLocalVariableType(var, getCurrentFrame().getStackedVariableType());
+                descriptorType = getCurrentFrame().getStackedVariableType();
                 getCurrentFrame().setStackedVariableIndex(var);
             } else {
-                myJavaClassMethod.addLocalVariableType(var, getDescriptor(opString, 0));
+                descriptorType = getDescriptor(opString, 0);
             }
+
+            if (!descriptorType.equals("Object ") || variableType == null) {
+                variableType = descriptorType;
+            }
+
+            myJavaClassMethod.addLocalVariableType(var, variableType);
         }
     }
 
@@ -212,6 +229,9 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
             arguments.add(0, getTopOfBodyStack());
         }
 
+        final int returnTypeIndex = desc.indexOf(')') + 1;
+        String returnType = getDescriptor(desc, returnTypeIndex);
+
         final String decompiledOwnerClassName = getDecompiledFullClassName(owner);
 
         String invocationName = "";
@@ -221,9 +241,9 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
             if (!myBodyStack.isEmpty() && myBodyStack.peek() instanceof Variable) {
                 Variable v = (Variable) myBodyStack.pop();
                 if (myBodyStack.isEmpty()) {
-                    myStatements.add(new InstanceInvocation(name, arguments, v));
+                    myStatements.add(new InstanceInvocation(name, returnType, arguments, v));
                 } else {
-                    myBodyStack.push(new com.sdc.ast.expressions.InstanceInvocation(name, arguments, v));
+                    myBodyStack.push(new com.sdc.ast.expressions.InstanceInvocation(name, returnType, arguments, v));
                 }
                 return;
             } else {
@@ -233,6 +253,7 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
             if (name.equals("<init>")) {
                 myJavaClassMethod.addImport(decompiledOwnerClassName);
                 invocationName = getClassName(owner);
+                returnType = invocationName + " ";
             } else {
                 invocationName = "super." + name;
             }
@@ -242,11 +263,11 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
         }
 
         if (name.equals("<init>")) {
-            myBodyStack.push(new New(new com.sdc.ast.expressions.Invocation(invocationName, arguments)));
+            myBodyStack.push(new New(new com.sdc.ast.expressions.Invocation(invocationName, returnType, arguments)));
         } else if (myBodyStack.isEmpty()) {
-            myStatements.add(new Invocation(invocationName, arguments));
+            myStatements.add(new Invocation(invocationName, returnType, arguments));
         } else {
-            myBodyStack.push(new com.sdc.ast.expressions.Invocation(invocationName, arguments));
+            myBodyStack.push(new com.sdc.ast.expressions.Invocation(invocationName, returnType, arguments));
         }
     }
 
@@ -509,10 +530,14 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
             final int lastIndex = myStatements.size() - 1;
             final Statement lastStatement = myStatements.get(lastIndex);
 
-            if (lastStatement instanceof Invocation) {
+            if (lastStatement instanceof InstanceInvocation) {
+                InstanceInvocation invoke = (InstanceInvocation) lastStatement;
+                myStatements.remove(lastIndex);
+                return new com.sdc.ast.expressions.InstanceInvocation(invoke.getFunction(), invoke.getReturnType(), invoke.getArguments(), invoke.getVariable());
+            } else if (lastStatement instanceof Invocation) {
                 Invocation invoke = (Invocation) lastStatement;
                 myStatements.remove(lastIndex);
-                return new com.sdc.ast.expressions.Invocation(invoke.getFunction(), invoke.getArguments());
+                return new com.sdc.ast.expressions.Invocation(invoke.getFunction(), invoke.getReturnType(), invoke.getArguments());
             } else if (lastStatement instanceof Assignment) {
                 return ((Assignment) lastStatement).getRight();
             }

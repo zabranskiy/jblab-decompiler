@@ -4,10 +4,12 @@ import com.beust.jcommander.JCommander;
 import com.sdc.java.JavaClassVisitor;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
+//import org.objectweb.asm.util.TraceClassVisitor;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
+//import java.io.InputStream;
+//import java.io.PrintWriter;
 
 //import com.sdc.cpp.CppClassVisitor;
 

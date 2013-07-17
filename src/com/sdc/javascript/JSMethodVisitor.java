@@ -143,12 +143,12 @@ public class JSMethodVisitor extends AbstractMethodVisitor {
 
         if (opString.contains("INVOKEVIRTUAL")) {
             if (myBodyDecompilationStack.isEmpty()) {
-                myStatements.add(new Invocation(name, arguments));
+                myStatements.add(new Invocation(name, "", arguments));
             } else {
-                myBodyDecompilationStack.push(new com.sdc.ast.expressions.Invocation(name, arguments));
+                myBodyDecompilationStack.push(new com.sdc.ast.expressions.Invocation(name, "", arguments));
             }
         } else if (opString.contains("INVOKESPECIAL")) {
-            myBodyDecompilationStack.push(new New(new com.sdc.ast.expressions.Invocation(owner, arguments)));
+            myBodyDecompilationStack.push(new New(new com.sdc.ast.expressions.Invocation(owner, "", arguments)));
         }
     }
 
@@ -387,7 +387,7 @@ public class JSMethodVisitor extends AbstractMethodVisitor {
             if (lastStatement instanceof Invocation) {
                 Invocation invoke = (Invocation) lastStatement;
                 myStatements.remove(lastIndex);
-                return new com.sdc.ast.expressions.Invocation(invoke.getFunction(), invoke.getArguments());
+                return new com.sdc.ast.expressions.Invocation(invoke.getFunction(), "", invoke.getArguments());
             } else if (lastStatement instanceof Assignment) {
                 return ((Assignment) lastStatement).getRight();
             }
