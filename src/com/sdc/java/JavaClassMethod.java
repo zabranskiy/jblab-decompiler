@@ -9,7 +9,9 @@ import com.sdc.cfg.GraphDrawer;
 import com.sdc.cfg.Node;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class JavaClassMethod extends AbstractClassMethod {
     private final String myModifier;
@@ -22,6 +24,9 @@ public class JavaClassMethod extends AbstractClassMethod {
     private final JavaClass myJavaClass;
     private final List<String> myGenericTypes;
     private final List<String> myGenericIdentifiers;
+
+    private List<JavaAnnotation> myAnnotations = new ArrayList<JavaAnnotation>();
+    private Map<Integer, List<JavaAnnotation>> myParameterAnnotations = new HashMap<Integer, List<JavaAnnotation>>();
 
     private int myLastLocalVariableIndex;
 
@@ -145,6 +150,29 @@ public class JavaClassMethod extends AbstractClassMethod {
             }
         }
         return result;
+    }
+
+    public void appendAnnotation(final JavaAnnotation annotation) {
+        myAnnotations.add(annotation);
+    }
+
+    public List<JavaAnnotation> getAnnotations() {
+        return myAnnotations;
+    }
+
+    public void appendParameterAnnotation(final int index, final JavaAnnotation annotation) {
+        if (!myParameterAnnotations.containsKey(index)) {
+            myParameterAnnotations.put(index, new ArrayList<JavaAnnotation>());
+        }
+        myParameterAnnotations.get(index).add(annotation);
+    }
+
+    public boolean checkParameterForAnnotation(final int index) {
+        return myParameterAnnotations.containsKey(index);
+    }
+
+    public List<JavaAnnotation> getParameterAnnotations(final int index) {
+        return myParameterAnnotations.get(index);
     }
 
     public void setNodes(List<Node> myNodes) {

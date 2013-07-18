@@ -82,7 +82,12 @@ public class JavaClassVisitor extends AbstractClassVisitor {
 
     @Override
     public AnnotationVisitor visitAnnotation(final String desc, final boolean visible) {
-        return null;
+        JavaAnnotation annotation = new JavaAnnotation();
+        annotation.setName(getDescriptor(desc, 0));
+
+        myDecompiledJavaClass.appendAnnotation(annotation);
+
+        return new JavaAnnotationVisitor(annotation);
     }
 
     @Override
@@ -224,6 +229,8 @@ public class JavaClassVisitor extends AbstractClassVisitor {
                 return getClassName(className) + " ";
             case 'T':
                 return descriptor.substring(pos + 1, descriptor.indexOf(";", pos)) + " ";
+            case '@':
+                return getDescriptor(descriptor, pos + 1);
             //case '[':
             default:
                 return getDescriptor(descriptor, pos + 1).trim() + "[] ";

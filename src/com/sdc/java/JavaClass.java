@@ -23,6 +23,8 @@ public class JavaClass extends AbstractClass {
     private List<JavaClassField> myFields = new ArrayList<JavaClassField>();
     private List<JavaClassMethod> myMethods = new ArrayList<JavaClassMethod>();
 
+    private List<JavaAnnotation> myAnnotations = new ArrayList<JavaAnnotation>();
+
     private List<String> myImports = new ArrayList<String>();
 
     private final int myTextWidth;
@@ -104,6 +106,14 @@ public class JavaClass extends AbstractClass {
         {
             myImports.add(importName);
         }
+    }
+
+    public void appendAnnotation(final JavaAnnotation annotation) {
+        myAnnotations.add(annotation);
+    }
+
+    public List<JavaAnnotation> getAnnotations() {
+        return myAnnotations;
     }
 
     public boolean isGenericType(final String className) {

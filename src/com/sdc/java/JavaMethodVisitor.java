@@ -42,7 +42,12 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
 
     @Override
     public AnnotationVisitor visitAnnotation(final String desc, final boolean visible) {
-        return null;
+        JavaAnnotation annotation = new JavaAnnotation();
+        annotation.setName(getDescriptor(desc, 0));
+
+        myJavaClassMethod.appendAnnotation(annotation);
+
+        return new JavaAnnotationVisitor(annotation);
     }
 
     @Override
@@ -57,7 +62,12 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
 
     @Override
     public AnnotationVisitor visitParameterAnnotation(final int parameter, final String desc, final boolean visible) {
-        return null;
+        JavaAnnotation annotation = new JavaAnnotation();
+        annotation.setName(getDescriptor(desc, 0));
+
+        myJavaClassMethod.appendParameterAnnotation(parameter, annotation);
+
+        return new JavaAnnotationVisitor(annotation);
     }
 
     @Override
