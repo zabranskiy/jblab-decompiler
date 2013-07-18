@@ -27,8 +27,7 @@ public class JavaClassVisitor extends AbstractClassVisitor {
 
         if ((access & Opcodes.ACC_ENUM) == 0
                 && (access & Opcodes.ACC_INTERFACE) == 0
-                && (access & Opcodes.ACC_ANNOTATION) == 0)
-        {
+                && (access & Opcodes.ACC_ANNOTATION) == 0) {
             type = "class ";
         }
 
@@ -96,8 +95,7 @@ public class JavaClassVisitor extends AbstractClassVisitor {
 
     @Override
     public FieldVisitor visitField(final int access, final String name, final String desc, final String signature
-            , final Object value)
-    {
+            , final Object value) {
         final String description = signature != null ? signature : desc;
         final JavaClassField cf = new JavaClassField(getAccess(access)
                 , getDescriptor(description, 0), name, myTextWidth, myNestSize);
@@ -120,7 +118,7 @@ public class JavaClassVisitor extends AbstractClassVisitor {
 
         List<String> throwedExceptions = new ArrayList<String>();
         if (exceptions != null) {
-            for (final String exception: exceptions) {
+            for (final String exception : exceptions) {
                 throwedExceptions.add(getClassName(exception));
             }
         }
@@ -148,11 +146,13 @@ public class JavaClassVisitor extends AbstractClassVisitor {
 
     @Override
     public void visitEnd() {
-        for (final JavaClassMethod method: myDecompiledJavaClass.getMethods()) {
+        for (final JavaClassMethod method : myDecompiledJavaClass.getMethods()) {
             myDecompiledJavaClass.appendImports(method.getImports());
         }
+    }
 
-        System.out.println(myDecompiledJavaClass.toString());
+    public String getDecompiledCode() {
+        return myDecompiledJavaClass.toString();
     }
 
     private String getAccess(final int access) {
