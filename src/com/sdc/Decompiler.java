@@ -1,9 +1,10 @@
 package com.sdc;
 
 import com.beust.jcommander.JCommander;
+import com.sdc.abstractLangauge.AbstractClassVisitor;
 import com.sdc.java.JavaClassVisitor;
 import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassVisitor;
+//import org.objectweb.asm.ClassVisitor;
 //import org.objectweb.asm.util.TraceClassVisitor;
 
 import java.io.FileInputStream;
@@ -39,7 +40,7 @@ public class Decompiler {
             cr = new ClassReader(new FileInputStream(decompilerParameters.getClassPath()));
         }
 
-        ClassVisitor cv;
+        AbstractClassVisitor cv;
 //        ClassVisitor cv = new TraceClassVisitor(new PrintWriter(System.out));
 
         if (decompilerParameters.getLanguage().equals("java")) {
@@ -52,5 +53,6 @@ public class Decompiler {
         }
 
         cr.accept(cv, 0);
+        System.out.println(cv.getDecompiledCode());
     }
 }
