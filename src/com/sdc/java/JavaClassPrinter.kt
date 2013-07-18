@@ -178,10 +178,7 @@ fun printJavaClass(javaClass: JavaClass): PrimeDoc {
     val packageCode = text("package " + javaClass.getPackage() + ";")
     var imports = group(nil())
     for (importName in javaClass.getImports()!!.toArray())
-        imports = group(
-                imports
-                + nest(javaClass.getNestSize(), line() + text("import " + importName + ";"))
-        )
+        imports = group(imports / text("import " + importName + ";"))
 
     var declaration = group(printAnnotations(javaClass.getAnnotations()!!.toList()) / text(javaClass.getModifier() + javaClass.getType() + javaClass.getName()))
 
@@ -206,16 +203,16 @@ fun printJavaClass(javaClass: JavaClass): PrimeDoc {
     if (!implementedInterfaces.isEmpty())
         declaration = group(
                 declaration
-                + nest(javaClass.getNestSize(), line() + text("implements " + implementedInterfaces.get(0)))
+                + nest(2 * javaClass.getNestSize(), line() + text("implements " + implementedInterfaces.get(0)))
         )
     for (interface in implementedInterfaces.drop(1)) {
         declaration = group(
                 (declaration + text(","))
-                + nest(javaClass.getNestSize(), line() + text(interface as String))
+                + nest(2 * javaClass.getNestSize(), line() + text(interface as String))
         )
     }
 
-    var javaClassCode = group(packageCode + imports / (declaration + text(" {")))
+    var javaClassCode = group(packageCode + imports + declaration + text(" {"))
 
     for (classField in javaClass.getFields()!!.toArray())
         javaClassCode = group(
@@ -226,7 +223,7 @@ fun printJavaClass(javaClass: JavaClass): PrimeDoc {
     for (classMethod in javaClass.getMethods()!!.toArray())
         javaClassCode = group(
                 javaClassCode
-                + nest(javaClass.getNestSize(), line() + printClassMethod(classMethod as JavaClassMethod))
+                + nest(javaClass.getNestSize(), printClassMethod(classMethod as JavaClassMethod))
         )
 
     return group(javaClassCode / text("}"))
@@ -299,8 +296,6 @@ fun printAnnotation(annotation: JavaAnnotation): PrimeDoc {
         annotationCode = group(annotationCode + text("("))
         var counter = 1
         for ((name, value) in properties) {
-
-
             annotationCode = group(annotationCode + text(name + " = "
                     + if (!annotation.isStringProperty(name)) value else "\"" + value + "\""))
             if (counter < properties.keySet().size)
