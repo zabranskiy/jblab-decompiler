@@ -245,7 +245,7 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
         //System.out.println(opString + " " + owner + " " + name + " " + desc);
 
         List<Expression> arguments = new ArrayList<Expression>();
-        for (int i = 1; i < desc.indexOf(')'); i++) {
+        for (int i = 0; i < getParametersCount(desc); i++) {
             arguments.add(0, getTopOfBodyStack());
         }
 
@@ -600,5 +600,29 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
 
     private Frame getCurrentFrame() {
         return myJavaClassMethod.getCurrentFrame();
+    }
+
+    private int getParametersCount(final String descriptor) {
+        int result = 0;
+        int pos = 1;
+        while (pos < descriptor.indexOf(")")) {
+            switch (descriptor.charAt(pos)) {
+                case '[':
+                    pos++;
+                    break;
+                case 'L':
+                case 'T':
+                case '+':
+                case '-':
+                    result++;
+                    pos = descriptor.indexOf(';', pos) + 1;
+                    break;
+                default:
+                    result++;
+                    pos++;
+                    break;
+            }
+        }
+        return result;
     }
 }
