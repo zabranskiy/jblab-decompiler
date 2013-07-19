@@ -1,4 +1,4 @@
-package JavaClassPrinter
+package JavaPrinter
 
 import pretty.*
 import com.sdc.ast.expressions.Expression
@@ -12,13 +12,14 @@ import com.sdc.ast.controlflow.Statement
 import com.sdc.ast.controlflow.Invocation
 import com.sdc.ast.controlflow.Assignment
 import com.sdc.ast.controlflow.Return
-import com.sdc.java.JavaClass
-import com.sdc.java.JavaClassField
-import com.sdc.java.JavaMethod
 import com.sdc.ast.controlflow.Throw
 import com.sdc.ast.expressions.New
 import com.sdc.ast.controlflow.InstanceInvocation
 import com.sdc.ast.expressions.NewArray
+
+import com.sdc.java.JavaClass
+import com.sdc.java.JavaClassField
+import com.sdc.java.JavaMethod
 import com.sdc.java.JavaAnnotation
 
 

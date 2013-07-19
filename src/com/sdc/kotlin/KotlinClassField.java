@@ -1,11 +1,8 @@
-package com.sdc.java;
-
-import JavaPrinter.JavaPrinterPackage;
-import pretty.PrettyPackage;
+package com.sdc.kotlin;
 
 import com.sdc.abstractLanguage.AbstractClassField;
 
-public class JavaClassField  extends AbstractClassField{
+public class KotlinClassField extends AbstractClassField {
     private final String myModifier;
     private final String myType;
     private final String myName;
@@ -13,7 +10,7 @@ public class JavaClassField  extends AbstractClassField{
     private final int myTextWidth;
     private final int myNestSize;
 
-    public JavaClassField(final String modifier, final String type, final String name, final int textWidth, final int nestSize) {
+    public KotlinClassField(final String modifier, final String type, final String name, final int textWidth, final int nestSize) {
         this.myModifier = modifier;
         this.myType = type;
         this.myName = name;
@@ -35,10 +32,5 @@ public class JavaClassField  extends AbstractClassField{
 
     public int getNestSize() {
         return myNestSize;
-    }
-
-    @Override
-    public String toString() {
-        return PrettyPackage.pretty(myTextWidth, JavaPrinterPackage.printClassField(this));
     }
 }

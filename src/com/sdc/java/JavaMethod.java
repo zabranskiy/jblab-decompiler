@@ -1,6 +1,6 @@
 package com.sdc.java;
 
-import JavaClassPrinter.JavaClassPrinterPackage;
+import JavaPrinter.JavaPrinterPackage;
 import com.sdc.abstractLanguage.AbstractMethod;
 import pretty.PrettyPackage;
 
@@ -40,6 +40,20 @@ public class JavaMethod extends AbstractMethod {
 
     private final int myTextWidth;
     private final int myNestSize;
+
+    public JavaMethod(final String modifier, final String returnType, final String name, final String[] exceptions,
+                      final JavaClass javaClass, final List<String> genericTypes, final List<String> genericIdentifiers,
+                      final int textWidth, final int nestSize) {
+        this.myModifier = modifier;
+        this.myReturnType = returnType;
+        this.myName = name;
+        this.myExceptions = exceptions;
+        this.myJavaClass = javaClass;
+        this.myGenericTypes = genericTypes;
+        this.myGenericIdentifiers = genericIdentifiers;
+        this.myTextWidth = textWidth;
+        this.myNestSize = nestSize;
+    }
 
     public String getModifier() {
         return myModifier;
@@ -87,20 +101,6 @@ public class JavaMethod extends AbstractMethod {
 
     public void setCurrentFrame(final Frame currentFrame) {
         this.myCurrentFrame = currentFrame;
-    }
-
-    public JavaMethod(final String modifier, final String returnType, final String name, final String[] exceptions,
-                      final JavaClass javaClass, final List<String> genericTypes, final List<String> genericIdentifiers,
-                      final int textWidth, final int nestSize) {
-        this.myModifier = modifier;
-        this.myReturnType = returnType;
-        this.myName = name;
-        this.myExceptions = exceptions;
-        this.myJavaClass = javaClass;
-        this.myGenericTypes = genericTypes;
-        this.myGenericIdentifiers = genericIdentifiers;
-        this.myTextWidth = textWidth;
-        this.myNestSize = nestSize;
     }
 
     public void addImport(final String importClassName) {
@@ -190,6 +190,6 @@ public class JavaMethod extends AbstractMethod {
 
     @Override
     public String toString() {
-          return PrettyPackage.pretty(myTextWidth, JavaClassPrinterPackage.printClassMethod(this));
+          return PrettyPackage.pretty(myTextWidth, JavaPrinterPackage.printClassMethod(this));
     }
 }

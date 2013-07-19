@@ -41,10 +41,14 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
         this.myDecompiledOwnerFullClassName = decompiledOwnerFullClassName;
     }
 
+    private Frame getCurrentFrame() {
+        return myJavaMethod.getCurrentFrame();
+    }
+
     @Override
     public AnnotationVisitor visitAnnotation(final String desc, final boolean visible) {
         JavaAnnotation annotation = new JavaAnnotation();
-        annotation.setName(getDescriptor(desc, 0));
+        annotation.setName(DeclarationWorker.getJavaDescriptor(desc, 0, myJavaMethod.getImports()));
 
         myJavaMethod.appendAnnotation(annotation);
 
@@ -64,7 +68,7 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
     @Override
     public AnnotationVisitor visitParameterAnnotation(final int parameter, final String desc, final boolean visible) {
         JavaAnnotation annotation = new JavaAnnotation();
-        annotation.setName(getDescriptor(desc, 0));
+        annotation.setName(DeclarationWorker.getJavaDescriptor(desc, 0, myJavaMethod.getImports()));
 
         myJavaMethod.appendParameterAnnotation(parameter, annotation);
 
@@ -116,8 +120,8 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
                     }
                 } else {
                     final String className = (String) stack[0];
-                    myJavaMethod.addImport(getDecompiledFullClassName(className));
-                    stackedVariableType = getClassName(className) + " ";
+                    myJavaMethod.addImport(DeclarationWorker.getDecompiledFullClassName(className));
+                    stackedVariableType = DeclarationWorker.getClassName(className) + " ";
                 }
 
                 getCurrentFrame().setStackedVariableType(stackedVariableType);
@@ -224,7 +228,7 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
                 descriptorType = getCurrentFrame().getStackedVariableType();
                 getCurrentFrame().setStackedVariableIndex(var);
             } else {
-                descriptorType = getDescriptor(opString, 0);
+                descriptorType = DeclarationWorker.getJavaDescriptor(opString, 0, myJavaMethod.getImports());
             }
 
             if (!descriptorType.equals("Object ") || variableType == null) {
@@ -242,13 +246,13 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
         if (opString.contains("NEWARRAY")) {
             List<Expression> dimensions = new ArrayList<Expression>();
             dimensions.add(getTopOfBodyStack());
-            myBodyStack.push(new NewArray(1, getClassName(type), dimensions));
+            myBodyStack.push(new NewArray(1, DeclarationWorker.getClassName(type), dimensions));
         }
     }
 
     @Override
     public void visitFieldInsn(final int opcode, final String owner, final String name, final String desc) {
-        myBodyStack.push(new Field(name, getDescriptor(desc, 0)));
+        myBodyStack.push(new Field(name, DeclarationWorker.getJavaDescriptor(desc, 0, myJavaMethod.getImports())));
     }
 
     @Override
@@ -257,14 +261,14 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
         //System.out.println(opString + " " + owner + " " + name + " " + desc);
 
         List<Expression> arguments = new ArrayList<Expression>();
-        for (int i = 0; i < getParametersCount(desc); i++) {
+        for (int i = 0; i < DeclarationWorker.getParametersCount(desc); i++) {
             arguments.add(0, getTopOfBodyStack());
         }
 
         final int returnTypeIndex = desc.indexOf(')') + 1;
-        String returnType = getDescriptor(desc, returnTypeIndex);
+        String returnType = DeclarationWorker.getJavaDescriptor(desc, returnTypeIndex, myJavaMethod.getImports());
 
-        final String decompiledOwnerClassName = getDecompiledFullClassName(owner);
+        final String decompiledOwnerClassName = DeclarationWorker.getDecompiledFullClassName(owner);
 
         String invocationName = "";
 
@@ -284,14 +288,14 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
         } else if (opString.contains("INVOKESPECIAL")) {
             if (name.equals("<init>")) {
                 myJavaMethod.addImport(decompiledOwnerClassName);
-                invocationName = getClassName(owner);
+                invocationName = DeclarationWorker.getClassName(owner);
                 returnType = invocationName + " ";
             } else {
                 invocationName = "super." + name;
             }
         } else if (opString.contains("INVOKESTATIC")) {
             myJavaMethod.addImport(decompiledOwnerClassName);
-            invocationName = getClassName(owner) + "." + name;
+            invocationName = DeclarationWorker.getClassName(owner) + "." + name;
         }
 
         if (name.equals("<init>")) {
@@ -389,7 +393,7 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
             dimensions.add(0, getTopOfBodyStack());
         }
 
-        final String className = getDescriptor(desc, 0).trim();
+        final String className = DeclarationWorker.getJavaDescriptor(desc, 0, myJavaMethod.getImports()).trim();
         myBodyStack.push(new NewArray(dims, className.substring(0, className.length() - 2 * dims), dimensions));
     }
 
@@ -426,7 +430,7 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
         }
 
         final String description = signature != null ? signature : desc;
-        myJavaMethod.addLocalVariableFromDebugInfo(index, name, getDescriptor(description, 0));
+        myJavaMethod.addLocalVariableFromDebugInfo(index, name, DeclarationWorker.getJavaDescriptor(description, 0, myJavaMethod.getImports()));
     }
 
     @Override
@@ -513,66 +517,6 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
        // myStatements.clear();
     }
 
-    private String getDescriptor(final String descriptor, final int pos) {
-        switch (descriptor.charAt(pos)) {
-            case 'B':
-                return "byte ";
-            case 'J':
-                return "long ";
-            case 'Z':
-                return "boolean ";
-            case 'I':
-                return "int ";
-            case 'S':
-                return "short ";
-            case 'C':
-                return "char ";
-            case 'F':
-                return "float ";
-            case 'D':
-                return "double ";
-            case 'L':
-                if (!descriptor.contains("<")) {
-                    final String className = descriptor.substring(pos + 1, descriptor.indexOf(";", pos));
-                    myJavaMethod.addImport(getDecompiledFullClassName(className));
-                    return getClassName(className) + " ";
-                } else {
-                    final String className = descriptor.substring(pos + 1, descriptor.indexOf("<", pos));
-                    final String[] genericList = descriptor.substring(descriptor.indexOf("<") + 1, descriptor.indexOf(">")).split(";");
-                    myJavaMethod.addImport(getDecompiledFullClassName(className));
-
-                    StringBuilder result = new StringBuilder(getClassName(className));
-                    boolean isSingleType = true;
-
-                    result.append("<");
-                    for (final String generic : genericList) {
-                        if (!isSingleType) {
-                            result.append(", ");
-                        }
-                        isSingleType = false;
-
-                        final String genericName = getDescriptor(generic + ";", 0).trim();
-                        result.append(genericName);
-                    }
-                    result.append("> ");
-
-                    return result.toString();
-                }
-            case 'T':
-                return descriptor.substring(pos + 1, descriptor.indexOf(";", pos)) + " ";
-            case '+':
-                return "? extends " + getDescriptor(descriptor, pos + 1);
-            case '-':
-                return "? super " + getDescriptor(descriptor, pos + 1);
-            case '*':
-                return "? ";
-            case '[':
-                return getDescriptor(descriptor, pos + 1).trim() + "[] ";
-            default:
-                return "Object ";
-        }
-    }
-
     private Expression getTopOfBodyStack() {
         if (myBodyStack.isEmpty()) {
             final int lastIndex = myStatements.size() - 1;
@@ -599,42 +543,5 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
             myBodyStack.push(ternaryExpression);
         }
         return myBodyStack.pop();
-    }
-
-    private String getClassName(final String fullClassName) {
-        final String[] classParts = fullClassName.split("/");
-        return classParts[classParts.length - 1];
-    }
-
-    private String getDecompiledFullClassName(final String fullClassName) {
-        return fullClassName.replace("/", ".");
-    }
-
-    private Frame getCurrentFrame() {
-        return myJavaMethod.getCurrentFrame();
-    }
-
-    private int getParametersCount(final String descriptor) {
-        int result = 0;
-        int pos = 1;
-        while (pos < descriptor.indexOf(")")) {
-            switch (descriptor.charAt(pos)) {
-                case '[':
-                    pos++;
-                    break;
-                case 'L':
-                case 'T':
-                case '+':
-                case '-':
-                    result++;
-                    pos = descriptor.indexOf(';', pos) + 1;
-                    break;
-                default:
-                    result++;
-                    pos++;
-                    break;
-            }
-        }
-        return result;
     }
 }

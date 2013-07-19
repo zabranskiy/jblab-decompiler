@@ -3,7 +3,7 @@ package com.sdc.java;
 import com.sdc.abstractLanguage.AbstractClass;
 
 import pretty.PrettyPackage;
-import JavaClassPrinter.JavaClassPrinterPackage;
+import JavaPrinter.JavaPrinterPackage;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -139,6 +139,6 @@ public class JavaClass extends AbstractClass {
 
     @Override
     public String toString() {
-        return PrettyPackage.pretty(myTextWidth, JavaClassPrinterPackage.printJavaClass(this));
+        return PrettyPackage.pretty(myTextWidth, JavaPrinterPackage.printJavaClass(this));
     }
 }
