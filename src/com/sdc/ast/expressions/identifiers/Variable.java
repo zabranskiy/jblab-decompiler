@@ -1,7 +1,7 @@
 package com.sdc.ast.expressions.identifiers;
 
 import com.sdc.ast.expressions.Expression;
-import com.sdc.java.Frame;
+import com.sdc.util.Frame;
 
 public class Variable extends Identifier {
     private final int myIndex;

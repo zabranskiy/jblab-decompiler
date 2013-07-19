@@ -111,15 +111,9 @@ public class JavaClassVisitor extends AbstractClassVisitor {
     @Override
     public MethodVisitor visitMethod(final int access, final String name, final String desc
             , final String signature, final String[] exceptions) {
-        if (name.equals("<init>")) {
-            return null;
-        }
 
         final String description = signature != null ? signature : desc;
-
         final String modifier = getAccess(access);
-        final int returnTypeIndex = description.indexOf(')') + 1;
-        final String returnType = getDescriptor(description, returnTypeIndex);
 
         List<String> throwedExceptions = new ArrayList<String>();
         if (exceptions != null) {
@@ -133,7 +127,18 @@ public class JavaClassVisitor extends AbstractClassVisitor {
         List<String> genericTypesImports = new ArrayList<String>();
         parseGenericDeclaration(description, genericTypesList, genericIdentifiersList, genericTypesImports);
 
-        final JavaClassMethod javaClassMethod = new JavaClassMethod(modifier, returnType, name
+        String returnType;
+        String methodName;
+        if (name.equals("<init>")) {
+            returnType = "";
+            methodName = myDecompiledJavaClass.getName();
+        } else {
+            final int returnTypeIndex = description.indexOf(')') + 1;
+            returnType = getDescriptor(description, returnTypeIndex);
+            methodName = name;
+        }
+
+        final JavaClassMethod javaClassMethod = new JavaClassMethod(modifier, returnType, methodName
                 , throwedExceptions.toArray(new String[throwedExceptions.size()])
                 , myDecompiledJavaClass, genericTypesList, genericIdentifiersList
                 , myTextWidth, myNestSize);

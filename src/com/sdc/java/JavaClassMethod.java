@@ -4,6 +4,8 @@ import JavaClassPrinter.JavaClassPrinterPackage;
 import pretty.PrettyPackage;
 
 import com.sdc.abstractLangauge.AbstractClassMethod;
+import com.sdc.util.Frame;
+
 import com.sdc.ast.controlflow.Statement;
 import com.sdc.cfg.GraphDrawer;
 import com.sdc.cfg.Node;

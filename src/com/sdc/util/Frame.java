@@ -1,4 +1,4 @@
-package com.sdc.java;
+package com.sdc.util;
 
 import java.util.*;
 
