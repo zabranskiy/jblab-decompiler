@@ -181,7 +181,7 @@ public class DeclarationWorker {
                 if (!descriptor.contains("<")) {
                     final String className = descriptor.substring(pos + 1, descriptor.indexOf(";", pos));
                     imports.add(getDecompiledFullClassName(className));
-                    return getClassName(className) + " ";
+                    return getClassName(className);
                 } else {
                     final String className = descriptor.substring(pos + 1, descriptor.indexOf("<", pos));
                     final String[] genericList = descriptor.substring(descriptor.indexOf("<") + 1, descriptor.indexOf(">")).split(";");

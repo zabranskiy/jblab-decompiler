@@ -1,6 +1,6 @@
 package com.sdc.java;
 
-import com.sdc.abstractLanguage.AbstractMethodVisitor;
+import com.sdc.abstractLanguage.*;
 import com.sdc.ast.controlflow.*;
 import com.sdc.ast.controlflow.InstanceInvocation;
 import com.sdc.ast.controlflow.Invocation;
@@ -41,7 +41,7 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
         this.myDecompiledOwnerFullClassName = decompiledOwnerFullClassName;
     }
 
-    private Frame getCurrentFrame() {
+    private AbstractFrame getCurrentFrame() {
         return myJavaMethod.getCurrentFrame();
     }
 
@@ -86,19 +86,19 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
             myJavaMethod.setCurrentFrame(getCurrentFrame().getParent());
         } else if (type == 3) {
             // F_SAME
-            Frame newFrame = new Frame();
-            newFrame.setSameFrame(getCurrentFrame());
-            newFrame.setParent(getCurrentFrame().getParent());
-            getCurrentFrame().getParent().addChild(newFrame);
+            AbstractFrame newAbstractFrame = new JavaFrame();
+            newAbstractFrame.setSameFrame(getCurrentFrame());
+            newAbstractFrame.setParent(getCurrentFrame().getParent());
+            getCurrentFrame().getParent().addChild(newAbstractFrame);
 
-            myJavaMethod.setCurrentFrame(newFrame);
+            myJavaMethod.setCurrentFrame(newAbstractFrame);
         } else {
-            Frame newFrame = new Frame();
+            AbstractFrame newAbstractFrame = new JavaFrame();
 
-            newFrame.setParent(getCurrentFrame());
-            getCurrentFrame().addChild(newFrame);
+            newAbstractFrame.setParent(getCurrentFrame());
+            getCurrentFrame().addChild(newAbstractFrame);
 
-            myJavaMethod.setCurrentFrame(newFrame);
+            myJavaMethod.setCurrentFrame(newAbstractFrame);
 
             if (nStack > 0) {
                 String stackedVariableType = "";

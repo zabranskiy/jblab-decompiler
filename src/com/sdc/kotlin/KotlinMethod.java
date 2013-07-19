@@ -1,13 +1,12 @@
 package com.sdc.kotlin;
 
-import JavaPrinter.JavaPrinterPackage;
 import KotlinPrinter.KotlinPrinterPackage;
 import com.sdc.abstractLanguage.AbstractMethod;
 import com.sdc.ast.controlflow.Statement;
 import com.sdc.cfg.GraphDrawer;
 import com.sdc.cfg.Node;
 import com.sdc.java.JavaAnnotation;
-import com.sdc.util.Frame;
+import com.sdc.abstractLanguage.AbstractFrame;
 import pretty.PrettyPackage;
 
 import java.util.ArrayList;
@@ -32,8 +31,8 @@ public class KotlinMethod extends AbstractMethod {
 
     private int myLastLocalVariableIndex;
 
-    private final Frame myRootFrame = new Frame();
-    private Frame myCurrentFrame = myRootFrame;
+    private final AbstractFrame myRootAbstractFrame = new KotlinFrame();
+    private AbstractFrame myCurrentAbstractFrame = myRootAbstractFrame;
 
     private List<Statement> myBody = null;
     private List<Node> myNodes = null;
@@ -95,12 +94,12 @@ public class KotlinMethod extends AbstractMethod {
         this.myLastLocalVariableIndex = lastLocalVariableIndex;
     }
 
-    public Frame getCurrentFrame() {
-        return myCurrentFrame;
+    public AbstractFrame getCurrentFrame() {
+        return myCurrentAbstractFrame;
     }
 
-    public void setCurrentFrame(final Frame currentFrame) {
-        this.myCurrentFrame = currentFrame;
+    public void setCurrentFrame(final AbstractFrame currentAbstractFrame) {
+        this.myCurrentAbstractFrame = currentAbstractFrame;
     }
 
     public void addImport(final String importClassName) {
@@ -108,22 +107,22 @@ public class KotlinMethod extends AbstractMethod {
     }
 
     public void addLocalVariableName(final int index, final String name) {
-        myCurrentFrame.addLocalVariableName(index, name);
+        myCurrentAbstractFrame.addLocalVariableName(index, name);
     }
 
     public void addLocalVariableType(final int index, final String type) {
-        myCurrentFrame.addLocalVariableType(index, type);
+        myCurrentAbstractFrame.addLocalVariableType(index, type);
     }
 
     public void addLocalVariableFromDebugInfo(final int index, final String name, final String type) {
-        myRootFrame.addLocalVariableFromDebugInfo(index, name, type);
+        myRootAbstractFrame.addLocalVariableFromDebugInfo(index, name, type);
     }
 
     public List<String> getParameters() {
         List<String> parameters = new ArrayList<String>();
         for (int variableIndex = 1; variableIndex <= myLastLocalVariableIndex; variableIndex++) {
-            if (myRootFrame.containsIndex(variableIndex)) {
-                parameters.add(myRootFrame.getLocalVariableName(variableIndex));
+            if (myRootAbstractFrame.containsIndex(variableIndex)) {
+                parameters.add(myRootAbstractFrame.getLocalVariableName(variableIndex));
             }
         }
         return parameters;

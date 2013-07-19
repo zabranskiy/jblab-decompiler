@@ -1,20 +1,20 @@
-package com.sdc.util;
+package com.sdc.abstractLanguage;
 
 import java.util.*;
 
-public class Frame {
-    private String myStackedVariableType = "";
-    private int myStackedVariableIndex = 0;
-    private boolean myStackChecked = false;
+public abstract class AbstractFrame {
+    protected String myStackedVariableType = "";
+    protected int myStackedVariableIndex = 0;
+    protected boolean myStackChecked = false;
 
-    private Map<Integer, String> myLocalVariableNames = new HashMap<Integer, String>();
-    private Map<Integer, String> myLocalVariableTypes = new HashMap<Integer, String>();
-    private List<Integer> myDeclaredVariables = new ArrayList<Integer>();
-    private Set<Integer> myLocalVariablesFromDebugInfo = new HashSet<Integer>();
+    protected Map<Integer, String> myLocalVariableNames = new HashMap<Integer, String>();
+    protected Map<Integer, String> myLocalVariableTypes = new HashMap<Integer, String>();
+    protected List<Integer> myDeclaredVariables = new ArrayList<Integer>();
+    protected Set<Integer> myLocalVariablesFromDebugInfo = new HashSet<Integer>();
 
-    private Frame myParent = null;
-    private List<Frame> myChildren = new ArrayList<Frame>();
-    private Frame mySameFrame = null;
+    protected AbstractFrame myParent = null;
+    protected List<AbstractFrame> myChildren = new ArrayList<AbstractFrame>();
+    protected AbstractFrame mySameAbstractFrame = null;
 
     public String getStackedVariableType() {
         return myStackedVariableType;
@@ -32,16 +32,16 @@ public class Frame {
         return myStackedVariableIndex;
     }
 
-    public Frame getParent() {
+    public AbstractFrame getParent() {
         return myParent;
     }
 
-    public void setParent(final Frame parent) {
+    public void setParent(final AbstractFrame parent) {
         this.myParent = parent;
     }
 
-    public void setSameFrame(final Frame sameFrame) {
-        this.mySameFrame = sameFrame;
+    public void setSameFrame(final AbstractFrame sameAbstractFrame) {
+        this.mySameAbstractFrame = sameAbstractFrame;
     }
 
     public boolean checkStack() {
@@ -56,7 +56,7 @@ public class Frame {
         return !myStackedVariableType.isEmpty();
     }
 
-    public void addChild(final Frame child) {
+    public void addChild(final AbstractFrame child) {
         myChildren.add(child);
     }
 
@@ -70,8 +70,8 @@ public class Frame {
 
     public boolean addLocalVariableFromDebugInfo(final int index, final String name, final String type) {
         if (!containsIndex(index) || myLocalVariablesFromDebugInfo.contains(index)) {
-            for (final Frame frame: myChildren) {
-                if (frame.addLocalVariableFromDebugInfo(index, name, type)) {
+            for (final AbstractFrame abstractFrame : myChildren) {
+                if (abstractFrame.addLocalVariableFromDebugInfo(index, name, type)) {
                     return true;
                 }
             }
@@ -90,13 +90,13 @@ public class Frame {
                 return myLocalVariableNames.get(index);
             } else {
                 myDeclaredVariables.add(index);
-                return myLocalVariableTypes.get(index) + myLocalVariableNames.get(index);
+                return getVariableNameForDeclaration(index);
             }
         } else {
-            if (mySameFrame == null) {
+            if (mySameAbstractFrame == null) {
                 return myParent.getLocalVariableName(index);
             } else {
-                return mySameFrame.getLocalVariableName(index);
+                return mySameAbstractFrame.getLocalVariableName(index);
             }
         }
     }
@@ -105,10 +105,10 @@ public class Frame {
         if (containsIndex(index)) {
             return myLocalVariableTypes.get(index);
         } else {
-            if (mySameFrame == null) {
+            if (mySameAbstractFrame == null) {
                 return myParent.getLocalVariableType(index);
             } else {
-                return mySameFrame.getLocalVariableType(index);
+                return mySameAbstractFrame.getLocalVariableType(index);
             }
         }
     }
@@ -116,4 +116,6 @@ public class Frame {
     public boolean containsIndex(final int index) {
         return myLocalVariableTypes.containsKey(index);
     }
+
+    abstract protected String getVariableNameForDeclaration(final int index);
 }

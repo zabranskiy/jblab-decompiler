@@ -1,25 +1,25 @@
 package com.sdc.ast.expressions.identifiers;
 
 import com.sdc.ast.expressions.Expression;
-import com.sdc.util.Frame;
+import com.sdc.abstractLanguage.AbstractFrame;
 
 public class Variable extends Identifier {
     private final int myIndex;
-    private final Frame myFrame;
+    private final AbstractFrame myAbstractFrame;
 
     private final Expression myArrayIndex;
     private final Identifier myArrayVariable;
 
-    public Variable(final int index, final Frame frame) {
+    public Variable(final int index, final AbstractFrame abstractFrame) {
         this.myIndex = index;
-        this.myFrame = frame;
+        this.myAbstractFrame = abstractFrame;
         this.myArrayIndex = null;
         this.myArrayVariable = null;
     }
 
     public Variable(final Expression arrayIndex, final Identifier arrayVariable) {
         this.myIndex = -1;
-        this.myFrame = null;
+        this.myAbstractFrame = null;
         this.myArrayIndex = arrayIndex;
         this.myArrayVariable = arrayVariable;
     }
@@ -27,7 +27,7 @@ public class Variable extends Identifier {
     @Override
     public String getName() {
         if (myIndex != -1) {
-            return myFrame.getLocalVariableName(myIndex);
+            return myAbstractFrame.getLocalVariableName(myIndex);
         } else {
             return myArrayVariable.getName();
         }
@@ -36,7 +36,7 @@ public class Variable extends Identifier {
     @Override
     public String getType() {
         if (myIndex != -1) {
-            return myFrame.getLocalVariableType(myIndex);
+            return myAbstractFrame.getLocalVariableType(myIndex);
         } else {
             String result = myArrayVariable.getType();
             if (result.endsWith("[] ")) {

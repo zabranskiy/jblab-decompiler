@@ -232,16 +232,10 @@ fun printKotlinMethod(kotlinMethod: KotlinMethod): PrimeDoc {
         var variables = kotlinMethod.getParameters()!!.toList()
         var index = 0
         for (variable in variables) {
-            if (kotlinMethod.checkParameterForAnnotation(index))
-                arguments = nest(
-                        2 * kotlinMethod.getNestSize()
-                        , arguments + text(" " + variable)
-                )
-            else
-                arguments = nest(
-                        2 * kotlinMethod.getNestSize()
-                        , arguments + text(variable)
-                )
+            arguments = nest(
+                    2 * kotlinMethod.getNestSize()
+                    , arguments + text(variable)
+            )
             if (index + 1 < variables.size)
                 arguments = group(arguments + text(",") + line())
 
