@@ -101,6 +101,18 @@ public class Frame {
         }
     }
 
+    public String getLocalVariableType(final int index) {
+        if (containsIndex(index)) {
+            return myLocalVariableTypes.get(index);
+        } else {
+            if (mySameFrame == null) {
+                return myParent.getLocalVariableType(index);
+            } else {
+                return mySameFrame.getLocalVariableType(index);
+            }
+        }
+    }
+
     public boolean containsIndex(final int index) {
         return myLocalVariableTypes.containsKey(index);
     }

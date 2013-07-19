@@ -33,6 +33,20 @@ public class Variable extends Identifier {
         }
     }
 
+    @Override
+    public String getType() {
+        if (myIndex != -1) {
+            return myFrame.getLocalVariableType(myIndex);
+        } else {
+            String result = myArrayVariable.getType();
+            if (result.endsWith("[] ")) {
+                result = result.substring(0, result.length() - 3);
+            }
+
+            return result + " ";
+        }
+    }
+
     public Expression getArrayIndex() {
         return myArrayIndex;
     }

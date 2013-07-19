@@ -1,7 +1,7 @@
 package com.sdc.java;
 
 import JavaClassPrinter.JavaClassPrinterPackage;
-import com.sdc.abstractLangauge.AbstractMethod;
+import com.sdc.abstractLanguage.AbstractMethod;
 import pretty.PrettyPackage;
 
 import com.sdc.util.Frame;

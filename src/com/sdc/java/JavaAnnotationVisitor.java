@@ -1,6 +1,6 @@
 package com.sdc.java;
 
-import com.sdc.abstractLangauge.AbstractAnnotationVisitor;
+import com.sdc.abstractLanguage.AbstractAnnotationVisitor;
 
 public class JavaAnnotationVisitor extends AbstractAnnotationVisitor {
     public JavaAnnotationVisitor(final JavaAnnotation javaAnnotation) {

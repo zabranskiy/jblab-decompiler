@@ -20,4 +20,12 @@ public class NewArray extends Expression {
     public String getType() {
         return myType;
     }
+
+    public String getFullType() {
+        StringBuilder result= new StringBuilder(myType);
+        for (int i = 0; i < myDimensionsCount; i++) {
+            result.append("[]");
+        }
+        return result.append(" ").toString();
+    }
 }

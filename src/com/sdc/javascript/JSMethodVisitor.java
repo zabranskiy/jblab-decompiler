@@ -1,6 +1,6 @@
 package com.sdc.javascript;
 
-import com.sdc.abstractLangauge.AbstractMethodVisitor;
+import com.sdc.abstractLanguage.AbstractMethodVisitor;
 import com.sdc.ast.controlflow.*;
 import com.sdc.ast.controlflow.Invocation;
 import com.sdc.ast.expressions.*;
@@ -128,7 +128,7 @@ public class JSMethodVisitor extends AbstractMethodVisitor {
 
     @Override
     public void visitFieldInsn(final int opcode, final String owner, final String name, final String desc) {
-        myBodyDecompilationStack.push(new Field(name));
+        myBodyDecompilationStack.push(new Field(name, getDescriptor(desc.charAt(0))));
     }
 
     @Override

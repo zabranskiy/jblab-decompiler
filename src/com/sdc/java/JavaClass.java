@@ -1,6 +1,6 @@
 package com.sdc.java;
 
-import com.sdc.abstractLangauge.AbstractClass;
+import com.sdc.abstractLanguage.AbstractClass;
 
 import pretty.PrettyPackage;
 import JavaClassPrinter.JavaClassPrinterPackage;

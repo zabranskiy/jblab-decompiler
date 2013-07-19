@@ -1,6 +1,6 @@
 package com.sdc.javascript;
 
-import com.sdc.abstractLangauge.AbstractMethod;
+import com.sdc.abstractLanguage.AbstractMethod;
 import com.sdc.javascript.statements.Statement;
 import com.sdc.cfg.Edge;
 import com.sdc.cfg.GraphDrawer;

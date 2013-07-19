@@ -1,8 +1,6 @@
 package com.sdc.javascript;
 
-import JavaClassPrinter.JavaClassPrinterPackage;
-import com.sdc.abstractLangauge.AbstractClass;
-import pretty.PrettyPackage;
+import com.sdc.abstractLanguage.AbstractClass;
 
 import java.util.ArrayList;
 import java.util.List;

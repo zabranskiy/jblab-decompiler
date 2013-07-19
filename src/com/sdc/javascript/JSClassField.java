@@ -1,8 +1,7 @@
 package com.sdc.javascript;
 
 
-import JavaClassPrinter.JavaClassPrinterPackage;
-import com.sdc.abstractLangauge.AbstractClassField;
+import com.sdc.abstractLanguage.AbstractClassField;
 import com.sdc.javascript.expressions.Expression;
 import com.sdc.javascript.expressions.Literal;
 //import pretty.PrettyPackage;

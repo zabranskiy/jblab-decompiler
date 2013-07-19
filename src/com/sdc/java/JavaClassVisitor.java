@@ -1,6 +1,6 @@
 package com.sdc.java;
 
-import com.sdc.abstractLangauge.AbstractClassVisitor;
+import com.sdc.abstractLanguage.AbstractClassVisitor;
 import org.objectweb.asm.*;
 
 import java.util.ArrayList;

@@ -1,6 +1,6 @@
 package com.sdc.kotlin;
 
-import com.sdc.abstractLangauge.AbstractClassVisitor;
+import com.sdc.abstractLanguage.AbstractClassVisitor;
 
 public class KotlinClassVisitor extends AbstractClassVisitor {
 }

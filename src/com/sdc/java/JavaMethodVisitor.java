@@ -1,6 +1,6 @@
 package com.sdc.java;
 
-import com.sdc.abstractLangauge.AbstractMethodVisitor;
+import com.sdc.abstractLanguage.AbstractMethodVisitor;
 import com.sdc.ast.controlflow.*;
 import com.sdc.ast.controlflow.InstanceInvocation;
 import com.sdc.ast.controlflow.Invocation;
@@ -208,9 +208,10 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
                 variableType = ((com.sdc.ast.expressions.Invocation) expr).getReturnType();
             } else if (expr instanceof New) {
                 variableType = ((New) expr).getReturnType();
-            } else if (expr instanceof Variable) {
-                final String name = ((Variable) expr).getName();
-                variableType = name.substring(0, name.lastIndexOf(" ") + 1);
+            } else if (expr instanceof NewArray) {
+                variableType = ((NewArray) expr).getFullType();
+            } else if (expr instanceof Identifier) {
+                variableType = ((Identifier) expr).getType();
             }
         }
 
@@ -247,7 +248,7 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
 
     @Override
     public void visitFieldInsn(final int opcode, final String owner, final String name, final String desc) {
-        myBodyStack.push(new Field(name));
+        myBodyStack.push(new Field(name, getDescriptor(desc, 0)));
     }
 
     @Override

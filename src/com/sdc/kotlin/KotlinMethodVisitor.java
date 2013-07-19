@@ -1,6 +1,6 @@
 package com.sdc.kotlin;
 
-import com.sdc.abstractLangauge.AbstractMethodVisitor;
+import com.sdc.abstractLanguage.AbstractMethodVisitor;
 
 public class KotlinMethodVisitor extends AbstractMethodVisitor {
 }

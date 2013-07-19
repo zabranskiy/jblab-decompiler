@@ -1,4 +1,4 @@
-package com.sdc.abstractLangauge;
+package com.sdc.abstractLanguage;
 
 import org.objectweb.asm.*;
 

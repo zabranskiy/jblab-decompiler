@@ -1,16 +1,11 @@
 package com.sdc.javascript;
 
-import com.sdc.abstractLangauge.AbstractClassVisitor;
-import com.sdc.javascript.expressions.*;
-import com.sdc.javascript.statements.ExpressionStatement;
-import com.sdc.javascript.statements.Statement;
+import com.sdc.abstractLanguage.AbstractClassVisitor;
 import org.objectweb.asm.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import static org.objectweb.asm.Opcodes.ASM4;
 
 public class JSClassVisitor extends AbstractClassVisitor {
     //private JavaClass myDecompiledJavaClass = null;

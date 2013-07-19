@@ -1,6 +1,6 @@
 package com.sdc.kotlin;
 
-import com.sdc.abstractLangauge.AbstractAnnotationVisitor;
+import com.sdc.abstractLanguage.AbstractAnnotationVisitor;
 
 public class KotlinAnnotationVisitor extends AbstractAnnotationVisitor {
     public KotlinAnnotationVisitor(final KotlinAnnotation annotation) {

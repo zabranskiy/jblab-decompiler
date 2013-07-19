@@ -1,4 +1,4 @@
-package com.sdc.abstractLangauge;
+package com.sdc.abstractLanguage;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -3,7 +3,7 @@ package com.sdc.java;
 import JavaClassPrinter.JavaClassPrinterPackage;
 import pretty.PrettyPackage;
 
-import com.sdc.abstractLangauge.AbstractClassField;
+import com.sdc.abstractLanguage.AbstractClassField;
 
 public class JavaClassField  extends AbstractClassField{
     private final String myModifier;
