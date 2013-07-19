@@ -180,7 +180,7 @@ fun printJavaClass(javaClass: JavaClass): PrimeDoc {
     for (importName in javaClass.getImports()!!.toArray())
         imports = group(imports / text("import " + importName + ";"))
 
-    var declaration = group(printAnnotations(javaClass.getAnnotations()!!.toList()) / text(javaClass.getModifier() + javaClass.getType() + javaClass.getName()))
+    var declaration = group(printAnnotations(javaClass.getAnnotations()!!.toList()) + text(javaClass.getModifier() + javaClass.getType() + javaClass.getName()))
 
     val genericsDeclaration = javaClass.getGenericDeclaration()
     if (!genericsDeclaration!!.isEmpty()) {
@@ -212,7 +212,7 @@ fun printJavaClass(javaClass: JavaClass): PrimeDoc {
         )
     }
 
-    var javaClassCode = group(packageCode + imports + declaration + text(" {"))
+    var javaClassCode = group(packageCode + imports / declaration + text(" {"))
 
     for (classField in javaClass.getFields()!!.toArray())
         javaClassCode = group(
@@ -223,14 +223,14 @@ fun printJavaClass(javaClass: JavaClass): PrimeDoc {
     for (classMethod in javaClass.getMethods()!!.toArray())
         javaClassCode = group(
                 javaClassCode
-                + nest(javaClass.getNestSize(), printClassMethod(classMethod as JavaMethod))
+                + nest(javaClass.getNestSize(), line() + printClassMethod(classMethod as JavaMethod))
         )
 
     return group(javaClassCode / text("}"))
 }
 
 fun printClassMethod(classMethod: JavaMethod): PrimeDoc {
-    var declaration = group(printAnnotations(classMethod.getAnnotations()!!.toList()) / text(classMethod.getModifier()))
+    var declaration = group(printAnnotations(classMethod.getAnnotations()!!.toList()) + text(classMethod.getModifier()))
 
     val genericsDeclaration = classMethod.getGenericDeclaration()
     if (!genericsDeclaration!!.isEmpty()) {
@@ -310,6 +310,6 @@ fun printAnnotation(annotation: JavaAnnotation): PrimeDoc {
 fun printAnnotations(annotations: List<JavaAnnotation>): PrimeDoc {
     var annotationsCode = group(nil())
     for (annotation in annotations)
-        annotationsCode = group(annotationsCode / printAnnotation(annotation))
+        annotationsCode = group(annotationsCode + printAnnotation(annotation) + line())
     return annotationsCode
 }
