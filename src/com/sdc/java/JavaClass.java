@@ -21,7 +21,7 @@ public class JavaClass extends AbstractClass {
     private final List<String> myGenericIdentifiers;
 
     private List<JavaClassField> myFields = new ArrayList<JavaClassField>();
-    private List<JavaClassMethod> myMethods = new ArrayList<JavaClassMethod>();
+    private List<JavaMethod> myMethods = new ArrayList<JavaMethod>();
 
     private List<JavaAnnotation> myAnnotations = new ArrayList<JavaAnnotation>();
 
@@ -62,7 +62,7 @@ public class JavaClass extends AbstractClass {
         return myFields;
     }
 
-    public List<JavaClassMethod> getMethods() {
+    public List<JavaMethod> getMethods() {
         return myMethods;
     }
 
@@ -90,7 +90,7 @@ public class JavaClass extends AbstractClass {
         myFields.add(field);
     }
 
-    public void appendMethod(final JavaClassMethod method) {
+    public void appendMethod(final JavaMethod method) {
         myMethods.add(method);
     }
 

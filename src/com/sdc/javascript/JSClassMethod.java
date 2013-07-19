@@ -1,6 +1,6 @@
 package com.sdc.javascript;
 
-import com.sdc.abstractLangauge.AbstractClassMethod;
+import com.sdc.abstractLangauge.AbstractMethod;
 import com.sdc.javascript.statements.Statement;
 import com.sdc.cfg.Edge;
 import com.sdc.cfg.GraphDrawer;
@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class JSClassMethod extends AbstractClassMethod {
+public class JSClassMethod extends AbstractMethod {
     private final String myModifier;
     private final String myReturnType;
     private final String myName;

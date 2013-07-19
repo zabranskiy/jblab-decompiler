@@ -19,7 +19,6 @@ public class JSClassVisitor extends AbstractClassVisitor {
     private final int myNestSize;
 
     public JSClassVisitor(final int textWidth, final int nestSize) {
-        super(ASM4);
         this.myTextWidth = textWidth;
         this.myNestSize = nestSize;
     }

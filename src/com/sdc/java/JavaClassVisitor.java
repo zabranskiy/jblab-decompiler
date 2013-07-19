@@ -6,15 +6,12 @@ import org.objectweb.asm.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.objectweb.asm.Opcodes.ASM4;
-
 public class JavaClassVisitor extends AbstractClassVisitor {
     private JavaClass myDecompiledJavaClass = null;
     private final int myTextWidth;
     private final int myNestSize;
 
     public JavaClassVisitor(final int textWidth, final int nestSize) {
-        super(ASM4);
         this.myTextWidth = textWidth;
         this.myNestSize = nestSize;
     }
@@ -138,7 +135,7 @@ public class JavaClassVisitor extends AbstractClassVisitor {
             methodName = name;
         }
 
-        final JavaClassMethod javaClassMethod = new JavaClassMethod(modifier, returnType, methodName
+        final JavaMethod javaMethod = new JavaMethod(modifier, returnType, methodName
                 , throwedExceptions.toArray(new String[throwedExceptions.size()])
                 , myDecompiledJavaClass, genericTypesList, genericIdentifiersList
                 , myTextWidth, myNestSize);
@@ -146,17 +143,17 @@ public class JavaClassVisitor extends AbstractClassVisitor {
         myDecompiledJavaClass.appendImports(genericTypesImports);
 
         final String parameters = description.substring(description.indexOf('(') + 1, description.indexOf(')'));
-        addInformationAboutParameters(parameters, javaClassMethod);
+        addInformationAboutParameters(parameters, javaMethod);
 
-        myDecompiledJavaClass.appendMethod(javaClassMethod);
+        myDecompiledJavaClass.appendMethod(javaMethod);
 
-        return new JavaMethodVisitor(javaClassMethod
+        return new JavaMethodVisitor(javaMethod
                 , myDecompiledJavaClass.getPackage() + "." + myDecompiledJavaClass.getName());
     }
 
     @Override
     public void visitEnd() {
-        for (final JavaClassMethod method : myDecompiledJavaClass.getMethods()) {
+        for (final JavaMethod method : myDecompiledJavaClass.getMethods()) {
             myDecompiledJavaClass.appendImports(method.getImports());
         }
     }
@@ -242,7 +239,7 @@ public class JavaClassVisitor extends AbstractClassVisitor {
         }
     }
 
-    private void addInformationAboutParameters(final String descriptor, final JavaClassMethod javaClassMethod) {
+    private void addInformationAboutParameters(final String descriptor, final JavaMethod javaMethod) {
         int count = 0;
         int pos = 0;
 
@@ -306,11 +303,11 @@ public class JavaClassVisitor extends AbstractClassVisitor {
 
             final int index = (count - backupCount) == 1 ? count : count - 1;
 
-            javaClassMethod.addLocalVariableName(index, "x" + index);
-            javaClassMethod.addLocalVariableType(index, getDescriptor(descriptor, backupPos));
+            javaMethod.addLocalVariableName(index, "x" + index);
+            javaMethod.addLocalVariableType(index, getDescriptor(descriptor, backupPos));
         }
 
-        javaClassMethod.setLastLocalVariableIndex(count);
+        javaMethod.setLastLocalVariableIndex(count);
     }
 
     private String getClassName(final String fullClassName) {

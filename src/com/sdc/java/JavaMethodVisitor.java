@@ -14,13 +14,14 @@ import com.sdc.cfg.Switch;
 import com.sdc.cfg.functionalization.AnonymousClass;
 import com.sdc.cfg.functionalization.Generator;
 import com.sdc.util.*;
+
 import org.objectweb.asm.*;
 import org.objectweb.asm.util.Printer;
 
 import java.util.*;
 
 public class JavaMethodVisitor extends AbstractMethodVisitor {
-    private JavaClassMethod myJavaClassMethod;
+    private JavaMethod myJavaMethod;
 
     private final String myDecompiledOwnerFullClassName;
 
@@ -35,9 +36,8 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
 
     private boolean myHasDebugInformation = false;
 
-    public JavaMethodVisitor(JavaClassMethod javaClassMethod, final String decompiledOwnerFullClassName) {
-        super(Opcodes.ASM4, null);
-        this.myJavaClassMethod = javaClassMethod;
+    public JavaMethodVisitor(JavaMethod javaMethod, final String decompiledOwnerFullClassName) {
+        this.myJavaMethod = javaMethod;
         this.myDecompiledOwnerFullClassName = decompiledOwnerFullClassName;
     }
 
@@ -46,7 +46,7 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
         JavaAnnotation annotation = new JavaAnnotation();
         annotation.setName(getDescriptor(desc, 0));
 
-        myJavaClassMethod.appendAnnotation(annotation);
+        myJavaMethod.appendAnnotation(annotation);
 
         return new JavaAnnotationVisitor(annotation);
     }
@@ -66,7 +66,7 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
         JavaAnnotation annotation = new JavaAnnotation();
         annotation.setName(getDescriptor(desc, 0));
 
-        myJavaClassMethod.appendParameterAnnotation(parameter, annotation);
+        myJavaMethod.appendParameterAnnotation(parameter, annotation);
 
         return new JavaAnnotationVisitor(annotation);
     }
@@ -79,7 +79,7 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
     public void visitFrame(final int type, final int nLocal, final Object[] local, final int nStack, final Object[] stack) {
         if (type == 2) {
             // F_CHOP
-            myJavaClassMethod.setCurrentFrame(getCurrentFrame().getParent());
+            myJavaMethod.setCurrentFrame(getCurrentFrame().getParent());
         } else if (type == 3) {
             // F_SAME
             Frame newFrame = new Frame();
@@ -87,14 +87,14 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
             newFrame.setParent(getCurrentFrame().getParent());
             getCurrentFrame().getParent().addChild(newFrame);
 
-            myJavaClassMethod.setCurrentFrame(newFrame);
+            myJavaMethod.setCurrentFrame(newFrame);
         } else {
             Frame newFrame = new Frame();
 
             newFrame.setParent(getCurrentFrame());
             getCurrentFrame().addChild(newFrame);
 
-            myJavaClassMethod.setCurrentFrame(newFrame);
+            myJavaMethod.setCurrentFrame(newFrame);
 
             if (nStack > 0) {
                 String stackedVariableType = "";
@@ -116,7 +116,7 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
                     }
                 } else {
                     final String className = (String) stack[0];
-                    myJavaClassMethod.addImport(getDecompiledFullClassName(className));
+                    myJavaMethod.addImport(getDecompiledFullClassName(className));
                     stackedVariableType = getClassName(className) + " ";
                 }
 
@@ -214,9 +214,9 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
             }
         }
 
-        if (!opString.contains("LOAD") && var > myJavaClassMethod.getLastLocalVariableIndex()) {
+        if (!opString.contains("LOAD") && var > myJavaMethod.getLastLocalVariableIndex()) {
             final String name = "y" + var;
-            myJavaClassMethod.addLocalVariableName(var, name);
+            myJavaMethod.addLocalVariableName(var, name);
 
             String descriptorType;
             if (currentFrameHasStack) {
@@ -230,7 +230,7 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
                 variableType = descriptorType;
             }
 
-            myJavaClassMethod.addLocalVariableType(var, variableType);
+            myJavaMethod.addLocalVariableType(var, variableType);
         }
     }
 
@@ -282,14 +282,14 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
             }
         } else if (opString.contains("INVOKESPECIAL")) {
             if (name.equals("<init>")) {
-                myJavaClassMethod.addImport(decompiledOwnerClassName);
+                myJavaMethod.addImport(decompiledOwnerClassName);
                 invocationName = getClassName(owner);
                 returnType = invocationName + " ";
             } else {
                 invocationName = "super." + name;
             }
         } else if (opString.contains("INVOKESTATIC")) {
-            myJavaClassMethod.addImport(decompiledOwnerClassName);
+            myJavaMethod.addImport(decompiledOwnerClassName);
             invocationName = getClassName(owner) + "." + name;
         }
 
@@ -425,7 +425,7 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
         }
 
         final String description = signature != null ? signature : desc;
-        myJavaClassMethod.addLocalVariableFromDebugInfo(index, name, getDescriptor(description, 0));
+        myJavaMethod.addLocalVariableFromDebugInfo(index, name, getDescriptor(description, 0));
     }
 
     @Override
@@ -478,10 +478,10 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
 
         Generator generator = new Generator(myNodes);
         AnonymousClass aClass = generator.genAnonymousClass();
-        // myJavaClassMethod.setAnonymousClass(aClass);
-        myJavaClassMethod.setBody(myStatements);
-        myJavaClassMethod.setNodes(myNodes);
-        //myJavaClassMethod.drawCFG();
+        // myJavaMethod.setAnonymousClass(aClass);
+        myJavaMethod.setBody(myStatements);
+        myJavaMethod.setNodes(myNodes);
+        //myJavaMethod.drawCFG();
     }
 
     private Integer getLeftEmptyNodeIndex() {
@@ -533,12 +533,12 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
             case 'L':
                 if (!descriptor.contains("<")) {
                     final String className = descriptor.substring(pos + 1, descriptor.indexOf(";", pos));
-                    myJavaClassMethod.addImport(getDecompiledFullClassName(className));
+                    myJavaMethod.addImport(getDecompiledFullClassName(className));
                     return getClassName(className) + " ";
                 } else {
                     final String className = descriptor.substring(pos + 1, descriptor.indexOf("<", pos));
                     final String[] genericList = descriptor.substring(descriptor.indexOf("<") + 1, descriptor.indexOf(">")).split(";");
-                    myJavaClassMethod.addImport(getDecompiledFullClassName(className));
+                    myJavaMethod.addImport(getDecompiledFullClassName(className));
 
                     StringBuilder result = new StringBuilder(getClassName(className));
                     boolean isSingleType = true;
@@ -610,7 +610,7 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
     }
 
     private Frame getCurrentFrame() {
-        return myJavaClassMethod.getCurrentFrame();
+        return myJavaMethod.getCurrentFrame();
     }
 
     private int getParametersCount(final String descriptor) {

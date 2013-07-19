@@ -31,7 +31,6 @@ public class JSMethodVisitor extends AbstractMethodVisitor {
     private boolean myHasDebugInformation = false;
 
     public JSMethodVisitor(JSClassMethod jsClassMethod) {
-        super(Opcodes.ASM4, null);
         this.myJSClassMethod = jsClassMethod;
     }
 

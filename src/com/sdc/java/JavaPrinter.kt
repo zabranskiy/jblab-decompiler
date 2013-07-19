@@ -14,7 +14,7 @@ import com.sdc.ast.controlflow.Assignment
 import com.sdc.ast.controlflow.Return
 import com.sdc.java.JavaClass
 import com.sdc.java.JavaClassField
-import com.sdc.java.JavaClassMethod
+import com.sdc.java.JavaMethod
 import com.sdc.ast.controlflow.Throw
 import com.sdc.ast.expressions.New
 import com.sdc.ast.controlflow.InstanceInvocation
@@ -223,13 +223,13 @@ fun printJavaClass(javaClass: JavaClass): PrimeDoc {
     for (classMethod in javaClass.getMethods()!!.toArray())
         javaClassCode = group(
                 javaClassCode
-                + nest(javaClass.getNestSize(), printClassMethod(classMethod as JavaClassMethod))
+                + nest(javaClass.getNestSize(), printClassMethod(classMethod as JavaMethod))
         )
 
     return group(javaClassCode / text("}"))
 }
 
-fun printClassMethod(classMethod: JavaClassMethod): PrimeDoc {
+fun printClassMethod(classMethod: JavaMethod): PrimeDoc {
     var declaration = group(printAnnotations(classMethod.getAnnotations()!!.toList()) / text(classMethod.getModifier()))
 
     val genericsDeclaration = classMethod.getGenericDeclaration()

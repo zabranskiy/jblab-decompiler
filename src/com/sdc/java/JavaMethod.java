@@ -1,9 +1,9 @@
 package com.sdc.java;
 
 import JavaClassPrinter.JavaClassPrinterPackage;
+import com.sdc.abstractLangauge.AbstractMethod;
 import pretty.PrettyPackage;
 
-import com.sdc.abstractLangauge.AbstractClassMethod;
 import com.sdc.util.Frame;
 
 import com.sdc.ast.controlflow.Statement;
@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class JavaClassMethod extends AbstractClassMethod {
+public class JavaMethod extends AbstractMethod {
     private final String myModifier;
     private final String myReturnType;
     private final String myName;
@@ -89,9 +89,9 @@ public class JavaClassMethod extends AbstractClassMethod {
         this.myCurrentFrame = currentFrame;
     }
 
-    public JavaClassMethod(final String modifier, final String returnType, final String name, final String[] exceptions,
-                           final JavaClass javaClass, final List<String> genericTypes, final List<String> genericIdentifiers,
-                           final int textWidth, final int nestSize) {
+    public JavaMethod(final String modifier, final String returnType, final String name, final String[] exceptions,
+                      final JavaClass javaClass, final List<String> genericTypes, final List<String> genericIdentifiers,
+                      final int textWidth, final int nestSize) {
         this.myModifier = modifier;
         this.myReturnType = returnType;
         this.myName = name;
