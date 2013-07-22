@@ -132,10 +132,10 @@ fun printStatement(statement: Statement, nestSize: Int): PrimeDoc =
                     group(funName + arguments + text(")"))
                 }
             }
-            is Assignment -> printExpression(statement.getLeft(), nestSize) + text(" =") + printExpression(statement.getRight(), nestSize)
+            is Assignment -> printExpression(statement.getLeft(), nestSize) + text(" = ") + printExpression(statement.getRight(), nestSize)
             is Return ->
                 if (statement.getReturnValue() != null)
-                    text("return")+ printExpression(statement.getReturnValue(), nestSize)
+                    text("return ") + printExpression(statement.getReturnValue(), nestSize)
                 else
                     text("return")
             is Throw -> text("throw") + printExpression(statement.getThrowObject(), nestSize)
@@ -194,10 +194,7 @@ fun printKotlinClass(kotlinClass: KotlinClass): PrimeDoc {
             kotlinClassCode = kotlinClassCode + nest(kotlinClass.getNestSize(), line() + printClassField(classField))
 
         for (classMethod in kotlinClass.getMethods()!!.toList())
-            kotlinClassCode = group(
-                    kotlinClassCode
-                    + nest(kotlinClass.getNestSize(), line() + printKotlinMethod(classMethod))
-            )
+            kotlinClassCode = kotlinClassCode + nest(kotlinClass.getNestSize(), line() + printKotlinMethod(classMethod))
 
         return kotlinClassCode / text("}")
     } else {
@@ -231,10 +228,7 @@ fun printKotlinMethod(kotlinMethod: KotlinMethod): PrimeDoc {
         var variables = kotlinMethod.getParameters()!!.toList()
         var index = 0
         for (variable in variables) {
-            arguments = nest(
-                    2 * kotlinMethod.getNestSize()
-                    , arguments + text(variable)
-            )
+            arguments = nest(2 * kotlinMethod.getNestSize(), arguments + text(variable))
             if (index + 1 < variables.size)
                 arguments = group(arguments + text(",") + line())
 
@@ -242,9 +236,17 @@ fun printKotlinMethod(kotlinMethod: KotlinMethod): PrimeDoc {
         }
     }
 
-    val body = text("}")
+    val body = nest(
+            kotlinMethod.getNestSize(),
+            printStatements(kotlinMethod.getBody(), kotlinMethod.getNestSize())
+    ) / text("}")
 
-    return group(declaration + arguments + text(")") + text(": " + kotlinMethod.getReturnType() + " ") + text("{")) + body
+    var returnTypeCode = text(" ")
+    val returnType = kotlinMethod.getReturnType()
+    if (!returnType!!.isEmpty())
+        returnTypeCode = text(": " + returnType + " ")
+
+    return group(declaration + arguments + text(")") + returnTypeCode + text("{")) + body
 }
 
 fun printClassField(classField: KotlinClassField): PrimeDoc =

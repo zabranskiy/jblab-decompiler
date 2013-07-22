@@ -18,7 +18,7 @@ public class KotlinFrame extends AbstractFrame {
 
     @Override
     protected String getVariableNameForDeclaration(int index) {
-        if (index < myLastLocalVariableIndex) {
+        if (index <= myLastLocalVariableIndex) {
             return getLocalVariableName(index) + " : " + getLocalVariableType(index);
         } else {
             return "var " + getLocalVariableName(index) + " : " + getLocalVariableType(index);

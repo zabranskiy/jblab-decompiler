@@ -123,13 +123,6 @@ public class KotlinClassVisitor extends AbstractClassVisitor {
         final String description = signature != null ? signature : desc;
         final String modifier = DeclarationWorker.getKotlinAccess(access);
 
-        List<String> throwedExceptions = new ArrayList<String>();
-        if (exceptions != null) {
-            for (final String exception : exceptions) {
-                throwedExceptions.add(DeclarationWorker.getClassName(exception));
-            }
-        }
-
         List<String> genericTypesList = new ArrayList<String>();
         List<String> genericIdentifiersList = new ArrayList<String>();
         List<String> genericTypesImports = new ArrayList<String>();
@@ -147,7 +140,6 @@ public class KotlinClassVisitor extends AbstractClassVisitor {
         }
 
         final KotlinMethod kotlinMethod = new KotlinMethod(modifier, returnType, methodName
-                , throwedExceptions.toArray(new String[throwedExceptions.size()])
                 , myDecompiledKotlinClass, genericTypesList, genericIdentifiersList
                 , myTextWidth, myNestSize);
 
@@ -163,9 +155,7 @@ public class KotlinClassVisitor extends AbstractClassVisitor {
 
         myDecompiledKotlinClass.appendMethod(kotlinMethod);
 
-        return null;
-//        return new KotlinMethodVisitor(kotlinMethod
-//                , myDecompiledKotlinClass.getPackage() + "." + myDecompiledKotlinClass.getName());
+        return new KotlinMethodVisitor(kotlinMethod, myDecompiledKotlinClass.getPackage() + "." + myDecompiledKotlinClass.getName());
     }
 
     @Override
