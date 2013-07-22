@@ -79,7 +79,9 @@ public abstract class AbstractFrame {
         } else {
             myLocalVariablesFromDebugInfo.add(index);
             addLocalVariableName(index, name);
-            addLocalVariableType(index, type);
+            if (!type.equals("Object")) {
+                addLocalVariableType(index, type);
+            }
             return true;
         }
     }

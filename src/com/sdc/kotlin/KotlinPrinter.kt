@@ -18,6 +18,7 @@ import com.sdc.ast.expressions.NewArray
 import com.sdc.kotlin.KotlinClass
 import com.sdc.kotlin.KotlinMethod
 import com.sdc.kotlin.KotlinClassField
+import com.sdc.kotlin.KotlinAnnotation
 
 fun printExpression(expression: Expression?, nestSize: Int): PrimeDoc =
         when (expression) {
@@ -165,7 +166,7 @@ fun printKotlinClass(kotlinClass: KotlinClass): PrimeDoc {
         importsCode = importsCode / text("import " + importName)
 
     if (kotlinClass.isNormalClass()) {
-        var declaration : PrimeDoc = text(kotlinClass.getModifier() + kotlinClass.getType() + kotlinClass.getName())
+        var declaration : PrimeDoc = printAnnotations(kotlinClass.getAnnotations()!!.toList()) + text(kotlinClass.getModifier() + kotlinClass.getType() + kotlinClass.getName())
 
         val genericsDeclaration = kotlinClass.getGenericDeclaration()
         if (!genericsDeclaration!!.isEmpty()) {
@@ -207,7 +208,7 @@ fun printKotlinClass(kotlinClass: KotlinClass): PrimeDoc {
 }
 
 fun printKotlinMethod(kotlinMethod: KotlinMethod): PrimeDoc {
-    var declaration : PrimeDoc = text(kotlinMethod.getModifier() + "fun ")
+    var declaration : PrimeDoc = printAnnotations(kotlinMethod.getAnnotations()!!.toList()) + text(kotlinMethod.getModifier() + "fun ")
 
     val genericsDeclaration = kotlinMethod.getGenericDeclaration()
     if (!genericsDeclaration!!.isEmpty()) {
@@ -228,7 +229,10 @@ fun printKotlinMethod(kotlinMethod: KotlinMethod): PrimeDoc {
         var variables = kotlinMethod.getParameters()!!.toList()
         var index = 0
         for (variable in variables) {
-            arguments = nest(2 * kotlinMethod.getNestSize(), arguments + text(variable))
+            if (kotlinMethod.checkParameterForAnnotation(index))
+                arguments = arguments + printAnnotations(kotlinMethod.getParameterAnnotations(index)!!.toList()) + text(" " + variable)
+            else
+                arguments = arguments + text(variable)
             if (index + 1 < variables.size)
                 arguments = group(arguments + text(",") + line())
 
@@ -251,3 +255,27 @@ fun printKotlinMethod(kotlinMethod: KotlinMethod): PrimeDoc {
 
 fun printClassField(classField: KotlinClassField): PrimeDoc =
         text(classField.getModifier() + "var " + classField.getName() + ": " + classField.getType())
+
+fun printAnnotation(annotation: KotlinAnnotation): PrimeDoc {
+    var annotationCode : PrimeDoc = text(annotation.getName())
+    val properties = annotation.getProperties()
+    if (!properties!!.isEmpty()) {
+        annotationCode = annotationCode + text("(")
+        var counter = 1
+        for ((name, value) in properties) {
+            annotationCode = annotationCode + text(name + " = " + if (!annotation.isStringProperty(name)) value else "\"" + value + "\"")
+            if (counter < properties.keySet().size)
+                annotationCode = annotationCode + text(", ")
+            counter++
+        }
+        annotationCode = annotationCode + text(")")
+    }
+    return annotationCode + text(" ")
+}
+
+fun printAnnotations(annotations: List<KotlinAnnotation>): PrimeDoc {
+    var annotationsCode : PrimeDoc = nil()
+    for (annotation in annotations)
+        annotationsCode = annotationsCode + printAnnotation(annotation)
+    return annotationsCode
+}

@@ -137,7 +137,7 @@ public class KotlinClass {
         for (int i = 0; i < myGenericTypes.size(); i++) {
             if (!myGenericTypes.get(i).equals("java/lang/Object")) {
                 final String[] classParts = myGenericTypes.get(i).split("/");
-                result.add(myGenericIdentifiers.get(i) + " extends " + classParts[classParts.length - 1]);
+                result.add(myGenericIdentifiers.get(i) + " : " + classParts[classParts.length - 1]);
             } else {
                 result.add(myGenericIdentifiers.get(i));
             }
