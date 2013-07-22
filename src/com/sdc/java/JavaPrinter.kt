@@ -265,7 +265,7 @@ fun printClassMethod(classMethod: JavaMethod): PrimeDoc {
             if (classMethod.checkParameterForAnnotation(index))
                 arguments = nest(
                         2 * classMethod.getNestSize()
-                        , arguments + printAnnotations(classMethod.getParameterAnnotations(index)!!.toList()) + text(" " + variable)
+                        , arguments + printAnnotations(classMethod.getParameterAnnotations(index)!!.toList()) + text(variable)
                 )
             else
                 arguments = nest(

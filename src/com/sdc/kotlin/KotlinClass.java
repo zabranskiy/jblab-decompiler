@@ -110,7 +110,9 @@ public class KotlinClass {
 
     public void appendImport(final String importName) {
         if (!myImports.contains(importName)
-                && (importName.indexOf(myPackage) != 0 || importName.lastIndexOf(".") != myPackage.length()))
+                && (importName.indexOf(myPackage) != 0 || importName.lastIndexOf(".") != myPackage.length())
+                && (importName.indexOf("jet.") != 0 || importName.lastIndexOf(".") != "jet".length())
+                && (importName.indexOf("java.lang.") != 0 || importName.lastIndexOf(".") != "java.lang".length()))
         {
             myImports.add(importName);
         }

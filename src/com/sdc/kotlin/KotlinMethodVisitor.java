@@ -49,12 +49,17 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
 
     @Override
     public AnnotationVisitor visitAnnotation(final String desc, final boolean visible) {
-        KotlinAnnotation annotation = new KotlinAnnotation();
-        annotation.setName(DeclarationWorker.getKotlinDescriptor(desc, 0, myKotlinMethod.getImports()));
-
-        myKotlinMethod.appendAnnotation(annotation);
-
-        return new KotlinAnnotationVisitor(annotation);
+        List<String> annotationsImports = new ArrayList<String>();
+        final String annotationName = DeclarationWorker.getKotlinDescriptor(desc, 0, annotationsImports);
+        if (!annotationName.startsWith("Jet")) {
+            KotlinAnnotation annotation = new KotlinAnnotation();
+            annotation.setName(annotationName);
+            myKotlinMethod.appendAnnotation(annotation);
+            myKotlinMethod.getImports().addAll(annotationsImports);
+            return new KotlinAnnotationVisitor(annotation);
+        } else {
+            return null;
+        }
     }
 
     @Override
@@ -69,12 +74,17 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
 
     @Override
     public AnnotationVisitor visitParameterAnnotation(final int parameter, final String desc, final boolean visible) {
-        KotlinAnnotation annotation = new KotlinAnnotation();
-        annotation.setName(DeclarationWorker.getKotlinDescriptor(desc, 0, myKotlinMethod.getImports()));
-
-        myKotlinMethod.appendParameterAnnotation(parameter, annotation);
-
-        return new KotlinAnnotationVisitor(annotation);
+        List<String> annotationsImports = new ArrayList<String>();
+        final String annotationName = DeclarationWorker.getKotlinDescriptor(desc, 0, annotationsImports);
+        if (!annotationName.startsWith("Jet")) {
+            KotlinAnnotation annotation = new KotlinAnnotation();
+            annotation.setName(annotationName);
+            myKotlinMethod.appendParameterAnnotation(parameter, annotation);
+            myKotlinMethod.getImports().addAll(annotationsImports);
+            return new KotlinAnnotationVisitor(annotation);
+        } else {
+            return null;
+        }
     }
 
     @Override

@@ -81,9 +81,11 @@ public class JavaClassVisitor extends AbstractClassVisitor {
     @Override
     public AnnotationVisitor visitAnnotation(final String desc, final boolean visible) {
         JavaAnnotation annotation = new JavaAnnotation();
-        annotation.setName(DeclarationWorker.getJavaDescriptor(desc, 0, myDecompiledJavaClass.getImports()));
+        List<String> annotationImports = new ArrayList<String>();
 
+        annotation.setName(DeclarationWorker.getJavaDescriptor(desc, 0, annotationImports));
         myDecompiledJavaClass.appendAnnotation(annotation);
+        myDecompiledJavaClass.appendImports(annotationImports);
 
         return new JavaAnnotationVisitor(annotation);
     }
@@ -97,13 +99,16 @@ public class JavaClassVisitor extends AbstractClassVisitor {
     }
 
     @Override
-    public FieldVisitor visitField(final int access, final String name, final String desc, final String signature
-            , final Object value) {
+    public FieldVisitor visitField(final int access, final String name, final String desc, final String signature, final Object value) {
         final String description = signature != null ? signature : desc;
+        List<String> fieldDeclarationImports = new ArrayList<String>();
+
         final JavaClassField cf = new JavaClassField(DeclarationWorker.getJavaAccess(access)
-                , DeclarationWorker.getJavaDescriptor(description, 0, myDecompiledJavaClass.getImports())
+                , DeclarationWorker.getJavaDescriptor(description, 0, fieldDeclarationImports)
                 , name, myTextWidth, myNestSize);
         myDecompiledJavaClass.appendField(cf);
+        myDecompiledJavaClass.appendImports(fieldDeclarationImports);
+
         return null;
     }
 
@@ -132,9 +137,11 @@ public class JavaClassVisitor extends AbstractClassVisitor {
             returnType = "";
             methodName = myDecompiledJavaClass.getName();
         } else {
+            List<String> methodReturnTypeImports = new ArrayList<String>();
             final int returnTypeIndex = description.indexOf(')') + 1;
-            returnType = DeclarationWorker.getJavaDescriptor(description, returnTypeIndex, myDecompiledJavaClass.getImports());
+            returnType = DeclarationWorker.getJavaDescriptor(description, returnTypeIndex, methodReturnTypeImports);
             methodName = name;
+            myDecompiledJavaClass.appendImports(methodReturnTypeImports);
         }
 
         final JavaMethod javaMethod = new JavaMethod(modifier, returnType, methodName

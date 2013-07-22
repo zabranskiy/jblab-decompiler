@@ -230,7 +230,7 @@ fun printKotlinMethod(kotlinMethod: KotlinMethod): PrimeDoc {
         var index = 0
         for (variable in variables) {
             if (kotlinMethod.checkParameterForAnnotation(index))
-                arguments = arguments + printAnnotations(kotlinMethod.getParameterAnnotations(index)!!.toList()) + text(" " + variable)
+                arguments = arguments + printAnnotations(kotlinMethod.getParameterAnnotations(index)!!.toList()) + text(variable)
             else
                 arguments = arguments + text(variable)
             if (index + 1 < variables.size)

@@ -88,12 +88,17 @@ public class KotlinClassVisitor extends AbstractClassVisitor {
 
     @Override
     public AnnotationVisitor visitAnnotation(final String desc, final boolean visible) {
-        KotlinAnnotation annotation = new KotlinAnnotation();
-        annotation.setName(DeclarationWorker.getKotlinDescriptor(desc, 0, myDecompiledKotlinClass.getImports()));
-
-        myDecompiledKotlinClass.appendAnnotation(annotation);
-
-        return new KotlinAnnotationVisitor(annotation);
+        List<String> annotationImports = new ArrayList<String>();
+        final String annotationName = DeclarationWorker.getKotlinDescriptor(desc, 0, annotationImports);
+        if (!annotationName.startsWith("Jet")) {
+            KotlinAnnotation annotation = new KotlinAnnotation();
+            annotation.setName(annotationName);
+            myDecompiledKotlinClass.appendAnnotation(annotation);
+            myDecompiledKotlinClass.appendImports(annotationImports);
+            return new KotlinAnnotationVisitor(annotation);
+        } else {
+            return null;
+        }
     }
 
     @Override
@@ -105,14 +110,14 @@ public class KotlinClassVisitor extends AbstractClassVisitor {
     }
 
     @Override
-    public FieldVisitor visitField(final int access, final String name, final String desc, final String signature
-            , final Object value) {
-
+    public FieldVisitor visitField(final int access, final String name, final String desc, final String signature, final Object value) {
+        List<String> fieldImports = new ArrayList<String>();
         final String description = signature != null ? signature : desc;
         final KotlinClassField cf = new KotlinClassField(DeclarationWorker.getKotlinAccess(access)
-                , DeclarationWorker.getKotlinDescriptor(description, 0, myDecompiledKotlinClass.getImports())
+                , DeclarationWorker.getKotlinDescriptor(description, 0, fieldImports)
                 , name, myTextWidth, myNestSize);
         myDecompiledKotlinClass.appendField(cf);
+        myDecompiledKotlinClass.appendImports(fieldImports);
         return null;
     }
 
@@ -134,9 +139,11 @@ public class KotlinClassVisitor extends AbstractClassVisitor {
             returnType = "";
             methodName = myDecompiledKotlinClass.getName();
         } else {
+            List<String> methodReturnTypeImports = new ArrayList<String>();
             final int returnTypeIndex = description.indexOf(')') + 1;
-            returnType = DeclarationWorker.getKotlinDescriptor(description, returnTypeIndex, myDecompiledKotlinClass.getImports());
+            returnType = DeclarationWorker.getKotlinDescriptor(description, returnTypeIndex, methodReturnTypeImports);
             methodName = name;
+            myDecompiledKotlinClass.appendImports(methodReturnTypeImports);
         }
 
         final KotlinMethod kotlinMethod = new KotlinMethod(modifier, returnType, methodName
