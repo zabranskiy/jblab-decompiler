@@ -73,13 +73,14 @@ public class KotlinClassVisitor extends AbstractClassVisitor {
 
         myDecompiledKotlinClass.appendImports(traitImports);
         myDecompiledKotlinClass.appendImports(genericTypesImports);
+
+        if (className.contains("$src$")) {
+            myDecompiledKotlinClass.setIsNormalClass(false);
+        }
     }
 
     @Override
     public void visitSource(final String source, final String debug) {
-        if (source != null && source.contains("$src$")) {
-            myDecompiledKotlinClass.setIsNormalClass(false);
-        }
     }
 
     @Override

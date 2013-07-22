@@ -114,7 +114,9 @@ public class KotlinMethod extends AbstractMethod {
 
     public List<String> getParameters() {
         List<String> parameters = new ArrayList<String>();
-        for (int variableIndex = 1; variableIndex <= myLastLocalVariableIndex; variableIndex++) {
+        final int startIndex = isNormalClassMethod() ? 1 : 0;
+
+        for (int variableIndex = startIndex; variableIndex <= myLastLocalVariableIndex; variableIndex++) {
             if (myRootFrame.containsIndex(variableIndex)) {
                 parameters.add(myRootFrame.getLocalVariableName(variableIndex));
             }

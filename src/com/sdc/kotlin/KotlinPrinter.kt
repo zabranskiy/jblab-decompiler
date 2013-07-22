@@ -225,7 +225,7 @@ fun printKotlinMethod(kotlinMethod: KotlinMethod): PrimeDoc {
     declaration = declaration + text(kotlinMethod.getName() + "(")
 
     var arguments: PrimeDoc = nil()
-    if (kotlinMethod.getLastLocalVariableIndex() != 0) {
+    if (kotlinMethod.getLastLocalVariableIndex() != 0 || (!kotlinMethod.isNormalClassMethod() && kotlinMethod.getLastLocalVariableIndex() >= 0)) {
         var variables = kotlinMethod.getParameters()!!.toList()
         var index = 0
         for (variable in variables) {
