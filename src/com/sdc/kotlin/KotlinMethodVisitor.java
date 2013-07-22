@@ -264,7 +264,15 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
 
     @Override
     public void visitFieldInsn(final int opcode, final String owner, final String name, final String desc) {
-        myBodyStack.push(new Field(name, DeclarationWorker.getKotlinDescriptor(desc, 0, myKotlinMethod.getImports())));
+        final String opString = Printer.OPCODES[opcode];
+
+        if (opString.contains("PUTFIELD")) {
+            final Identifier v = new Field(name, DeclarationWorker.getKotlinDescriptor(desc, 0, myKotlinMethod.getImports()));
+            final Expression e = getTopOfBodyStack();
+            myStatements.add(new Assignment(v, e));
+        } else if (opString.contains("GETFIELD")) {
+            myBodyStack.push(new Field(name, DeclarationWorker.getKotlinDescriptor(desc, 0, myKotlinMethod.getImports())));
+        }
     }
 
     @Override

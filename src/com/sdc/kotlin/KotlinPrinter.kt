@@ -254,7 +254,7 @@ fun printKotlinMethod(kotlinMethod: KotlinMethod): PrimeDoc {
 }
 
 fun printClassField(classField: KotlinClassField): PrimeDoc =
-        text(classField.getModifier() + "var " + classField.getName() + ": " + classField.getType())
+        text(classField.getModifier() + "var " + classField.getName() + " : " + classField.getType())
 
 fun printAnnotation(annotation: KotlinAnnotation): PrimeDoc {
     var annotationCode : PrimeDoc = text(annotation.getName())
