@@ -27,7 +27,8 @@ public class KotlinClassVisitor extends AbstractClassVisitor {
 
         if ((access & Opcodes.ACC_ENUM) == 0
                 && (access & Opcodes.ACC_INTERFACE) == 0
-                && (access & Opcodes.ACC_ANNOTATION) == 0) {
+                && (access & Opcodes.ACC_ANNOTATION) == 0)
+        {
             type = "class ";
         }
 
@@ -47,13 +48,13 @@ public class KotlinClassVisitor extends AbstractClassVisitor {
             superClassImport = DeclarationWorker.getDecompiledFullClassName(superName);
         }
 
-        List<String> implementedInterfaces = new ArrayList<String>();
-        List<String> implementedInterfacesImports = new ArrayList<String>();
+        List<String> traits = new ArrayList<String>();
+        List<String> traitImports = new ArrayList<String>();
         if (interfaces != null && interfaces.length > 0) {
             for (final String implInterface : interfaces) {
                 if (!implInterface.equals("jet/JetObject")) {
-                    implementedInterfaces.add(DeclarationWorker.getClassName(implInterface));
-                    implementedInterfacesImports.add(DeclarationWorker.getDecompiledFullClassName(implInterface));
+                    traits.add(DeclarationWorker.getClassName(implInterface));
+                    traitImports.add(DeclarationWorker.getDecompiledFullClassName(implInterface));
                 }
             }
         }
@@ -63,19 +64,22 @@ public class KotlinClassVisitor extends AbstractClassVisitor {
         List<String> genericTypesImports = new ArrayList<String>();
         DeclarationWorker.parseGenericDeclaration(signature, genericTypesList, genericIdentifiersList, genericTypesImports);
 
-        myDecompiledKotlinClass = new KotlinClass(modifier, type, className, packageName.toString(), implementedInterfaces
+        myDecompiledKotlinClass = new KotlinClass(modifier, type, className, packageName.toString(), traits
                 , superClass, genericTypesList, genericIdentifiersList, myTextWidth, myNestSize);
 
         if (!superClassImport.isEmpty()) {
             myDecompiledKotlinClass.appendImport(superClassImport);
         }
 
-        myDecompiledKotlinClass.appendImports(implementedInterfacesImports);
+        myDecompiledKotlinClass.appendImports(traitImports);
         myDecompiledKotlinClass.appendImports(genericTypesImports);
     }
 
     @Override
     public void visitSource(final String source, final String debug) {
+        if (source != null && source.contains("$src$")) {
+            myDecompiledKotlinClass.setIsNormalClass(false);
+        }
     }
 
     @Override
@@ -150,7 +154,12 @@ public class KotlinClassVisitor extends AbstractClassVisitor {
         myDecompiledKotlinClass.appendImports(genericTypesImports);
 
         final String parameters = description.substring(description.indexOf('(') + 1, description.indexOf(')'));
-        DeclarationWorker.addInformationAboutParameters(parameters, kotlinMethod, 1, DeclarationWorker.SupportedLanguage.KOTLIN);
+        int startIndex = 1;
+        if (!myDecompiledKotlinClass.isNormalClass()) {
+            startIndex = 0;
+        }
+
+        DeclarationWorker.addInformationAboutParameters(parameters, kotlinMethod, startIndex, DeclarationWorker.SupportedLanguage.KOTLIN);
 
         myDecompiledKotlinClass.appendMethod(kotlinMethod);
 

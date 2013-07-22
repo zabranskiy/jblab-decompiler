@@ -67,6 +67,9 @@ public class DeclarationWorker {
     public static String getKotlinAccess(final int access) {
         StringBuilder sb = new StringBuilder("");
 
+        if ((access & Opcodes.ACC_PUBLIC) != 0) {
+            sb.append("public ");
+        }
         if ((access & Opcodes.ACC_PRIVATE) != 0) {
             sb.append("private ");
         }

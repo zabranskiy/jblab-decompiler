@@ -13,7 +13,7 @@ public class KotlinClass {
     private final String myPackage;
 
     private final String mySuperClass;
-    private final List<String> myImplementedInterfaces;
+    private final List<String> myTraits;
 
     private final List<String> myGenericTypes;
     private final List<String> myGenericIdentifiers;
@@ -25,18 +25,20 @@ public class KotlinClass {
 
     private List<String> myImports = new ArrayList<String>();
 
+    private boolean myIsNormalClass = true;
+
     private final int myTextWidth;
     private final int myNestSize;
 
     public KotlinClass(final String modifier, final String type, final String name, final String packageName,
-                       final List<String> implementedInterfaces, final String superClass,
+                       final List<String> traits, final String superClass,
                        final List<String> genericTypes, final List<String> genericIdentifiers,
                        final int textWidth, final int nestSize) {
         this.myModifier = modifier;
         this.myType = type;
         this.myName = name;
         this.myPackage = packageName;
-        this.myImplementedInterfaces = implementedInterfaces;
+        this.myTraits = traits;
         this.mySuperClass = superClass;
         this.myGenericTypes = genericTypes;
         this.myGenericIdentifiers = genericIdentifiers;
@@ -64,8 +66,8 @@ public class KotlinClass {
         return myImports;
     }
 
-    public List<String> getImplementedInterfaces() {
-        return myImplementedInterfaces;
+    public List<String> getTraits() {
+        return myTraits;
     }
 
     public String getSuperClass() {
@@ -78,6 +80,14 @@ public class KotlinClass {
 
     public List<KotlinMethod> getMethods() {
         return myMethods;
+    }
+
+    public void setIsNormalClass(boolean isNormalClass) {
+        myIsNormalClass = isNormalClass;
+    }
+
+    public boolean isNormalClass() {
+        return myIsNormalClass;
     }
 
     public int getNestSize() {
