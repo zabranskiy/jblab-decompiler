@@ -76,7 +76,7 @@ fun printExpression(expression: Expression?, nestSize: Int): PrimeDoc =
 
             is com.sdc.ast.expressions.Invocation -> {
                 var funName : PrimeDoc = text(expression.getFunction() + "(")
-                if (expression is InstanceInvocation) {
+                if (expression is com.sdc.ast.expressions.InstanceInvocation) {
                     funName = text(expression.getVariable()!!.getName() + ".") + funName
                 }
 
