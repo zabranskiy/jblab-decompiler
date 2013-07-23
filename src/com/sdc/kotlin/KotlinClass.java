@@ -180,6 +180,15 @@ public class KotlinClass {
         return null;
     }
 
+    public boolean hasField(final String fieldName) {
+        for (KotlinClassField field : myFields) {
+            if (field.getName().equalsIgnoreCase(fieldName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public String toString() {
         return PrettyPackage.pretty(myTextWidth, KotlinPrinterPackage.printKotlinClass(this));

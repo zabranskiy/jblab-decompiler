@@ -147,6 +147,10 @@ public class KotlinClassVisitor extends AbstractClassVisitor {
             myDecompiledKotlinClass.appendImports(methodReturnTypeImports);
         }
 
+        if ((methodName.startsWith("set") || methodName.startsWith("get")) && myDecompiledKotlinClass.hasField(methodName.substring(3))) {
+            return null;
+        }
+
         final KotlinMethod kotlinMethod = new KotlinMethod(modifier, returnType, methodName
                 , myDecompiledKotlinClass, genericTypesList, genericIdentifiersList
                 , myTextWidth, myNestSize);
