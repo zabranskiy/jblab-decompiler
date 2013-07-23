@@ -323,6 +323,10 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
         } else if (opString.contains("INVOKESTATIC")) {
             myKotlinMethod.addImport(decompiledOwnerClassName);
             invocationName = DeclarationWorker.getClassName(owner) + "." + name;
+            if (name.equals("checkParameterIsNotNull")) {
+                ((KotlinFrame) getCurrentFrame()).addNotNullVariable(((Variable) arguments.get(0)).getIndex());
+                return;
+            }
         }
 
         if (name.equals("<init>")) {

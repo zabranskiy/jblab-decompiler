@@ -258,14 +258,14 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
 
         if (opString.contains("PUTFIELD")) {
             if (!myDecompiledOwnerFullClassName.endsWith(myJavaMethod.getName())) {
-                final Identifier v = new Field(name, DeclarationWorker.getKotlinDescriptor(desc, 0, myJavaMethod.getImports()));
+                final Identifier v = new Field(name, DeclarationWorker.getJavaDescriptor(desc, 0, myJavaMethod.getImports()));
                 final Expression e = getTopOfBodyStack();
                 myStatements.add(new Assignment(v, e));
             } else {
                 myJavaMethod.addInitializerToField(name, getTopOfBodyStack());
             }
         } else if (opString.contains("GETFIELD")) {
-            myBodyStack.push(new Field(name, DeclarationWorker.getKotlinDescriptor(desc, 0, myJavaMethod.getImports())));
+            myBodyStack.push(new Field(name, DeclarationWorker.getJavaDescriptor(desc, 0, myJavaMethod.getImports())));
         }
     }
 

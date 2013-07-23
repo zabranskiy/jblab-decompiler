@@ -54,4 +54,8 @@ public class Variable extends Identifier {
     public Identifier getArrayVariable() {
         return myArrayVariable;
     }
+
+    public int getIndex() {
+        return myIndex;
+    }
 }

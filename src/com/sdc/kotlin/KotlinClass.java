@@ -132,7 +132,8 @@ public class KotlinClass {
         if (!myImports.contains(importName)
                 && (importName.indexOf(myPackage) != 0 || importName.lastIndexOf(".") != myPackage.length())
                 && (importName.indexOf("jet.") != 0 || importName.lastIndexOf(".") != "jet".length())
-                && (importName.indexOf("java.lang.") != 0 || importName.lastIndexOf(".") != "java.lang".length()))
+                && (importName.indexOf("java.lang.") != 0 || importName.lastIndexOf(".") != "java.lang".length())
+                && (importName.indexOf("jet.runtime.") != 0 || importName.lastIndexOf(".") != "jet.runtime".length()))
         {
             myImports.add(importName);
         }

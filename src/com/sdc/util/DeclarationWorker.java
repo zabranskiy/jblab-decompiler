@@ -3,7 +3,10 @@ package com.sdc.util;
 import com.sdc.abstractLanguage.AbstractMethod;
 import org.objectweb.asm.Opcodes;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class DeclarationWorker {
     public enum SupportedLanguage {
@@ -184,7 +187,12 @@ public class DeclarationWorker {
                 if (!descriptor.contains("<")) {
                     final String className = descriptor.substring(pos + 1, descriptor.indexOf(";", pos));
                     imports.add(getDecompiledFullClassName(className));
-                    return getClassName(className);
+                    final String actualClassName = getClassName(className);
+                    if (isPrimitiveClass(actualClassName)) {
+                        return convertJavaPrimitiveClassToKotlin(actualClassName) + "?";
+                    } else {
+                        return actualClassName;
+                    }
                 } else {
                     final String className = descriptor.substring(pos + 1, descriptor.indexOf("<", pos));
                     final String[] genericList = descriptor.substring(descriptor.indexOf("<") + 1, descriptor.indexOf(">")).split(";");
@@ -256,7 +264,9 @@ public class DeclarationWorker {
         while (pos < descriptor.length()) {
             final int backupPos = pos;
             final int backupCount = count;
+            final String type = getDescriptor(descriptor, backupPos, abstractMethod.getImports(), language);
 
+            boolean isPrimitiveClass = false;
             switch (descriptor.charAt(pos)) {
                 case 'B':
                     count++;
@@ -293,6 +303,7 @@ public class DeclarationWorker {
                 case 'L':
                     count++;
                     pos = descriptor.indexOf(";", pos) + 1;
+                    isPrimitiveClass = isPrimitiveClass(type);
                     break;
                 case 'T':
                     count++;
@@ -314,7 +325,11 @@ public class DeclarationWorker {
             final int index = (count - backupCount) == 1 ? count : count - 1;
 
             abstractMethod.addLocalVariableName(index, "x" + index);
-            abstractMethod.addLocalVariableType(index, getDescriptor(descriptor, backupPos, abstractMethod.getImports(), language));
+            if (language == SupportedLanguage.KOTLIN) {
+                abstractMethod.addLocalVariableType(index, isPrimitiveClass ? convertJavaPrimitiveClassToKotlin(type) + "?" : type);
+            } else {
+                abstractMethod.addLocalVariableType(index, type);
+            }
         }
 
         abstractMethod.setLastLocalVariableIndex(count);
@@ -347,4 +362,15 @@ public class DeclarationWorker {
         }
     }
 
+    public static boolean isPrimitiveClass(final String type) {
+        Set<String> primitiveTypes = new HashSet<String>(Arrays.asList("Byte", "Long", "Boolean", "Integer", "Int", "Short", "Char", "Float", "Double"));
+        return primitiveTypes.contains(type);
+    }
+
+    private static String convertJavaPrimitiveClassToKotlin(final String javaClass) {
+        if (javaClass.equals("Integer")) {
+            return "Int";
+        }
+        return javaClass;
+    }
 }
