@@ -24,6 +24,7 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
     private JavaMethod myJavaMethod;
 
     private final String myDecompiledOwnerFullClassName;
+    private final String myDecompiledOwnerSuperClassName;
 
     private Stack<Expression> myBodyStack = new Stack<Expression>();
     private List<Statement> myStatements = new ArrayList<Statement>();
@@ -36,9 +37,10 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
 
     private boolean myHasDebugInformation = false;
 
-    public JavaMethodVisitor(JavaMethod javaMethod, final String decompiledOwnerFullClassName) {
+    public JavaMethodVisitor(JavaMethod javaMethod, final String decompiledOwnerFullClassName, final String decompiledOwnerSuperClassName) {
         this.myJavaMethod = javaMethod;
         this.myDecompiledOwnerFullClassName = decompiledOwnerFullClassName;
+        this.myDecompiledOwnerSuperClassName = decompiledOwnerSuperClassName;
     }
 
     private AbstractFrame getCurrentFrame() {
@@ -307,7 +309,11 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
         }
 
         if (name.equals("<init>")) {
-            myBodyStack.push(new New(new com.sdc.ast.expressions.Invocation(invocationName, returnType, arguments)));
+            if (myDecompiledOwnerFullClassName.endsWith(myJavaMethod.getName()) && myDecompiledOwnerSuperClassName.endsWith(invocationName)) {
+                myStatements.add(new Invocation("super", returnType, arguments));
+            } else {
+                myBodyStack.push(new New(new com.sdc.ast.expressions.Invocation(invocationName, returnType, arguments)));
+            }
         } else if (myBodyStack.isEmpty()) {
             myStatements.add(new Invocation(invocationName, returnType, arguments));
         } else {

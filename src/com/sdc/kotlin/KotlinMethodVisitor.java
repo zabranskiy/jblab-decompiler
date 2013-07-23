@@ -27,6 +27,7 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
     private KotlinMethod myKotlinMethod;
 
     private final String myDecompiledOwnerFullClassName;
+    private final String myDecompiledOwnerSuperClassName;
 
     private Stack<Expression> myBodyStack = new Stack<Expression>();
     private List<Statement> myStatements = new ArrayList<Statement>();
@@ -39,9 +40,10 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
 
     private boolean myHasDebugInformation = false;
 
-    public KotlinMethodVisitor(KotlinMethod kotlinMethod, final String decompiledOwnerFullClassName) {
+    public KotlinMethodVisitor(KotlinMethod kotlinMethod, final String decompiledOwnerFullClassName, final String decompiledOwnerSuperClassName) {
         this.myKotlinMethod = kotlinMethod;
         this.myDecompiledOwnerFullClassName = decompiledOwnerFullClassName;
+        this.myDecompiledOwnerSuperClassName = decompiledOwnerSuperClassName;
     }
 
     private AbstractFrame getCurrentFrame() {
@@ -320,7 +322,11 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
         }
 
         if (name.equals("<init>")) {
-            myBodyStack.push(new New(new com.sdc.ast.expressions.Invocation(invocationName, returnType, arguments)));
+            if (myDecompiledOwnerFullClassName.endsWith(myKotlinMethod.getName()) && myDecompiledOwnerSuperClassName.endsWith(invocationName)) {
+                myStatements.add(new Invocation(invocationName, returnType, arguments));
+            } else {
+                myBodyStack.push(new New(new com.sdc.ast.expressions.Invocation(invocationName, returnType, arguments)));
+            }
         } else if (myBodyStack.isEmpty()) {
             myStatements.add(new com.sdc.ast.controlflow.Invocation(invocationName, returnType, arguments));
         } else {

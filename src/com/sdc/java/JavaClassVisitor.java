@@ -157,7 +157,7 @@ public class JavaClassVisitor extends AbstractClassVisitor {
         myDecompiledJavaClass.appendMethod(javaMethod);
 
         return new JavaMethodVisitor(javaMethod
-                , myDecompiledJavaClass.getPackage() + "." + myDecompiledJavaClass.getName());
+                , myDecompiledJavaClass.getPackage() + "." + myDecompiledJavaClass.getName(), myDecompiledJavaClass.getSuperClass());
     }
 
     @Override

@@ -163,7 +163,7 @@ public class KotlinClassVisitor extends AbstractClassVisitor {
 
         myDecompiledKotlinClass.appendMethod(kotlinMethod);
 
-        return new KotlinMethodVisitor(kotlinMethod, myDecompiledKotlinClass.getPackage() + "." + myDecompiledKotlinClass.getName());
+        return new KotlinMethodVisitor(kotlinMethod, myDecompiledKotlinClass.getPackage() + "." + myDecompiledKotlinClass.getName(), myDecompiledKotlinClass.getSuperClass());
     }
 
     @Override
