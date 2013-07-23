@@ -1,6 +1,7 @@
 package com.sdc.kotlin;
 
 import KotlinPrinter.KotlinPrinterPackage;
+import com.sdc.ast.expressions.Expression;
 import pretty.PrettyPackage;
 
 import java.util.ArrayList;
@@ -22,6 +23,9 @@ public class KotlinClass {
     private List<KotlinMethod> myMethods = new ArrayList<KotlinMethod>();
 
     private List<KotlinAnnotation> myAnnotations = new ArrayList<KotlinAnnotation>();
+
+    private KotlinMethod myConstructor;
+    private Expression mySuperClassConstructor;
 
     private List<String> myImports = new ArrayList<String>();
 
@@ -86,6 +90,22 @@ public class KotlinClass {
         myIsNormalClass = isNormalClass;
     }
 
+    public void setConstructor(final KotlinMethod constructor) {
+        this.myConstructor = constructor;
+    }
+
+    public void setSuperClassConstructor(final Expression superClassConstructor) {
+        this.mySuperClassConstructor = superClassConstructor;
+    }
+
+    public KotlinMethod getConstructor() {
+        return myConstructor;
+    }
+
+    public Expression getSuperClassConstructor() {
+        return mySuperClassConstructor;
+    }
+
     public boolean isNormalClass() {
         return myIsNormalClass;
     }
@@ -145,6 +165,19 @@ public class KotlinClass {
             }
         }
         return result;
+    }
+
+    public void addInitializerToField(final String fieldName, final Expression initializer) {
+        getField(fieldName).setInitializer(initializer);
+    }
+
+    public KotlinClassField getField(final String fieldName) {
+        for (KotlinClassField field : myFields) {
+            if (field.getName().equals(fieldName)) {
+                return field;
+            }
+        }
+        return null;
     }
 
     @Override

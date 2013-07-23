@@ -270,9 +270,13 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
         final String opString = Printer.OPCODES[opcode];
 
         if (opString.contains("PUTFIELD")) {
-            final Identifier v = new Field(name, DeclarationWorker.getKotlinDescriptor(desc, 0, myKotlinMethod.getImports()));
-            final Expression e = getTopOfBodyStack();
-            myStatements.add(new Assignment(v, e));
+            if (!myDecompiledOwnerFullClassName.endsWith(myKotlinMethod.getName())) {
+                final Identifier v = new Field(name, DeclarationWorker.getKotlinDescriptor(desc, 0, myKotlinMethod.getImports()));
+                final Expression e = getTopOfBodyStack();
+                myStatements.add(new Assignment(v, e));
+            } else {
+                myKotlinMethod.addInitializerToField(name, getTopOfBodyStack());
+            }
         } else if (opString.contains("GETFIELD")) {
             myBodyStack.push(new Field(name, DeclarationWorker.getKotlinDescriptor(desc, 0, myKotlinMethod.getImports())));
         }
@@ -323,7 +327,7 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
 
         if (name.equals("<init>")) {
             if (myDecompiledOwnerFullClassName.endsWith(myKotlinMethod.getName()) && myDecompiledOwnerSuperClassName.endsWith(invocationName)) {
-                myStatements.add(new Invocation(invocationName, returnType, arguments));
+                myKotlinMethod.getKotlinClass().setSuperClassConstructor(new com.sdc.ast.expressions.Invocation(invocationName, returnType, arguments));
             } else {
                 myBodyStack.push(new New(new com.sdc.ast.expressions.Invocation(invocationName, returnType, arguments)));
             }

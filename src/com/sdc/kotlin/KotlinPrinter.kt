@@ -181,9 +181,11 @@ fun printKotlinClass(kotlinClass: KotlinClass): PrimeDoc {
             declaration = declaration + text(">")
         }
 
+        declaration = declaration + printPrimaryConstructorParameters(kotlinClass.getConstructor())
+
         val superClass = kotlinClass.getSuperClass()
         if (!superClass!!.isEmpty())
-            declaration = declaration + group(nest(2 * kotlinClass.getNestSize(), line() + text(": " + superClass)))
+            declaration = declaration + group(nest(2 * kotlinClass.getNestSize(), line() + text(": " ) + printSuperClassConstructor(kotlinClass.getSuperClassConstructor(), kotlinClass.getNestSize())))
 
         val traits = kotlinClass.getTraits()!!.toArray()
         for (singleTrait in traits)
@@ -193,6 +195,10 @@ fun printKotlinClass(kotlinClass: KotlinClass): PrimeDoc {
 
         for (classField in kotlinClass.getFields()!!.toList())
             kotlinClassCode = kotlinClassCode + nest(kotlinClass.getNestSize(), line() + printClassField(classField))
+
+        if (!kotlinClass.getConstructor()!!.hasEmptyBody()) {
+            kotlinClassCode = kotlinClassCode + nest(kotlinClass.getNestSize(), line() + printInitialConstructor(kotlinClass.getConstructor()))
+        }
 
         for (classMethod in kotlinClass.getMethods()!!.toList())
             kotlinClassCode = kotlinClassCode + nest(kotlinClass.getNestSize(), line() + printKotlinMethod(classMethod))
@@ -224,21 +230,7 @@ fun printKotlinMethod(kotlinMethod: KotlinMethod): PrimeDoc {
     }
     declaration = declaration + text(kotlinMethod.getName() + "(")
 
-    var arguments: PrimeDoc = nil()
-    if (kotlinMethod.getLastLocalVariableIndex() != 0 || (!kotlinMethod.isNormalClassMethod() && kotlinMethod.getLastLocalVariableIndex() >= 0)) {
-        var variables = kotlinMethod.getParameters()!!.toList()
-        var index = 0
-        for (variable in variables) {
-            if (kotlinMethod.checkParameterForAnnotation(index))
-                arguments = arguments + printAnnotations(kotlinMethod.getParameterAnnotations(index)!!.toList()) + text(variable)
-            else
-                arguments = arguments + text(variable)
-            if (index + 1 < variables.size)
-                arguments = group(arguments + text(",") + line())
-
-            index++
-        }
-    }
+    val arguments = printMethodParameters(kotlinMethod)
 
     val body = nest(
             kotlinMethod.getNestSize(),
@@ -253,8 +245,12 @@ fun printKotlinMethod(kotlinMethod: KotlinMethod): PrimeDoc {
     return group(declaration + arguments + text(")") + returnTypeCode + text("{")) + body
 }
 
-fun printClassField(classField: KotlinClassField): PrimeDoc =
-        text(classField.getModifier() + "var " + classField.getName() + " : " + classField.getType())
+fun printClassField(classField: KotlinClassField): PrimeDoc {
+    var fieldCode : PrimeDoc = text(classField.getModifier() + "var " + classField.getName() + " : " + classField.getType())
+    if (classField.hasInitializer())
+        fieldCode = fieldCode + text(" = ") + printExpression(classField.getInitializer(), classField.getNestSize())
+    return fieldCode
+}
 
 fun printAnnotation(annotation: KotlinAnnotation): PrimeDoc {
     var annotationCode : PrimeDoc = text(annotation.getName())
@@ -278,4 +274,37 @@ fun printAnnotations(annotations: List<KotlinAnnotation>): PrimeDoc {
     for (annotation in annotations)
         annotationsCode = annotationsCode + printAnnotation(annotation)
     return annotationsCode
+}
+
+fun printPrimaryConstructorParameters(constructor: KotlinMethod?): PrimeDoc =
+    text("(") + printMethodParameters(constructor) + text(")")
+
+fun printMethodParameters(method: KotlinMethod?): PrimeDoc {
+    var arguments: PrimeDoc = nil()
+    if (method!!.getLastLocalVariableIndex() != 0 || (!method.isNormalClassMethod() && method.getLastLocalVariableIndex() >= 0)) {
+        var variables = method.getParameters()!!.toList()
+        var index = 0
+        for (variable in variables) {
+            if (method.checkParameterForAnnotation(index))
+                arguments = arguments + printAnnotations(method.getParameterAnnotations(index)!!.toList()) + text(variable)
+            else
+                arguments = arguments + text(variable)
+            if (index + 1 < variables.size)
+                arguments = group(arguments + text(",") + line())
+
+            index++
+        }
+    }
+    return arguments
+}
+
+fun printSuperClassConstructor(superClassConstructor : Expression?, nestSize : Int): PrimeDoc =
+        printExpression(superClassConstructor, nestSize)
+
+fun printInitialConstructor(constructor: KotlinMethod?): PrimeDoc {
+    val body = nest(
+            constructor!!.getNestSize(),
+            printStatements(constructor.getBody(), constructor.getNestSize())
+    )
+    return text("initial constructor {") + body / text("}")
 }

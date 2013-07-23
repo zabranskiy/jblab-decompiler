@@ -2,6 +2,7 @@ package com.sdc.java;
 
 import com.sdc.abstractLanguage.AbstractClass;
 
+import com.sdc.ast.expressions.Expression;
 import pretty.PrettyPackage;
 import JavaPrinter.JavaPrinterPackage;
 
@@ -136,6 +137,19 @@ public class JavaClass extends AbstractClass {
             }
         }
         return result;
+    }
+
+    public void addInitializerToField(final String fieldName, final Expression initializer) {
+        getField(fieldName).setInitializer(initializer);
+    }
+
+    public JavaClassField getField(final String fieldName) {
+        for (JavaClassField field : myFields) {
+            if (field.getName().equals(fieldName)) {
+                return field;
+            }
+        }
+        return null;
     }
 
     @Override

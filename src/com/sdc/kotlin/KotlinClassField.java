@@ -1,11 +1,14 @@
 package com.sdc.kotlin;
 
 import com.sdc.abstractLanguage.AbstractClassField;
+import com.sdc.ast.expressions.Expression;
 
 public class KotlinClassField extends AbstractClassField {
     private final String myModifier;
     private final String myType;
     private final String myName;
+
+    private Expression myInitializer;
 
     private final int myTextWidth;
     private final int myNestSize;
@@ -32,5 +35,17 @@ public class KotlinClassField extends AbstractClassField {
 
     public int getNestSize() {
         return myNestSize;
+    }
+
+    public void setInitializer(Expression initializer) {
+        this.myInitializer = initializer;
+    }
+
+    public Expression getInitializer() {
+        return myInitializer;
+    }
+
+    public boolean hasInitializer() {
+        return myInitializer != null;
     }
 }

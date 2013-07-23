@@ -2,6 +2,7 @@ package com.sdc.java;
 
 import JavaPrinter.JavaPrinterPackage;
 import com.sdc.abstractLanguage.AbstractMethod;
+import com.sdc.ast.expressions.Expression;
 import pretty.PrettyPackage;
 
 import com.sdc.abstractLanguage.AbstractFrame;
@@ -175,6 +176,14 @@ public class JavaMethod extends AbstractMethod {
 
     public List<JavaAnnotation> getParameterAnnotations(final int index) {
         return myParameterAnnotations.get(index);
+    }
+
+    public void addInitializerToField(final String fieldName, final Expression initializer) {
+        myJavaClass.addInitializerToField(fieldName, initializer);
+    }
+
+    public JavaClass getKotlinClass() {
+        return myJavaClass;
     }
 
     public void setNodes(List<Node> myNodes) {

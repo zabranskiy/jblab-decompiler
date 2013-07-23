@@ -287,8 +287,13 @@ fun printClassMethod(classMethod: JavaMethod): PrimeDoc {
     return group(declaration + arguments + text(")") + throwsExceptions / text("{")) + body
 }
 
-fun printClassField(classField: JavaClassField): PrimeDoc =
-    text(classField.getModifier() + classField.getType() + classField.getName() + ";")
+fun printClassField(classField: JavaClassField): PrimeDoc {
+    var fieldCode : PrimeDoc = text(classField.getModifier() + classField.getType() + classField.getName())
+    if (classField.hasInitializer())
+        fieldCode = fieldCode + text(" = ") + printExpression(classField.getInitializer(), classField.getNestSize())
+    return fieldCode + text(";")
+}
+
 
 fun printAnnotation(annotation: JavaAnnotation): PrimeDoc {
     var annotationCode = group(text("@" + annotation.getName()))

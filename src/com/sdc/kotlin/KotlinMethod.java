@@ -2,7 +2,9 @@ package com.sdc.kotlin;
 
 import KotlinPrinter.KotlinPrinterPackage;
 import com.sdc.abstractLanguage.AbstractMethod;
+import com.sdc.ast.controlflow.Return;
 import com.sdc.ast.controlflow.Statement;
+import com.sdc.ast.expressions.Expression;
 import com.sdc.cfg.GraphDrawer;
 import com.sdc.cfg.Node;
 import com.sdc.abstractLanguage.AbstractFrame;
@@ -174,6 +176,18 @@ public class KotlinMethod extends AbstractMethod {
 
     public boolean isNormalClassMethod() {
         return myKotlinClass.isNormalClass();
+    }
+
+    public boolean hasEmptyBody() {
+        return myBody.size() == 1 && ((Return) myBody.get(0)).getReturnValue() == null;
+    }
+
+    public void addInitializerToField(final String fieldName, final Expression initializer) {
+        myKotlinClass.addInitializerToField(fieldName, initializer);
+    }
+
+    public KotlinClass getKotlinClass() {
+        return myKotlinClass;
     }
 
     public void setNodes(List<Node> myNodes) {

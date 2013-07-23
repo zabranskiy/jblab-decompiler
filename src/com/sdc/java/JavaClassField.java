@@ -1,6 +1,7 @@
 package com.sdc.java;
 
 import JavaPrinter.JavaPrinterPackage;
+import com.sdc.ast.expressions.Expression;
 import pretty.PrettyPackage;
 
 import com.sdc.abstractLanguage.AbstractClassField;
@@ -9,6 +10,8 @@ public class JavaClassField  extends AbstractClassField{
     private final String myModifier;
     private final String myType;
     private final String myName;
+
+    private Expression myInitializer;
 
     private final int myTextWidth;
     private final int myNestSize;
@@ -35,6 +38,18 @@ public class JavaClassField  extends AbstractClassField{
 
     public int getNestSize() {
         return myNestSize;
+    }
+
+    public void setInitializer(Expression initializer) {
+        this.myInitializer = initializer;
+    }
+
+    public Expression getInitializer() {
+        return myInitializer;
+    }
+
+    public boolean hasInitializer() {
+        return myInitializer != null;
     }
 
     @Override

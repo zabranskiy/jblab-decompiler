@@ -161,7 +161,11 @@ public class KotlinClassVisitor extends AbstractClassVisitor {
 
         DeclarationWorker.addInformationAboutParameters(parameters, kotlinMethod, startIndex, DeclarationWorker.SupportedLanguage.KOTLIN);
 
-        myDecompiledKotlinClass.appendMethod(kotlinMethod);
+        if (name.equals("<init>")) {
+            myDecompiledKotlinClass.setConstructor(kotlinMethod);
+        } else {
+            myDecompiledKotlinClass.appendMethod(kotlinMethod);
+        }
 
         return new KotlinMethodVisitor(kotlinMethod, myDecompiledKotlinClass.getPackage() + "." + myDecompiledKotlinClass.getName(), myDecompiledKotlinClass.getSuperClass());
     }
