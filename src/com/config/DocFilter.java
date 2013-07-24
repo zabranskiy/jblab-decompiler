@@ -2,7 +2,10 @@ package com.config;
 
 import org.jetbrains.annotations.NotNull;
 
-import javax.swing.text.*;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Document;
+import javax.swing.text.DocumentFilter;
 
 public class DocFilter extends DocumentFilter {
     @Override

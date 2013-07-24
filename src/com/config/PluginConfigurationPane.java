@@ -1,5 +1,6 @@
 package com.config;
 
+import com.decompiler.Language;
 import com.intellij.ui.HyperlinkLabel;
 import org.jetbrains.annotations.NotNull;
 
@@ -16,7 +17,7 @@ public class PluginConfigurationPane {
     private JComboBox comboBox1;
     private JTextField textField1;
     private JTextField textField2;
-    private String selectedLanguage;
+    private Language selectedLanguage;
 
 
     public PluginConfigurationPane() {
@@ -28,7 +29,7 @@ public class PluginConfigurationPane {
             @Override
             public void actionPerformed(@NotNull ActionEvent e) {
                 if (e.getSource() instanceof JComboBox) {
-                    selectedLanguage = (String) ((JComboBox) e.getSource()).getSelectedItem();
+                    selectedLanguage = new Language((String) ((JComboBox) e.getSource()).getSelectedItem());
                 }
                 if (showPrettyCheckBox.isSelected()) {
                     textField1.setEditable(true);
@@ -47,15 +48,15 @@ public class PluginConfigurationPane {
         doc2.setDocumentFilter(new DocFilter());
     }
 
-    public void storeDataTo(PluginComponent pluginComponent) {
+    public void storeDataTo(PluginConfigComponent pluginComponent) {
         pluginComponent.setChosenLanguage(selectedLanguage);
         pluginComponent.setShowPrettyEnabled(showPrettyCheckBox.isSelected());
         pluginComponent.setTabSize(Integer.valueOf(textField1.getText()));
         pluginComponent.setTextWidth(Integer.valueOf(textField2.getText()));
     }
 
-    public void readDataFrom(PluginComponent pluginComponent) {
-        comboBox1.setSelectedItem(pluginComponent.getChosenLanguage());
+    public void readDataFrom(PluginConfigComponent pluginComponent) {
+        comboBox1.setSelectedItem(pluginComponent.getChosenLanguage().getName());
         showPrettyCheckBox.setSelected(pluginComponent.isShowPrettyEnabled());
         textField1.setText(pluginComponent.getTabSize().toString());
         textField2.setText(pluginComponent.getTextWidth().toString());
@@ -69,8 +70,8 @@ public class PluginConfigurationPane {
         }
     }
 
-    public boolean isModified(PluginComponent pluginComponent) {
-        return !comboBox1.getSelectedItem().equals(pluginComponent.getChosenLanguage())
+    public boolean isModified(PluginConfigComponent pluginComponent) {
+        return !comboBox1.getSelectedItem().equals(pluginComponent.getChosenLanguage().getName())
                 || showPrettyCheckBox.isSelected() != pluginComponent.isShowPrettyEnabled()
                 || !textField1.getText().equals(pluginComponent.getTabSize().toString())
                 || !textField2.getText().equals(pluginComponent.getTextWidth().toString());
