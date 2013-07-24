@@ -16,6 +16,7 @@ import com.intellij.testFramework.LightVirtualFile;
 import com.sdc.abstractLanguage.AbstractClassVisitor;
 import com.sdc.java.JavaClassVisitor;
 import com.sdc.js.JSClassVisitor;
+import com.sdc.kotlin.KotlinClassVisitor;
 import org.objectweb.asm.ClassReader;
 
 import java.io.IOException;
@@ -80,12 +81,14 @@ public class Decompile extends AnAction {
     }
 
     public String decompile(final InputStream is) throws IOException {
-        String language = pluginComponent.getChosenLanguage();
+        final String language = pluginComponent.getChosenLanguage();
         ClassReader cr = new ClassReader(is);
 
         AbstractClassVisitor cv;
         if (language.equals("JavaScript")) {
             cv = new JSClassVisitor(pluginComponent.getTextWidth(), pluginComponent.getTabSize());
+        } else if (language.equals("Kotlin")) {
+            cv = new KotlinClassVisitor(pluginComponent.getTextWidth(), pluginComponent.getTabSize());
         } else {
             // Java
             cv = new JavaClassVisitor(pluginComponent.getTextWidth(), pluginComponent.getTabSize());

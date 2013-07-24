@@ -9,7 +9,7 @@ public class DecompilerParameters {
     @Parameter(description = "Prints a disassembled view of the given class using specified language.")
     private List<String> myParameters = new ArrayList<String>();
 
-    @Parameter(names = {"-l", "--language"}, description = "Decompiler's output language name. Current supported languages are: {java, cpp}.")
+    @Parameter(names = {"-l", "--language"}, description = "Decompiler's output language name. Current supported languages are: {java, javascript, kotlin}.")
     private String myLanguage = "java";
 
     @Parameter(names = {"-h", "--help"}, description = "Print help information.", help = true)

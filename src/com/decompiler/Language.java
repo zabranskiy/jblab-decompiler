@@ -5,25 +5,26 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Language {
-    private String name;
-    private static final Map<String, String> myMap;
+    private String myName;
+    private static final Map<String, String> myLanguageToExtensionMap;
 
     static {
         Map<String, String> aMap = new HashMap<String, String>();
         aMap.put("Java", ".java");
         aMap.put("JavaScript", ".js");
-        myMap = Collections.unmodifiableMap(aMap);
+        aMap.put("Kotlin", ".kt");
+        myLanguageToExtensionMap = Collections.unmodifiableMap(aMap);
     }
 
-    public Language(String name) {
-        this.name = name;
+    public Language(final String name) {
+        this.myName = name;
     }
 
     public String getExtension() {
-        return myMap.get(name);
+        return myLanguageToExtensionMap.get(myName);
     }
 
     public String getName() {
-        return name;
+        return myName;
     }
 }
