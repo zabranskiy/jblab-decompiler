@@ -13,7 +13,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.testFramework.LightVirtualFile;
-import com.sdc.abstractLangauge.AbstractClassVisitor;
+import com.sdc.abstractLanguage.AbstractClassVisitor;
 import com.sdc.java.JavaClassVisitor;
 import com.sdc.javascript.JSClassVisitor;
 import org.objectweb.asm.ClassReader;
