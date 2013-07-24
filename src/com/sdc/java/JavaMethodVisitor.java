@@ -285,20 +285,17 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
         final String decompiledOwnerClassName = DeclarationWorker.getDecompiledFullClassName(owner);
 
         String invocationName = "";
+        boolean needToRemoveThisFromStack = true;
 
         if (opString.contains("INVOKEVIRTUAL") || opString.contains("INVOKEINTERFACE")
                 || (decompiledOwnerClassName.equals(myDecompiledOwnerFullClassName) && !name.equals("<init>"))) {
-            if (!myBodyStack.isEmpty() && myBodyStack.peek() instanceof Variable) {
-                Variable v = (Variable) myBodyStack.pop();
-                if (myBodyStack.isEmpty()) {
-                    myStatements.add(new InstanceInvocation(name, returnType, arguments, v));
-                } else {
-                    myBodyStack.push(new com.sdc.ast.expressions.InstanceInvocation(name, returnType, arguments, v));
-                }
-                return;
+            Variable v = (Variable) myBodyStack.pop();
+            if (myBodyStack.isEmpty()) {
+                myStatements.add(new InstanceInvocation(name, returnType, arguments, v));
             } else {
-                invocationName = name;
+                myBodyStack.push(new com.sdc.ast.expressions.InstanceInvocation(name, returnType, arguments, v));
             }
+            return;
         } else if (opString.contains("INVOKESPECIAL")) {
             if (name.equals("<init>")) {
                 myJavaMethod.addImport(decompiledOwnerClassName);
@@ -310,6 +307,7 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
         } else if (opString.contains("INVOKESTATIC")) {
             myJavaMethod.addImport(decompiledOwnerClassName);
             invocationName = DeclarationWorker.getClassName(owner) + "." + name;
+            needToRemoveThisFromStack = false;
         }
 
         if (name.equals("<init>")) {
@@ -320,7 +318,10 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
                 myBodyStack.push(new New(new com.sdc.ast.expressions.Invocation(invocationName, returnType, arguments)));
             }
         } else {
-            removeThisVariableFromStack();
+            if (needToRemoveThisFromStack) {
+                removeThisVariableFromStack();
+            }
+
             if (myBodyStack.isEmpty()) {
                 myStatements.add(new Invocation(invocationName, returnType, arguments));
             } else {
