@@ -49,7 +49,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
 
     @Override
     public void visitEnd() {
-        super.visitEnd();    //To change body of overridden methods use File | Settings | File Templates.
+        super.visitEnd();
     }
 
     public String getDecompiledCode() {

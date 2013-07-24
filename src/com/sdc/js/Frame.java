@@ -1,4 +1,4 @@
-package com.sdc.java;
+package com.sdc.js;
 
 import com.sdc.abstractLangauge.AbstractFrame;
 
@@ -92,7 +92,8 @@ public class Frame implements AbstractFrame {
                 return myLocalVariableNames.get(index);
             } else {
                 myDeclaredVariables.add(index);
-                return myLocalVariableTypes.get(index) + myLocalVariableNames.get(index);
+                //return myLocalVariableTypes.get(index) + myLocalVariableNames.get(index);
+                return myLocalVariableNames.get(index);
             }
         } else {
             if (mySameFrame == null) {
