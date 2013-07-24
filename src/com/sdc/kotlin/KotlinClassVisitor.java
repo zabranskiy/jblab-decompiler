@@ -155,6 +155,12 @@ public class KotlinClassVisitor extends AbstractClassVisitor {
                 , myDecompiledKotlinClass, genericTypesList, genericIdentifiersList
                 , myTextWidth, myNestSize);
 
+        if (myDecompiledKotlinClass.isNormalClass()) {
+            kotlinMethod.addLocalVariableName(0, "this");
+            kotlinMethod.addLocalVariableType(0, myDecompiledKotlinClass.getName());
+            kotlinMethod.declareThisVariable();
+        }
+
         myDecompiledKotlinClass.appendImports(genericTypesImports);
 
         final String parameters = description.substring(description.indexOf('(') + 1, description.indexOf(')'));

@@ -202,9 +202,7 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
         final boolean currentFrameHasStack = getCurrentFrame().checkStack();
         String variableType = null;
 
-        if (opString.contains("ALOAD") && var == 0) {
-            return;
-        } else if (opString.contains("LOAD")) {
+        if (opString.contains("LOAD")) {
             myBodyStack.push(new Variable(var, getCurrentFrame()));
         } else if (opString.contains("STORE") && !currentFrameHasStack) {
             Identifier v = new Variable(var, getCurrentFrame());
@@ -264,7 +262,9 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
             } else {
                 myJavaMethod.addInitializerToField(name, getTopOfBodyStack());
             }
+            removeThisVariableFromStack();
         } else if (opString.contains("GETFIELD")) {
+            removeThisVariableFromStack();
             myBodyStack.push(new Field(name, DeclarationWorker.getJavaDescriptor(desc, 0, myJavaMethod.getImports())));
         }
     }
@@ -314,14 +314,18 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
 
         if (name.equals("<init>")) {
             if (myDecompiledOwnerFullClassName.endsWith(myJavaMethod.getName()) && myDecompiledOwnerSuperClassName.endsWith(invocationName)) {
+                removeThisVariableFromStack();
                 myStatements.add(new Invocation("super", returnType, arguments));
             } else {
                 myBodyStack.push(new New(new com.sdc.ast.expressions.Invocation(invocationName, returnType, arguments)));
             }
-        } else if (myBodyStack.isEmpty()) {
-            myStatements.add(new Invocation(invocationName, returnType, arguments));
         } else {
-            myBodyStack.push(new com.sdc.ast.expressions.Invocation(invocationName, returnType, arguments));
+            removeThisVariableFromStack();
+            if (myBodyStack.isEmpty()) {
+                myStatements.add(new Invocation(invocationName, returnType, arguments));
+            } else {
+                myBodyStack.push(new com.sdc.ast.expressions.Invocation(invocationName, returnType, arguments));
+            }
         }
     }
 
@@ -561,5 +565,11 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
             myBodyStack.push(ternaryExpression);
         }
         return myBodyStack.pop();
+    }
+
+    private void removeThisVariableFromStack() {
+        if (!myBodyStack.isEmpty()) {
+            myBodyStack.pop();
+        }
     }
 }

@@ -190,6 +190,12 @@ public class KotlinMethod extends AbstractMethod {
         return myKotlinClass;
     }
 
+    public void declareThisVariable() {
+        if (isNormalClassMethod()) {
+            myRootFrame.getLocalVariableName(0);
+        }
+    }
+
     public void setNodes(List<Node> myNodes) {
         this.myNodes = myNodes;
     }

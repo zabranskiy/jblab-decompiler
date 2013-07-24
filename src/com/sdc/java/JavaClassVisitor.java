@@ -149,6 +149,10 @@ public class JavaClassVisitor extends AbstractClassVisitor {
                 , myDecompiledJavaClass, genericTypesList, genericIdentifiersList
                 , myTextWidth, myNestSize);
 
+        javaMethod.addLocalVariableName(0, "this");
+        javaMethod.addLocalVariableType(0, myDecompiledJavaClass.getName());
+        javaMethod.declareThisVariable();
+
         myDecompiledJavaClass.appendImports(genericTypesImports);
 
         final String parameters = description.substring(description.indexOf('(') + 1, description.indexOf(')'));

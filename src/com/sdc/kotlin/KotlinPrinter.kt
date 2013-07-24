@@ -77,7 +77,9 @@ fun printExpression(expression: Expression?, nestSize: Int): PrimeDoc =
             is com.sdc.ast.expressions.Invocation -> {
                 var funName : PrimeDoc = text(expression.getFunction() + "(")
                 if (expression is com.sdc.ast.expressions.InstanceInvocation) {
-                    funName = text(expression.getVariable()!!.getName() + ".") + funName
+                    val variableName = expression.getVariable()!!.getName()
+                    if (!variableName.equals("this"))
+                        funName = text(variableName + ".") + funName
                 }
 
                 val args = expression.getArguments()
@@ -119,7 +121,9 @@ fun printStatement(statement: Statement, nestSize: Int): PrimeDoc =
             is Invocation -> {
                 var funName : PrimeDoc = text(statement.getFunction() + "(")
                 if (statement is InstanceInvocation) {
-                    funName = text(statement.getVariable()!!.getName() + ".") + funName
+                    val variableName = statement.getVariable()!!.getName()
+                    if (!variableName.equals("this"))
+                        funName = text(variableName + ".") + funName
                 }
 
                 val args = statement.getArguments()
@@ -180,25 +184,32 @@ fun printKotlinClass(kotlinClass: KotlinClass): PrimeDoc {
             }
             declaration = declaration + text(">")
         }
-
-        declaration = declaration + printPrimaryConstructorParameters(kotlinClass.getConstructor())
+        val constructor = kotlinClass.getConstructor()
+        if (constructor != null)
+            declaration = declaration + printPrimaryConstructorParameters(constructor)
 
         val superClass = kotlinClass.getSuperClass()
-        if (!superClass!!.isEmpty())
+        if (!superClass!!.isEmpty()) {
             declaration = declaration + group(nest(2 * kotlinClass.getNestSize(), line() + text(": " ) + printSuperClassConstructor(kotlinClass.getSuperClassConstructor(), kotlinClass.getNestSize())))
-
-        val traits = kotlinClass.getTraits()!!.toArray()
-        for (singleTrait in traits)
-            declaration = declaration + text(",") + group(nest(2 * kotlinClass.getNestSize(), line() + text(singleTrait as String)))
+            val traits = kotlinClass.getTraits()!!.toArray()
+            for (singleTrait in traits)
+                declaration = declaration + text(",") + group(nest(2 * kotlinClass.getNestSize(), line() + text(singleTrait as String)))
+        } else {
+            var traits = kotlinClass.getTraits()
+            if (!traits!!.isEmpty()) {
+                declaration = declaration + text(": ") + text(traits!!.get(0))
+                for (singleTrait in traits!!.drop(1))
+                    declaration = declaration + text(",") + group(nest(2 * kotlinClass.getNestSize(), line() + text(singleTrait)))
+            }
+        }
 
         var kotlinClassCode : PrimeDoc = packageCode + importsCode / declaration + text(" {")
 
         for (classField in kotlinClass.getFields()!!.toList())
             kotlinClassCode = kotlinClassCode + nest(kotlinClass.getNestSize(), line() + printClassField(classField))
 
-        if (!kotlinClass.getConstructor()!!.hasEmptyBody()) {
+        if (constructor != null && !constructor.hasEmptyBody())
             kotlinClassCode = kotlinClassCode + nest(kotlinClass.getNestSize(), line() + printInitialConstructor(kotlinClass.getConstructor()))
-        }
 
         for (classMethod in kotlinClass.getMethods()!!.toList())
             kotlinClassCode = kotlinClassCode + nest(kotlinClass.getNestSize(), line() + printKotlinMethod(classMethod))

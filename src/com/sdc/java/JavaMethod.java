@@ -182,6 +182,10 @@ public class JavaMethod extends AbstractMethod {
         myJavaClass.addInitializerToField(fieldName, initializer);
     }
 
+    public void declareThisVariable() {
+        myRootAbstractFrame.getLocalVariableName(0);
+    }
+
     public JavaClass getKotlinClass() {
         return myJavaClass;
     }

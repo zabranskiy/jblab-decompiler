@@ -84,7 +84,9 @@ fun printExpression(expression: Expression?, nestSize: Int): PrimeDoc =
         is com.sdc.ast.expressions.Invocation -> {
             var funName = group(text(expression.getFunction() + "("))
             if (expression is com.sdc.ast.expressions.InstanceInvocation) {
-                funName = group(text(expression.getVariable()!!.getName() + ".") + funName)
+                val variableName = expression.getVariable()!!.getName()
+                if (!variableName.equals("this"))
+                    funName = group(text(variableName + ".") + funName)
             }
             val args = expression.getArguments()
             if (args!!.isEmpty())
@@ -128,7 +130,9 @@ fun printStatement(statement: Statement, nestSize: Int): PrimeDoc =
         is Invocation -> {
             var funName = group(text(statement.getFunction() + "("))
             if (statement is InstanceInvocation) {
-                funName = group(text(statement.getVariable()!!.getName() + ".") + funName)
+                val variableName = statement.getVariable()!!.getName()
+                if (!variableName.equals("this"))
+                    funName = group(text(variableName + ".") + funName)
             }
             val args = statement.getArguments()
             if (args!!.isEmpty())

@@ -3,7 +3,6 @@ package com.sdc.kotlin;
 import com.sdc.abstractLanguage.AbstractFrame;
 import com.sdc.abstractLanguage.AbstractMethodVisitor;
 import com.sdc.ast.controlflow.*;
-import com.sdc.ast.controlflow.Invocation;
 import com.sdc.ast.expressions.*;
 import com.sdc.ast.expressions.identifiers.Field;
 import com.sdc.ast.expressions.identifiers.Identifier;
@@ -215,9 +214,7 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
         final boolean currentFrameHasStack = getCurrentFrame().checkStack();
         String variableType = null;
 
-        if (opString.contains("ALOAD") && var == 0 && myKotlinMethod.isNormalClassMethod()) {
-            return;
-        } else if (opString.contains("LOAD")) {
+        if (opString.contains("LOAD")) {
             myBodyStack.push(new Variable(var, getCurrentFrame()));
         } else if (opString.contains("STORE") && !currentFrameHasStack) {
             Identifier v = new Variable(var, getCurrentFrame());
@@ -277,7 +274,9 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
             } else {
                 myKotlinMethod.addInitializerToField(name, getTopOfBodyStack());
             }
+            removeThisVariableFromStack();
         } else if (opString.contains("GETFIELD")) {
+            removeThisVariableFromStack();
             myBodyStack.push(new Field(name, DeclarationWorker.getKotlinDescriptor(desc, 0, myKotlinMethod.getImports())));
         }
     }
@@ -318,7 +317,7 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
                 invocationName = DeclarationWorker.getClassName(owner);
                 returnType = invocationName + " ";
             } else {
-                invocationName = "super." + name;
+                invocationName = "super<" + DeclarationWorker.getClassName(owner) + ">."  + name;
             }
         } else if (opString.contains("INVOKESTATIC")) {
             myKotlinMethod.addImport(decompiledOwnerClassName);
@@ -331,14 +330,18 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
 
         if (name.equals("<init>")) {
             if (myDecompiledOwnerFullClassName.endsWith(myKotlinMethod.getName()) && myDecompiledOwnerSuperClassName.endsWith(invocationName)) {
+                removeThisVariableFromStack();
                 myKotlinMethod.getKotlinClass().setSuperClassConstructor(new com.sdc.ast.expressions.Invocation(invocationName, returnType, arguments));
             } else {
                 myBodyStack.push(new New(new com.sdc.ast.expressions.Invocation(invocationName, returnType, arguments)));
             }
-        } else if (myBodyStack.isEmpty()) {
-            myStatements.add(new com.sdc.ast.controlflow.Invocation(invocationName, returnType, arguments));
         } else {
-            myBodyStack.push(new com.sdc.ast.expressions.Invocation(invocationName, returnType, arguments));
+            removeThisVariableFromStack();
+            if (myBodyStack.isEmpty()) {
+                myStatements.add(new com.sdc.ast.controlflow.Invocation(invocationName, returnType, arguments));
+            } else {
+                myBodyStack.push(new com.sdc.ast.expressions.Invocation(invocationName, returnType, arguments));
+            }
         }
     }
 
@@ -578,6 +581,12 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
             myBodyStack.push(ternaryExpression);
         }
         return myBodyStack.pop();
+    }
+
+    private void removeThisVariableFromStack() {
+        if (!myBodyStack.isEmpty()) {
+            myBodyStack.pop();
+        }
     }
 }
 
