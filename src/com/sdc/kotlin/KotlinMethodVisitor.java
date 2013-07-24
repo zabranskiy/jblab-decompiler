@@ -432,8 +432,7 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
             dimensions.add(0, getTopOfBodyStack());
         }
 
-        final String className = DeclarationWorker.getKotlinDescriptor(desc, 0, myKotlinMethod.getImports()).trim();
-        myBodyStack.push(new NewArray(dims, className.substring(0, className.length() - 2 * dims), dimensions));
+        myBodyStack.push(new NewArray(dims, DeclarationWorker.getKotlinDescriptor(desc.substring(dims), 0, myKotlinMethod.getImports()).trim(), dimensions));
     }
 
     @Override

@@ -108,10 +108,12 @@ fun printExpression(expression: Expression?, nestSize: Int): PrimeDoc =
                         newArray = newArray + text("{ i -> null")
                 }
 
-                while (counter > 0)
-                    newArray = newArray + text(" }")
+                while (counter > 0) {
+                    newArray = newArray + text(" })")
+                    counter--
+                }
 
-                newArray + text(")")
+                newArray
             }
             else -> throw IllegalArgumentException("Unknown Expression implementer!")
         }
