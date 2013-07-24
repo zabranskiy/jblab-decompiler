@@ -1,17 +1,61 @@
 package com.sdc.ast.expressions.identifiers;
 
-import com.sdc.abstractLangauge.AbstractFrame;
+import com.sdc.ast.expressions.Expression;
+import com.sdc.abstractLanguage.AbstractFrame;
 
 public class Variable extends Identifier {
     private final int myIndex;
-    private final AbstractFrame myFrame;
+    private final AbstractFrame myAbstractFrame;
 
-    public Variable(final int index, final AbstractFrame frame) {
+    private final Expression myArrayIndex;
+    private final Identifier myArrayVariable;
+
+    public Variable(final int index, final AbstractFrame abstractFrame) {
         this.myIndex = index;
-        this.myFrame = frame;
+        this.myAbstractFrame = abstractFrame;
+        this.myArrayIndex = null;
+        this.myArrayVariable = null;
     }
 
+    public Variable(final Expression arrayIndex, final Identifier arrayVariable) {
+        this.myIndex = -1;
+        this.myAbstractFrame = null;
+        this.myArrayIndex = arrayIndex;
+        this.myArrayVariable = arrayVariable;
+    }
+
+    @Override
     public String getName() {
-        return myFrame.getLocalVariableName(myIndex);
+        if (myIndex != -1) {
+            return myAbstractFrame.getLocalVariableName(myIndex);
+        } else {
+            return myArrayVariable.getName();
+        }
+    }
+
+    @Override
+    public String getType() {
+        if (myIndex != -1) {
+            return myAbstractFrame.getLocalVariableType(myIndex);
+        } else {
+            String result = myArrayVariable.getType();
+            if (result.endsWith("[] ")) {
+                result = result.substring(0, result.length() - 3);
+            }
+
+            return result + " ";
+        }
+    }
+
+    public Expression getArrayIndex() {
+        return myArrayIndex;
+    }
+
+    public Identifier getArrayVariable() {
+        return myArrayVariable;
+    }
+
+    public int getIndex() {
+        return myIndex;
     }
 }

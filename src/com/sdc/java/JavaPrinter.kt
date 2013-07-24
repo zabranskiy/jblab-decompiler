@@ -1,4 +1,4 @@
-package JavaClassPrinter
+package JavaPrinter
 
 import pretty.*
 import com.sdc.ast.expressions.Expression
@@ -12,18 +12,24 @@ import com.sdc.ast.controlflow.Statement
 import com.sdc.ast.controlflow.Invocation
 import com.sdc.ast.controlflow.Assignment
 import com.sdc.ast.controlflow.Return
-import com.sdc.java.JavaClass
-import com.sdc.java.JavaClassField
-import com.sdc.java.JavaClassMethod
 import com.sdc.ast.controlflow.Throw
 import com.sdc.ast.expressions.New
 import com.sdc.ast.controlflow.InstanceInvocation
+import com.sdc.ast.expressions.NewArray
+
+import com.sdc.java.JavaClass
+import com.sdc.java.JavaClassField
+import com.sdc.java.JavaMethod
+import com.sdc.java.JavaAnnotation
 
 
 fun printExpression(expression: Expression?, nestSize: Int): PrimeDoc =
     when (expression) {
-        is Constant -> text(expression.getValue().toString())
-
+        is Constant ->
+            if (!expression.isStringValue())
+                text(expression.getValue().toString())
+            else
+                text("\"" + expression.getValue().toString() + "\"")
         is BinaryExpression -> {
             val opPriority = expression.getPriority()
 
@@ -64,12 +70,23 @@ fun printExpression(expression: Expression?, nestSize: Int): PrimeDoc =
         }
 
         is Field -> text(expression.getName())
-        is Variable -> text(expression.getName())
+        is Variable -> {
+            if (expression.getArrayIndex() == null)
+                text(expression.getName())
+            else {
+                group(
+                    printExpression(expression.getArrayVariable(), nestSize)
+                    + text("[") + printExpression(expression.getArrayIndex(), nestSize) + text("]")
+                )
+            }
+        }
 
         is com.sdc.ast.expressions.Invocation -> {
             var funName = group(text(expression.getFunction() + "("))
-            if (expression is InstanceInvocation) {
-                funName = group(text(expression.getVariable()!!.getName() + ".") + funName)
+            if (expression is com.sdc.ast.expressions.InstanceInvocation) {
+                val variableName = expression.getVariable()!!.getName()
+                if (!variableName.equals("this"))
+                    funName = group(text(variableName + ".") + funName)
             }
             val args = expression.getArguments()
             if (args!!.isEmpty())
@@ -87,6 +104,15 @@ fun printExpression(expression: Expression?, nestSize: Int): PrimeDoc =
                       text("new") + nest(nestSize, line()
                       + printExpression(expression.getConstructor(), nestSize))
                   )
+        is NewArray -> {
+            var newArray = group(text("new") + nest(nestSize, line() + text(expression.getType())))
+            for (dimension in expression.getDimensions()!!.toList()) {
+                newArray = group(newArray + text("[") + printExpression(dimension, nestSize) + text("]"))
+            }
+            newArray
+        }
+
+
         is TernaryExpression -> {
             val condition = expression.getCondition()
             val printCondition = printExpression(condition, nestSize)
@@ -104,7 +130,9 @@ fun printStatement(statement: Statement, nestSize: Int): PrimeDoc =
         is Invocation -> {
             var funName = group(text(statement.getFunction() + "("))
             if (statement is InstanceInvocation) {
-                funName = group(text(statement.getVariable()!!.getName() + ".") + funName)
+                val variableName = statement.getVariable()!!.getName()
+                if (!variableName.equals("this"))
+                    funName = group(text(variableName + ".") + funName)
             }
             val args = statement.getArguments()
             if (args!!.isEmpty())
@@ -155,12 +183,9 @@ fun printJavaClass(javaClass: JavaClass): PrimeDoc {
     val packageCode = text("package " + javaClass.getPackage() + ";")
     var imports = group(nil())
     for (importName in javaClass.getImports()!!.toArray())
-        imports = group(
-                imports
-                + nest(javaClass.getNestSize(), line() + text("import " + importName + ";"))
-        )
+        imports = group(imports / text("import " + importName + ";"))
 
-    var declaration = group(text(javaClass.getModifier() + javaClass.getType() + javaClass.getName()))
+    var declaration = group(printAnnotations(javaClass.getAnnotations()!!.toList()) + text(javaClass.getModifier() + javaClass.getType() + javaClass.getName()))
 
     val genericsDeclaration = javaClass.getGenericDeclaration()
     if (!genericsDeclaration!!.isEmpty()) {
@@ -183,16 +208,16 @@ fun printJavaClass(javaClass: JavaClass): PrimeDoc {
     if (!implementedInterfaces.isEmpty())
         declaration = group(
                 declaration
-                + nest(javaClass.getNestSize(), line() + text("implements " + implementedInterfaces.get(0)))
+                + nest(2 * javaClass.getNestSize(), line() + text("implements " + implementedInterfaces.get(0)))
         )
     for (interface in implementedInterfaces.drop(1)) {
         declaration = group(
                 (declaration + text(","))
-                + nest(javaClass.getNestSize(), line() + text(interface as String))
+                + nest(2 * javaClass.getNestSize(), line() + text(interface as String))
         )
     }
 
-    var javaClassCode = group(packageCode + imports / (declaration + text(" {")))
+    var javaClassCode = group(packageCode + imports / declaration + text(" {"))
 
     for (classField in javaClass.getFields()!!.toArray())
         javaClassCode = group(
@@ -203,14 +228,14 @@ fun printJavaClass(javaClass: JavaClass): PrimeDoc {
     for (classMethod in javaClass.getMethods()!!.toArray())
         javaClassCode = group(
                 javaClassCode
-                + nest(javaClass.getNestSize(), line() + printClassMethod(classMethod as JavaClassMethod))
+                + nest(javaClass.getNestSize(), line() + printClassMethod(classMethod as JavaMethod))
         )
 
     return group(javaClassCode / text("}"))
 }
 
-fun printClassMethod(classMethod: JavaClassMethod): PrimeDoc {
-    var declaration = group(text(classMethod.getModifier()))
+fun printClassMethod(classMethod: JavaMethod): PrimeDoc {
+    var declaration = group(printAnnotations(classMethod.getAnnotations()!!.toList()) + text(classMethod.getModifier()))
 
     val genericsDeclaration = classMethod.getGenericDeclaration()
     if (!genericsDeclaration!!.isEmpty()) {
@@ -238,11 +263,24 @@ fun printClassMethod(classMethod: JavaClassMethod): PrimeDoc {
 
     var arguments: PrimeDoc = nil()
     if (classMethod.getLastLocalVariableIndex() != 0) {
-        var variables = classMethod.getParameters()
-        var variablesDocs = variables!!.take(variables!!.size - 1)
-                .map { variable -> text(variable) + text(", ") }
+        var variables = classMethod.getParameters()!!.toList()
+        var index = 0
+        for (variable in variables) {
+            if (classMethod.checkParameterForAnnotation(index))
+                arguments = nest(
+                        2 * classMethod.getNestSize()
+                        , arguments + printAnnotations(classMethod.getParameterAnnotations(index)!!.toList()) + text(variable)
+                )
+            else
+                arguments = nest(
+                        2 * classMethod.getNestSize()
+                        , arguments + text(variable)
+                )
+            if (index + 1 < variables.size)
+                arguments = group(arguments + text(",") + line())
 
-        arguments = nest(2 * classMethod.getNestSize(), fill(variablesDocs + text(variables!!.last as String)))
+            index++
+        }
     }
 
     val body = nest(
@@ -253,5 +291,35 @@ fun printClassMethod(classMethod: JavaClassMethod): PrimeDoc {
     return group(declaration + arguments + text(")") + throwsExceptions / text("{")) + body
 }
 
-fun printClassField(classField: JavaClassField): PrimeDoc =
-    text(classField.getModifier() + classField.getType() + classField.getName() + ";")
+fun printClassField(classField: JavaClassField): PrimeDoc {
+    var fieldCode : PrimeDoc = text(classField.getModifier() + classField.getType() + classField.getName())
+    if (classField.hasInitializer())
+        fieldCode = fieldCode + text(" = ") + printExpression(classField.getInitializer(), classField.getNestSize())
+    return fieldCode + text(";")
+}
+
+
+fun printAnnotation(annotation: JavaAnnotation): PrimeDoc {
+    var annotationCode = group(text("@" + annotation.getName()))
+    val properties = annotation.getProperties()
+    if (!properties!!.isEmpty()) {
+        annotationCode = group(annotationCode + text("("))
+        var counter = 1
+        for ((name, value) in properties) {
+            annotationCode = group(annotationCode + text(name + " = "
+                    + if (!annotation.isStringProperty(name)) value else "\"" + value + "\""))
+            if (counter < properties.keySet().size)
+                annotationCode = group(annotationCode + text(", "))
+            counter++
+        }
+        annotationCode = group(annotationCode + text(")"))
+    }
+    return annotationCode
+}
+
+fun printAnnotations(annotations: List<JavaAnnotation>): PrimeDoc {
+    var annotationsCode = group(nil())
+    for (annotation in annotations)
+        annotationsCode = group(annotationsCode + printAnnotation(annotation) + line())
+    return annotationsCode
+}

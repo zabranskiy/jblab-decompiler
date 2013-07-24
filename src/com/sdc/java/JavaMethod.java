@@ -1,17 +1,22 @@
 package com.sdc.java;
 
-import JavaClassPrinter.JavaClassPrinterPackage;
+import JavaPrinter.JavaPrinterPackage;
+import com.sdc.abstractLanguage.AbstractMethod;
+import com.sdc.ast.expressions.Expression;
 import pretty.PrettyPackage;
 
-import com.sdc.abstractLangauge.AbstractClassMethod;
+import com.sdc.abstractLanguage.AbstractFrame;
+
 import com.sdc.ast.controlflow.Statement;
 import com.sdc.cfg.GraphDrawer;
 import com.sdc.cfg.Node;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-public class JavaClassMethod extends AbstractClassMethod {
+public class JavaMethod extends AbstractMethod {
     private final String myModifier;
     private final String myReturnType;
     private final String myName;
@@ -23,16 +28,33 @@ public class JavaClassMethod extends AbstractClassMethod {
     private final List<String> myGenericTypes;
     private final List<String> myGenericIdentifiers;
 
+    private List<JavaAnnotation> myAnnotations = new ArrayList<JavaAnnotation>();
+    private Map<Integer, List<JavaAnnotation>> myParameterAnnotations = new HashMap<Integer, List<JavaAnnotation>>();
+
     private int myLastLocalVariableIndex;
 
-    private final Frame myRootFrame = new Frame();
-    private Frame myCurrentFrame = myRootFrame;
+    private final AbstractFrame myRootAbstractFrame = new JavaFrame();
+    private AbstractFrame myCurrentAbstractFrame = myRootAbstractFrame;
 
     private List<Statement> myBody = null;
     private List<Node> myNodes = null;
 
     private final int myTextWidth;
     private final int myNestSize;
+
+    public JavaMethod(final String modifier, final String returnType, final String name, final String[] exceptions,
+                      final JavaClass javaClass, final List<String> genericTypes, final List<String> genericIdentifiers,
+                      final int textWidth, final int nestSize) {
+        this.myModifier = modifier;
+        this.myReturnType = returnType;
+        this.myName = name;
+        this.myExceptions = exceptions;
+        this.myJavaClass = javaClass;
+        this.myGenericTypes = genericTypes;
+        this.myGenericIdentifiers = genericIdentifiers;
+        this.myTextWidth = textWidth;
+        this.myNestSize = nestSize;
+    }
 
     public String getModifier() {
         return myModifier;
@@ -74,26 +96,12 @@ public class JavaClassMethod extends AbstractClassMethod {
         this.myLastLocalVariableIndex = lastLocalVariableIndex;
     }
 
-    public Frame getCurrentFrame() {
-        return myCurrentFrame;
+    public AbstractFrame getCurrentFrame() {
+        return myCurrentAbstractFrame;
     }
 
-    public void setCurrentFrame(final Frame currentFrame) {
-        this.myCurrentFrame = currentFrame;
-    }
-
-    public JavaClassMethod(final String modifier, final String returnType, final String name, final String[] exceptions,
-                           final JavaClass javaClass, final List<String> genericTypes, final List<String> genericIdentifiers,
-                           final int textWidth, final int nestSize) {
-        this.myModifier = modifier;
-        this.myReturnType = returnType;
-        this.myName = name;
-        this.myExceptions = exceptions;
-        this.myJavaClass = javaClass;
-        this.myGenericTypes = genericTypes;
-        this.myGenericIdentifiers = genericIdentifiers;
-        this.myTextWidth = textWidth;
-        this.myNestSize = nestSize;
+    public void setCurrentFrame(final AbstractFrame currentAbstractFrame) {
+        this.myCurrentAbstractFrame = currentAbstractFrame;
     }
 
     public void addImport(final String importClassName) {
@@ -101,22 +109,22 @@ public class JavaClassMethod extends AbstractClassMethod {
     }
 
     public void addLocalVariableName(final int index, final String name) {
-        myCurrentFrame.addLocalVariableName(index, name);
+        myCurrentAbstractFrame.addLocalVariableName(index, name);
     }
 
     public void addLocalVariableType(final int index, final String type) {
-        myCurrentFrame.addLocalVariableType(index, type);
+        myCurrentAbstractFrame.addLocalVariableType(index, type);
     }
 
     public void addLocalVariableFromDebugInfo(final int index, final String name, final String type) {
-        myRootFrame.addLocalVariableFromDebugInfo(index, name, type);
+        myRootAbstractFrame.addLocalVariableFromDebugInfo(index, name, type);
     }
 
     public List<String> getParameters() {
         List<String> parameters = new ArrayList<String>();
         for (int variableIndex = 1; variableIndex <= myLastLocalVariableIndex; variableIndex++) {
-            if (myRootFrame.containsIndex(variableIndex)) {
-                parameters.add(myRootFrame.getLocalVariableName(variableIndex));
+            if (myRootAbstractFrame.containsIndex(variableIndex)) {
+                parameters.add(myRootAbstractFrame.getLocalVariableName(variableIndex));
             }
         }
         return parameters;
@@ -147,6 +155,41 @@ public class JavaClassMethod extends AbstractClassMethod {
         return result;
     }
 
+    public void appendAnnotation(final JavaAnnotation annotation) {
+        myAnnotations.add(annotation);
+    }
+
+    public List<JavaAnnotation> getAnnotations() {
+        return myAnnotations;
+    }
+
+    public void appendParameterAnnotation(final int index, final JavaAnnotation annotation) {
+        if (!myParameterAnnotations.containsKey(index)) {
+            myParameterAnnotations.put(index, new ArrayList<JavaAnnotation>());
+        }
+        myParameterAnnotations.get(index).add(annotation);
+    }
+
+    public boolean checkParameterForAnnotation(final int index) {
+        return myParameterAnnotations.containsKey(index);
+    }
+
+    public List<JavaAnnotation> getParameterAnnotations(final int index) {
+        return myParameterAnnotations.get(index);
+    }
+
+    public void addInitializerToField(final String fieldName, final Expression initializer) {
+        myJavaClass.addInitializerToField(fieldName, initializer);
+    }
+
+    public void declareThisVariable() {
+        myRootAbstractFrame.getLocalVariableName(0);
+    }
+
+    public JavaClass getKotlinClass() {
+        return myJavaClass;
+    }
+
     public void setNodes(List<Node> myNodes) {
         this.myNodes = myNodes;
     }
@@ -160,6 +203,6 @@ public class JavaClassMethod extends AbstractClassMethod {
 
     @Override
     public String toString() {
-          return PrettyPackage.pretty(myTextWidth, JavaClassPrinterPackage.printClassMethod(this));
+          return PrettyPackage.pretty(myTextWidth, JavaPrinterPackage.printClassMethod(this));
     }
 }

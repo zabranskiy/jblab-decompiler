@@ -11,4 +11,7 @@ public class New extends Expression {
         return myConstructor;
     }
 
+    public String getReturnType() {
+        return myConstructor.getReturnType();
+    }
 }

@@ -1,9 +1,10 @@
 package com.sdc.java;
 
-import com.sdc.abstractLangauge.AbstractClass;
+import com.sdc.abstractLanguage.AbstractClass;
 
+import com.sdc.ast.expressions.Expression;
 import pretty.PrettyPackage;
-import JavaClassPrinter.JavaClassPrinterPackage;
+import JavaPrinter.JavaPrinterPackage;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +22,9 @@ public class JavaClass extends AbstractClass {
     private final List<String> myGenericIdentifiers;
 
     private List<JavaClassField> myFields = new ArrayList<JavaClassField>();
-    private List<JavaClassMethod> myMethods = new ArrayList<JavaClassMethod>();
+    private List<JavaMethod> myMethods = new ArrayList<JavaMethod>();
+
+    private List<JavaAnnotation> myAnnotations = new ArrayList<JavaAnnotation>();
 
     private List<String> myImports = new ArrayList<String>();
 
@@ -60,7 +63,7 @@ public class JavaClass extends AbstractClass {
         return myFields;
     }
 
-    public List<JavaClassMethod> getMethods() {
+    public List<JavaMethod> getMethods() {
         return myMethods;
     }
 
@@ -88,7 +91,7 @@ public class JavaClass extends AbstractClass {
         myFields.add(field);
     }
 
-    public void appendMethod(final JavaClassMethod method) {
+    public void appendMethod(final JavaMethod method) {
         myMethods.add(method);
     }
 
@@ -100,10 +103,19 @@ public class JavaClass extends AbstractClass {
 
     public void appendImport(final String importName) {
         if (!myImports.contains(importName)
-                && (importName.indexOf(myPackage) != 0 || importName.lastIndexOf(".") != myPackage.length()))
+                && (importName.indexOf(myPackage) != 0 || importName.lastIndexOf(".") != myPackage.length())
+                && (importName.indexOf("java.lang.") != 0 || importName.lastIndexOf(".") != "java.lang".length()))
         {
             myImports.add(importName);
         }
+    }
+
+    public void appendAnnotation(final JavaAnnotation annotation) {
+        myAnnotations.add(annotation);
+    }
+
+    public List<JavaAnnotation> getAnnotations() {
+        return myAnnotations;
     }
 
     public boolean isGenericType(final String className) {
@@ -127,8 +139,21 @@ public class JavaClass extends AbstractClass {
         return result;
     }
 
+    public void addInitializerToField(final String fieldName, final Expression initializer) {
+        getField(fieldName).setInitializer(initializer);
+    }
+
+    public JavaClassField getField(final String fieldName) {
+        for (JavaClassField field : myFields) {
+            if (field.getName().equals(fieldName)) {
+                return field;
+            }
+        }
+        return null;
+    }
+
     @Override
     public String toString() {
-        return PrettyPackage.pretty(myTextWidth, JavaClassPrinterPackage.printJavaClass(this));
+        return PrettyPackage.pretty(myTextWidth, JavaPrinterPackage.printJavaClass(this));
     }
 }

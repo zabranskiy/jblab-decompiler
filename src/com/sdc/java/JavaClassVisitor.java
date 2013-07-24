@@ -1,12 +1,11 @@
 package com.sdc.java;
 
-import com.sdc.abstractLangauge.AbstractClassVisitor;
+import com.sdc.abstractLanguage.AbstractClassVisitor;
+import com.sdc.util.DeclarationWorker;
 import org.objectweb.asm.*;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.objectweb.asm.Opcodes.ASM4;
 
 public class JavaClassVisitor extends AbstractClassVisitor {
     private JavaClass myDecompiledJavaClass = null;
@@ -14,7 +13,6 @@ public class JavaClassVisitor extends AbstractClassVisitor {
     private final int myNestSize;
 
     public JavaClassVisitor(final int textWidth, final int nestSize) {
-        super(ASM4);
         this.myTextWidth = textWidth;
         this.myNestSize = nestSize;
     }
@@ -22,7 +20,7 @@ public class JavaClassVisitor extends AbstractClassVisitor {
     @Override
     public void visit(final int version, final int access, final String name
             , final String signature, final String superName, final String[] interfaces) {
-        final String modifier = getAccess(access & ~Opcodes.ACC_SUPER);
+        final String modifier = DeclarationWorker.getJavaAccess(access & ~Opcodes.ACC_SUPER);
         String type = "";
 
         if ((access & Opcodes.ACC_ENUM) == 0
@@ -31,7 +29,7 @@ public class JavaClassVisitor extends AbstractClassVisitor {
             type = "class ";
         }
 
-        final String className = getClassName(name);
+        final String className = DeclarationWorker.getClassName(name);
 
         final String[] classParts = name.split("/");
         StringBuilder packageName = new StringBuilder("");
@@ -43,23 +41,23 @@ public class JavaClassVisitor extends AbstractClassVisitor {
         String superClass = "";
         String superClassImport = "";
         if (superName != null && !"java/lang/Object".equals(superName)) {
-            superClass = getClassName(superName);
-            superClassImport = getDecompiledFullClassName(superName);
+            superClass = DeclarationWorker.getClassName(superName);
+            superClassImport = DeclarationWorker.getDecompiledFullClassName(superName);
         }
 
         List<String> implementedInterfaces = new ArrayList<String>();
         List<String> implementedInterfacesImports = new ArrayList<String>();
         if (interfaces != null && interfaces.length > 0) {
             for (final String implInterface : interfaces) {
-                implementedInterfaces.add(getClassName(implInterface));
-                implementedInterfacesImports.add(getDecompiledFullClassName(implInterface));
+                implementedInterfaces.add(DeclarationWorker.getClassName(implInterface));
+                implementedInterfacesImports.add(DeclarationWorker.getDecompiledFullClassName(implInterface));
             }
         }
 
         List<String> genericTypesList = new ArrayList<String>();
         List<String> genericIdentifiersList = new ArrayList<String>();
         List<String> genericTypesImports = new ArrayList<String>();
-        parseGenericDeclaration(signature, genericTypesList, genericIdentifiersList, genericTypesImports);
+        DeclarationWorker.parseGenericDeclaration(signature, genericTypesList, genericIdentifiersList, genericTypesImports);
 
         myDecompiledJavaClass = new JavaClass(modifier, type, className, packageName.toString(), implementedInterfaces
                 , superClass, genericTypesList, genericIdentifiersList, myTextWidth, myNestSize);
@@ -82,7 +80,14 @@ public class JavaClassVisitor extends AbstractClassVisitor {
 
     @Override
     public AnnotationVisitor visitAnnotation(final String desc, final boolean visible) {
-        return null;
+        JavaAnnotation annotation = new JavaAnnotation();
+        List<String> annotationImports = new ArrayList<String>();
+
+        annotation.setName(DeclarationWorker.getJavaDescriptor(desc, 0, annotationImports));
+        myDecompiledJavaClass.appendAnnotation(annotation);
+        myDecompiledJavaClass.appendImports(annotationImports);
+
+        return new JavaAnnotationVisitor(annotation);
     }
 
     @Override
@@ -94,223 +99,79 @@ public class JavaClassVisitor extends AbstractClassVisitor {
     }
 
     @Override
-    public FieldVisitor visitField(final int access, final String name, final String desc, final String signature
-            , final Object value) {
+    public FieldVisitor visitField(final int access, final String name, final String desc, final String signature, final Object value) {
         final String description = signature != null ? signature : desc;
-        final JavaClassField cf = new JavaClassField(getAccess(access)
-                , getDescriptor(description, 0), name, myTextWidth, myNestSize);
+        List<String> fieldDeclarationImports = new ArrayList<String>();
+
+        final JavaClassField cf = new JavaClassField(DeclarationWorker.getJavaAccess(access)
+                , DeclarationWorker.getJavaDescriptor(description, 0, fieldDeclarationImports)
+                , name, myTextWidth, myNestSize);
         myDecompiledJavaClass.appendField(cf);
+        myDecompiledJavaClass.appendImports(fieldDeclarationImports);
+
         return null;
     }
 
     @Override
     public MethodVisitor visitMethod(final int access, final String name, final String desc
             , final String signature, final String[] exceptions) {
-        if (name.equals("<init>")) {
-            return null;
-        }
 
         final String description = signature != null ? signature : desc;
-
-        final String modifier = getAccess(access);
-        final int returnTypeIndex = description.indexOf(')') + 1;
-        final String returnType = getDescriptor(description, returnTypeIndex);
+        final String modifier = DeclarationWorker.getJavaAccess(access);
 
         List<String> throwedExceptions = new ArrayList<String>();
         if (exceptions != null) {
             for (final String exception : exceptions) {
-                throwedExceptions.add(getClassName(exception));
+                throwedExceptions.add(DeclarationWorker.getClassName(exception));
             }
         }
 
         List<String> genericTypesList = new ArrayList<String>();
         List<String> genericIdentifiersList = new ArrayList<String>();
         List<String> genericTypesImports = new ArrayList<String>();
-        parseGenericDeclaration(description, genericTypesList, genericIdentifiersList, genericTypesImports);
+        DeclarationWorker. parseGenericDeclaration(description, genericTypesList, genericIdentifiersList, genericTypesImports);
 
-        final JavaClassMethod javaClassMethod = new JavaClassMethod(modifier, returnType, name
+        String returnType;
+        String methodName;
+        if (name.equals("<init>")) {
+            returnType = "";
+            methodName = myDecompiledJavaClass.getName();
+        } else {
+            List<String> methodReturnTypeImports = new ArrayList<String>();
+            final int returnTypeIndex = description.indexOf(')') + 1;
+            returnType = DeclarationWorker.getJavaDescriptor(description, returnTypeIndex, methodReturnTypeImports);
+            methodName = name;
+            myDecompiledJavaClass.appendImports(methodReturnTypeImports);
+        }
+
+        final JavaMethod javaMethod = new JavaMethod(modifier, returnType, methodName
                 , throwedExceptions.toArray(new String[throwedExceptions.size()])
                 , myDecompiledJavaClass, genericTypesList, genericIdentifiersList
                 , myTextWidth, myNestSize);
 
+        javaMethod.addLocalVariableName(0, "this");
+        javaMethod.addLocalVariableType(0, myDecompiledJavaClass.getName());
+        javaMethod.declareThisVariable();
+
         myDecompiledJavaClass.appendImports(genericTypesImports);
 
         final String parameters = description.substring(description.indexOf('(') + 1, description.indexOf(')'));
-        addInformationAboutParameters(parameters, javaClassMethod);
+        DeclarationWorker.addInformationAboutParameters(parameters, javaMethod, 1, DeclarationWorker.SupportedLanguage.JAVA);
 
-        myDecompiledJavaClass.appendMethod(javaClassMethod);
+        myDecompiledJavaClass.appendMethod(javaMethod);
 
-        return new JavaMethodVisitor(javaClassMethod
-                , myDecompiledJavaClass.getPackage() + "." + myDecompiledJavaClass.getName());
+        return new JavaMethodVisitor(javaMethod
+                , myDecompiledJavaClass.getPackage() + "." + myDecompiledJavaClass.getName(), myDecompiledJavaClass.getSuperClass());
     }
 
     @Override
     public void visitEnd() {
-        for (final JavaClassMethod method : myDecompiledJavaClass.getMethods()) {
+        for (final JavaMethod method : myDecompiledJavaClass.getMethods()) {
             myDecompiledJavaClass.appendImports(method.getImports());
         }
     }
 
     public String getDecompiledCode() {
         return myDecompiledJavaClass.toString();
-    }
-
-    private String getAccess(final int access) {
-        StringBuilder sb = new StringBuilder("");
-
-        if ((access & Opcodes.ACC_PUBLIC) != 0) {
-            sb.append("public ");
-        }
-        if ((access & Opcodes.ACC_PRIVATE) != 0) {
-            sb.append("private ");
-        }
-        if ((access & Opcodes.ACC_PROTECTED) != 0) {
-            sb.append("protected ");
-        }
-        if ((access & Opcodes.ACC_FINAL) != 0) {
-            sb.append("final ");
-        }
-        if ((access & Opcodes.ACC_STATIC) != 0) {
-            sb.append("static ");
-        }
-        if ((access & Opcodes.ACC_SYNCHRONIZED) != 0) {
-            sb.append("synchronized ");
-        }
-        if ((access & Opcodes.ACC_VOLATILE) != 0) {
-            sb.append("volatile ");
-        }
-        if ((access & Opcodes.ACC_TRANSIENT) != 0) {
-            sb.append("transient ");
-        }
-        if ((access & Opcodes.ACC_ABSTRACT) != 0) {
-            sb.append("abstract ");
-        }
-        if ((access & Opcodes.ACC_STRICT) != 0) {
-            sb.append("strictfp ");
-        }
-        if ((access & Opcodes.ACC_SYNTHETIC) != 0) {
-            sb.append("synthetic ");
-        }
-        if ((access & Opcodes.ACC_ENUM) != 0) {
-            sb.append("enum ");
-        }
-
-        return sb.toString();
-    }
-
-    private String getDescriptor(final String descriptor, final int pos) {
-        switch (descriptor.charAt(pos)) {
-            case 'V':
-                return "void ";
-            case 'B':
-                return "byte ";
-            case 'J':
-                return "long ";
-            case 'Z':
-                return "boolean ";
-            case 'I':
-                return "int ";
-            case 'S':
-                return "short ";
-            case 'C':
-                return "char ";
-            case 'F':
-                return "float ";
-            case 'D':
-                return "double ";
-            case 'L':
-                final String className = descriptor.substring(pos + 1, descriptor.indexOf(";", pos));
-                myDecompiledJavaClass.appendImport(getDecompiledFullClassName(className));
-                return getClassName(className) + " ";
-            //case 'T'
-            default:
-                return descriptor.substring(pos + 1, descriptor.indexOf(";", pos)) + " ";
-        }
-    }
-
-    private void addInformationAboutParameters(final String descriptor, final JavaClassMethod javaClassMethod) {
-        int count = 0;
-        int pos = 0;
-
-        while (pos < descriptor.length()) {
-            final int backupPos = pos;
-            final int backupCount = count;
-
-            switch (descriptor.charAt(pos)) {
-                case 'B':
-                    count++;
-                    pos++;
-                    break;
-                case 'J':
-                    count += 2;
-                    pos++;
-                    break;
-                case 'Z':
-                    count++;
-                    pos++;
-                    break;
-                case 'I':
-                    count++;
-                    pos++;
-                    break;
-                case 'S':
-                    count++;
-                    pos++;
-                    break;
-                case 'C':
-                    count++;
-                    pos++;
-                    break;
-                case 'F':
-                    count++;
-                    pos++;
-                    break;
-                case 'D':
-                    count += 2;
-                    pos++;
-                    break;
-                case 'L':
-                    count++;
-                    pos = descriptor.indexOf(";", pos) + 1;
-                    break;
-                case 'T':
-                    count++;
-                    pos = descriptor.indexOf(";", pos) + 1;
-                    break;
-            }
-
-            final int index = (count - backupCount) == 1 ? count : count - 1;
-
-            javaClassMethod.addLocalVariableName(index, "x" + index);
-            javaClassMethod.addLocalVariableType(index, getDescriptor(descriptor, backupPos));
-        }
-
-        javaClassMethod.setLastLocalVariableIndex(count);
-    }
-
-    private String getClassName(final String fullClassName) {
-        final String[] classParts = fullClassName.split("/");
-        return classParts[classParts.length - 1];
-    }
-
-    private String getDecompiledFullClassName(final String fullClassName) {
-        return fullClassName.replace("/", ".");
-    }
-
-    private void parseGenericDeclaration(final String signature, List<String> genericTypesList,
-                                         List<String> genericIdentifiersList, List<String> genericTypesImports) {
-        if (signature != null && signature.contains("<")) {
-            final String genericDeclaration = signature.substring(signature.indexOf("<") + 1, signature.indexOf(">"));
-            final String[] genericTypes = genericDeclaration.split(";");
-            for (final String genericType : genericTypes) {
-                if (!genericType.isEmpty()) {
-                    final String[] genericTypeParts = genericType.split(":");
-                    final String genericSuperClassName = genericTypeParts[1].substring(1);
-                    genericTypesImports.add(getDecompiledFullClassName(genericSuperClassName));
-                    genericTypesList.add(genericSuperClassName);
-                    genericIdentifiersList.add(genericTypeParts[0]);
-                }
-            }
-        }
     }
 }

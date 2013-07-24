@@ -11,8 +11,8 @@ public class InstanceInvocation extends Invocation {
         return myVariable;
     }
 
-    public InstanceInvocation(final String function, final List<Expression> arguments, final Variable variable) {
-        super(function, arguments);
+    public InstanceInvocation(final String function, final String returnType, final List<Expression> arguments, final Variable variable) {
+        super(function, returnType, arguments);
         this.myVariable = variable;
     }
 }
