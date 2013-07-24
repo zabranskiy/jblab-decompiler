@@ -1,33 +1,37 @@
-package com.sdc.js;
+package com.sdc.kotlin;
 
-import JSClassPrinter.JSClassPrinterPackage;
-import pretty.PrettyPackage;
-
+import KotlinPrinter.KotlinPrinterPackage;
 import com.sdc.abstractLanguage.AbstractMethod;
-import com.sdc.abstractLanguage.AbstractFrame;
-
+import com.sdc.ast.controlflow.Return;
 import com.sdc.ast.controlflow.Statement;
+import com.sdc.ast.expressions.Expression;
 import com.sdc.cfg.GraphDrawer;
 import com.sdc.cfg.Node;
+import com.sdc.abstractLanguage.AbstractFrame;
+import pretty.PrettyPackage;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-public class JSClassMethod extends AbstractMethod {
+public class KotlinMethod extends AbstractMethod {
     private final String myModifier;
     private final String myReturnType;
     private final String myName;
-    private final String[] myExceptions;
 
     private List<String> myImports = new ArrayList<String>();
 
-    private final JSClass myJavaClass;
+    private final KotlinClass myKotlinClass;
     private final List<String> myGenericTypes;
     private final List<String> myGenericIdentifiers;
 
+    private List<KotlinAnnotation> myAnnotations = new ArrayList<KotlinAnnotation>();
+    private Map<Integer, List<KotlinAnnotation>> myParameterAnnotations = new HashMap<Integer, List<KotlinAnnotation>>();
+
     private int myLastLocalVariableIndex;
 
-    private final AbstractFrame myRootFrame = new JSFrame();
+    private final AbstractFrame myRootFrame = new KotlinFrame();
     private AbstractFrame myCurrentFrame = myRootFrame;
 
     private List<Statement> myBody = null;
@@ -35,6 +39,19 @@ public class JSClassMethod extends AbstractMethod {
 
     private final int myTextWidth;
     private final int myNestSize;
+
+    public KotlinMethod(final String modifier, final String returnType, final String name,
+                      final KotlinClass kotlinClass, final List<String> genericTypes, final List<String> genericIdentifiers,
+                      final int textWidth, final int nestSize) {
+        this.myModifier = modifier;
+        this.myReturnType = returnType;
+        this.myName = name;
+        this.myKotlinClass = kotlinClass;
+        this.myGenericTypes = genericTypes;
+        this.myGenericIdentifiers = genericIdentifiers;
+        this.myTextWidth = textWidth;
+        this.myNestSize = nestSize;
+    }
 
     public String getModifier() {
         return myModifier;
@@ -46,10 +63,6 @@ public class JSClassMethod extends AbstractMethod {
 
     public String getName() {
         return myName;
-    }
-
-    public String[] getExceptions() {
-        return myExceptions;
     }
 
     public List<String> getImports() {
@@ -74,28 +87,15 @@ public class JSClassMethod extends AbstractMethod {
 
     public void setLastLocalVariableIndex(int lastLocalVariableIndex) {
         this.myLastLocalVariableIndex = lastLocalVariableIndex;
+        ((KotlinFrame) myRootFrame).setLastLocalVariableIndex(lastLocalVariableIndex);
     }
 
     public AbstractFrame getCurrentFrame() {
         return myCurrentFrame;
     }
 
-    public void setCurrentFrame(final AbstractFrame currentFrame) {
-        this.myCurrentFrame = currentFrame;
-    }
-
-    public JSClassMethod(final String modifier, final String returnType, final String name, final String[] exceptions,
-                         final JSClass javaClass, final List<String> genericTypes, final List<String> genericIdentifiers,
-                         final int textWidth, final int nestSize) {
-        this.myModifier = modifier;
-        this.myReturnType = returnType;
-        this.myName = name;
-        this.myExceptions = exceptions;
-        this.myJavaClass = javaClass;
-        this.myGenericTypes = genericTypes;
-        this.myGenericIdentifiers = genericIdentifiers;
-        this.myTextWidth = textWidth;
-        this.myNestSize = nestSize;
+    public void setCurrentFrame(final AbstractFrame currentAbstractFrame) {
+        this.myCurrentFrame = currentAbstractFrame;
     }
 
     public void addImport(final String importClassName) {
@@ -116,7 +116,9 @@ public class JSClassMethod extends AbstractMethod {
 
     public List<String> getParameters() {
         List<String> parameters = new ArrayList<String>();
-        for (int variableIndex = 1; variableIndex <= myLastLocalVariableIndex; variableIndex++) {
+        final int startIndex = isNormalClassMethod() ? 1 : 0;
+
+        for (int variableIndex = startIndex; variableIndex <= myLastLocalVariableIndex; variableIndex++) {
             if (myRootFrame.containsIndex(variableIndex)) {
                 parameters.add(myRootFrame.getLocalVariableName(variableIndex));
             }
@@ -125,12 +127,12 @@ public class JSClassMethod extends AbstractMethod {
     }
 
     public boolean isGenericType(final String className) {
-        return myGenericTypes.contains(className) || myJavaClass.isGenericType(className);
+        return myGenericTypes.contains(className) || myKotlinClass.isGenericType(className);
     }
 
     public String getGenericIdentifier(final String className) {
         if (!myGenericTypes.contains(className)) {
-            return myJavaClass.getGenericIdentifier(className);
+            return myKotlinClass.getGenericIdentifier(className);
         } else {
             return myGenericIdentifiers.get(myGenericTypes.indexOf(className));
         }
@@ -141,12 +143,57 @@ public class JSClassMethod extends AbstractMethod {
         for (int i = 0; i < myGenericTypes.size(); i++) {
             if (!myGenericTypes.get(i).equals("java/lang/Object")) {
                 final String[] classParts = myGenericTypes.get(i).split("/");
-                result.add(myGenericIdentifiers.get(i) + " extends " + classParts[classParts.length - 1]);
+                result.add(myGenericIdentifiers.get(i) + " : " + classParts[classParts.length - 1]);
             } else {
                 result.add(myGenericIdentifiers.get(i));
             }
         }
         return result;
+    }
+
+    public void appendAnnotation(final KotlinAnnotation annotation) {
+        myAnnotations.add(annotation);
+    }
+
+    public List<KotlinAnnotation> getAnnotations() {
+        return myAnnotations;
+    }
+
+    public void appendParameterAnnotation(final int index, final KotlinAnnotation annotation) {
+        if (!myParameterAnnotations.containsKey(index)) {
+            myParameterAnnotations.put(index, new ArrayList<KotlinAnnotation>());
+        }
+        myParameterAnnotations.get(index).add(annotation);
+    }
+
+    public boolean checkParameterForAnnotation(final int index) {
+        return myParameterAnnotations.containsKey(index);
+    }
+
+    public List<KotlinAnnotation> getParameterAnnotations(final int index) {
+        return myParameterAnnotations.get(index);
+    }
+
+    public boolean isNormalClassMethod() {
+        return myKotlinClass.isNormalClass();
+    }
+
+    public boolean hasEmptyBody() {
+        return myBody.size() == 1 && ((Return) myBody.get(0)).getReturnValue() == null;
+    }
+
+    public void addInitializerToField(final String fieldName, final Expression initializer) {
+        myKotlinClass.addInitializerToField(fieldName, initializer);
+    }
+
+    public KotlinClass getKotlinClass() {
+        return myKotlinClass;
+    }
+
+    public void declareThisVariable() {
+        if (isNormalClassMethod()) {
+            myRootFrame.getLocalVariableName(0);
+        }
     }
 
     public void setNodes(List<Node> myNodes) {
@@ -162,6 +209,6 @@ public class JSClassMethod extends AbstractMethod {
 
     @Override
     public String toString() {
-          return PrettyPackage.pretty(myTextWidth, JSClassPrinterPackage.printClassMethod(this));
+        return PrettyPackage.pretty(myTextWidth, KotlinPrinterPackage.printKotlinMethod(this));
     }
 }

@@ -1,9 +1,8 @@
-package com.sdc.java;
+package com.sdc.kotlin;
 
-import com.sdc.abstractLanguage.*;
+import com.sdc.abstractLanguage.AbstractFrame;
+import com.sdc.abstractLanguage.AbstractMethodVisitor;
 import com.sdc.ast.controlflow.*;
-import com.sdc.ast.controlflow.InstanceInvocation;
-import com.sdc.ast.controlflow.Invocation;
 import com.sdc.ast.expressions.*;
 import com.sdc.ast.expressions.identifiers.Field;
 import com.sdc.ast.expressions.identifiers.Identifier;
@@ -13,15 +12,18 @@ import com.sdc.cfg.Node;
 import com.sdc.cfg.Switch;
 import com.sdc.cfg.functionalization.AnonymousClass;
 import com.sdc.cfg.functionalization.Generator;
-import com.sdc.util.*;
+import com.sdc.util.DeclarationWorker;
 
-import org.objectweb.asm.*;
+import org.objectweb.asm.AnnotationVisitor;
+import org.objectweb.asm.Attribute;
+import org.objectweb.asm.Handle;
+import org.objectweb.asm.Label;
 import org.objectweb.asm.util.Printer;
 
 import java.util.*;
 
-public class JavaMethodVisitor extends AbstractMethodVisitor {
-    private JavaMethod myJavaMethod;
+public class KotlinMethodVisitor extends AbstractMethodVisitor {
+    private KotlinMethod myKotlinMethod;
 
     private final String myDecompiledOwnerFullClassName;
     private final String myDecompiledOwnerSuperClassName;
@@ -37,24 +39,29 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
 
     private boolean myHasDebugInformation = false;
 
-    public JavaMethodVisitor(JavaMethod javaMethod, final String decompiledOwnerFullClassName, final String decompiledOwnerSuperClassName) {
-        this.myJavaMethod = javaMethod;
+    public KotlinMethodVisitor(KotlinMethod kotlinMethod, final String decompiledOwnerFullClassName, final String decompiledOwnerSuperClassName) {
+        this.myKotlinMethod = kotlinMethod;
         this.myDecompiledOwnerFullClassName = decompiledOwnerFullClassName;
         this.myDecompiledOwnerSuperClassName = decompiledOwnerSuperClassName;
     }
 
     private AbstractFrame getCurrentFrame() {
-        return myJavaMethod.getCurrentFrame();
+        return myKotlinMethod.getCurrentFrame();
     }
 
     @Override
     public AnnotationVisitor visitAnnotation(final String desc, final boolean visible) {
-        JavaAnnotation annotation = new JavaAnnotation();
-        annotation.setName(DeclarationWorker.getJavaDescriptor(desc, 0, myJavaMethod.getImports()));
-
-        myJavaMethod.appendAnnotation(annotation);
-
-        return new JavaAnnotationVisitor(annotation);
+        List<String> annotationsImports = new ArrayList<String>();
+        final String annotationName = DeclarationWorker.getKotlinDescriptor(desc, 0, annotationsImports);
+        if (!annotationName.startsWith("Jet")) {
+            KotlinAnnotation annotation = new KotlinAnnotation();
+            annotation.setName(annotationName);
+            myKotlinMethod.appendAnnotation(annotation);
+            myKotlinMethod.getImports().addAll(annotationsImports);
+            return new KotlinAnnotationVisitor(annotation);
+        } else {
+            return null;
+        }
     }
 
     @Override
@@ -69,12 +76,17 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
 
     @Override
     public AnnotationVisitor visitParameterAnnotation(final int parameter, final String desc, final boolean visible) {
-        JavaAnnotation annotation = new JavaAnnotation();
-        annotation.setName(DeclarationWorker.getJavaDescriptor(desc, 0, myJavaMethod.getImports()));
-
-        myJavaMethod.appendParameterAnnotation(parameter, annotation);
-
-        return new JavaAnnotationVisitor(annotation);
+        List<String> annotationsImports = new ArrayList<String>();
+        final String annotationName = DeclarationWorker.getKotlinDescriptor(desc, 0, annotationsImports);
+        if (!annotationName.startsWith("Jet")) {
+            KotlinAnnotation annotation = new KotlinAnnotation();
+            annotation.setName(annotationName);
+            myKotlinMethod.appendParameterAnnotation(parameter, annotation);
+            myKotlinMethod.getImports().addAll(annotationsImports);
+            return new KotlinAnnotationVisitor(annotation);
+        } else {
+            return null;
+        }
     }
 
     @Override
@@ -85,22 +97,22 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
     public void visitFrame(final int type, final int nLocal, final Object[] local, final int nStack, final Object[] stack) {
         if (type == 2) {
             // F_CHOP
-            myJavaMethod.setCurrentFrame(getCurrentFrame().getParent());
+            myKotlinMethod.setCurrentFrame(getCurrentFrame().getParent());
         } else if (type == 3) {
             // F_SAME
-            AbstractFrame newAbstractFrame = new JavaFrame();
+            AbstractFrame newAbstractFrame = new KotlinFrame();
             newAbstractFrame.setSameFrame(getCurrentFrame());
             newAbstractFrame.setParent(getCurrentFrame().getParent());
             getCurrentFrame().getParent().addChild(newAbstractFrame);
 
-            myJavaMethod.setCurrentFrame(newAbstractFrame);
+            myKotlinMethod.setCurrentFrame(newAbstractFrame);
         } else {
-            AbstractFrame newAbstractFrame = new JavaFrame();
+            AbstractFrame newAbstractFrame = new KotlinFrame();
 
             newAbstractFrame.setParent(getCurrentFrame());
             getCurrentFrame().addChild(newAbstractFrame);
 
-            myJavaMethod.setCurrentFrame(newAbstractFrame);
+            myKotlinMethod.setCurrentFrame(newAbstractFrame);
 
             if (nStack > 0) {
                 String stackedVariableType = "";
@@ -122,7 +134,7 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
                     }
                 } else {
                     final String className = (String) stack[0];
-                    myJavaMethod.addImport(DeclarationWorker.getDecompiledFullClassName(className));
+                    myKotlinMethod.addImport(DeclarationWorker.getDecompiledFullClassName(className));
                     stackedVariableType = DeclarationWorker.getClassName(className) + " ";
                 }
 
@@ -219,23 +231,23 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
             }
         }
 
-        if (!opString.contains("LOAD") && var > myJavaMethod.getLastLocalVariableIndex()) {
+        if (!opString.contains("LOAD") && var > myKotlinMethod.getLastLocalVariableIndex()) {
             final String name = "y" + var;
-            myJavaMethod.addLocalVariableName(var, name);
+            myKotlinMethod.addLocalVariableName(var, name);
 
             String descriptorType;
             if (currentFrameHasStack) {
                 descriptorType = getCurrentFrame().getStackedVariableType();
                 getCurrentFrame().setStackedVariableIndex(var);
             } else {
-                descriptorType = DeclarationWorker.getJavaDescriptor(opString, 0, myJavaMethod.getImports());
+                descriptorType = DeclarationWorker.getKotlinDescriptor(opString, 0, myKotlinMethod.getImports());
             }
 
             if (!descriptorType.equals("Object ") || variableType == null) {
                 variableType = descriptorType;
             }
 
-            myJavaMethod.addLocalVariableType(var, variableType);
+            myKotlinMethod.addLocalVariableType(var, variableType);
         }
     }
 
@@ -255,17 +267,17 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
         final String opString = Printer.OPCODES[opcode];
 
         if (opString.contains("PUTFIELD")) {
-            if (!myDecompiledOwnerFullClassName.endsWith(myJavaMethod.getName())) {
-                final Identifier v = new Field(name, DeclarationWorker.getJavaDescriptor(desc, 0, myJavaMethod.getImports()));
+            if (!myDecompiledOwnerFullClassName.endsWith(myKotlinMethod.getName())) {
+                final Identifier v = new Field(name, DeclarationWorker.getKotlinDescriptor(desc, 0, myKotlinMethod.getImports()));
                 final Expression e = getTopOfBodyStack();
                 myStatements.add(new Assignment(v, e));
             } else {
-                myJavaMethod.addInitializerToField(name, getTopOfBodyStack());
+                myKotlinMethod.addInitializerToField(name, getTopOfBodyStack());
             }
             removeThisVariableFromStack();
         } else if (opString.contains("GETFIELD")) {
             removeThisVariableFromStack();
-            myBodyStack.push(new Field(name, DeclarationWorker.getJavaDescriptor(desc, 0, myJavaMethod.getImports())));
+            myBodyStack.push(new Field(name, DeclarationWorker.getKotlinDescriptor(desc, 0, myKotlinMethod.getImports())));
         }
     }
 
@@ -280,7 +292,7 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
         }
 
         final int returnTypeIndex = desc.indexOf(')') + 1;
-        String returnType = DeclarationWorker.getJavaDescriptor(desc, returnTypeIndex, myJavaMethod.getImports());
+        String returnType = DeclarationWorker.getKotlinDescriptor(desc, returnTypeIndex, myKotlinMethod.getImports());
 
         final String decompiledOwnerClassName = DeclarationWorker.getDecompiledFullClassName(owner);
 
@@ -291,29 +303,33 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
                 || (decompiledOwnerClassName.equals(myDecompiledOwnerFullClassName) && !name.equals("<init>"))) {
             Variable v = (Variable) myBodyStack.pop();
             if (myBodyStack.isEmpty()) {
-                myStatements.add(new InstanceInvocation(name, returnType, arguments, v));
+                myStatements.add(new com.sdc.ast.controlflow.InstanceInvocation(name, returnType, arguments, v));
             } else {
                 myBodyStack.push(new com.sdc.ast.expressions.InstanceInvocation(name, returnType, arguments, v));
             }
             return;
         } else if (opString.contains("INVOKESPECIAL")) {
             if (name.equals("<init>")) {
-                myJavaMethod.addImport(decompiledOwnerClassName);
+                myKotlinMethod.addImport(decompiledOwnerClassName);
                 invocationName = DeclarationWorker.getClassName(owner);
                 returnType = invocationName + " ";
             } else {
-                invocationName = "super." + name;
+                invocationName = "super<" + DeclarationWorker.getClassName(owner) + ">."  + name;
             }
         } else if (opString.contains("INVOKESTATIC")) {
-            myJavaMethod.addImport(decompiledOwnerClassName);
+            myKotlinMethod.addImport(decompiledOwnerClassName);
             invocationName = DeclarationWorker.getClassName(owner) + "." + name;
             needToRemoveThisFromStack = false;
+            if (name.equals("checkParameterIsNotNull")) {
+                ((KotlinFrame) getCurrentFrame()).addNotNullVariable(((Variable) arguments.get(0)).getIndex());
+                return;
+            }
         }
 
         if (name.equals("<init>")) {
-            if (myDecompiledOwnerFullClassName.endsWith(myJavaMethod.getName()) && myDecompiledOwnerSuperClassName.endsWith(invocationName)) {
+            if (myDecompiledOwnerFullClassName.endsWith(myKotlinMethod.getName()) && myDecompiledOwnerSuperClassName.endsWith(invocationName)) {
                 removeThisVariableFromStack();
-                myStatements.add(new Invocation("super", returnType, arguments));
+                myKotlinMethod.getKotlinClass().setSuperClassConstructor(new com.sdc.ast.expressions.Invocation(invocationName, returnType, arguments));
             } else {
                 myBodyStack.push(new New(new com.sdc.ast.expressions.Invocation(invocationName, returnType, arguments)));
             }
@@ -323,7 +339,7 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
             }
 
             if (myBodyStack.isEmpty()) {
-                myStatements.add(new Invocation(invocationName, returnType, arguments));
+                myStatements.add(new com.sdc.ast.controlflow.Invocation(invocationName, returnType, arguments));
             } else {
                 myBodyStack.push(new com.sdc.ast.expressions.Invocation(invocationName, returnType, arguments));
             }
@@ -416,7 +432,7 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
             dimensions.add(0, getTopOfBodyStack());
         }
 
-        final String className = DeclarationWorker.getJavaDescriptor(desc, 0, myJavaMethod.getImports()).trim();
+        final String className = DeclarationWorker.getKotlinDescriptor(desc, 0, myKotlinMethod.getImports()).trim();
         myBodyStack.push(new NewArray(dims, className.substring(0, className.length() - 2 * dims), dimensions));
     }
 
@@ -453,7 +469,7 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
         }
 
         final String description = signature != null ? signature : desc;
-        myJavaMethod.addLocalVariableFromDebugInfo(index, name, DeclarationWorker.getJavaDescriptor(description, 0, myJavaMethod.getImports()));
+        myKotlinMethod.addLocalVariableFromDebugInfo(index, name, DeclarationWorker.getKotlinDescriptor(description, 0, myKotlinMethod.getImports()));
     }
 
     @Override
@@ -506,10 +522,10 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
 
         Generator generator = new Generator(myNodes);
         AnonymousClass aClass = generator.genAnonymousClass();
-        // myJavaMethod.setAnonymousClass(aClass);
-        myJavaMethod.setBody(myStatements);
-        myJavaMethod.setNodes(myNodes);
-        //myJavaMethod.drawCFG();
+        // myKotlinMethod.setAnonymousClass(aClass);
+        myKotlinMethod.setBody(myStatements);
+        myKotlinMethod.setNodes(myNodes);
+        //myKotlinMethod.drawCFG();
     }
 
     private Integer getLeftEmptyNodeIndex() {
@@ -537,7 +553,7 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
             myNodes.add(node);
         }
         myNodeInnerLabels.clear();
-       // myStatements.clear();
+        // myStatements.clear();
     }
 
     private Expression getTopOfBodyStack() {
@@ -545,12 +561,12 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
             final int lastIndex = myStatements.size() - 1;
             final Statement lastStatement = myStatements.get(lastIndex);
 
-            if (lastStatement instanceof InstanceInvocation) {
-                InstanceInvocation invoke = (InstanceInvocation) lastStatement;
+            if (lastStatement instanceof com.sdc.ast.controlflow.InstanceInvocation) {
+                com.sdc.ast.controlflow.InstanceInvocation invoke = (com.sdc.ast.controlflow.InstanceInvocation) lastStatement;
                 myStatements.remove(lastIndex);
                 return new com.sdc.ast.expressions.InstanceInvocation(invoke.getFunction(), invoke.getReturnType(), invoke.getArguments(), invoke.getVariable());
-            } else if (lastStatement instanceof Invocation) {
-                Invocation invoke = (Invocation) lastStatement;
+            } else if (lastStatement instanceof com.sdc.ast.controlflow.Invocation) {
+                com.sdc.ast.controlflow.Invocation invoke = (com.sdc.ast.controlflow.Invocation) lastStatement;
                 myStatements.remove(lastIndex);
                 return new com.sdc.ast.expressions.Invocation(invoke.getFunction(), invoke.getReturnType(), invoke.getArguments());
             } else if (lastStatement instanceof Assignment) {
@@ -574,3 +590,4 @@ public class JavaMethodVisitor extends AbstractMethodVisitor {
         }
     }
 }
+

@@ -1,19 +1,19 @@
-package com.sdc.js;
-
-import JSClassPrinter.JSClassPrinterPackage;
-import pretty.PrettyPackage;
+package com.sdc.kotlin;
 
 import com.sdc.abstractLanguage.AbstractClassField;
+import com.sdc.ast.expressions.Expression;
 
-public class JSClassField extends AbstractClassField {
+public class KotlinClassField extends AbstractClassField {
     private final String myModifier;
     private final String myType;
     private final String myName;
 
+    private Expression myInitializer;
+
     private final int myTextWidth;
     private final int myNestSize;
 
-    public JSClassField(final String modifier, final String type, final String name, final int textWidth, final int nestSize) {
+    public KotlinClassField(final String modifier, final String type, final String name, final int textWidth, final int nestSize) {
         this.myModifier = modifier;
         this.myType = type;
         this.myName = name;
@@ -37,8 +37,15 @@ public class JSClassField extends AbstractClassField {
         return myNestSize;
     }
 
-    @Override
-    public String toString() {
-        return PrettyPackage.pretty(myTextWidth, JSClassPrinterPackage.printClassField(this));
+    public void setInitializer(Expression initializer) {
+        this.myInitializer = initializer;
+    }
+
+    public Expression getInitializer() {
+        return myInitializer;
+    }
+
+    public boolean hasInitializer() {
+        return myInitializer != null;
     }
 }

@@ -1,6 +1,7 @@
 package com.sdc.js;
 
-import com.sdc.abstractLangauge.AbstractMethodVisitor;
+import com.sdc.abstractLanguage.AbstractFrame;
+import com.sdc.abstractLanguage.AbstractMethodVisitor;
 import com.sdc.ast.controlflow.*;
 import com.sdc.ast.controlflow.InstanceInvocation;
 import com.sdc.ast.controlflow.Invocation;
@@ -13,6 +14,7 @@ import com.sdc.cfg.Node;
 import com.sdc.cfg.Switch;
 import com.sdc.cfg.functionalization.AnonymousClass;
 import com.sdc.cfg.functionalization.Generator;
+import com.sdc.util.DeclarationWorker;
 import org.objectweb.asm.*;
 import org.objectweb.asm.util.Printer;
 
@@ -35,7 +37,6 @@ public class JSMethodVisitor extends AbstractMethodVisitor {
     private boolean myHasDebugInformation = false;
 
     public JSMethodVisitor(JSClassMethod javaClassMethod, final String decompiledOwnerFullClassName) {
-        super(Opcodes.ASM4, null);
         this.myJavaClassMethod = javaClassMethod;
         this.myDecompiledOwnerFullClassName = decompiledOwnerFullClassName;
     }
@@ -71,19 +72,19 @@ public class JSMethodVisitor extends AbstractMethodVisitor {
             myJavaClassMethod.setCurrentFrame(getCurrentFrame().getParent());
         } else if (type == 3) {
             // F_SAME
-            Frame newFrame = new Frame();
-            newFrame.setSameFrame(getCurrentFrame());
-            newFrame.setParent(getCurrentFrame().getParent());
-            getCurrentFrame().getParent().addChild(newFrame);
+            JSFrame newJSFrame = new JSFrame();
+            newJSFrame.setSameFrame(getCurrentFrame());
+            newJSFrame.setParent(getCurrentFrame().getParent());
+            getCurrentFrame().getParent().addChild(newJSFrame);
 
-            myJavaClassMethod.setCurrentFrame(newFrame);
+            myJavaClassMethod.setCurrentFrame(newJSFrame);
         } else {
-            Frame newFrame = new Frame();
+            JSFrame newJSFrame = new JSFrame();
 
-            newFrame.setParent(getCurrentFrame());
-            getCurrentFrame().addChild(newFrame);
+            newJSFrame.setParent(getCurrentFrame());
+            getCurrentFrame().addChild(newJSFrame);
 
-            myJavaClassMethod.setCurrentFrame(newFrame);
+            myJavaClassMethod.setCurrentFrame(newJSFrame);
 
             if (nStack > 0) {
                 String stackedVariableType = "";
@@ -128,7 +129,7 @@ public class JSMethodVisitor extends AbstractMethodVisitor {
         } else if (opString.contains("NEG")) {
             myBodyStack.push(new UnaryExpression(UnaryExpression.OperationType.NEGATE, getTopOfBodyStack()));
         } else if (opString.contains("CONST_")) {
-            myBodyStack.push(new Constant(opString.substring(7)));
+            myBodyStack.push(new Constant(opString.substring(7), false));
         } else if (opString.equals("RETURN")) {
             myStatements.add(new Return());
         } else if (opString.contains("RETURN")) {
@@ -160,7 +161,7 @@ public class JSMethodVisitor extends AbstractMethodVisitor {
         final String opString = Printer.OPCODES[opcode];
 
         if (opString.contains("IPUSH")) {
-            myBodyStack.push(new Constant(operand));
+            myBodyStack.push(new Constant(operand, false));
         }
     }
 
@@ -199,7 +200,7 @@ public class JSMethodVisitor extends AbstractMethodVisitor {
 
     @Override
     public void visitFieldInsn(final int opcode, final String owner, final String name, final String desc) {
-        myBodyStack.push(new Field(name));
+        myBodyStack.push(new Field(name, DeclarationWorker.getJavaDescriptor(desc, 0, myJavaClassMethod.getImports())));
     }
 
     @Override
@@ -212,6 +213,9 @@ public class JSMethodVisitor extends AbstractMethodVisitor {
             arguments.add(0, getTopOfBodyStack());
         }
 
+        final int returnTypeIndex = desc.indexOf(')') + 1;
+        String returnType = DeclarationWorker.getJavaDescriptor(desc, returnTypeIndex, myJavaClassMethod.getImports());
+
         final String decompiledOwnerClassName = getDecompiledFullClassName(owner);
 
         String invocationName = "";
@@ -221,9 +225,9 @@ public class JSMethodVisitor extends AbstractMethodVisitor {
             if (!myBodyStack.isEmpty() && myBodyStack.peek() instanceof Variable) {
                 Variable v = (Variable) myBodyStack.pop();
                 if (myBodyStack.isEmpty()) {
-                    myStatements.add(new InstanceInvocation(name, arguments, v));
+                    myStatements.add(new InstanceInvocation(name, returnType, arguments, v));
                 } else {
-                    myBodyStack.push(new com.sdc.ast.expressions.InstanceInvocation(name, arguments, v));
+                    myBodyStack.push(new com.sdc.ast.expressions.InstanceInvocation(name, returnType, arguments, v));
                 }
                 return;
             } else {
@@ -242,11 +246,11 @@ public class JSMethodVisitor extends AbstractMethodVisitor {
         }
 
         if (name.equals("<init>")) {
-            myBodyStack.push(new New(new com.sdc.ast.expressions.Invocation(invocationName, arguments)));
+            myBodyStack.push(new New(new com.sdc.ast.expressions.Invocation(invocationName, returnType, arguments)));
         } else if (myBodyStack.isEmpty()) {
-            myStatements.add(new Invocation(invocationName, arguments));
+            myStatements.add(new Invocation(invocationName, returnType, arguments));
         } else {
-            myBodyStack.push(new com.sdc.ast.expressions.Invocation(invocationName, arguments));
+            myBodyStack.push(new com.sdc.ast.expressions.Invocation(invocationName, returnType, arguments));
         }
     }
 
@@ -294,7 +298,7 @@ public class JSMethodVisitor extends AbstractMethodVisitor {
 
     @Override
     public void visitLdcInsn(final Object cst) {
-        myBodyStack.push(new Constant(cst));
+        myBodyStack.push(new Constant(cst, cst instanceof String));
     }
 
     @Override
@@ -512,7 +516,7 @@ public class JSMethodVisitor extends AbstractMethodVisitor {
             if (lastStatement instanceof Invocation) {
                 Invocation invoke = (Invocation) lastStatement;
                 myStatements.remove(lastIndex);
-                return new com.sdc.ast.expressions.Invocation(invoke.getFunction(), invoke.getArguments());
+                return new com.sdc.ast.expressions.Invocation(invoke.getFunction(), invoke.getReturnType(), invoke.getArguments());
             } else if (lastStatement instanceof Assignment) {
                 return ((Assignment) lastStatement).getRight();
             }
@@ -537,7 +541,7 @@ public class JSMethodVisitor extends AbstractMethodVisitor {
         return fullClassName.replace("/", ".");
     }
 
-    private Frame getCurrentFrame() {
+    private AbstractFrame getCurrentFrame() {
         return myJavaClassMethod.getCurrentFrame();
     }
 }
