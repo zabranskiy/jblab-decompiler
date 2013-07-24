@@ -15,7 +15,7 @@ import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.testFramework.LightVirtualFile;
 import com.sdc.abstractLanguage.AbstractClassVisitor;
 import com.sdc.java.JavaClassVisitor;
-import com.sdc.javascript.JSClassVisitor;
+import com.sdc.js.JSClassVisitor;
 import org.objectweb.asm.ClassReader;
 
 import java.io.IOException;

@@ -1,4 +1,4 @@
-package com.sdc;
+package com.decompiler;
 
 import com.beust.jcommander.Parameter;
 

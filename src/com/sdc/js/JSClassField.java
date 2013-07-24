@@ -1,16 +1,14 @@
-package com.sdc.javascript;
+package com.sdc.js;
 
+import JSClassPrinter.JSClassPrinterPackage;
+import pretty.PrettyPackage;
 
 import com.sdc.abstractLanguage.AbstractClassField;
-import com.sdc.javascript.expressions.Expression;
-import com.sdc.javascript.expressions.Literal;
-//import pretty.PrettyPackage;
 
-public class JSClassField extends AbstractClassField{
+public class JSClassField extends AbstractClassField {
     private final String myModifier;
     private final String myType;
     private final String myName;
-    private final Expression myDefaultValue;
 
     private final int myTextWidth;
     private final int myNestSize;
@@ -21,8 +19,6 @@ public class JSClassField extends AbstractClassField{
         this.myName = name;
         this.myTextWidth = textWidth;
         this.myNestSize = nestSize;
-
-        this.myDefaultValue = new Literal("0");
     }
 
     public String getModifier() {
@@ -41,12 +37,8 @@ public class JSClassField extends AbstractClassField{
         return myNestSize;
     }
 
-    public Expression getDefaultValue() {
-        return myDefaultValue;
-    }
-
-    /*@Override
+    @Override
     public String toString() {
-        return PrettyPackage.pretty(myTextWidth, JavaClassPrinterPackage.printClassField(this));
-    } */
+        return PrettyPackage.pretty(myTextWidth, JSClassPrinterPackage.printClassField(this));
+    }
 }

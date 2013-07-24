@@ -1,18 +1,20 @@
-package com.sdc;
+package com.decompiler;
 
 import com.beust.jcommander.JCommander;
-import com.sdc.abstractLangauge.AbstractClassVisitor;
+
+import com.sdc.abstractLanguage.AbstractClassVisitor;
 import com.sdc.java.JavaClassVisitor;
+import com.sdc.js.JSClassVisitor;
+
 import org.objectweb.asm.ClassReader;
 //import org.objectweb.asm.ClassVisitor;
 //import org.objectweb.asm.util.TraceClassVisitor;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-//import java.io.InputStream;
+import java.io.InputStream;
 //import java.io.PrintWriter;
 
-//import com.sdc.cpp.CppClassVisitor;
 
 public class Decompiler {
     public static void main(String[] args) throws IOException {
@@ -45,6 +47,8 @@ public class Decompiler {
 
         if (decompilerParameters.getLanguage().equals("java")) {
             cv = new JavaClassVisitor(textWidth, tabSize);
+        } else if (decompilerParameters.getLanguage().equals("js")) {
+            cv = new JSClassVisitor(textWidth, tabSize);
         }/* else if (decompilerParameters.getLanguage().equals("cpp")) {
             cv = new CppClassVisitor(textWidth, tabSize);
         }*/ else {
@@ -54,5 +58,20 @@ public class Decompiler {
 
         cr.accept(cv, 0);
         System.out.println(cv.getDecompiledCode());
+    }
+
+
+    public static String decompile(Language lang, final InputStream is, Integer textWidth, Integer tabSize) throws IOException {
+        ClassReader cr = new ClassReader(is);
+
+        AbstractClassVisitor cv;
+        if (lang.getName().equals("JavaScript")) {
+            cv = new JSClassVisitor(textWidth, tabSize);
+        } else {
+            // Java
+            cv = new JavaClassVisitor(textWidth, tabSize);
+        }
+        cr.accept(cv, 0);
+        return cv.getDecompiledCode();
     }
 }
