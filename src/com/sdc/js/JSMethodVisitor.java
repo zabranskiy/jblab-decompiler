@@ -72,19 +72,19 @@ public class JSMethodVisitor extends AbstractMethodVisitor {
             myJavaClassMethod.setCurrentFrame(getCurrentFrame().getParent());
         } else if (type == 3) {
             // F_SAME
-            Frame newFrame = new Frame();
-            newFrame.setSameFrame(getCurrentFrame());
-            newFrame.setParent(getCurrentFrame().getParent());
-            getCurrentFrame().getParent().addChild(newFrame);
+            JSFrame newJSFrame = new JSFrame();
+            newJSFrame.setSameFrame(getCurrentFrame());
+            newJSFrame.setParent(getCurrentFrame().getParent());
+            getCurrentFrame().getParent().addChild(newJSFrame);
 
-            myJavaClassMethod.setCurrentFrame(newFrame);
+            myJavaClassMethod.setCurrentFrame(newJSFrame);
         } else {
-            Frame newFrame = new Frame();
+            JSFrame newJSFrame = new JSFrame();
 
-            newFrame.setParent(getCurrentFrame());
-            getCurrentFrame().addChild(newFrame);
+            newJSFrame.setParent(getCurrentFrame());
+            getCurrentFrame().addChild(newJSFrame);
 
-            myJavaClassMethod.setCurrentFrame(newFrame);
+            myJavaClassMethod.setCurrentFrame(newJSFrame);
 
             if (nStack > 0) {
                 String stackedVariableType = "";

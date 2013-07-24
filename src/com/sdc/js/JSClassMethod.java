@@ -27,7 +27,7 @@ public class JSClassMethod extends AbstractMethod {
 
     private int myLastLocalVariableIndex;
 
-    private final AbstractFrame myRootFrame = new Frame();
+    private final AbstractFrame myRootFrame = new JSFrame();
     private AbstractFrame myCurrentFrame = myRootFrame;
 
     private List<Statement> myBody = null;
