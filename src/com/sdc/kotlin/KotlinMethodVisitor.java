@@ -103,7 +103,11 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
             AbstractFrame newAbstractFrame = new KotlinFrame();
             newAbstractFrame.setSameFrame(getCurrentFrame());
             newAbstractFrame.setParent(getCurrentFrame().getParent());
-            getCurrentFrame().getParent().addChild(newAbstractFrame);
+            if (getCurrentFrame().getParent() != null) {
+                getCurrentFrame().getParent().addChild(newAbstractFrame);
+            } else {
+                getCurrentFrame().addChild(newAbstractFrame);
+            }
 
             myKotlinMethod.setCurrentFrame(newAbstractFrame);
         } else {
@@ -120,16 +124,16 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
                 if (stack[0] instanceof Integer) {
                     switch ((Integer) stack[0]) {
                         case 1:
-                            stackedVariableType = "int ";
+                            stackedVariableType = "Int ";
                             break;
                         case 2:
-                            stackedVariableType = "float ";
+                            stackedVariableType = "Float ";
                             break;
                         case 3:
-                            stackedVariableType = "double ";
+                            stackedVariableType = "Double ";
                             break;
                         case 4:
-                            stackedVariableType = "long ";
+                            stackedVariableType = "Long ";
                             break;
                     }
                 } else {
@@ -299,16 +303,19 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
         String invocationName = "";
         boolean needToRemoveThisFromStack = true;
 
-        if (opString.contains("INVOKEVIRTUAL") || opString.contains("INVOKEINTERFACE")
-                || (myKotlinMethod.isNormalClassMethod() && decompiledOwnerClassName.equals(myDecompiledOwnerFullClassName) && !name.equals("<init>"))) {
-            if (!myBodyStack.isEmpty() && myBodyStack.peek() instanceof Variable) {
-                Variable v = (Variable) myBodyStack.pop();
-                if (myBodyStack.isEmpty()) {
-                    myStatements.add(new com.sdc.ast.controlflow.InstanceInvocation(name, returnType, arguments, v));
-                } else {
-                    myBodyStack.push(new com.sdc.ast.expressions.InstanceInvocation(name, returnType, arguments, v));
+        if (opString.contains("INVOKEVIRTUAL") || opString.contains("INVOKEINTERFACE")) {
+            if (!name.equals("<init>")) {
+                if (!myKotlinMethod.isNormalClassMethod()) {
+                    invocationName = name;
+                } else if (!myBodyStack.isEmpty() && myBodyStack.peek() instanceof Variable) {
+                    Variable v = (Variable) myBodyStack.pop();
+                    if (myBodyStack.isEmpty()) {
+                        myStatements.add(new com.sdc.ast.controlflow.InstanceInvocation(name, returnType, arguments, v));
+                    } else {
+                        myBodyStack.push(new com.sdc.ast.expressions.InstanceInvocation(name, returnType, arguments, v));
+                    }
+                    return;
                 }
-                return;
             }
         } else if (opString.contains("INVOKESPECIAL")) {
             if (name.equals("<init>")) {
@@ -573,7 +580,7 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
             } else if (lastStatement instanceof Assignment) {
                 return ((Assignment) lastStatement).getRight();
             }
-        } else if ((myNodes.size() > 1) && (myBodyStack.size() >= 2) && (myNodes.get(myNodes.size() - 2).getCondition() != null)) {
+        } /*else if ((myNodes.size() > 1) && (myBodyStack.size() >= 2) && (myNodes.get(myNodes.size() - 2).getCondition() != null)) {
             final int lastIndex = myNodes.size() - 1;
             myNodes.remove(lastIndex);
             final Node ifNode = myNodes.get(lastIndex - 1);
@@ -581,7 +588,7 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
             ifNode.setCondition(null);
             final TernaryExpression ternaryExpression = new TernaryExpression(condition, getTopOfBodyStack(), getTopOfBodyStack());
             myBodyStack.push(ternaryExpression);
-        }
+        }*/
         return myBodyStack.pop();
     }
 
