@@ -1,6 +1,7 @@
 package com.sdc.js;
 
-import com.sdc.abstractLangauge.AbstractClassVisitor;
+import com.sdc.abstractLanguage.AbstractClassVisitor;
+
 import org.objectweb.asm.*;
 
 import java.util.ArrayList;
@@ -14,7 +15,6 @@ public class JSClassVisitor extends AbstractClassVisitor {
     private final int myNestSize;
 
     public JSClassVisitor(final int textWidth, final int nestSize) {
-        super(ASM4);
         this.myTextWidth = textWidth;
         this.myNestSize = nestSize;
     }
