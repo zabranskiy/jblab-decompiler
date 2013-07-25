@@ -3,10 +3,7 @@ package com.sdc.util;
 import com.sdc.abstractLanguage.AbstractMethod;
 import org.objectweb.asm.Opcodes;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class DeclarationWorker {
     public enum SupportedLanguage {
@@ -122,7 +119,7 @@ public class DeclarationWorker {
             case 'D':
                 return "double ";
             case 'L':
-                if (!descriptor.contains("<")) {
+                if (descriptor.indexOf("<", pos) == -1) {
                     final String className = descriptor.substring(pos + 1, descriptor.indexOf(";", pos));
                     imports.add(getDecompiledFullClassName(className));
                     return getClassName(className) + " ";
@@ -184,7 +181,7 @@ public class DeclarationWorker {
             case 'D':
                 return "Double";
             case 'L':
-                if (!descriptor.contains("<")) {
+                if (descriptor.indexOf("<", pos) == -1) {
                     final String className = descriptor.substring(pos + 1, descriptor.indexOf(";", pos));
                     imports.add(getDecompiledFullClassName(className));
                     final String actualClassName = getClassName(className);
@@ -218,9 +215,9 @@ public class DeclarationWorker {
             case 'T':
                 return descriptor.substring(pos + 1, descriptor.indexOf(";", pos));
             case '+':
-                return "? extends " + getKotlinDescriptor(descriptor, pos + 1, imports);
+                return "out " + getKotlinDescriptor(descriptor, pos + 1, imports);
             case '-':
-                return "? super " + getKotlinDescriptor(descriptor, pos + 1, imports);
+                return "in " + getKotlinDescriptor(descriptor, pos + 1, imports);
             case '*':
                 return "? ";
             case '@':
@@ -235,22 +232,8 @@ public class DeclarationWorker {
         int result = 0;
         int pos = 1;
         while (pos < descriptor.indexOf(")")) {
-            switch (descriptor.charAt(pos)) {
-                case '[':
-                    pos++;
-                    break;
-                case 'L':
-                case 'T':
-                case '+':
-                case '-':
-                    result++;
-                    pos = descriptor.indexOf(';', pos) + 1;
-                    break;
-                default:
-                    result++;
-                    pos++;
-                    break;
-            }
+            pos = getNextTypePosition(descriptor, pos);
+            result++;
         }
         return result;
     }
@@ -269,59 +252,29 @@ public class DeclarationWorker {
             boolean isPrimitiveClass = false;
             switch (descriptor.charAt(pos)) {
                 case 'B':
+                case 'Z':
+                case 'I':
+                case 'S':
+                case 'C':
+                case 'F':
+                case 'T':
+                case '[':
+                case '+':
+                case '-':
+                case '*':
                     count++;
-                    pos++;
                     break;
                 case 'J':
-                    count += 2;
-                    pos++;
-                    break;
-                case 'Z':
-                    count++;
-                    pos++;
-                    break;
-                case 'I':
-                    count++;
-                    pos++;
-                    break;
-                case 'S':
-                    count++;
-                    pos++;
-                    break;
-                case 'C':
-                    count++;
-                    pos++;
-                    break;
-                case 'F':
-                    count++;
-                    pos++;
-                    break;
                 case 'D':
                     count += 2;
-                    pos++;
                     break;
                 case 'L':
                     count++;
-                    pos = descriptor.indexOf(";", pos) + 1;
                     isPrimitiveClass = isPrimitiveClass(type);
-                    break;
-                case 'T':
-                    count++;
-                    pos = descriptor.indexOf(";", pos) + 1;
-                    break;
-                case '[':
-                    while (descriptor.charAt(pos) == '[') {
-                        pos++;
-                    }
-                    if (descriptor.charAt(pos) == 'L' || descriptor.charAt(pos) == 'T') {
-                        pos = descriptor.indexOf(";", pos) + 1;
-                    } else {
-                        pos++;
-                    }
-                    count++;
                     break;
             }
 
+            pos = getNextTypePosition(descriptor, pos);
             final int index = (count - backupCount) == 1 ? count : count - 1;
 
             abstractMethod.addLocalVariableName(index, "x" + index);
@@ -372,5 +325,53 @@ public class DeclarationWorker {
             return "Int";
         }
         return javaClass;
+    }
+
+    private static int getNextTypePosition(final String descriptor, final int startPos) {
+        switch (descriptor.charAt(startPos)) {
+            case 'B':
+            case 'J':
+            case 'Z':
+            case 'I':
+            case 'S':
+            case 'C':
+            case 'F':
+            case 'D':
+                return startPos + 1;
+            case 'L':
+                final int semicolonIndex = descriptor.indexOf(";", startPos);
+                final int bracketIndex = descriptor.indexOf("<", startPos);
+                if (bracketIndex == -1 || bracketIndex > semicolonIndex) {
+                    return semicolonIndex + 1;
+                } else {
+                    return skipGenericTypePart(descriptor, semicolonIndex) + 1;
+                }
+            case 'T':
+                return descriptor.indexOf(";", startPos) + 1;
+            case '[':
+            case '+':
+            case '-':
+            case '*':
+            default:
+                return getNextTypePosition(descriptor, startPos + 1);
+        }
+    }
+
+    private static int skipGenericTypePart(final String descriptor, final int startPos) {
+        Stack stack = new Stack();
+        stack.push(0);
+        int pos = startPos + 1;
+        while (!stack.isEmpty()) {
+            switch (descriptor.charAt(pos)) {
+                case '<':
+                    stack.push(0);
+                    break;
+                case '>':
+                    stack.pop();
+                    break;
+            }
+            pos++;
+        }
+        return pos;
     }
 }

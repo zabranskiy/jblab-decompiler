@@ -300,14 +300,16 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
         boolean needToRemoveThisFromStack = true;
 
         if (opString.contains("INVOKEVIRTUAL") || opString.contains("INVOKEINTERFACE")
-                || (decompiledOwnerClassName.equals(myDecompiledOwnerFullClassName) && !name.equals("<init>"))) {
-            Variable v = (Variable) myBodyStack.pop();
-            if (myBodyStack.isEmpty()) {
-                myStatements.add(new com.sdc.ast.controlflow.InstanceInvocation(name, returnType, arguments, v));
-            } else {
-                myBodyStack.push(new com.sdc.ast.expressions.InstanceInvocation(name, returnType, arguments, v));
+                || (myKotlinMethod.isNormalClassMethod() && decompiledOwnerClassName.equals(myDecompiledOwnerFullClassName) && !name.equals("<init>"))) {
+            if (!myBodyStack.isEmpty() && myBodyStack.peek() instanceof Variable) {
+                Variable v = (Variable) myBodyStack.pop();
+                if (myBodyStack.isEmpty()) {
+                    myStatements.add(new com.sdc.ast.controlflow.InstanceInvocation(name, returnType, arguments, v));
+                } else {
+                    myBodyStack.push(new com.sdc.ast.expressions.InstanceInvocation(name, returnType, arguments, v));
+                }
+                return;
             }
-            return;
         } else if (opString.contains("INVOKESPECIAL")) {
             if (name.equals("<init>")) {
                 myKotlinMethod.addImport(decompiledOwnerClassName);
@@ -584,7 +586,9 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
     }
 
     private void removeThisVariableFromStack() {
-        if (!myBodyStack.isEmpty()) {
+        if (myKotlinMethod.isNormalClassMethod() && !myBodyStack.isEmpty()
+                && myBodyStack.peek() instanceof Variable && ((Variable) myBodyStack.peek()).getName().equals("this"))
+        {
             myBodyStack.pop();
         }
     }
