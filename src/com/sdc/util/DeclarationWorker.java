@@ -122,7 +122,7 @@ public class DeclarationWorker {
                 if (descriptor.indexOf("<", pos) == -1) {
                     return getSimpleClassName(descriptor, pos, imports) + " ";
                 } else {
-                    return getClassNameWithGenerics(descriptor, pos, imports);
+                    return getClassNameWithGenerics(descriptor, pos, imports, SupportedLanguage.JAVA);
                 }
             case 'T':
                 return descriptor.substring(pos + 1, descriptor.indexOf(";", pos)) + " ";
@@ -168,7 +168,7 @@ public class DeclarationWorker {
                         return actualClassName;
                     }
                 } else {
-                    return convertJetFunctionRawType(getClassNameWithGenerics(descriptor, pos, imports));
+                    return convertJetFunctionRawType(getClassNameWithGenerics(descriptor, pos, imports, SupportedLanguage.KOTLIN));
                 }
             case 'T':
                 return descriptor.substring(pos + 1, descriptor.indexOf(";", pos));
@@ -396,7 +396,7 @@ public class DeclarationWorker {
         return getClassName(className);
     }
 
-    private static String getClassNameWithGenerics(final String descriptor, final int pos, List<String> imports) {
+    private static String getClassNameWithGenerics(final String descriptor, final int pos, List<String> imports, final SupportedLanguage language) {
         final String className = descriptor.substring(pos + 1, descriptor.indexOf("<", pos));
         imports.add(getDecompiledFullClassName(className));
 
@@ -407,7 +407,7 @@ public class DeclarationWorker {
         int curPos = pos + className.length() + 2;
 
         while (curPos < lastClassNamePos - 1) {
-            final String genericType = getKotlinDescriptor(descriptor, curPos, imports);
+            final String genericType = getDescriptor(descriptor, curPos, imports, language);
             result = result.append(genericType);
             curPos = getNextTypePosition(descriptor, curPos);
             if (curPos < lastClassNamePos - 1) {
