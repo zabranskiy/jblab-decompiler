@@ -120,30 +120,9 @@ public class DeclarationWorker {
                 return "double ";
             case 'L':
                 if (descriptor.indexOf("<", pos) == -1) {
-                    final String className = descriptor.substring(pos + 1, descriptor.indexOf(";", pos));
-                    imports.add(getDecompiledFullClassName(className));
-                    return getClassName(className) + " ";
+                    return getSimpleClassName(descriptor, pos, imports) + " ";
                 } else {
-                    final String className = descriptor.substring(pos + 1, descriptor.indexOf("<", pos));
-                    final String[] genericList = descriptor.substring(descriptor.indexOf("<") + 1, descriptor.indexOf(">")).split(";");
-                    imports.add(getDecompiledFullClassName(className));
-
-                    StringBuilder result = new StringBuilder(getClassName(className));
-                    boolean isSingleType = true;
-
-                    result.append("<");
-                    for (final String generic : genericList) {
-                        if (!isSingleType) {
-                            result.append(", ");
-                        }
-                        isSingleType = false;
-
-                        final String genericName = getJavaDescriptor(generic + ";", 0, imports).trim();
-                        result.append(genericName);
-                    }
-                    result.append("> ");
-
-                    return result.toString();
+                    return getClassNameWithGenerics(descriptor, pos, imports);
                 }
             case 'T':
                 return descriptor.substring(pos + 1, descriptor.indexOf(";", pos)) + " ";
@@ -181,36 +160,15 @@ public class DeclarationWorker {
             case 'D':
                 return "Double";
             case 'L':
-                if (descriptor.indexOf("<", pos) == -1) {
-                    final String className = descriptor.substring(pos + 1, descriptor.indexOf(";", pos));
-                    imports.add(getDecompiledFullClassName(className));
-                    final String actualClassName = getClassName(className);
+                if (descriptor.indexOf("<", pos) == -1 || descriptor.indexOf("<", pos) > descriptor.indexOf(";", pos)) {
+                    final String actualClassName = getSimpleClassName(descriptor, pos, imports);
                     if (isPrimitiveClass(actualClassName)) {
                         return convertJavaPrimitiveClassToKotlin(actualClassName) + "?";
                     } else {
                         return actualClassName;
                     }
                 } else {
-                    final String className = descriptor.substring(pos + 1, descriptor.indexOf("<", pos));
-                    final String[] genericList = descriptor.substring(descriptor.indexOf("<") + 1, descriptor.indexOf(">")).split(";");
-                    imports.add(getDecompiledFullClassName(className));
-
-                    StringBuilder result = new StringBuilder(getClassName(className));
-                    boolean isSingleType = true;
-
-                    result.append("<");
-                    for (final String generic : genericList) {
-                        if (!isSingleType) {
-                            result.append(", ");
-                        }
-                        isSingleType = false;
-
-                        final String genericName = getJavaDescriptor(generic + ";", 0, imports).trim();
-                        result.append(genericName);
-                    }
-                    result.append(">");
-
-                    return result.toString();
+                    return convertJetFunctionRawType(getClassNameWithGenerics(descriptor, pos, imports));
                 }
             case 'T':
                 return descriptor.substring(pos + 1, descriptor.indexOf(";", pos));
@@ -316,13 +274,15 @@ public class DeclarationWorker {
     }
 
     public static boolean isPrimitiveClass(final String type) {
-        Set<String> primitiveTypes = new HashSet<String>(Arrays.asList("Byte", "Long", "Boolean", "Integer", "Int", "Short", "Char", "Float", "Double"));
+        Set<String> primitiveTypes = new HashSet<String>(Arrays.asList("Byte", "Long", "Boolean", "Integer", "Int", "Short", "Character", "Float", "Double"));
         return primitiveTypes.contains(type);
     }
 
     private static String convertJavaPrimitiveClassToKotlin(final String javaClass) {
         if (javaClass.equals("Integer")) {
             return "Int";
+        } else if (javaClass.equals("Character")) {
+            return "Char";
         }
         return javaClass;
     }
@@ -373,5 +333,89 @@ public class DeclarationWorker {
             pos++;
         }
         return pos;
+    }
+
+    private static String convertJetFunctionRawType(final String type) {
+        final int prefixLength = "Function".length();
+
+        if (type.startsWith("Function") && Character.isDigit(type.charAt(prefixLength))) {
+            final int parametersCount = Integer.valueOf(type.substring(prefixLength, type.indexOf("<")));
+
+            StringBuilder result = new StringBuilder("(");
+            int beginPartPos = type.indexOf("<") + 1;
+            int endPartPos = beginPartPos;
+            List<String> parts = new ArrayList<String>();
+
+            Stack stack = new Stack();
+            while (endPartPos < type.length()) {
+                switch (type.charAt(endPartPos)) {
+                    case '<':
+                    case '(':
+                        stack.push(0);
+                        break;
+                    case ')':
+                        stack.pop();
+                        break;
+                    case '>':
+                        if (type.charAt(endPartPos - 1) == '-') {
+                            break;
+                        } else if (endPartPos != type.length() - 1) {
+                            stack.pop();
+                            endPartPos++;
+                            continue;
+                        }
+                    case ',':
+                        if (stack.isEmpty()) {
+                            parts.add(type.substring(beginPartPos, endPartPos));
+                            endPartPos += 2;
+                            beginPartPos = endPartPos;
+                            continue;
+                        }
+                        break;
+                }
+                endPartPos++;
+            }
+
+            if (parametersCount >= 1) {
+                for (int i = 0; i < parametersCount - 1; i++) {
+                    result = result.append(parts.get(i)).append(", ");
+                }
+                result = result.append(parts.get(parametersCount - 1));
+            }
+            result = result.append(") -> ").append(parts.get(parametersCount));
+
+            return result.toString();
+        } else {
+            return type;
+        }
+    }
+
+    private static String getSimpleClassName(final String descriptor, final int pos, List<String> imports) {
+        final String className = descriptor.substring(pos + 1, descriptor.indexOf(";", pos));
+        imports.add(getDecompiledFullClassName(className));
+        return getClassName(className);
+    }
+
+    private static String getClassNameWithGenerics(final String descriptor, final int pos, List<String> imports) {
+        final String className = descriptor.substring(pos + 1, descriptor.indexOf("<", pos));
+        imports.add(getDecompiledFullClassName(className));
+
+        StringBuilder result = new StringBuilder(getClassName(className));
+        result = result.append("<");
+
+        final int lastClassNamePos = skipGenericTypePart(descriptor, descriptor.indexOf("<", pos));
+        int curPos = pos + className.length() + 2;
+
+        while (curPos < lastClassNamePos - 1) {
+            final String genericType = getKotlinDescriptor(descriptor, curPos, imports);
+            result = result.append(genericType);
+            curPos = getNextTypePosition(descriptor, curPos);
+            if (curPos < lastClassNamePos - 1) {
+                result = result.append(", ");
+            }
+        }
+        result = result.append(">");
+
+        return result.toString();
     }
 }
