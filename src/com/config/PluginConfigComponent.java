@@ -1,5 +1,6 @@
 package com.config;
 
+import com.decompiler.Language;
 import com.intellij.openapi.components.ApplicationComponent;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
@@ -15,24 +16,26 @@ import org.jetbrains.annotations.Nullable;
 import javax.swing.*;
 
 /**
- * Configuration component for decompiler.
+ * The component for the application-level configuration.
  */
 @State(
         name = PluginConfigurationPane.COMPONENT_NAME,
         storages = {@Storage(id = "other", file = "$APP_CONFIG$/jblab.decompiler.xml")}
 )
-public class PluginComponent implements ApplicationComponent, Configurable, PersistentStateComponent<Element> {
-    public static final String SHOW_PRETTY_ATTRIBUTE = "displayPrettyEnabled";
-    public static final String CHOOSE_LANGUAGE_ATTRIBUTE = "chooseLanguage";
-    public static final String SHOW_TAB_SIZE = "displayTabSize";
-    public static final String SHOW_TEXT_WIDTH = "displayTextWidth";
-    public static final String CONFIGURATION_CONFIG_ELEMENT = "configuration";
-    public static final String DEFAULT_LANGUAGE = "Java";
+public class PluginConfigComponent implements ApplicationComponent, Configurable, PersistentStateComponent<Element> {
+    private static final String COMPONENT_NAME = "JBLab Decompiler Plugin Config";
+    private static final String DISPLAY_NAME = "JBLab Decompiler";
+    private static final String CONFIGURATION_CONFIG_ELEMENT = "configuration";
+    private static final String SHOW_PRETTY_ATTRIBUTE = "displayPrettyEnabled";
+    private static final String CHOOSE_LANGUAGE_ATTRIBUTE = "selectLanguage";
+    private static final String SHOW_TAB_SIZE = "displayTabSize";
+    private static final String SHOW_TEXT_WIDTH = "displayTextWidth";
+    private static final String DEFAULT_LANGUAGE = "Java";
 
     private PluginConfigurationPane configPane;
     private boolean showPrettyEnabled;
 
-    private String chosenLanguage;
+    private Language chosenLanguage;
     private Integer textWidth, tabSize;
 
     public void initComponent() {
@@ -45,13 +48,13 @@ public class PluginComponent implements ApplicationComponent, Configurable, Pers
 
     @NotNull
     public String getComponentName() {
-        return "JBLab Decompiler Plugin";
+        return COMPONENT_NAME;
     }
 
     @Nls
     @Override
     public String getDisplayName() {
-        return "JBLab Decompiler";
+        return DISPLAY_NAME;
     }
 
     @Nullable
@@ -93,7 +96,7 @@ public class PluginComponent implements ApplicationComponent, Configurable, Pers
         configPane = null;
     }
 
-    public String getChosenLanguage() {
+    public Language getChosenLanguage() {
         return chosenLanguage;
     }
 
@@ -113,8 +116,8 @@ public class PluginComponent implements ApplicationComponent, Configurable, Pers
         this.tabSize = tabSize;
     }
 
-    public void setChosenLanguage(String language) {
-        this.chosenLanguage = language;
+    public void setChosenLanguage(Language lang) {
+        this.chosenLanguage = lang;
     }
 
     public boolean isShowPrettyEnabled() {
@@ -128,7 +131,7 @@ public class PluginComponent implements ApplicationComponent, Configurable, Pers
     @Override
     public Element getState() {
         Element configuration = new Element(CONFIGURATION_CONFIG_ELEMENT);
-        configuration.setAttribute(CHOOSE_LANGUAGE_ATTRIBUTE, String.valueOf(chosenLanguage));
+        configuration.setAttribute(CHOOSE_LANGUAGE_ATTRIBUTE, String.valueOf(chosenLanguage == null ? "null" : chosenLanguage.getName()));
         configuration.setAttribute(SHOW_PRETTY_ATTRIBUTE, String.valueOf(showPrettyEnabled));
         configuration.setAttribute(SHOW_TAB_SIZE, String.valueOf(tabSize));
         configuration.setAttribute(SHOW_TEXT_WIDTH, String.valueOf(textWidth));
@@ -138,7 +141,7 @@ public class PluginComponent implements ApplicationComponent, Configurable, Pers
     @Override
     public void loadState(Element configuration) {
         String temp = configuration.getAttributeValue(CHOOSE_LANGUAGE_ATTRIBUTE);
-        chosenLanguage = temp.equals("null") ? DEFAULT_LANGUAGE : temp;
+        chosenLanguage = new Language(temp.equals("null") ? DEFAULT_LANGUAGE : temp);
         temp = configuration.getAttributeValue(SHOW_TAB_SIZE);
         tabSize = temp.equals("null") ? 4 : Integer.valueOf(temp);
         temp = configuration.getAttributeValue(SHOW_TEXT_WIDTH);

@@ -23,16 +23,13 @@
     <!--<depends>com.intellij.modules.java</depends>-->
 
     <application-components>
-        <!-- Add your application components here -->
         <component>
-            <implementation-class>com.config.PluginComponent</implementation-class>
+            <implementation-class>com.config.PluginConfigComponent</implementation-class>
+        </component>
+        <component>
+            <implementation-class>com.JBLabDecompiler</implementation-class>
         </component>
     </application-components>
-
-    <project-components>
-        <!-- Add your project components here -->
-    </project-components>
-
 
     <actions>
         <action id="Decompile" class="com.actions.Decompile" text="Decompile" description="Decompile class file">
@@ -42,7 +39,8 @@
         </action>
     </actions>
 
-    <extensions defaultExtensionNs="com.intellij">
-        <!-- Add your extensions here -->
-    </extensions>
+    <!--<extensions defaultExtensionNs="com.intellij">-->
+    <!--<attachSourcesProvider implementation="com.editor.DecompilerAttachSourcesProvider"/>-->
+    <!--</extensions>-->
+
 </idea-plugin>
