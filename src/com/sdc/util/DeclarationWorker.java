@@ -60,6 +60,9 @@ public class DeclarationWorker {
         if ((access & Opcodes.ACC_ENUM) != 0) {
             sb.append("enum ");
         }
+        if ((access & Opcodes.ACC_BRIDGE) != 0) {
+            sb.append("bridge ");
+        }
 
         return sb.toString();
     }
@@ -81,6 +84,9 @@ public class DeclarationWorker {
         }
         if ((access & Opcodes.ACC_ABSTRACT) != 0) {
             sb.append("abstract ");
+        }
+        if ((access & Opcodes.ACC_BRIDGE) != 0) {
+            sb.append("bridge ");
         }
 
         return sb.toString();

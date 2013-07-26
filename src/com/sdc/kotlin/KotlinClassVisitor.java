@@ -190,4 +190,8 @@ public class KotlinClassVisitor extends AbstractClassVisitor {
     public String getDecompiledCode() {
         return myDecompiledKotlinClass.toString();
     }
+
+    public KotlinClass getDecompiledClass() {
+        return myDecompiledKotlinClass;
+    }
 }

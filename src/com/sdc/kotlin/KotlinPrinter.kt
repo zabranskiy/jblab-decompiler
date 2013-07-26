@@ -19,6 +19,7 @@ import com.sdc.kotlin.KotlinClass
 import com.sdc.kotlin.KotlinMethod
 import com.sdc.kotlin.KotlinClassField
 import com.sdc.kotlin.KotlinAnnotation
+import com.sdc.ast.expressions.nestedclasses.LambdaFunction
 
 fun printExpression(expression: Expression?, nestSize: Int): PrimeDoc =
         when (expression) {
@@ -115,6 +116,16 @@ fun printExpression(expression: Expression?, nestSize: Int): PrimeDoc =
 
                 newArray
             }
+
+            is LambdaFunction -> {
+                val lambdaFunction = expression.getFunction()
+                val arguments = text("{ ") + printMethodParameters(expression.getFunction()) + text(" -> ")
+                val body = nest(
+                        lambdaFunction!!.getNestSize(),
+                        printStatements(lambdaFunction.getBody(), lambdaFunction.getNestSize())
+                ) / text("}")
+                arguments + body
+            }
             else -> throw IllegalArgumentException("Unknown Expression implementer!")
         }
 
@@ -136,7 +147,7 @@ fun printStatement(statement: Statement, nestSize: Int): PrimeDoc =
                             .map { arg -> printExpression(arg, nestSize) + text(", ") }
                     var arguments = nest(2 * nestSize, fill(argsDocs + printExpression(args.last as Expression, nestSize)))
 
-                    group(funName + arguments + text(")"))
+                    funName + arguments + text(")")
                 }
             }
             is Assignment -> printExpression(statement.getLeft(), nestSize) + text(" = ") + printExpression(statement.getRight(), nestSize)
@@ -255,7 +266,7 @@ fun printKotlinMethod(kotlinMethod: KotlinMethod): PrimeDoc {
     if (!returnType!!.isEmpty())
         returnTypeCode = text(": " + returnType + " ")
 
-    return group(declaration + arguments + text(")") + returnTypeCode + text("{")) + body
+    return declaration + arguments + text(")") + returnTypeCode + text("{") + body
 }
 
 fun printClassField(classField: KotlinClassField): PrimeDoc {
@@ -303,7 +314,7 @@ fun printMethodParameters(method: KotlinMethod?): PrimeDoc {
             else
                 arguments = arguments + text(variable)
             if (index + 1 < variables.size)
-                arguments = group(arguments + text(",") + line())
+                arguments = arguments + text(", ")
 
             index++
         }

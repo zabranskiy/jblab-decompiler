@@ -77,6 +77,10 @@ public class KotlinMethod extends AbstractMethod {
         return myNestSize;
     }
 
+    public int getTextWidth() {
+        return myTextWidth;
+    }
+
     public List<Statement> getBody() {
         return myBody;
     }

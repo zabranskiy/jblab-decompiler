@@ -1,13 +1,15 @@
 package com.sdc.kotlin;
 
 import KotlinPrinter.KotlinPrinterPackage;
-import com.sdc.ast.expressions.Expression;
 import pretty.PrettyPackage;
+
+import com.sdc.abstractLanguage.AbstractClass;
+import com.sdc.ast.expressions.Expression;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class KotlinClass {
+public class KotlinClass extends AbstractClass {
     private final String myModifier;
     private final String myType;
     private final String myName;

@@ -1,12 +1,16 @@
 package com.sdc.kotlin;
 
+import com.sdc.abstractLanguage.AbstractClassVisitor;
 import com.sdc.abstractLanguage.AbstractFrame;
 import com.sdc.abstractLanguage.AbstractMethodVisitor;
 import com.sdc.ast.controlflow.*;
 import com.sdc.ast.expressions.*;
+import com.sdc.ast.expressions.InstanceInvocation;
+import com.sdc.ast.expressions.Invocation;
 import com.sdc.ast.expressions.identifiers.Field;
 import com.sdc.ast.expressions.identifiers.Identifier;
 import com.sdc.ast.expressions.identifiers.Variable;
+import com.sdc.ast.expressions.nestedclasses.LambdaFunction;
 import com.sdc.cfg.ExceptionHandler;
 import com.sdc.cfg.Node;
 import com.sdc.cfg.Switch;
@@ -14,12 +18,10 @@ import com.sdc.cfg.functionalization.AnonymousClass;
 import com.sdc.cfg.functionalization.Generator;
 import com.sdc.util.DeclarationWorker;
 
-import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.Attribute;
-import org.objectweb.asm.Handle;
-import org.objectweb.asm.Label;
+import org.objectweb.asm.*;
 import org.objectweb.asm.util.Printer;
 
+import java.io.IOException;
 import java.util.*;
 
 public class KotlinMethodVisitor extends AbstractMethodVisitor {
@@ -163,9 +165,12 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
         } else if (opString.contains("CONST_")) {
             myBodyStack.push(new Constant(opString.substring(7).toLowerCase(), false));
         } else if (opString.equals("RETURN")) {
+            replaceInvocationsFromExpressionsToStatements();
             myStatements.add(new Return());
         } else if (opString.contains("RETURN")) {
-            myStatements.add(new Return(getTopOfBodyStack()));
+            final Expression expression = getTopOfBodyStack();
+            replaceInvocationsFromExpressionsToStatements();
+            myStatements.add(new Return(expression));
         } else if (opString.contains("CMP")) {
             Expression e1 = getTopOfBodyStack();
             Expression e2 = getTopOfBodyStack();
@@ -282,6 +287,18 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
         } else if (opString.contains("GETFIELD")) {
             removeThisVariableFromStack();
             myBodyStack.push(new Field(name, DeclarationWorker.getKotlinDescriptor(desc, 0, myKotlinMethod.getImports())));
+        } else if (opString.contains("GETSTATIC")) {
+            final String decompiledOwnerName = DeclarationWorker.getDecompiledFullClassName(owner);
+            if (name.equals("instance$") && decompiledOwnerName.contains(myDecompiledOwnerFullClassName) && decompiledOwnerName.contains(myKotlinMethod.getName())) {
+                try {
+                    AbstractClassVisitor cv = new KotlinClassVisitor(myKotlinMethod.getTextWidth(), myKotlinMethod.getNestSize());
+                    ClassReader cr = new ClassReader(decompiledOwnerName);
+                    cr.accept(cv, 0);
+                    myBodyStack.push(new LambdaFunction(((KotlinClassVisitor) cv).getDecompiledClass()));
+                } catch (IOException e) {
+
+                }
+            }
         }
     }
 
@@ -319,6 +336,22 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
             }
         } else if (opString.contains("INVOKESPECIAL")) {
             if (name.equals("<init>")) {
+                final String decompiledOwnerName = DeclarationWorker.getDecompiledFullClassName(owner);
+                if (decompiledOwnerName.contains(myDecompiledOwnerFullClassName) && decompiledOwnerName.contains(myKotlinMethod.getName())) {
+                    try {
+                        AbstractClassVisitor cv = new KotlinClassVisitor(myKotlinMethod.getTextWidth(), myKotlinMethod.getNestSize());
+                        ClassReader cr = new ClassReader(decompiledOwnerName);
+                        cr.accept(cv, 0);
+                        LambdaFunction lf = new LambdaFunction(((KotlinClassVisitor) cv).getDecompiledClass());
+                        if (lf.isKotlinLambda()) {
+                            myBodyStack.push(lf);
+                            return;
+                        }
+                    } catch (IOException e) {
+
+                    }
+                }
+
                 myKotlinMethod.addImport(decompiledOwnerClassName);
                 invocationName = DeclarationWorker.getClassName(owner);
                 returnType = invocationName + " ";
@@ -597,6 +630,18 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
                 && myBodyStack.peek() instanceof Variable && ((Variable) myBodyStack.peek()).getName().equals("this"))
         {
             myBodyStack.pop();
+        }
+    }
+
+    private void replaceInvocationsFromExpressionsToStatements() {
+        for (final Expression expression : myBodyStack) {
+            if (expression instanceof InstanceInvocation) {
+                final InstanceInvocation invocation = (InstanceInvocation) expression;
+                myStatements.add(new com.sdc.ast.controlflow.InstanceInvocation(invocation.getFunction(), invocation.getReturnType(), invocation.getArguments(), invocation.getVariable()));
+            } else if (expression instanceof Invocation) {
+                final Invocation invocation = (Invocation) expression;
+                myStatements.add(new com.sdc.ast.controlflow.Invocation(invocation.getFunction(), invocation.getReturnType(), invocation.getArguments()));
+            }
         }
     }
 }
