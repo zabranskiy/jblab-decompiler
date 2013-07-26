@@ -324,9 +324,7 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
 
         if (opString.contains("INVOKEVIRTUAL") || opString.contains("INVOKEINTERFACE")) {
             if (!name.equals("<init>")) {
-                if (!myKotlinMethod.isNormalClassMethod()) {
-                    invocationName = name;
-                } else if (!myBodyStack.isEmpty() && myBodyStack.peek() instanceof Variable) {
+                 if (!myBodyStack.isEmpty() && myBodyStack.peek() instanceof Variable) {
                     Variable v = (Variable) myBodyStack.pop();
                     if (myBodyStack.isEmpty()) {
                         myStatements.add(new com.sdc.ast.controlflow.InstanceInvocation(name, returnType, arguments, v));
@@ -343,7 +341,7 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
                 final String decompiledOwnerName = DeclarationWorker.getDecompiledFullClassName(owner);
                 final int srcIndex = myDecompiledOwnerFullClassName.indexOf("$src$");
                 final String methodOwner = srcIndex == -1 ? myDecompiledOwnerFullClassName : myDecompiledOwnerFullClassName.substring(0, srcIndex);
-                if (decompiledOwnerName.contains(myDecompiledOwnerFullClassName) && decompiledOwnerName.contains(myKotlinMethod.getName())) {
+                if (decompiledOwnerName.contains(methodOwner) && decompiledOwnerName.contains(myKotlinMethod.getName())) {
                     try {
                         AbstractClassVisitor cv = new KotlinClassVisitor(myKotlinMethod.getTextWidth(), myKotlinMethod.getNestSize());
                         ClassReader cr = new ClassReader(decompiledOwnerName);
@@ -368,7 +366,11 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
             myKotlinMethod.addImport(decompiledOwnerClassName);
             final String ownerClassName = DeclarationWorker.getClassName(owner);
             if (!ownerClassName.equals("KotlinPackage")) {
-                invocationName = ownerClassName + "." + name;
+                if (!ownerClassName.contains("$src$")) {
+                    invocationName = ownerClassName + "." + name;
+                } else {
+                    invocationName = name;
+                }
             } else {
                 Variable variable = (Variable) arguments.remove(0);
                 if (myBodyStack.isEmpty()) {

@@ -289,6 +289,8 @@ public class DeclarationWorker {
             return "Int";
         } else if (javaClass.equals("Character")) {
             return "Char";
+        } else if (javaClass.equals("Object")) {
+            return "Any";
         }
         return javaClass;
     }
