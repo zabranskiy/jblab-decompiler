@@ -4,6 +4,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Language for ease of use in the decompiler.
+ * Dmitriy Zabranskiy, 2013
+ */
 public class Language {
     private String myName;
     private static final Map<String, String> myLanguageToExtensionMap;

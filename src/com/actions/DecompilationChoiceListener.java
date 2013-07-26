@@ -1,7 +1,8 @@
 package com.actions;
 
+import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.vfs.VirtualFile;
 
 public interface DecompilationChoiceListener {
-    void decompile(VirtualFile virtualFile);
+    void treatFile(final FileEditorManager manager, final VirtualFile file);
 }

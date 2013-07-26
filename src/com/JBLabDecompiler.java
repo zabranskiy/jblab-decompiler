@@ -14,18 +14,13 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.codeStyle.CodeStyleManager;
-import com.intellij.testFramework.LightVirtualFile;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-
-import static com.decompiler.Decompiler.getDecompiledCode;
+import static com.decompiler.Decompiler.decompile;
 
 
 public class JBLabDecompiler implements ApplicationComponent, DecompilationChoiceListener, ProjectManagerListener {
-    private Project project;
+    private Project myCurrentProject;
 
     public void initComponent() {
         ProjectManager.getInstance().addProjectManagerListener(this);
@@ -41,58 +36,47 @@ public class JBLabDecompiler implements ApplicationComponent, DecompilationChoic
     }
 
     @Override
-    public void projectOpened(Project project) {
-        this.project = project;
+    public void projectOpened(final Project project) {
+        this.myCurrentProject = project;
         NavigationListener navigationListener = new NavigationListener(this);
         project.getMessageBus().connect().subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, navigationListener);
     }
 
     @Override
-    public boolean canCloseProject(Project project) {
+    public boolean canCloseProject(final Project project) {
         return true;
     }
 
     @Override
-    public void projectClosed(Project project) {
+    public void projectClosed(final Project project) {
         // no-op
     }
 
     @Override
-    public void projectClosing(Project project) {
+    public void projectClosing(final Project project) {
         // no-op
     }
 
     @Override
-    public void decompile(VirtualFile virtualFile) {
-        FileEditorManager manager = FileEditorManager.getInstance(project);
-        PluginConfigComponent pluginComponent = ApplicationManager.getApplication().getComponent(PluginConfigComponent.class);
-        try {
-            InputStream is = virtualFile.getInputStream();
-            byte[] bytes = new byte[com.Constants.CAFEBABE];
-            is.mark(com.Constants.CAFEBABE);
-            is.read(bytes);
-            final int magic = ByteBuffer.wrap(bytes).getInt();
-            if (magic == 0xCAFEBABE) {
-                is.reset();
-                LightVirtualFile decompiledFile = new LightVirtualFile(virtualFile.getNameWithoutExtension() + pluginComponent.getChosenLanguage().getExtension(),
-                        getDecompiledCode(pluginComponent.getChosenLanguage(), is, pluginComponent.getTextWidth(), pluginComponent.getTabSize()));
-                if (!pluginComponent.isShowPrettyEnabled()) {
-                    final PsiFile psiFile = PsiManager.getInstance(project).findFile(decompiledFile);
-                    // Reformat decompiled code by IDEA
-                    ApplicationManager.getApplication().runWriteAction(new Runnable() {
-                        @Override
-                        public void run() {
-                            assert psiFile != null;
-                            CodeStyleManager.getInstance(project).reformat(psiFile);
-                        }
-                    });
-                }
-                manager.closeFile(virtualFile);
-                manager.openFile(decompiledFile, true);
+    public void treatFile(final FileEditorManager manager, final VirtualFile file) {
+        PluginConfigComponent config = ApplicationManager.getApplication().getComponent(PluginConfigComponent.class);
+
+        VirtualFile decompiledFile = decompile(config, file);
+
+        if (decompiledFile != null) {
+            if (!config.isShowPrettyEnabled()) {
+                final PsiFile psiFile = PsiManager.getInstance(myCurrentProject).findFile(decompiledFile);
+                // Reformat decompiled code by IDEA
+                ApplicationManager.getApplication().runWriteAction(new Runnable() {
+                    @Override
+                    public void run() {
+                        assert psiFile != null;
+                        CodeStyleManager.getInstance(myCurrentProject).reformat(psiFile);
+                    }
+                });
             }
-            is.close();
-        } catch (IOException e1) {
-            e1.printStackTrace();
+            manager.closeFile(file);
+            manager.openFile(decompiledFile, true);
         }
     }
 }
