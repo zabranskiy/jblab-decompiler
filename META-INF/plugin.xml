@@ -32,7 +32,7 @@
     </application-components>
 
     <actions>
-        <action id="Decompile" class="com.actions.Decompile" text="Decompile" description="Decompile class file">
+        <action id="Decompile" class="com.actions.DecompileAction" text="Decompile" description="Decompile class file">
             <add-to-group group-id="EditorPopupMenu" anchor="after" relative-to-action="Compile"/>
             <add-to-group group-id="ProjectViewPopupMenu" anchor="after" relative-to-action="Compile"/>
             <keyboard-shortcut keymap="$default" first-keystroke="ctrl F10"/>

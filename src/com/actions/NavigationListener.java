@@ -8,24 +8,24 @@ import org.jetbrains.annotations.NotNull;
 
 public class NavigationListener implements FileEditorManagerListener {
 
-    private final DecompilationChoiceListener decompilationListener;
+    private final DecompilationChoiceListener myDecompilationListener;
 
-    public NavigationListener(@NotNull DecompilationChoiceListener decompilationListener) {
-        this.decompilationListener = decompilationListener;
+    public NavigationListener(@NotNull final DecompilationChoiceListener decompilationListener) {
+        this.myDecompilationListener = decompilationListener;
     }
 
     @Override
-    public void fileOpened(FileEditorManager source, VirtualFile virtualFile) {
-        decompilationListener.decompile(virtualFile);
+    public void fileOpened(final FileEditorManager source, final VirtualFile file) {
+        myDecompilationListener.treatFile(source, file);
     }
 
     @Override
-    public void fileClosed(FileEditorManager source, VirtualFile file) {
+    public void fileClosed(final FileEditorManager source, final VirtualFile file) {
         // no-op
     }
 
     @Override
-    public void selectionChanged(FileEditorManagerEvent event) {
+    public void selectionChanged(final FileEditorManagerEvent event) {
         // no-op
     }
 }

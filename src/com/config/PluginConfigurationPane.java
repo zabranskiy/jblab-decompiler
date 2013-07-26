@@ -11,80 +11,86 @@ import java.awt.event.ActionListener;
 
 public class PluginConfigurationPane {
     protected static final String COMPONENT_NAME = "PluginConfiguration";
-    private JCheckBox showPrettyCheckBox;
-    private JPanel contentPane;
-    private HyperlinkLabel hyperlinkLabel;
-    private JComboBox comboBox1;
-    private JTextField textField1;
-    private JTextField textField2;
-    private Language selectedLanguage;
+    private JCheckBox myShowPrettyCheckBox;
+    private JPanel myContentPane;
+    private HyperlinkLabel myHyperlinkLabel;
+    private JComboBox myLanguageComboBox;
+    private JTextField myTabSizeField;
+    private JTextField myTextWidthField;
+    private Language mySelectedLanguage;
 
 
     public PluginConfigurationPane() {
-        String[] languages = {"Java", "JavaScript", "C"};
-        comboBox1.insertItemAt(languages[0], 0);
-        comboBox1.insertItemAt(languages[1], 1);
-//        comboBox1.insertItemAt(languages[2], 2);
+        final String[] languages = {"Java", "JavaScript", "Kotlin"};
+        myLanguageComboBox.insertItemAt(languages[0], 0);
+        myLanguageComboBox.insertItemAt(languages[1], 1);
+        myLanguageComboBox.insertItemAt(languages[2], 2);
         ActionListener actionListener = new ActionListener() {
             @Override
             public void actionPerformed(@NotNull ActionEvent e) {
                 if (e.getSource() instanceof JComboBox) {
-                    selectedLanguage = new Language((String) ((JComboBox) e.getSource()).getSelectedItem());
+                    mySelectedLanguage = new Language((String) ((JComboBox) e.getSource()).getSelectedItem());
+                    if (mySelectedLanguage.getName().equals("JavaScript")) {
+                        myShowPrettyCheckBox.setEnabled(false);
+                        myShowPrettyCheckBox.setSelected(true);
+                    } else {
+                        myShowPrettyCheckBox.setEnabled(true);
+                    }
                 }
-                if (showPrettyCheckBox.isSelected()) {
-                    textField1.setEditable(true);
-                    textField2.setEditable(true);
+                if (myShowPrettyCheckBox.isSelected()) {
+                    myTabSizeField.setEditable(true);
+                    myTextWidthField.setEditable(true);
                 } else {
-                    textField1.setEditable(false);
-                    textField2.setEditable(false);
+                    myTabSizeField.setEditable(false);
+                    myTextWidthField.setEditable(false);
                 }
             }
         };
-        showPrettyCheckBox.addActionListener(actionListener);
-        comboBox1.addActionListener(actionListener);
-        PlainDocument doc1 = (PlainDocument) textField1.getDocument();
+        myShowPrettyCheckBox.addActionListener(actionListener);
+        myLanguageComboBox.addActionListener(actionListener);
+        PlainDocument doc1 = (PlainDocument) myTabSizeField.getDocument();
         doc1.setDocumentFilter(new DocFilter());
-        PlainDocument doc2 = (PlainDocument) textField2.getDocument();
+        PlainDocument doc2 = (PlainDocument) myTextWidthField.getDocument();
         doc2.setDocumentFilter(new DocFilter());
     }
 
-    public void storeDataTo(PluginConfigComponent pluginComponent) {
-        pluginComponent.setChosenLanguage(selectedLanguage);
-        pluginComponent.setShowPrettyEnabled(showPrettyCheckBox.isSelected());
-        pluginComponent.setTabSize(Integer.valueOf(textField1.getText()));
-        pluginComponent.setTextWidth(Integer.valueOf(textField2.getText()));
+    public void storeDataTo(final PluginConfigComponent pluginComponent) {
+        pluginComponent.setChosenLanguage(mySelectedLanguage);
+        pluginComponent.setShowPrettyEnabled(myShowPrettyCheckBox.isSelected());
+        pluginComponent.setTabSize(Integer.valueOf(myTabSizeField.getText()));
+        pluginComponent.setTextWidth(Integer.valueOf(myTextWidthField.getText()));
     }
 
-    public void readDataFrom(PluginConfigComponent pluginComponent) {
-        comboBox1.setSelectedItem(pluginComponent.getChosenLanguage().getName());
-        showPrettyCheckBox.setSelected(pluginComponent.isShowPrettyEnabled());
-        textField1.setText(pluginComponent.getTabSize().toString());
-        textField2.setText(pluginComponent.getTextWidth().toString());
+    public void readDataFrom(final PluginConfigComponent pluginComponent) {
+        myLanguageComboBox.setSelectedItem(pluginComponent.getChosenLanguage().getName());
+        myShowPrettyCheckBox.setSelected(pluginComponent.isShowPrettyEnabled());
+        myTabSizeField.setText(pluginComponent.getTabSize().toString());
+        myTextWidthField.setText(pluginComponent.getTextWidth().toString());
 
         if (pluginComponent.isShowPrettyEnabled()) {
-            textField1.setEditable(true);
-            textField2.setEditable(true);
+            myTabSizeField.setEditable(true);
+            myTextWidthField.setEditable(true);
         } else {
-            textField1.setEditable(false);
-            textField2.setEditable(false);
+            myTabSizeField.setEditable(false);
+            myTextWidthField.setEditable(false);
         }
     }
 
-    public boolean isModified(PluginConfigComponent pluginComponent) {
-        return !comboBox1.getSelectedItem().equals(pluginComponent.getChosenLanguage().getName())
-                || showPrettyCheckBox.isSelected() != pluginComponent.isShowPrettyEnabled()
-                || !textField1.getText().equals(pluginComponent.getTabSize().toString())
-                || !textField2.getText().equals(pluginComponent.getTextWidth().toString());
+    public boolean isModified(final PluginConfigComponent pluginComponent) {
+        return !myLanguageComboBox.getSelectedItem().equals(pluginComponent.getChosenLanguage().getName())
+                || myShowPrettyCheckBox.isSelected() != pluginComponent.isShowPrettyEnabled()
+                || !myTabSizeField.getText().equals(pluginComponent.getTabSize().toString())
+                || !myTextWidthField.getText().equals(pluginComponent.getTextWidth().toString());
     }
 
     public JPanel getRootPane() {
-        return contentPane;
+        return myContentPane;
     }
 
     private void createUIComponents() {
         final String link = "https://github.com/zabranskiy/djlab/";
-        hyperlinkLabel = new HyperlinkLabel();
-        hyperlinkLabel.setHyperlinkText(link);
-        hyperlinkLabel.setHyperlinkTarget(link);
+        myHyperlinkLabel = new HyperlinkLabel();
+        myHyperlinkLabel.setHyperlinkText(link);
+        myHyperlinkLabel.setHyperlinkTarget(link);
     }
 }

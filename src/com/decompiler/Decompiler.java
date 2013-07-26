@@ -1,19 +1,23 @@
 package com.decompiler;
 
 import com.beust.jcommander.JCommander;
-
+import com.config.PluginConfigComponent;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.testFramework.LightVirtualFile;
 import com.sdc.abstractLanguage.AbstractClassVisitor;
 import com.sdc.java.JavaClassVisitor;
 import com.sdc.js.JSClassVisitor;
-
 import com.sdc.kotlin.KotlinClassVisitor;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.ClassReader;
-//import org.objectweb.asm.ClassVisitor;
-//import org.objectweb.asm.util.TraceClassVisitor;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
+
+//import org.objectweb.asm.ClassVisitor;
+//import org.objectweb.asm.util.TraceClassVisitor;
 //import java.io.PrintWriter;
 
 
@@ -32,6 +36,7 @@ public class Decompiler {
             return;
         }
 
+        final String language = decompilerParameters.getLanguage();
         final int tabSize = decompilerParameters.getTabSize();
         final int textWidth = decompilerParameters.getTextWidth();
 
@@ -43,34 +48,46 @@ public class Decompiler {
             cr = new ClassReader(new FileInputStream(decompilerParameters.getClassPath()));
         }
 
-        AbstractClassVisitor cv;
-//        ClassVisitor cv = new TraceClassVisitor(new PrintWriter(System.out));
-
-        final String language = decompilerParameters.getLanguage();
-
-        if (language.equals("java")) {
-            cv = new JavaClassVisitor(textWidth, tabSize);
-        } else if (language.equals("js")) {
-            cv = new JSClassVisitor(textWidth, tabSize);
-        } else if (language.equals("kotlin")) {
-            cv = new KotlinClassVisitor(textWidth, tabSize);
-        } else {
-            System.out.println("Specify one of the valid output language. Use --help for more usage information.");
-            return;
-        }
-
-        cr.accept(cv, 0);
-        System.out.println(cv.getDecompiledCode());
+        System.out.println(getDecompiledCode(language, cr, textWidth, tabSize));
     }
 
+    @Nullable
+    public static VirtualFile decompile(final PluginConfigComponent config, final VirtualFile virtualFile) {
+        //Number of bytes CAFEBABE
+        final int CAFEBABE = 4;
 
-    public static String decompile(final Language lang, final InputStream is, Integer textWidth, Integer tabSize) throws IOException {
-        ClassReader cr = new ClassReader(is);
+        LightVirtualFile decompiledFile = null;
 
+        try {
+            InputStream is = virtualFile.getInputStream();
+            byte[] bytes = new byte[CAFEBABE];
+            is.mark(CAFEBABE);
+            is.read(bytes);
+            final int magic = ByteBuffer.wrap(bytes).getInt();
+            if (magic == 0xCAFEBABE) {
+                is.reset();
+                final Language lang = config.getChosenLanguage();
+                decompiledFile = new LightVirtualFile(virtualFile.getNameWithoutExtension() + lang.getExtension(),
+                        getDecompiledCode(lang.getName(), is, config.getTextWidth(), config.getTabSize()));
+            }
+            is.close();
+        } catch (IOException e1) {
+            e1.printStackTrace();
+        }
+
+        return decompiledFile;
+    }
+
+    private static String getDecompiledCode(final String languageName, final InputStream is, final Integer textWidth, final Integer tabSize) throws IOException {
+        return getDecompiledCode(languageName, new ClassReader(is), textWidth, tabSize);
+    }
+
+    private static String getDecompiledCode(final String languageName, final ClassReader cr, final Integer textWidth, final Integer tabSize) throws IOException {
         AbstractClassVisitor cv;
-        if (lang.getName().equals("JavaScript")) {
+
+        if (languageName.equals("JavaScript")) {
             cv = new JSClassVisitor(textWidth, tabSize);
-        } else if (lang.getName().equals("Kotlin")) {
+        } else if (languageName.equals("Kotlin")) {
             cv = new KotlinClassVisitor(textWidth, tabSize);
         } else {
             // Java
