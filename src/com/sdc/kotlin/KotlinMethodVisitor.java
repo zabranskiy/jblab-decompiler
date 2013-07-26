@@ -366,7 +366,18 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
             }
         } else if (opString.contains("INVOKESTATIC")) {
             myKotlinMethod.addImport(decompiledOwnerClassName);
-            invocationName = DeclarationWorker.getClassName(owner) + "." + name;
+            final String ownerClassName = DeclarationWorker.getClassName(owner);
+            if (!ownerClassName.equals("KotlinPackage")) {
+                invocationName = ownerClassName + "." + name;
+            } else {
+                Variable variable = (Variable) arguments.remove(0);
+                if (myBodyStack.isEmpty()) {
+                    myStatements.add(new com.sdc.ast.controlflow.InstanceInvocation(name, returnType, arguments, variable));
+                } else {
+                    myBodyStack.push(new com.sdc.ast.expressions.InstanceInvocation(name, returnType, arguments, variable));
+                }
+                return;
+            }
             needToRemoveThisFromStack = false;
             if (name.equals("checkParameterIsNotNull")) {
                 ((KotlinFrame) getCurrentFrame()).addNotNullVariable(((Variable) arguments.get(0)).getIndex());
@@ -515,7 +526,7 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
             myHasDebugInformation = true;
         }
 
-        myKotlinMethod.addLocalVariableName(0, name);
+        myKotlinMethod.addLocalVariableName(index, name);
         if (index > myKotlinMethod.getLastLocalVariableIndex()) {
             final String description = signature != null ? signature : desc;
             myKotlinMethod.addLocalVariableFromDebugInfo(index, name, DeclarationWorker.getKotlinDescriptor(description, 0, myKotlinMethod.getImports()));

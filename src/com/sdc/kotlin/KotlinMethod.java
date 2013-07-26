@@ -207,7 +207,7 @@ public class KotlinMethod extends AbstractMethod {
 
     public void dragReceiverFromMethodParameters() {
         if (hasReceiverParameter) {
-            addLocalVariableName(0, "this");
+            addLocalVariableName(0, "this$");
             declareThisVariable();
             myName = getCurrentFrame().getLocalVariableType(0) + "." + myName;
         }
