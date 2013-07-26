@@ -289,7 +289,9 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
             myBodyStack.push(new Field(name, DeclarationWorker.getKotlinDescriptor(desc, 0, myKotlinMethod.getImports())));
         } else if (opString.contains("GETSTATIC")) {
             final String decompiledOwnerName = DeclarationWorker.getDecompiledFullClassName(owner);
-            if (name.equals("instance$") && decompiledOwnerName.contains(myDecompiledOwnerFullClassName) && decompiledOwnerName.contains(myKotlinMethod.getName())) {
+            final int srcIndex = myDecompiledOwnerFullClassName.indexOf("$src$");
+            final String methodOwner = srcIndex == -1 ? myDecompiledOwnerFullClassName : myDecompiledOwnerFullClassName.substring(0, srcIndex);
+            if (name.equals("instance$") && decompiledOwnerName.contains(methodOwner) && decompiledOwnerName.contains(myKotlinMethod.getName())) {
                 try {
                     AbstractClassVisitor cv = new KotlinClassVisitor(myKotlinMethod.getTextWidth(), myKotlinMethod.getNestSize());
                     ClassReader cr = new ClassReader(decompiledOwnerName);
@@ -332,11 +334,15 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
                         myBodyStack.push(new com.sdc.ast.expressions.InstanceInvocation(name, returnType, arguments, v));
                     }
                     return;
+                } else {
+                    invocationName = "." + name;
                 }
             }
         } else if (opString.contains("INVOKESPECIAL")) {
             if (name.equals("<init>")) {
                 final String decompiledOwnerName = DeclarationWorker.getDecompiledFullClassName(owner);
+                final int srcIndex = myDecompiledOwnerFullClassName.indexOf("$src$");
+                final String methodOwner = srcIndex == -1 ? myDecompiledOwnerFullClassName : myDecompiledOwnerFullClassName.substring(0, srcIndex);
                 if (decompiledOwnerName.contains(myDecompiledOwnerFullClassName) && decompiledOwnerName.contains(myKotlinMethod.getName())) {
                     try {
                         AbstractClassVisitor cv = new KotlinClassVisitor(myKotlinMethod.getTextWidth(), myKotlinMethod.getNestSize());
@@ -509,8 +515,11 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
             myHasDebugInformation = true;
         }
 
-        final String description = signature != null ? signature : desc;
-        myKotlinMethod.addLocalVariableFromDebugInfo(index, name, DeclarationWorker.getKotlinDescriptor(description, 0, myKotlinMethod.getImports()));
+        myKotlinMethod.addLocalVariableName(0, name);
+        if (index > myKotlinMethod.getLastLocalVariableIndex()) {
+            final String description = signature != null ? signature : desc;
+            myKotlinMethod.addLocalVariableFromDebugInfo(index, name, DeclarationWorker.getKotlinDescriptor(description, 0, myKotlinMethod.getImports()));
+        }
     }
 
     @Override

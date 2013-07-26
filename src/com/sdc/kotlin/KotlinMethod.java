@@ -18,7 +18,7 @@ import java.util.Map;
 public class KotlinMethod extends AbstractMethod {
     private final String myModifier;
     private final String myReturnType;
-    private final String myName;
+    private String myName;
 
     private List<String> myImports = new ArrayList<String>();
 
@@ -30,6 +30,8 @@ public class KotlinMethod extends AbstractMethod {
     private Map<Integer, List<KotlinAnnotation>> myParameterAnnotations = new HashMap<Integer, List<KotlinAnnotation>>();
 
     private int myLastLocalVariableIndex;
+
+    private boolean hasReceiverParameter = false;
 
     private final AbstractFrame myRootFrame = new KotlinFrame();
     private AbstractFrame myCurrentFrame = myRootFrame;
@@ -108,6 +110,11 @@ public class KotlinMethod extends AbstractMethod {
 
     public void addLocalVariableName(final int index, final String name) {
         myCurrentFrame.addLocalVariableName(index, name);
+
+        if (index == 0 && name.equals("$receiver")) {
+            hasReceiverParameter = true;
+            dragReceiverFromMethodParameters();
+        }
     }
 
     public void addLocalVariableType(final int index, final String type) {
@@ -120,7 +127,7 @@ public class KotlinMethod extends AbstractMethod {
 
     public List<String> getParameters() {
         List<String> parameters = new ArrayList<String>();
-        final int startIndex = isNormalClassMethod() ? 1 : 0;
+        final int startIndex = isNormalClassMethod() || hasReceiverParameter ? 1 : 0;
 
         for (int variableIndex = startIndex; variableIndex <= myLastLocalVariableIndex; variableIndex++) {
             if (myRootFrame.containsIndex(variableIndex)) {
@@ -195,8 +202,14 @@ public class KotlinMethod extends AbstractMethod {
     }
 
     public void declareThisVariable() {
-        if (isNormalClassMethod()) {
-            myRootFrame.getLocalVariableName(0);
+        myRootFrame.getLocalVariableName(0);
+    }
+
+    public void dragReceiverFromMethodParameters() {
+        if (hasReceiverParameter) {
+            addLocalVariableName(0, "this");
+            declareThisVariable();
+            myName = getCurrentFrame().getLocalVariableType(0) + "." + myName;
         }
     }
 
