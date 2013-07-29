@@ -35,82 +35,49 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
         final String opString = Printer.OPCODES[opcode];
 
         if (opString.contains("GETSTATIC")) {
-            final String decompiledOwnerName = DeclarationWorker.getDecompiledFullClassName(owner);
-            final int srcIndex = myDecompiledOwnerFullClassName.indexOf("$src$");
-            final String methodOwner = srcIndex == -1 ? myDecompiledOwnerFullClassName : myDecompiledOwnerFullClassName.substring(0, srcIndex);
-            if (name.equals("instance$") && decompiledOwnerName.contains(methodOwner) && decompiledOwnerName.contains(myDecompiledMethod.getName())) {
-                try {
-                    AbstractClassVisitor cv = new KotlinClassVisitor(myDecompiledMethod.getTextWidth(), myDecompiledMethod.getNestSize());
-                    ClassReader cr = new ClassReader(decompiledOwnerName);
-                    cr.accept(cv, 0);
-                    myBodyStack.push(new LambdaFunction(cv.getDecompiledClass());
-                } catch (IOException e) {
-                }
-            }
+            tryVisitLambdaFunction(owner);
         }
     }
 
     @Override
     public void visitMethodInsn(final int opcode, final String owner, final String name, final String desc) {
         final String opString = Printer.OPCODES[opcode];
-        //System.out.println(opString + " " + owner + " " + name + " " + desc);
 
-        List<Expression> arguments = new ArrayList<Expression>();
-        for (int i = 0; i < DeclarationWorker.getParametersCount(desc); i++) {
-            arguments.add(0, getTopOfBodyStack());
-        }
+        final String decompiledOwnerFullClassName = DeclarationWorker.getDecompiledFullClassName(owner);
+        final String ownerClassName = DeclarationWorker.getClassName(owner);
 
-        final int returnTypeIndex = desc.indexOf(')') + 1;
-        String returnType = DeclarationWorker.getKotlinDescriptor(desc, returnTypeIndex, myKotlinMethod.getImports());
+        List<Expression> arguments = getInvocationArguments(desc);
+        String returnType = getInvocationReturnType(desc);
+        String invocationName = name;
 
-        final String decompiledOwnerClassName = DeclarationWorker.getDecompiledFullClassName(owner);
-
-        String invocationName = "";
-        boolean needToRemoveThisFromStack = true;
+        boolean isStaticInvocation = false;
 
         if (opString.contains("INVOKEVIRTUAL") || opString.contains("INVOKEINTERFACE")) {
             if (!name.equals("<init>")) {
-                 if (!myBodyStack.isEmpty() && myBodyStack.peek() instanceof Variable) {
-                    Variable v = (Variable) myBodyStack.pop();
-                    if (myBodyStack.isEmpty()) {
-                        myStatements.add(new com.sdc.ast.controlflow.InstanceInvocation(name, returnType, arguments, v));
-                    } else {
-                        myBodyStack.push(new com.sdc.ast.expressions.InstanceInvocation(name, returnType, arguments, v));
-                    }
+                if (!myBodyStack.isEmpty() && myBodyStack.peek() instanceof Variable) {
+                    appendInstanceInvocation(name, returnType, arguments, (Variable) arguments.remove(0));
                     return;
                 } else {
                     invocationName = "." + name;
                 }
             }
-        } else if (opString.contains("INVOKESPECIAL")) {
+        }
+
+        if (opString.contains("INVOKESPECIAL")) {
             if (name.equals("<init>")) {
-                final String decompiledOwnerName = DeclarationWorker.getDecompiledFullClassName(owner);
-                final int srcIndex = myDecompiledOwnerFullClassName.indexOf("$src$");
-                final String methodOwner = srcIndex == -1 ? myDecompiledOwnerFullClassName : myDecompiledOwnerFullClassName.substring(0, srcIndex);
-                if (decompiledOwnerName.contains(methodOwner) && decompiledOwnerName.contains(myKotlinMethod.getName())) {
-                    try {
-                        AbstractClassVisitor cv = new KotlinClassVisitor(myKotlinMethod.getTextWidth(), myKotlinMethod.getNestSize());
-                        ClassReader cr = new ClassReader(decompiledOwnerName);
-                        cr.accept(cv, 0);
-                        LambdaFunction lf = new LambdaFunction(((KotlinClassVisitor) cv).getDecompiledClass());
-                        if (lf.isKotlinLambda()) {
-                            myBodyStack.push(lf);
-                            return;
-                        }
-                    } catch (IOException e) {
-
-                    }
+                if (tryVisitLambdaFunction(owner)) {
+                    return;
                 }
-
-                myKotlinMethod.addImport(decompiledOwnerClassName);
-                invocationName = DeclarationWorker.getClassName(owner);
+                myDecompiledMethod.addImport(decompiledOwnerFullClassName);
+                invocationName = ownerClassName;
                 returnType = invocationName + " ";
             } else {
-                invocationName = "super<" + DeclarationWorker.getClassName(owner) + ">."  + name;
+                invocationName = "super<" + ownerClassName + ">."  + name;
             }
-        } else if (opString.contains("INVOKESTATIC")) {
-            myKotlinMethod.addImport(decompiledOwnerClassName);
-            final String ownerClassName = DeclarationWorker.getClassName(owner);
+        }
+
+        if (opString.contains("INVOKESTATIC")) {
+            myDecompiledMethod.addImport(decompiledOwnerFullClassName);
             if (!ownerClassName.equals("KotlinPackage")) {
                 if (!ownerClassName.contains("$src$")) {
                     invocationName = ownerClassName + "." + name;
@@ -118,39 +85,43 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
                     invocationName = name;
                 }
             } else {
-                Variable variable = (Variable) arguments.remove(0);
-                if (myBodyStack.isEmpty()) {
-                    myStatements.add(new com.sdc.ast.controlflow.InstanceInvocation(name, returnType, arguments, variable));
-                } else {
-                    myBodyStack.push(new com.sdc.ast.expressions.InstanceInvocation(name, returnType, arguments, variable));
-                }
+                appendInstanceInvocation(name, returnType, arguments, (Variable) arguments.remove(0));
                 return;
             }
-            needToRemoveThisFromStack = false;
+
+            isStaticInvocation = true;
             if (name.equals("checkParameterIsNotNull")) {
                 ((KotlinFrame) getCurrentFrame()).addNotNullVariable(((Variable) arguments.get(0)).getIndex());
                 return;
             }
         }
 
-        if (name.equals("<init>")) {
-            if (myDecompiledOwnerFullClassName.endsWith(myKotlinMethod.getName()) && myDecompiledOwnerSuperClassName.endsWith(invocationName)) {
-                removeThisVariableFromStack();
-                myKotlinMethod.getKotlinClass().setSuperClassConstructor(new com.sdc.ast.expressions.Invocation(invocationName, returnType, arguments));
-            } else {
-                myBodyStack.push(new New(new com.sdc.ast.expressions.Invocation(invocationName, returnType, arguments)));
-            }
-        } else {
-            if (needToRemoveThisFromStack) {
-                removeThisVariableFromStack();
-            }
+        appendInvocationOrConstructor(isStaticInvocation, name, invocationName, returnType,arguments);
+    }
 
-            if (myBodyStack.isEmpty()) {
-                myStatements.add(new com.sdc.ast.controlflow.Invocation(invocationName, returnType, arguments));
-            } else {
-                myBodyStack.push(new com.sdc.ast.expressions.Invocation(invocationName, returnType, arguments));
+    @Override
+    protected void processSuperClassConstructorInvocation(final String invocationName, final String returnType, final List<Expression> arguments) {
+        ((KotlinClass) myDecompiledMethod.getDecompiledClass()).setSuperClassConstructor(new com.sdc.ast.expressions.Invocation(invocationName, returnType, arguments));
+    }
+
+    private boolean tryVisitLambdaFunction(final String owner) {
+        final String decompiledOwnerName = DeclarationWorker.getDecompiledFullClassName(owner);
+        final int srcIndex = myDecompiledOwnerFullClassName.indexOf("$src$");
+        final String methodOwner = srcIndex == -1 ? myDecompiledOwnerFullClassName : myDecompiledOwnerFullClassName.substring(0, srcIndex);
+        if (decompiledOwnerName.contains(methodOwner) && decompiledOwnerName.contains(myDecompiledMethod.getName())) {
+            try {
+                AbstractClassVisitor cv = myVisitorFactory.createClassVisitor(myDecompiledMethod.getTextWidth(), myDecompiledMethod.getNestSize());
+                ClassReader cr = new ClassReader(decompiledOwnerName);
+                cr.accept(cv, 0);
+                LambdaFunction lf = new LambdaFunction(cv.getDecompiledClass());
+                if (lf.isKotlinLambda()) {
+                    myBodyStack.push(lf);
+                    return true;
+                }
+            } catch (IOException e) {
             }
         }
+        return false;
     }
 }
 

@@ -1,10 +1,9 @@
 package com.sdc.abstractLanguage;
 
-import com.sdc.ast.controlflow.Assignment;
-import com.sdc.ast.controlflow.Return;
-import com.sdc.ast.controlflow.Statement;
-import com.sdc.ast.controlflow.Throw;
+import com.sdc.ast.controlflow.*;
 import com.sdc.ast.expressions.*;
+import com.sdc.ast.expressions.InstanceInvocation;
+import com.sdc.ast.expressions.Invocation;
 import com.sdc.ast.expressions.identifiers.Field;
 import com.sdc.ast.expressions.identifiers.Identifier;
 import com.sdc.ast.expressions.identifiers.Variable;
@@ -281,7 +280,48 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
         }
     }
 
-    /*** visitMethod is here ***/
+    @Override
+    public void visitMethodInsn(final int opcode, final String owner, final String name, final String desc) {
+        final String opString = Printer.OPCODES[opcode];
+
+        final String decompiledOwnerFullClassName = DeclarationWorker.getDecompiledFullClassName(owner);
+        final String ownerClassName = DeclarationWorker.getClassName(owner);
+
+        List<Expression> arguments = getInvocationArguments(desc);
+        String returnType = getInvocationReturnType(desc);
+        String invocationName = name;
+
+        boolean isStaticInvocation = false;
+
+        if (opString.contains("INVOKEVIRTUAL") || opString.contains("INVOKEINTERFACE")
+                || (decompiledOwnerFullClassName.equals(myDecompiledOwnerFullClassName) && !name.equals("<init>")))
+        {
+            if (!myBodyStack.isEmpty() && myBodyStack.peek() instanceof Variable) {
+                appendInstanceInvocation(name, returnType, arguments, (Variable) myBodyStack.pop());
+                return;
+            } else {
+                invocationName = "." + name;
+            }
+        }
+
+        if (opString.contains("INVOKESPECIAL")) {
+            if (name.equals("<init>")) {
+                myDecompiledMethod.addImport(decompiledOwnerFullClassName);
+                invocationName = ownerClassName;
+                returnType = invocationName + " ";
+            } else {
+                invocationName = "super." + name;
+            }
+        }
+
+        if (opString.contains("INVOKESTATIC")) {
+            myDecompiledMethod.addImport(decompiledOwnerFullClassName);
+            invocationName = ownerClassName + "." + name;
+            isStaticInvocation = true;
+        }
+
+        appendInvocationOrConstructor(isStaticInvocation, name, invocationName, returnType,arguments);
+    }
 
     @Override
     public void visitInvokeDynamicInsn(final String name, final String desc, final Handle bsm, final Object... bsmArgs) {
@@ -547,6 +587,62 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
                 final Invocation invocation = (Invocation) expression;
                 myStatements.add(new com.sdc.ast.controlflow.Invocation(invocation.getFunction(), invocation.getReturnType(), invocation.getArguments()));
             }
+        }
+    }
+
+    protected void appendInstanceInvocation(final String function, final String returnType, final List<Expression> arguments, final Variable variable) {
+        if (myBodyStack.isEmpty()) {
+            myStatements.add(new com.sdc.ast.controlflow.InstanceInvocation(function, returnType, arguments, variable));
+        } else {
+            myBodyStack.push(new com.sdc.ast.expressions.InstanceInvocation(function, returnType, arguments, variable));
+        }
+    }
+
+    protected void appendInvocation(final String function, final String returnType, final List<Expression> arguments) {
+        if (myBodyStack.isEmpty()) {
+            myStatements.add(new com.sdc.ast.controlflow.Invocation(function, returnType, arguments));
+        } else {
+            myBodyStack.push(new com.sdc.ast.expressions.Invocation(function, returnType, arguments));
+        }
+    }
+
+    protected List<Expression> getInvocationArguments(final String descriptor) {
+        List<Expression> arguments = new ArrayList<Expression>();
+        for (int i = 0; i < DeclarationWorker.getParametersCount(descriptor); i++) {
+            arguments.add(0, getTopOfBodyStack());
+        }
+        return arguments;
+    }
+
+    protected String getInvocationReturnType(final String descriptor) {
+        final int returnTypeIndex = descriptor.indexOf(')') + 1;
+        return DeclarationWorker.getDescriptor(descriptor, returnTypeIndex, myDecompiledMethod.getImports(), myLanguage);
+    }
+
+    protected boolean checkForSuperClassConstructor(final String invocationName) {
+        return myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName()) && myDecompiledOwnerSuperClassName.endsWith(invocationName);
+    }
+
+    protected void processSuperClassConstructorInvocation(final String invocationName, final String returnType, final List<Expression> arguments) {
+        myStatements.add(new com.sdc.ast.controlflow.Invocation("super", returnType, arguments));
+    }
+
+    protected void appendInvocationOrConstructor(final boolean isStaticInvocation, final String visitMethodName,
+                                                 final String invocationName, final String returnType, final List<Expression> arguments)
+    {
+        if (visitMethodName.equals("<init>")) {
+            if (checkForSuperClassConstructor(invocationName)) {
+                removeThisVariableFromStack();
+                processSuperClassConstructorInvocation(invocationName, returnType, arguments);
+            } else {
+                myBodyStack.push(new New(new com.sdc.ast.expressions.Invocation(invocationName, returnType, arguments)));
+            }
+        } else {
+            if (!isStaticInvocation) {
+                removeThisVariableFromStack();
+            }
+
+            appendInvocation(invocationName, returnType, arguments);
         }
     }
 }
