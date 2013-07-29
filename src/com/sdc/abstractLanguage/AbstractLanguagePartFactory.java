@@ -15,4 +15,6 @@ public abstract class AbstractLanguagePartFactory {
     public abstract AbstractAnnotation createAnnotation();
 
     public abstract AbstractClassField createClassField(final String modifier, final String type, final String name, final int textWidth, final int nestSize);
+
+    public abstract AbstractFrame createFrame();
 }

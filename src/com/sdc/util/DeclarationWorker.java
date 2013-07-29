@@ -194,6 +194,48 @@ public class DeclarationWorker {
         }
     }
 
+    public static String getDescriptorByInt(final int desc, final SupportedLanguage language) {
+        switch (language) {
+            case JAVA:
+            case JAVASCRIPT:
+                return getJavaDescriptorByInt(desc);
+            case KOTLIN:
+                return getKotlinDescriptorByInt(desc);
+            default:
+                return "";
+        }
+    }
+
+    public static String getJavaDescriptorByInt(final int desc) {
+        switch (desc) {
+            case 1:
+                return "int ";
+            case 2:
+                return "float ";
+            case 3:
+                return "double ";
+            case 4:
+                return "long ";
+            default:
+                return "";
+        }
+    }
+
+    public static String getKotlinDescriptorByInt(final int i) {
+        switch (i) {
+            case 1:
+                return "Int ";
+            case 2:
+                return "Float ";
+            case 3:
+                return "Double ";
+            case 4:
+                return "Long ";
+            default:
+                return "";
+        }
+    }
+
     public static int getParametersCount(final String descriptor) {
         int result = 0;
         int pos = 1;

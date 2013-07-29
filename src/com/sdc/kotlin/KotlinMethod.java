@@ -49,7 +49,7 @@ public class KotlinMethod extends AbstractMethod {
     }
 
     public boolean isNormalClassMethod() {
-        return ((KotlinClass) myAbstractClass).isNormalClass();
+        return myAbstractClass.isNormalClass();
     }
 
     public boolean hasEmptyBody() {

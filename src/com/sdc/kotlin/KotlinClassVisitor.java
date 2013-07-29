@@ -11,6 +11,7 @@ public class KotlinClassVisitor extends AbstractClassVisitor {
 
     public KotlinClassVisitor(final int textWidth, final int nestSize) {
         super(textWidth, nestSize);
+
         this.myLanguagePartFactory = new KotlinLanguagePartFactory();
         this.myVisitorFactory = new KotlinVisitorFactory();
         this.myLanguage = DeclarationWorker.SupportedLanguage.KOTLIN;

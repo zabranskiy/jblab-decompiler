@@ -8,6 +8,7 @@ public class JavaClassVisitor extends AbstractClassVisitor {
 
     public JavaClassVisitor(final int textWidth, final int nestSize) {
         super(textWidth, nestSize);
+
         this.myLanguagePartFactory = new JavaLanguagePartFactory();
         this.myVisitorFactory = new JavaVisitorFactory();
         this.myLanguage = DeclarationWorker.SupportedLanguage.JAVA;

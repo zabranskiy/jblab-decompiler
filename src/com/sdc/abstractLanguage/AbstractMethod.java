@@ -115,6 +115,10 @@ public abstract class AbstractMethod {
         return myAbstractClass;
     }
 
+    public boolean isNormalClassMethod() {
+        return myAbstractClass.isNormalClass();
+    }
+
     public void addImport(final String importClassName) {
         myImports.add(importClassName);
     }

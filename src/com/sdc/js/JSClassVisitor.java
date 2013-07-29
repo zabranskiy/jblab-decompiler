@@ -8,6 +8,7 @@ public class JSClassVisitor extends AbstractClassVisitor {
 
     public JSClassVisitor(final int textWidth, final int nestSize) {
         super(textWidth, nestSize);
+
         this.myLanguagePartFactory = new JSLanguagePartFactory();
         this.myVisitorFactory = new JSVisitorFactory();
         this.myLanguage = DeclarationWorker.SupportedLanguage.JAVASCRIPT;
