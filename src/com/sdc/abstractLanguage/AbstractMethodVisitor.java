@@ -8,4 +8,6 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
     public AbstractMethodVisitor() {
         super(ASM4);
     }
+
+    public abstract AbstractMethod getDecompiledMethod();
 }

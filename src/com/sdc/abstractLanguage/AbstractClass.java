@@ -26,6 +26,8 @@ public abstract class AbstractClass {
 
     protected List<String> myDefaultPackages = new ArrayList<String>();
 
+    protected boolean myIsNormalClass = true;
+
     protected final int myTextWidth;
     protected final int myNestSize;
 
@@ -90,6 +92,14 @@ public abstract class AbstractClass {
 
     public int getTextWidth() {
         return myTextWidth;
+    }
+
+    public void setIsNormalClass(final boolean isNormalClass) {
+        this.myIsNormalClass = isNormalClass;
+    }
+
+    public boolean isNormalClass() {
+        return myIsNormalClass;
     }
 
     public void appendField(final AbstractClassField field) {

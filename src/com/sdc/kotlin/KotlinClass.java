@@ -12,12 +12,9 @@ import java.util.List;
 
 public class KotlinClass extends AbstractClass {
     public final static String INHERITANCE_IDENTIFIER = ":";
-    private final List<String> myTraits;
 
-    private KotlinMethod myConstructor;
+    private AbstractMethod myConstructor;
     private Expression mySuperClassConstructor;
-
-    private boolean myIsNormalClass = true;
 
     public KotlinClass(final String modifier, final String type, final String name, final String packageName,
                        final List<String> traits, final String superClass,
@@ -25,19 +22,10 @@ public class KotlinClass extends AbstractClass {
                        final int textWidth, final int nestSize)
     {
         super(modifier, type, name, packageName, traits, superClass, genericTypes, genericIdentifiers, textWidth, nestSize);
-        this.myTraits = traits;
         this.myDefaultPackages = Arrays.asList(myPackage, "java.lang", "jet", "jet.runtime");
     }
 
-    public List<String> getTraits() {
-        return myTraits;
-    }
-
-    public void setIsNormalClass(boolean isNormalClass) {
-        myIsNormalClass = isNormalClass;
-    }
-
-    public void setConstructor(final KotlinMethod constructor) {
+    public void setConstructor(final AbstractMethod constructor) {
         this.myConstructor = constructor;
     }
 
@@ -51,10 +39,6 @@ public class KotlinClass extends AbstractClass {
 
     public Expression getSuperClassConstructor() {
         return mySuperClassConstructor;
-    }
-
-    public boolean isNormalClass() {
-        return myIsNormalClass;
     }
 
     protected String getInheritanceIdentifier() {
