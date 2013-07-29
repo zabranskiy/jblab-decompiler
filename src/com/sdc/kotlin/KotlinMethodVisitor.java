@@ -55,7 +55,7 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
         if (opString.contains("INVOKEVIRTUAL") || opString.contains("INVOKEINTERFACE")) {
             if (!name.equals("<init>")) {
                 if (!myBodyStack.isEmpty() && myBodyStack.peek() instanceof Variable) {
-                    appendInstanceInvocation(name, returnType, arguments, (Variable) arguments.remove(0));
+                    appendInstanceInvocation(name, returnType, arguments, (Variable) myBodyStack.pop());
                     return;
                 } else {
                     invocationName = "." + name;

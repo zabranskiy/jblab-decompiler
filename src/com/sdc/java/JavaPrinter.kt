@@ -21,6 +21,7 @@ import com.sdc.java.JavaClass
 import com.sdc.java.JavaClassField
 import com.sdc.java.JavaMethod
 import com.sdc.java.JavaAnnotation
+import com.sdc.abstractLanguage.AbstractAnnotation
 
 
 fun printExpression(expression: Expression?, nestSize: Int): PrimeDoc =
@@ -185,7 +186,7 @@ fun printJavaClass(javaClass: JavaClass): PrimeDoc {
     for (importName in javaClass.getImports()!!.toArray())
         imports = group(imports / text("import " + importName + ";"))
 
-    var declaration = group(printAnnotations(javaClass.getAnnotations()!!.toList()) + text(javaClass.getModifier() + javaClass.getType() + javaClass.getName()))
+    var declaration = group(printJavaAnnotations(javaClass.getAnnotations()!!.toList()) + text(javaClass.getModifier() + javaClass.getType() + javaClass.getName()))
 
     val genericsDeclaration = javaClass.getGenericDeclaration()
     if (!genericsDeclaration!!.isEmpty()) {
@@ -235,7 +236,7 @@ fun printJavaClass(javaClass: JavaClass): PrimeDoc {
 }
 
 fun printClassMethod(classMethod: JavaMethod): PrimeDoc {
-    var declaration = group(printAnnotations(classMethod.getAnnotations()!!.toList()) + text(classMethod.getModifier()))
+    var declaration = group(printJavaAnnotations(classMethod.getAnnotations()!!.toList()) + text(classMethod.getModifier()))
 
     val genericsDeclaration = classMethod.getGenericDeclaration()
     if (!genericsDeclaration!!.isEmpty()) {
@@ -269,7 +270,7 @@ fun printClassMethod(classMethod: JavaMethod): PrimeDoc {
             if (classMethod.checkParameterForAnnotation(index))
                 arguments = nest(
                         2 * classMethod.getNestSize()
-                        , arguments + printAnnotations(classMethod.getParameterAnnotations(index)!!.toList()) + text(variable)
+                        , arguments + printJavaAnnotations(classMethod.getParameterAnnotations(index)!!.toList()) + text(variable)
                 )
             else
                 arguments = nest(
@@ -317,9 +318,9 @@ fun printAnnotation(annotation: JavaAnnotation): PrimeDoc {
     return annotationCode
 }
 
-fun printAnnotations(annotations: List<JavaAnnotation>): PrimeDoc {
+fun printJavaAnnotations(annotations: List<AbstractAnnotation>): PrimeDoc {
     var annotationsCode = group(nil())
     for (annotation in annotations)
-        annotationsCode = group(annotationsCode + printAnnotation(annotation) + line())
+        annotationsCode = group(annotationsCode + printAnnotation(annotation as JavaAnnotation) + line())
     return annotationsCode
 }

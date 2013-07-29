@@ -20,6 +20,7 @@ import com.sdc.kotlin.KotlinMethod
 import com.sdc.kotlin.KotlinClassField
 import com.sdc.kotlin.KotlinAnnotation
 import com.sdc.ast.expressions.nestedclasses.LambdaFunction
+import com.sdc.abstractLanguage.AbstractAnnotation
 
 fun printExpression(expression: Expression?, nestSize: Int): PrimeDoc =
         when (expression) {
@@ -121,7 +122,7 @@ fun printExpression(expression: Expression?, nestSize: Int): PrimeDoc =
 
             is LambdaFunction -> {
                 val lambdaFunction = expression.getFunction()
-                val arguments = text("{ ") + printMethodParameters(expression.getFunction()) + text(" -> ")
+                val arguments = text("{ ") + printMethodParameters(expression.getFunction() as KotlinMethod) + text(" -> ")
                 val body = nest(
                         lambdaFunction!!.getNestSize(),
                         printStatements(lambdaFunction.getBody(), lambdaFunction.getNestSize())
@@ -187,7 +188,7 @@ fun printKotlinClass(kotlinClass: KotlinClass): PrimeDoc {
         importsCode = importsCode / text("import " + importName)
 
     if (kotlinClass.isNormalClass()) {
-        var declaration : PrimeDoc = printAnnotations(kotlinClass.getAnnotations()!!.toList()) + text(kotlinClass.getModifier() + kotlinClass.getType() + kotlinClass.getName())
+        var declaration : PrimeDoc = printKotlinAnnotations(kotlinClass.getAnnotations()!!.toList()) + text(kotlinClass.getModifier() + kotlinClass.getType() + kotlinClass.getName())
 
         val genericsDeclaration = kotlinClass.getGenericDeclaration()
         if (!genericsDeclaration!!.isEmpty()) {
@@ -203,16 +204,16 @@ fun printKotlinClass(kotlinClass: KotlinClass): PrimeDoc {
         }
         val constructor = kotlinClass.getConstructor()
         if (constructor != null)
-            declaration = declaration + printPrimaryConstructorParameters(constructor)
+            declaration = declaration + printPrimaryConstructorParameters(constructor as KotlinMethod)
 
         val superClass = kotlinClass.getSuperClass()
         if (!superClass!!.isEmpty()) {
             declaration = declaration + group(nest(2 * kotlinClass.getNestSize(), line() + text(": " ) + printSuperClassConstructor(kotlinClass.getSuperClassConstructor(), kotlinClass.getNestSize())))
-            val traits = kotlinClass.getTraits()!!.toArray()
+            val traits = kotlinClass.getImplementedInterfaces()!!.toArray()
             for (singleTrait in traits)
                 declaration = declaration + text(",") + group(nest(2 * kotlinClass.getNestSize(), line() + text(singleTrait as String)))
         } else {
-            var traits = kotlinClass.getTraits()
+            var traits = kotlinClass.getImplementedInterfaces()
             if (!traits!!.isEmpty()) {
                 declaration = declaration + text(": ") + text(traits!!.get(0))
                 for (singleTrait in traits!!.drop(1))
@@ -223,26 +224,26 @@ fun printKotlinClass(kotlinClass: KotlinClass): PrimeDoc {
         var kotlinClassCode : PrimeDoc = packageCode + importsCode / declaration + text(" {")
 
         for (classField in kotlinClass.getFields()!!.toList())
-            kotlinClassCode = kotlinClassCode + nest(kotlinClass.getNestSize(), line() + printClassField(classField))
+            kotlinClassCode = kotlinClassCode + nest(kotlinClass.getNestSize(), line() + printClassField(classField as KotlinClassField))
 
-        if (constructor != null && !constructor.hasEmptyBody())
-            kotlinClassCode = kotlinClassCode + nest(kotlinClass.getNestSize(), line() + printInitialConstructor(kotlinClass.getConstructor()))
+        if (constructor != null && !(constructor as KotlinMethod).hasEmptyBody())
+            kotlinClassCode = kotlinClassCode + nest(kotlinClass.getNestSize(), line() + printInitialConstructor(kotlinClass.getConstructor() as KotlinMethod))
 
         for (classMethod in kotlinClass.getMethods()!!.toList())
-            kotlinClassCode = kotlinClassCode + nest(kotlinClass.getNestSize(), line() + printKotlinMethod(classMethod))
+            kotlinClassCode = kotlinClassCode + nest(kotlinClass.getNestSize(), line() + printKotlinMethod(classMethod as KotlinMethod))
 
         return kotlinClassCode / text("}")
     } else {
         var kotlinCode : PrimeDoc = packageCode + importsCode
         for (method in kotlinClass.getMethods()!!.toList())
-            kotlinCode = kotlinCode / printKotlinMethod(method)
+            kotlinCode = kotlinCode / printKotlinMethod(method as KotlinMethod)
 
         return kotlinCode
     }
 }
 
 fun printKotlinMethod(kotlinMethod: KotlinMethod): PrimeDoc {
-    var declaration : PrimeDoc = printAnnotations(kotlinMethod.getAnnotations()!!.toList()) + text(kotlinMethod.getModifier() + "fun ")
+    var declaration : PrimeDoc = printKotlinAnnotations(kotlinMethod.getAnnotations()!!.toList()) + text(kotlinMethod.getModifier() + "fun ")
 
     val genericsDeclaration = kotlinMethod.getGenericDeclaration()
     if (!genericsDeclaration!!.isEmpty()) {
@@ -297,10 +298,10 @@ fun printAnnotation(annotation: KotlinAnnotation): PrimeDoc {
     return annotationCode + text(" ")
 }
 
-fun printAnnotations(annotations: List<KotlinAnnotation>): PrimeDoc {
+fun printKotlinAnnotations(annotations: List<AbstractAnnotation>): PrimeDoc {
     var annotationsCode : PrimeDoc = nil()
     for (annotation in annotations)
-        annotationsCode = annotationsCode + printAnnotation(annotation)
+        annotationsCode = annotationsCode + printAnnotation(annotation as KotlinAnnotation)
     return annotationsCode
 }
 
@@ -314,7 +315,7 @@ fun printMethodParameters(method: KotlinMethod?): PrimeDoc {
         var index = 0
         for (variable in variables) {
             if (method.checkParameterForAnnotation(index))
-                arguments = arguments + printAnnotations(method.getParameterAnnotations(index)!!.toList()) + text(variable)
+                arguments = arguments + printKotlinAnnotations(method.getParameterAnnotations(index)!!.toList()) + text(variable)
             else
                 arguments = arguments + text(variable)
             if (index + 1 < variables.size)
