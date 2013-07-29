@@ -9,7 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class JSClass extends AbstractClass {
-    private final static String INHERITANCE_IDENTIFIER = "extends";
+    public final static String INHERITANCE_IDENTIFIER = "extends";
 
     public JSClass(final String modifier, final String type, final String name, final String packageName,
                      final List<String> implementedInterfaces, final String superClass,

@@ -11,7 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class KotlinClass extends AbstractClass {
-    private final static String INHERITANCE_IDENTIFIER = ":";
+    public final static String INHERITANCE_IDENTIFIER = ":";
     private final List<String> myTraits;
 
     private KotlinMethod myConstructor;
