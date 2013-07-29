@@ -80,10 +80,11 @@ fun printExpression(expression: Expression?, nestSize: Int): PrimeDoc =
                 var funName : PrimeDoc = text(expression.getFunction() + "(")
                 if (expression is com.sdc.ast.expressions.InstanceInvocation) {
                     var variableName = expression.getVariable()!!.getName()
-                    if (!variableName.equals("this"))
+                    if (!variableName.equals("this")) {
                         if (variableName.equals("this$"))
                             variableName = "this"
                         funName = text(variableName + ".") + funName
+                    }
                 }
 
                 val args = expression.getArguments()
@@ -138,10 +139,11 @@ fun printStatement(statement: Statement, nestSize: Int): PrimeDoc =
                 var funName : PrimeDoc = text(statement.getFunction() + "(")
                 if (statement is InstanceInvocation) {
                     var variableName = statement.getVariable()!!.getName()
-                    if (!variableName.equals("this"))
+                    if (!variableName.equals("this")) {
                         if (variableName.equals("this$"))
                             variableName = "this"
                         funName = text(variableName + ".") + funName
+                    }
                 }
 
                 val args = statement.getArguments()

@@ -45,6 +45,10 @@ public class KotlinClass extends AbstractClass {
         return INHERITANCE_IDENTIFIER;
     }
 
+    protected void removeMethod(final AbstractMethod abstractMethod) {
+        myMethods.remove(abstractMethod);
+    }
+
     @Override
     public String toString() {
         return PrettyPackage.pretty(myTextWidth, KotlinPrinterPackage.printKotlinClass(this));

@@ -174,7 +174,7 @@ public abstract class AbstractClass {
     }
 
     protected boolean checkImportNameForBeingInPackage(final String importName, final String packageName) {
-        return importName.indexOf(packageName) != 0 || importName.lastIndexOf(".") != packageName.length() + 1;
+        return importName.indexOf(packageName) == 0 && importName.lastIndexOf(".") == packageName.length() + 1;
     }
 
     protected boolean checkImportNameForBeingInPackages(final String importName, final List<String> packageNames) {

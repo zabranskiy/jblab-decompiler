@@ -324,7 +324,7 @@ public class DeclarationWorker {
     }
 
     public static boolean isPrimitiveClass(final String type) {
-        Set<String> primitiveTypes = new HashSet<String>(Arrays.asList("Byte", "Long", "Boolean", "Integer", "Int", "Short", "Character", "Float", "Double"));
+        Set<String> primitiveTypes = new HashSet<String>(Arrays.asList("Byte", "Long", "Boolean", "Integer", "Int", "Short", "Character", "Float", "Double", "Object"));
         return primitiveTypes.contains(type);
     }
 

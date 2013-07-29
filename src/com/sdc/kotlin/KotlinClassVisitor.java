@@ -1,6 +1,7 @@
 package com.sdc.kotlin;
 
 import com.sdc.abstractLanguage.AbstractClassVisitor;
+import com.sdc.abstractLanguage.AbstractMethod;
 import com.sdc.abstractLanguage.AbstractMethodVisitor;
 import com.sdc.util.DeclarationWorker;
 import org.objectweb.asm.*;
@@ -55,11 +56,16 @@ public class KotlinClassVisitor extends AbstractClassVisitor {
         final AbstractMethodVisitor methodVisitor = (AbstractMethodVisitor) super.visitMethod(access, name, desc, signature, exceptions);
 
         if (name.equals("<init>")) {
-            ((KotlinClass) myDecompiledClass).setConstructor(methodVisitor.getDecompiledMethod());
-        } else {
-            myDecompiledClass.appendMethod(methodVisitor.getDecompiledMethod());
+            final AbstractMethod decompiledMethod = methodVisitor.getDecompiledMethod();
+            final KotlinClass kotlinClass = getKotlinClass();
+            kotlinClass.setConstructor(decompiledMethod);
+            kotlinClass.removeMethod(decompiledMethod);
         }
 
         return methodVisitor;
+    }
+
+    private KotlinClass getKotlinClass() {
+        return (KotlinClass) myDecompiledClass;
     }
 }
