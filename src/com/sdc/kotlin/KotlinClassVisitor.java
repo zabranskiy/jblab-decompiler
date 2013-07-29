@@ -13,6 +13,7 @@ public class KotlinClassVisitor extends AbstractClassVisitor {
         super(textWidth, nestSize);
         this.myLanguagePartFactory = new KotlinLanguagePartFactory();
         this.myVisitorFactory = new KotlinVisitorFactory();
+        this.myLanguage = DeclarationWorker.SupportedLanguage.KOTLIN;
     }
 
     @Override

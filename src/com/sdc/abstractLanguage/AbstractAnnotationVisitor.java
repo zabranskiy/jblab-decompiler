@@ -13,23 +13,23 @@ public class AbstractAnnotationVisitor extends AnnotationVisitor {
     }
 
     @Override
-    public void visit(String name, Object value) {
+    public void visit(final String name, final Object value) {
         myAnnotation.addProperty(name, value);
         super.visit(name, value);
     }
 
     @Override
-    public void visitEnum(String name, String desc, String value) {
+    public void visitEnum(final String name, final String desc, final String value) {
         super.visitEnum(name, desc, value);
     }
 
     @Override
-    public AnnotationVisitor visitAnnotation(String name, String desc) {
+    public AnnotationVisitor visitAnnotation(final String name, final String desc) {
         return super.visitAnnotation(name, desc);
     }
 
     @Override
-    public AnnotationVisitor visitArray(String name) {
+    public AnnotationVisitor visitArray(final String name) {
         return super.visitArray(name);
     }
 

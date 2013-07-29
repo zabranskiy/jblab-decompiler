@@ -1,6 +1,7 @@
 package com.sdc.js;
 
 import com.sdc.abstractLanguage.AbstractClassVisitor;
+import com.sdc.util.DeclarationWorker;
 
 public class JSClassVisitor extends AbstractClassVisitor {
     private static final String DEFAULT_EXTENDED_CLASS = "java/lang/Object";
@@ -9,6 +10,7 @@ public class JSClassVisitor extends AbstractClassVisitor {
         super(textWidth, nestSize);
         this.myLanguagePartFactory = new JSLanguagePartFactory();
         this.myVisitorFactory = new JSVisitorFactory();
+        this.myLanguage = DeclarationWorker.SupportedLanguage.JAVASCRIPT;
     }
 
     @Override

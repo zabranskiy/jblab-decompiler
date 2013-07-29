@@ -14,6 +14,7 @@ public class DeclarationWorker {
     {
         switch (language) {
             case JAVA:
+            case JAVASCRIPT:
                 return getJavaAccess(access);
             case KOTLIN:
                 return getKotlinAccess(access);
@@ -97,6 +98,7 @@ public class DeclarationWorker {
     {
         switch (language) {
             case JAVA:
+            case JAVASCRIPT:
                 return getJavaDescriptor(descriptor, pos, imports);
             case KOTLIN:
                 return getKotlinDescriptor(descriptor, pos, imports);

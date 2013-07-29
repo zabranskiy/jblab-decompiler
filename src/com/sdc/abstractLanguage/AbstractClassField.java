@@ -36,7 +36,7 @@ public abstract class AbstractClassField {
         return myNestSize;
     }
 
-    public void setInitializer(Expression initializer) {
+    public void setInitializer(final Expression initializer) {
         this.myInitializer = initializer;
     }
 

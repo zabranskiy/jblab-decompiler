@@ -16,6 +16,8 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
     protected AbstractLanguagePartFactory myLanguagePartFactory;
     protected AbstractVisitorFactory myVisitorFactory;
 
+    protected DeclarationWorker.SupportedLanguage myLanguage;
+
     public AbstractClassVisitor(final int textWidth, final int nestSize) {
         super(ASM4);
         this.myTextWidth = textWidth;
@@ -38,7 +40,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
     public void visit(final int version, final int access, final String name
             , final String signature, final String superName, final String[] interfaces)
     {
-        final String modifier = DeclarationWorker.getJavaAccess(access & ~Opcodes.ACC_SUPER);
+        final String modifier = DeclarationWorker.getAccess(access & ~Opcodes.ACC_SUPER, myLanguage);
         String type = "";
 
         if ((access & Opcodes.ACC_ENUM) == 0
@@ -101,7 +103,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
     @Override
     public AnnotationVisitor visitAnnotation(final String desc, final boolean visible) {
         List<String> annotationImports = new ArrayList<String>();
-        final String annotationName = DeclarationWorker.getKotlinDescriptor(desc, 0, annotationImports);
+        final String annotationName = DeclarationWorker.getDescriptor(desc, 0, annotationImports, myLanguage);
 
         if (!checkForAutomaticallyGeneratedAnnotation(annotationName)) {
             AbstractAnnotation annotation = myLanguagePartFactory.createAnnotation();
@@ -129,8 +131,8 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
         List<String> fieldDeclarationImports = new ArrayList<String>();
         final String description = signature != null ? signature : desc;
 
-        final AbstractClassField cf = myLanguagePartFactory.createClassField(DeclarationWorker.getKotlinAccess(access)
-                , DeclarationWorker.getKotlinDescriptor(description, 0, fieldDeclarationImports)
+        final AbstractClassField cf = myLanguagePartFactory.createClassField(DeclarationWorker.getAccess(access, myLanguage)
+                , DeclarationWorker.getDescriptor(description, 0, fieldDeclarationImports, myLanguage)
                 , name, myTextWidth, myNestSize);
 
         myDecompiledClass.appendField(cf);
@@ -144,7 +146,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
             , final String signature, final String[] exceptions)
     {
         final String description = signature != null ? signature : desc;
-        final String modifier = DeclarationWorker.getJavaAccess(access);
+        final String modifier = DeclarationWorker.getAccess(access, myLanguage);
 
         List<String> throwedExceptions = new ArrayList<String>();
         if (exceptions != null) {
@@ -166,7 +168,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
         } else {
             List<String> methodReturnTypeImports = new ArrayList<String>();
             final int returnTypeIndex = description.indexOf(')') + 1;
-            returnType = DeclarationWorker.getJavaDescriptor(description, returnTypeIndex, methodReturnTypeImports);
+            returnType = DeclarationWorker.getDescriptor(description, returnTypeIndex, methodReturnTypeImports, myLanguage);
             methodName = name;
             myDecompiledClass.appendImports(methodReturnTypeImports);
         }
@@ -187,7 +189,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
         final String parameters = description.substring(description.indexOf('(') + 1, description.indexOf(')'));
         final int startIndex = myDecompiledClass.isNormalClass() ? 1 : 0;
 
-        DeclarationWorker.addInformationAboutParameters(parameters, abstractMethod, startIndex, DeclarationWorker.SupportedLanguage.JAVA);
+        DeclarationWorker.addInformationAboutParameters(parameters, abstractMethod, startIndex, myLanguage);
 
         myDecompiledClass.appendMethod(abstractMethod);
 
