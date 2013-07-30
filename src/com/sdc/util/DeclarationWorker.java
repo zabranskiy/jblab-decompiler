@@ -459,14 +459,14 @@ public class DeclarationWorker {
         int curPos = pos + className.length() + 2;
 
         while (curPos < lastClassNamePos - 1) {
-            final String genericType = getDescriptor(descriptor, curPos, imports, language);
+            final String genericType = getDescriptor(descriptor, curPos, imports, language).trim();
             result = result.append(genericType);
             curPos = getNextTypePosition(descriptor, curPos);
             if (curPos < lastClassNamePos - 1) {
                 result = result.append(", ");
             }
         }
-        result = result.append(">");
+        result = result.append("> ");
 
         return result.toString();
     }

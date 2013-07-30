@@ -132,6 +132,7 @@ public abstract class AbstractMethod {
     }
 
     public void addLocalVariableFromDebugInfo(final int index, final String name, final String type) {
+        myRootAbstractFrame.setLastLocalVariableIndex(myLastLocalVariableIndex);
         myRootAbstractFrame.addLocalVariableFromDebugInfo(index, name, type);
     }
 
