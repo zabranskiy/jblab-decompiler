@@ -41,20 +41,10 @@ class JavaPrinter: AbstractPrinter() {
         for (importName in javaClass.getImports()!!.toArray())
             imports = group(imports / text("import " + importName + ";"))
 
-        var declaration = group(printAnnotations(javaClass.getAnnotations()!!.toList()) + text(javaClass.getModifier() + javaClass.getType() + javaClass.getName()))
+        var declaration : PrimeDoc = group(printAnnotations(javaClass.getAnnotations()!!.toList()) + text(javaClass.getModifier() + javaClass.getType() + javaClass.getName()))
 
-        val genericsDeclaration = javaClass.getGenericDeclaration()
-        if (!genericsDeclaration!!.isEmpty()) {
-            declaration = group(declaration + text("<"))
-            var oneType = true
-            for (genericType in genericsDeclaration) {
-                if (!oneType)
-                    declaration = group(declaration + text(", "))
-                declaration = group(declaration + text(genericType))
-                oneType = false
-            }
-            declaration = group(declaration + text(">"))
-        }
+        val genericsCode = printGenerics(javaClass.getGenericDeclaration())
+        declaration = declaration + genericsCode
 
         val superClass = javaClass.getSuperClass()
         if (!superClass!!.isEmpty())
@@ -93,21 +83,11 @@ class JavaPrinter: AbstractPrinter() {
     override fun printMethod(decompiledMethod: AbstractMethod): PrimeDoc {
         val classMethod: JavaMethod = decompiledMethod as JavaMethod
 
-        var declaration = group(printAnnotations(classMethod.getAnnotations()!!.toList()) + text(classMethod.getModifier()))
+        var declaration : PrimeDoc = group(printAnnotations(classMethod.getAnnotations()!!.toList()) + text(classMethod.getModifier()))
 
-        val genericsDeclaration = classMethod.getGenericDeclaration()
-        if (!genericsDeclaration!!.isEmpty()) {
-            declaration = group(declaration + text("<"))
-            var oneType = true
-            for (genericType in genericsDeclaration) {
-                if (!oneType)
-                    declaration = group(declaration + text(", "))
-                declaration = group(declaration + text(genericType))
-                oneType = false
-            }
-            declaration = group(declaration + text("> "))
-        }
-        declaration = group(declaration + text(classMethod.getReturnType() + classMethod.getName() + "("))
+        val genericsCode = printGenerics(classMethod.getGenericDeclaration())
+
+        declaration = group(declaration + genericsCode + text(classMethod.getReturnType() + classMethod.getName() + "("))
 
         var throwsExceptions = group(nil())
         val exceptions = classMethod.getExceptions()
@@ -119,34 +99,14 @@ class JavaPrinter: AbstractPrinter() {
             throwsExceptions = group(nest(2 * classMethod.getNestSize(), line() + throwsExceptions))
         }
 
-        var arguments: PrimeDoc = nil()
-        if (classMethod.getLastLocalVariableIndex() != 0) {
-            var variables = classMethod.getParameters()!!.toList()
-            var index = 0
-            for (variable in variables) {
-                if (classMethod.checkParameterForAnnotation(index))
-                    arguments = nest(
-                            2 * classMethod.getNestSize()
-                            , arguments + printAnnotations(classMethod.getParameterAnnotations(index)!!.toList()) + text(variable)
-                    )
-                else
-                    arguments = nest(
-                            2 * classMethod.getNestSize()
-                            , arguments + text(variable)
-                    )
-                if (index + 1 < variables.size)
-                    arguments = group(arguments + text(",") + line())
-
-                index++
-            }
-        }
+        var arguments: PrimeDoc = printMethodParameters(classMethod)
 
         val body = nest(
                        classMethod.getNestSize(),
-                       line() + printStatements(classMethod.getBody(), classMethod.getNestSize())
+                       printStatements(classMethod.getBody(), classMethod.getNestSize())
                    ) / text("}")
 
-        return group(declaration + arguments + text(")") + throwsExceptions / text("{")) + body
+        return group(declaration + arguments + text(")") + throwsExceptions + text(" {")) + body
     }
 
     override fun printField(decompiledField: AbstractClassField): PrimeDoc {

@@ -144,7 +144,7 @@ abstract class AbstractPrinter {
                             .map { arg -> printExpression(arg, nestSize) + text(", ") }
                     var arguments = nest(2 * nestSize, fill(argsDocs + printExpression(args.last as Expression, nestSize)))
 
-                    group(funName + arguments + text(")"))
+                    funName + arguments + text(")")
                 }
             }
             is Assignment -> group(
@@ -171,15 +171,11 @@ abstract class AbstractPrinter {
     open fun printStatementsDelimiter(): PrimeDoc = text(";")
 
     open fun printStatements(statements: List<Statement>?, nestSize: Int): PrimeDoc {
-        if ((statements == null) || (statements.size == 0))
-            return nil()
-        else {
-            var body = printStatement(statements.get(0), nestSize) + printStatementsDelimiter()
-            for (i in 1..statements.size - 1) {
-                body = body / printStatement(statements.get(i), nestSize) + printStatementsDelimiter()
-            }
-            return body
-        }
+        var body : PrimeDoc = nil()
+        if (statements != null && statements.size != 0)
+            for (statement in statements)
+                body = body / printStatement(statement, nestSize) + printStatementsDelimiter()
+        return body
     }
 
     open fun printAnnotation(annotation: AbstractAnnotation): PrimeDoc {
@@ -235,9 +231,25 @@ abstract class AbstractPrinter {
         return arguments
     }
 
+    open fun printGenerics(genericsDeclaration : List<String>?): PrimeDoc {
+        var generics : PrimeDoc = nil()
+        if (!genericsDeclaration!!.isEmpty()) {
+            generics = group(generics + text("<"))
+            var oneType = true
+            for (genericType in genericsDeclaration) {
+                if (!oneType)
+                    generics = group(generics + text(", "))
+                generics = group(generics + text(genericType))
+                oneType = false
+            }
+            generics = group(generics + text("> "))
+        }
+        return generics
+    }
+
     abstract fun printAnnotationIdentifier(): PrimeDoc;
 
-    public abstract fun printClass(decompiledClass: AbstractClass): PrimeDoc;
+    abstract fun printClass(decompiledClass: AbstractClass): PrimeDoc;
 
     abstract fun printMethod(decompiledMethod: AbstractMethod): PrimeDoc;
 
