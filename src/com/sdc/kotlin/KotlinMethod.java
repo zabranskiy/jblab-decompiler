@@ -1,6 +1,6 @@
 package com.sdc.kotlin;
 
-import KotlinPrinter.KotlinPrinterPackage;
+import KotlinPrinter.KotlinPrinter;
 import pretty.PrettyPackage;
 
 import com.sdc.abstractLanguage.AbstractClass;
@@ -66,6 +66,6 @@ public class KotlinMethod extends AbstractMethod {
 
     @Override
     public String toString() {
-        return PrettyPackage.pretty(myTextWidth, KotlinPrinterPackage.printKotlinMethod(this));
+        return PrettyPackage.pretty(myTextWidth, (new KotlinPrinter()).printMethod(this));
     }
 }
