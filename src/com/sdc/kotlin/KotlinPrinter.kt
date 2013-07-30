@@ -2,33 +2,21 @@ package KotlinPrinter
 
 import pretty.*
 import com.sdc.ast.expressions.Expression
-import com.sdc.ast.expressions.Constant
-import com.sdc.ast.expressions.BinaryExpression
-import com.sdc.ast.expressions.UnaryExpression
 import com.sdc.ast.expressions.New
 import com.sdc.ast.expressions.NewArray
-import com.sdc.ast.expressions.identifiers.Field
-import com.sdc.ast.expressions.identifiers.Variable
 import com.sdc.ast.expressions.nestedclasses.LambdaFunction
-
-import com.sdc.ast.controlflow.Statement
-import com.sdc.ast.controlflow.Invocation
-import com.sdc.ast.controlflow.Assignment
-import com.sdc.ast.controlflow.Return
-import com.sdc.ast.controlflow.Throw
-import com.sdc.ast.controlflow.InstanceInvocation
 
 import com.sdc.kotlin.KotlinClass
 import com.sdc.kotlin.KotlinMethod
 import com.sdc.kotlin.KotlinClassField
 import com.sdc.kotlin.KotlinAnnotation
 
-
 import com.sdc.abstractLanguage.AbstractClass
 import com.sdc.abstractLanguage.AbstractMethod
 import com.sdc.abstractLanguage.AbstractClassField
 import com.sdc.abstractLanguage.AbstractAnnotation
 import com.sdc.abstractLanguage.AbstractPrinter
+
 
 class KotlinPrinter: AbstractPrinter() {
     override fun printVariableName(variableName: String?): String? = if (variableName.equals("this$")) "this" else variableName
@@ -87,18 +75,9 @@ class KotlinPrinter: AbstractPrinter() {
         if (kotlinClass.isNormalClass()) {
             var declaration : PrimeDoc = printAnnotations(kotlinClass.getAnnotations()!!.toList()) + text(kotlinClass.getModifier() + kotlinClass.getType() + kotlinClass.getName())
 
-            val genericsDeclaration = kotlinClass.getGenericDeclaration()
-            if (!genericsDeclaration!!.isEmpty()) {
-                declaration = declaration + text("<")
-                var oneType = true
-                for (genericType in genericsDeclaration) {
-                    if (!oneType)
-                        declaration = declaration + text(", ")
-                    declaration = declaration + text(genericType)
-                    oneType = false
-                }
-                declaration = declaration + text(">")
-            }
+            val genericsCode = printGenerics(kotlinClass.getGenericDeclaration())
+            declaration = declaration + genericsCode
+
             val constructor = kotlinClass.getConstructor()
             if (constructor != null)
                 declaration = declaration + printPrimaryConstructorParameters(constructor)
@@ -144,19 +123,9 @@ class KotlinPrinter: AbstractPrinter() {
 
         var declaration : PrimeDoc = printAnnotations(kotlinMethod.getAnnotations()!!.toList()) + text(kotlinMethod.getModifier() + "fun ")
 
-        val genericsDeclaration = kotlinMethod.getGenericDeclaration()
-        if (!genericsDeclaration!!.isEmpty()) {
-            declaration = declaration + text("<")
-            var oneType = true
-            for (genericType in genericsDeclaration) {
-                if (!oneType)
-                    declaration = declaration + text(", ")
-                declaration = declaration + text(genericType)
-                oneType = false
-            }
-            declaration = declaration + text("> ")
-        }
-        declaration = declaration + text(kotlinMethod.getName() + "(")
+        val genericsCode = printGenerics(kotlinMethod.getGenericDeclaration())
+
+        declaration = declaration + genericsCode + text(kotlinMethod.getName() + "(")
 
         val arguments = printMethodParameters(kotlinMethod)
 

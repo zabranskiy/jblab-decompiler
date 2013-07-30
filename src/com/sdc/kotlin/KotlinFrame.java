@@ -7,19 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class KotlinFrame extends AbstractFrame {
-    private int myLastLocalVariableIndex = -1;
     private List<Integer> myNotNullVariables = new ArrayList<Integer>();
-
-    public void setLastLocalVariableIndex(final int lastLocalVariableIndex) {
-        this.myLastLocalVariableIndex = lastLocalVariableIndex;
-    }
-
-    public int getLastLocalVariableIndex() {
-        if (myLastLocalVariableIndex == -1) {
-            myLastLocalVariableIndex = ((KotlinFrame) myParent).getLastLocalVariableIndex();
-        }
-        return myLastLocalVariableIndex;
-    }
 
     @Override
     protected String getVariableNameForDeclaration(final int index) {

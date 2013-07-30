@@ -12,6 +12,8 @@ public abstract class AbstractFrame {
     protected List<Integer> myDeclaredVariables = new ArrayList<Integer>();
     protected Set<Integer> myLocalVariablesFromDebugInfo = new HashSet<Integer>();
 
+    protected int myLastLocalVariableIndex = -1;
+
     protected AbstractFrame myParent = null;
     protected List<AbstractFrame> myChildren = new ArrayList<AbstractFrame>();
     protected AbstractFrame mySameAbstractFrame = null;
@@ -81,7 +83,7 @@ public abstract class AbstractFrame {
         } else {
             myLocalVariablesFromDebugInfo.add(index);
             addLocalVariableName(index, name);
-            if (!type.equals("Object")) {
+            if (!type.equals("Object") && index > getLastLocalVariableIndex()) {
                 addLocalVariableType(index, type);
             }
             return true;
@@ -119,5 +121,16 @@ public abstract class AbstractFrame {
 
     public boolean containsIndex(final int index) {
         return myLocalVariableTypes.containsKey(index);
+    }
+
+    public void setLastLocalVariableIndex(final int lastLocalVariableIndex) {
+        this.myLastLocalVariableIndex = lastLocalVariableIndex;
+    }
+
+    public int getLastLocalVariableIndex() {
+        if (myLastLocalVariableIndex == -1) {
+            myLastLocalVariableIndex = myParent.getLastLocalVariableIndex();
+        }
+        return myLastLocalVariableIndex;
     }
 }

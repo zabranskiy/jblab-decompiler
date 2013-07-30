@@ -1,6 +1,6 @@
 package com.sdc.js;
 
-import JSClassPrinter.JSClassPrinterPackage;
+import JSPrinter.JSPrinter;
 import pretty.PrettyPackage;
 
 import com.sdc.abstractLanguage.AbstractClass;
@@ -31,6 +31,6 @@ public class JSClassMethod extends AbstractMethod {
 
     @Override
     public String toString() {
-          return PrettyPackage.pretty(myTextWidth, JSClassPrinterPackage.printClassMethod(this));
+          return PrettyPackage.pretty(myTextWidth, (new JSPrinter()).printMethod(this));
     }
 }
