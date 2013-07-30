@@ -1,22 +1,6 @@
 package JavaPrinter
 
 import pretty.*
-import com.sdc.ast.expressions.Expression
-import com.sdc.ast.expressions.Constant
-import com.sdc.ast.expressions.BinaryExpression
-import com.sdc.ast.expressions.UnaryExpression
-import com.sdc.ast.expressions.TernaryExpression
-import com.sdc.ast.expressions.New
-import com.sdc.ast.expressions.NewArray
-import com.sdc.ast.expressions.identifiers.Field
-import com.sdc.ast.expressions.identifiers.Variable
-
-import com.sdc.ast.controlflow.Statement
-import com.sdc.ast.controlflow.Invocation
-import com.sdc.ast.controlflow.Assignment
-import com.sdc.ast.controlflow.Return
-import com.sdc.ast.controlflow.Throw
-import com.sdc.ast.controlflow.InstanceInvocation
 
 import com.sdc.java.JavaClass
 import com.sdc.java.JavaClassField

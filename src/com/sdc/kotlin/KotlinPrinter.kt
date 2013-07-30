@@ -2,33 +2,21 @@ package KotlinPrinter
 
 import pretty.*
 import com.sdc.ast.expressions.Expression
-import com.sdc.ast.expressions.Constant
-import com.sdc.ast.expressions.BinaryExpression
-import com.sdc.ast.expressions.UnaryExpression
 import com.sdc.ast.expressions.New
 import com.sdc.ast.expressions.NewArray
-import com.sdc.ast.expressions.identifiers.Field
-import com.sdc.ast.expressions.identifiers.Variable
 import com.sdc.ast.expressions.nestedclasses.LambdaFunction
-
-import com.sdc.ast.controlflow.Statement
-import com.sdc.ast.controlflow.Invocation
-import com.sdc.ast.controlflow.Assignment
-import com.sdc.ast.controlflow.Return
-import com.sdc.ast.controlflow.Throw
-import com.sdc.ast.controlflow.InstanceInvocation
 
 import com.sdc.kotlin.KotlinClass
 import com.sdc.kotlin.KotlinMethod
 import com.sdc.kotlin.KotlinClassField
 import com.sdc.kotlin.KotlinAnnotation
 
-
 import com.sdc.abstractLanguage.AbstractClass
 import com.sdc.abstractLanguage.AbstractMethod
 import com.sdc.abstractLanguage.AbstractClassField
 import com.sdc.abstractLanguage.AbstractAnnotation
 import com.sdc.abstractLanguage.AbstractPrinter
+
 
 class KotlinPrinter: AbstractPrinter() {
     override fun printVariableName(variableName: String?): String? = if (variableName.equals("this$")) "this" else variableName

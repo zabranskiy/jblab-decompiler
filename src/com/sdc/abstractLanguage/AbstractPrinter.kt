@@ -8,14 +8,16 @@ import com.sdc.ast.expressions.UnaryExpression
 import com.sdc.ast.expressions.TernaryExpression
 import com.sdc.ast.expressions.identifiers.Field
 import com.sdc.ast.expressions.identifiers.Variable
+import com.sdc.ast.expressions.NewArray
+import com.sdc.ast.expressions.New
+
 import com.sdc.ast.controlflow.Statement
 import com.sdc.ast.controlflow.Invocation
 import com.sdc.ast.controlflow.Assignment
 import com.sdc.ast.controlflow.Return
 import com.sdc.ast.controlflow.Throw
-import com.sdc.ast.expressions.New
 import com.sdc.ast.controlflow.InstanceInvocation
-import com.sdc.ast.expressions.NewArray
+
 
 abstract class AbstractPrinter {
     open fun printExpression(expression: Expression?, nestSize: Int): PrimeDoc =
@@ -95,7 +97,7 @@ abstract class AbstractPrinter {
                             .map { arg -> printExpression(arg, nestSize) + text(", ") }
                     var arguments = nest(2 * nestSize, fill(argsDocs + printExpression(args.last, nestSize)))
 
-                    group(funName + arguments + text(")"))
+                    funName + arguments + text(")")
                 }
             }
 
@@ -151,13 +153,14 @@ abstract class AbstractPrinter {
                     (printExpression(statement.getLeft(), nestSize) + text(" ="))
                     + nest(nestSize, line() + printExpression(statement.getRight(), nestSize))
             )
-            is Return -> if (statement.getReturnValue() != null)
-                group(
-                        text("return") + nest(nestSize, line()
-                        + printExpression(statement.getReturnValue(), nestSize))
-                )
-            else
-                text("return")
+            is Return ->
+                if (statement.getReturnValue() != null)
+                    group(
+                            text("return") + nest(nestSize, line()
+                            + printExpression(statement.getReturnValue(), nestSize))
+                    )
+                else
+                    text("return")
             is Throw -> group(
                     text("throw") + nest(nestSize, line()
                     + printExpression(statement.getThrowObject(), nestSize))
