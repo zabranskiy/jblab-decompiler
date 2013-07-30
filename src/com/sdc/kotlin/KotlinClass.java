@@ -1,6 +1,6 @@
 package com.sdc.kotlin;
 
-import KotlinPrinter.KotlinPrinterPackage;
+import KotlinPrinter.KotlinPrinter;
 import pretty.PrettyPackage;
 
 import com.sdc.abstractLanguage.AbstractClass;
@@ -51,6 +51,6 @@ public class KotlinClass extends AbstractClass {
 
     @Override
     public String toString() {
-        return PrettyPackage.pretty(myTextWidth, KotlinPrinterPackage.printKotlinClass(this));
+        return PrettyPackage.pretty(myTextWidth, (new KotlinPrinter()).printClass(this));
     }
 }
