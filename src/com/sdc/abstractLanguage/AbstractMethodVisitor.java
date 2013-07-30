@@ -239,7 +239,7 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
                 descriptorType = getCurrentFrame().getStackedVariableType();
                 getCurrentFrame().setStackedVariableIndex(var);
             } else {
-                descriptorType = DeclarationWorker.getKotlinDescriptor(opString, 0, myDecompiledMethod.getImports());
+                descriptorType = DeclarationWorker.getDescriptor(opString, 0, myDecompiledMethod.getImports(), myLanguage);
             }
 
             if (!descriptorType.equals("Object ") || variableType == null) {
@@ -267,7 +267,7 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
 
         if (opString.contains("PUTFIELD")) {
             if (!myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName())) {
-                final Identifier v = new Field(name, DeclarationWorker.getJavaDescriptor(desc, 0, myDecompiledMethod.getImports()));
+                final Identifier v = new Field(name, DeclarationWorker.getDescriptor(desc, 0, myDecompiledMethod.getImports(), myLanguage));
                 final Expression e = getTopOfBodyStack();
                 myStatements.add(new Assignment(v, e));
             } else {
@@ -446,12 +446,9 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
             myHasDebugInformation = true;
         }
 
-        myDecompiledMethod.addLocalVariableName(index, name);
-        if (index > myDecompiledMethod.getLastLocalVariableIndex()) {
-            final String description = signature != null ? signature : desc;
-            myDecompiledMethod.addLocalVariableFromDebugInfo(index, name,
-                    DeclarationWorker.getDescriptor(description, 0, myDecompiledMethod.getImports(), myLanguage));
-        }
+        final String description = signature != null ? signature : desc;
+        myDecompiledMethod.addLocalVariableFromDebugInfo(index, name,
+                DeclarationWorker.getDescriptor(description, 0, myDecompiledMethod.getImports(), myLanguage));
     }
 
     @Override

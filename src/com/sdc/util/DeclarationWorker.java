@@ -130,7 +130,7 @@ public class DeclarationWorker {
                 if (descriptor.indexOf("<", pos) == -1) {
                     return getSimpleClassName(descriptor, pos, imports) + " ";
                 } else {
-                    return getClassNameWithGenerics(descriptor, pos, imports, SupportedLanguage.JAVA);
+                    return getClassNameWithGenerics(descriptor, pos, imports, SupportedLanguage.JAVA) + " ";
                 }
             case 'T':
                 return descriptor.substring(pos + 1, descriptor.indexOf(";", pos)) + " ";
@@ -459,7 +459,7 @@ public class DeclarationWorker {
         int curPos = pos + className.length() + 2;
 
         while (curPos < lastClassNamePos - 1) {
-            final String genericType = getDescriptor(descriptor, curPos, imports, language);
+            final String genericType = getDescriptor(descriptor, curPos, imports, language).trim();
             result = result.append(genericType);
             curPos = getNextTypePosition(descriptor, curPos);
             if (curPos < lastClassNamePos - 1) {

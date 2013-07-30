@@ -8,14 +8,16 @@ import com.sdc.ast.expressions.UnaryExpression
 import com.sdc.ast.expressions.TernaryExpression
 import com.sdc.ast.expressions.identifiers.Field
 import com.sdc.ast.expressions.identifiers.Variable
+import com.sdc.ast.expressions.NewArray
+import com.sdc.ast.expressions.New
+
 import com.sdc.ast.controlflow.Statement
 import com.sdc.ast.controlflow.Invocation
 import com.sdc.ast.controlflow.Assignment
 import com.sdc.ast.controlflow.Return
 import com.sdc.ast.controlflow.Throw
-import com.sdc.ast.expressions.New
 import com.sdc.ast.controlflow.InstanceInvocation
-import com.sdc.ast.expressions.NewArray
+
 
 abstract class AbstractPrinter {
     open fun printExpression(expression: Expression?, nestSize: Int): PrimeDoc =
@@ -95,7 +97,7 @@ abstract class AbstractPrinter {
                             .map { arg -> printExpression(arg, nestSize) + text(", ") }
                     var arguments = nest(2 * nestSize, fill(argsDocs + printExpression(args.last, nestSize)))
 
-                    group(funName + arguments + text(")"))
+                    funName + arguments + text(")")
                 }
             }
 
@@ -144,20 +146,21 @@ abstract class AbstractPrinter {
                             .map { arg -> printExpression(arg, nestSize) + text(", ") }
                     var arguments = nest(2 * nestSize, fill(argsDocs + printExpression(args.last as Expression, nestSize)))
 
-                    group(funName + arguments + text(")"))
+                    funName + arguments + text(")")
                 }
             }
             is Assignment -> group(
                     (printExpression(statement.getLeft(), nestSize) + text(" ="))
                     + nest(nestSize, line() + printExpression(statement.getRight(), nestSize))
             )
-            is Return -> if (statement.getReturnValue() != null)
-                group(
-                        text("return") + nest(nestSize, line()
-                        + printExpression(statement.getReturnValue(), nestSize))
-                )
-            else
-                text("return")
+            is Return ->
+                if (statement.getReturnValue() != null)
+                    group(
+                            text("return") + nest(nestSize, line()
+                            + printExpression(statement.getReturnValue(), nestSize))
+                    )
+                else
+                    text("return")
             is Throw -> group(
                     text("throw") + nest(nestSize, line()
                     + printExpression(statement.getThrowObject(), nestSize))
@@ -171,15 +174,11 @@ abstract class AbstractPrinter {
     open fun printStatementsDelimiter(): PrimeDoc = text(";")
 
     open fun printStatements(statements: List<Statement>?, nestSize: Int): PrimeDoc {
-        if ((statements == null) || (statements.size == 0))
-            return nil()
-        else {
-            var body = printStatement(statements.get(0), nestSize) + printStatementsDelimiter()
-            for (i in 1..statements.size - 1) {
-                body = body / printStatement(statements.get(i), nestSize) + printStatementsDelimiter()
-            }
-            return body
-        }
+        var body : PrimeDoc = nil()
+        if (statements != null && statements.size != 0)
+            for (statement in statements)
+                body = body / printStatement(statement, nestSize) + printStatementsDelimiter()
+        return body
     }
 
     open fun printAnnotation(annotation: AbstractAnnotation): PrimeDoc {
@@ -235,9 +234,25 @@ abstract class AbstractPrinter {
         return arguments
     }
 
+    open fun printGenerics(genericsDeclaration : List<String>?): PrimeDoc {
+        var generics : PrimeDoc = nil()
+        if (!genericsDeclaration!!.isEmpty()) {
+            generics = group(generics + text("<"))
+            var oneType = true
+            for (genericType in genericsDeclaration) {
+                if (!oneType)
+                    generics = group(generics + text(", "))
+                generics = group(generics + text(genericType))
+                oneType = false
+            }
+            generics = group(generics + text("> "))
+        }
+        return generics
+    }
+
     abstract fun printAnnotationIdentifier(): PrimeDoc;
 
-    public abstract fun printClass(decompiledClass: AbstractClass): PrimeDoc;
+    abstract fun printClass(decompiledClass: AbstractClass): PrimeDoc;
 
     abstract fun printMethod(decompiledMethod: AbstractMethod): PrimeDoc;
 
