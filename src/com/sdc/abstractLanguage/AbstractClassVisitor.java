@@ -13,6 +13,8 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
     protected final int myTextWidth;
     protected final int myNestSize;
 
+    protected boolean myIsLambdaFunction = false;
+
     protected AbstractLanguagePartFactory myLanguagePartFactory;
     protected AbstractVisitorFactory myVisitorFactory;
 
@@ -83,6 +85,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
 
         myDecompiledClass = myLanguagePartFactory.createClass(modifier, type, className, packageName.toString(), implementedInterfaces
                 , superClass, genericTypesList, genericIdentifiersList, myTextWidth, myNestSize);
+        myDecompiledClass.setIsLambdaFunctionClass(myIsLambdaFunction);
 
         if (!superClassImport.isEmpty()) {
             myDecompiledClass.appendImport(superClassImport);
@@ -201,5 +204,9 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
         for (final AbstractMethod method : myDecompiledClass.getMethods()) {
             myDecompiledClass.appendImports(method.getImports());
         }
+    }
+
+    public void setIsLambdaFunction(final boolean isLambdaFunction) {
+        this.myIsLambdaFunction = isLambdaFunction;
     }
 }

@@ -27,6 +27,7 @@ public abstract class AbstractClass {
     protected List<String> myDefaultPackages = new ArrayList<String>();
 
     protected boolean myIsNormalClass = true;
+    protected boolean myIsLambdaFunctionClass = false;
 
     protected final int myTextWidth;
     protected final int myNestSize;
@@ -100,6 +101,14 @@ public abstract class AbstractClass {
 
     public boolean isNormalClass() {
         return myIsNormalClass;
+    }
+
+    public void setIsLambdaFunctionClass(final boolean isLambdaFunctionClass) {
+        this.myIsLambdaFunctionClass = isLambdaFunctionClass;
+    }
+
+    public boolean isLambdaFunctionClass() {
+        return myIsLambdaFunctionClass;
     }
 
     public void appendField(final AbstractClassField field) {

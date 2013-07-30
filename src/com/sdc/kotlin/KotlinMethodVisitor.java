@@ -111,6 +111,7 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
         if (decompiledOwnerName.contains(methodOwner) && decompiledOwnerName.contains(myDecompiledMethod.getName())) {
             try {
                 AbstractClassVisitor cv = myVisitorFactory.createClassVisitor(myDecompiledMethod.getTextWidth(), myDecompiledMethod.getNestSize());
+                cv.setIsLambdaFunction(true);
                 ClassReader cr = new ClassReader(decompiledOwnerName);
                 cr.accept(cv, 0);
                 LambdaFunction lf = new LambdaFunction(cv.getDecompiledClass());

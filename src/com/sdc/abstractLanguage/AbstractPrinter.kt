@@ -153,14 +153,12 @@ abstract class AbstractPrinter {
                     (printExpression(statement.getLeft(), nestSize) + text(" ="))
                     + nest(nestSize, line() + printExpression(statement.getRight(), nestSize))
             )
-            is Return ->
+            is Return -> {
+                var returnStatement : PrimeDoc = if (statement.needToPrintReturn()) text("return ") else text("")
                 if (statement.getReturnValue() != null)
-                    group(
-                            text("return") + nest(nestSize, line()
-                            + printExpression(statement.getReturnValue(), nestSize))
-                    )
-                else
-                    text("return")
+                    returnStatement = returnStatement + printExpression(statement.getReturnValue(), nestSize)
+                returnStatement
+            }
             is Throw -> group(
                     text("throw") + nest(nestSize, line()
                     + printExpression(statement.getThrowObject(), nestSize))

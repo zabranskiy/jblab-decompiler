@@ -35,7 +35,7 @@ public class KotlinMethod extends AbstractMethod {
     @Override
     public void setLastLocalVariableIndex(int lastLocalVariableIndex) {
         super.setLastLocalVariableIndex(lastLocalVariableIndex);
-        ((KotlinFrame) myRootAbstractFrame).setLastLocalVariableIndex(lastLocalVariableIndex);
+        myRootAbstractFrame.setLastLocalVariableIndex(lastLocalVariableIndex);
     }
 
     @Override

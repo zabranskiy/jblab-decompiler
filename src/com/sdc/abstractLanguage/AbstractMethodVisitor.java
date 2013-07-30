@@ -157,11 +157,15 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
             myBodyStack.push(new Constant(opString.substring(7).toLowerCase(), false));
         } else if (opString.equals("RETURN")) {
             replaceInvocationsFromExpressionsToStatements();
-            myStatements.add(new Return());
+            Return returnStatement = new Return();
+            returnStatement.setNeedToPrintReturn(!myDecompiledMethod.getDecompiledClass().isLambdaFunctionClass());
+            myStatements.add(returnStatement);
         } else if (opString.contains("RETURN")) {
-            final Expression expression = getTopOfBodyStack();
+            Expression expression = replaceBooleanConstant(getTopOfBodyStack());
             replaceInvocationsFromExpressionsToStatements();
-            myStatements.add(new Return(expression));
+            Return returnStatement = new Return(expression);
+            returnStatement.setNeedToPrintReturn(!myDecompiledMethod.getDecompiledClass().isLambdaFunctionClass());
+            myStatements.add(returnStatement);
         } else if (opString.contains("CMP")) {
             Expression e1 = getTopOfBodyStack();
             Expression e2 = getTopOfBodyStack();
@@ -264,10 +268,11 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
     @Override
     public void visitFieldInsn(final int opcode, final String owner, final String name, final String desc) {
         final String opString = Printer.OPCODES[opcode];
+        final String fieldName = myDecompiledMethod.getDecompiledClass().isLambdaFunctionClass() ? name.substring(1) : name;
 
         if (opString.contains("PUTFIELD")) {
             if (!myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName())) {
-                final Identifier v = new Field(name, DeclarationWorker.getDescriptor(desc, 0, myDecompiledMethod.getImports(), myLanguage));
+                final Identifier v = new Field(fieldName, DeclarationWorker.getDescriptor(desc, 0, myDecompiledMethod.getImports(), myLanguage));
                 final Expression e = getTopOfBodyStack();
                 myStatements.add(new Assignment(v, e));
             } else {
@@ -276,7 +281,7 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
             removeThisVariableFromStack();
         } else if (opString.contains("GETFIELD")) {
             removeThisVariableFromStack();
-            myBodyStack.push(new Field(name, DeclarationWorker.getDescriptor(desc, 0, myDecompiledMethod.getImports(), myLanguage)));
+            myBodyStack.push(new Field(fieldName, DeclarationWorker.getDescriptor(desc, 0, myDecompiledMethod.getImports(), myLanguage)));
         }
     }
 
@@ -640,6 +645,14 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
             }
 
             appendInvocation(invocationName, returnType, arguments);
+        }
+    }
+
+    protected Expression replaceBooleanConstant(final Expression expression) {
+        if (expression instanceof Constant && myDecompiledMethod.getReturnType().toLowerCase().contains("boolean")) {
+            return new Constant(((Constant) expression).getValue().toString().equals("1"), false);
+        } else {
+            return expression;
         }
     }
 }
