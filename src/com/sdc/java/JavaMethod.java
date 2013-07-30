@@ -1,6 +1,6 @@
 package com.sdc.java;
 
-import JavaPrinter.JavaPrinterPackage;
+import JavaPrinter.JavaPrinter;
 import pretty.PrettyPackage;
 
 import com.sdc.abstractLanguage.AbstractClass;
@@ -31,6 +31,6 @@ public class JavaMethod extends AbstractMethod {
 
     @Override
     public String toString() {
-          return PrettyPackage.pretty(myTextWidth, JavaPrinterPackage.printClassMethod(this));
+          return PrettyPackage.pretty(myTextWidth, (new JavaPrinter()).printMethod(this));
     }
 }
