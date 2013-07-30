@@ -16,15 +16,17 @@ public abstract class AbstractFrame {
     protected List<AbstractFrame> myChildren = new ArrayList<AbstractFrame>();
     protected AbstractFrame mySameAbstractFrame = null;
 
+    protected abstract String getVariableNameForDeclaration(final int index);
+
     public String getStackedVariableType() {
         return myStackedVariableType;
     }
 
-    public void setStackedVariableType(String stackedVariableType) {
+    public void setStackedVariableType(final String stackedVariableType) {
         this.myStackedVariableType = stackedVariableType;
     }
 
-    public void setStackedVariableIndex(int stackedVariableIndex) {
+    public void setStackedVariableIndex(final int stackedVariableIndex) {
         this.myStackedVariableIndex = stackedVariableIndex;
     }
 
@@ -118,6 +120,4 @@ public abstract class AbstractFrame {
     public boolean containsIndex(final int index) {
         return myLocalVariableTypes.containsKey(index);
     }
-
-    abstract protected String getVariableNameForDeclaration(final int index);
 }

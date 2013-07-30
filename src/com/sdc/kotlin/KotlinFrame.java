@@ -24,14 +24,13 @@ public class KotlinFrame extends AbstractFrame {
     @Override
     protected String getVariableNameForDeclaration(final int index) {
         final String variableType = getLocalVariableType(index);
+
         final boolean notNeedNullableMark = isNotNullVariable(index) || DeclarationWorker.isPrimitiveClass(variableType) || variableType.endsWith("?");
         final String nullableMark = notNeedNullableMark ? "" : "?";
 
-        String variableName;
-        if (index <= myLastLocalVariableIndex) {
-            variableName = getLocalVariableName(index) + " : " + getLocalVariableType(index);
-        } else {
-            variableName = "var " + getLocalVariableName(index) + " : " + getLocalVariableType(index);
+        String variableName = getLocalVariableName(index) + " : " + variableType;
+        if (index > myLastLocalVariableIndex) {
+            variableName = "var " + variableName;
         }
         return variableName + nullableMark;
     }

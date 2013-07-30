@@ -11,7 +11,7 @@ public class AbstractAnnotation {
         return myName;
     }
 
-    public void setName(String name) {
+    public void setName(final String name) {
         this.myName = name.trim();
     }
 

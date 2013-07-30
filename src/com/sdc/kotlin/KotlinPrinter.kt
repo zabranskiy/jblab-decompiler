@@ -19,6 +19,8 @@ import com.sdc.kotlin.KotlinClass
 import com.sdc.kotlin.KotlinMethod
 import com.sdc.kotlin.KotlinClassField
 import com.sdc.kotlin.KotlinAnnotation
+import com.sdc.ast.expressions.nestedclasses.LambdaFunction
+import com.sdc.abstractLanguage.AbstractAnnotation
 
 fun printExpression(expression: Expression?, nestSize: Int): PrimeDoc =
         when (expression) {
@@ -77,9 +79,12 @@ fun printExpression(expression: Expression?, nestSize: Int): PrimeDoc =
             is com.sdc.ast.expressions.Invocation -> {
                 var funName : PrimeDoc = text(expression.getFunction() + "(")
                 if (expression is com.sdc.ast.expressions.InstanceInvocation) {
-                    val variableName = expression.getVariable()!!.getName()
-                    if (!variableName.equals("this"))
+                    var variableName = expression.getVariable()!!.getName()
+                    if (!variableName.equals("this")) {
+                        if (variableName.equals("this$"))
+                            variableName = "this"
                         funName = text(variableName + ".") + funName
+                    }
                 }
 
                 val args = expression.getArguments()
@@ -108,10 +113,22 @@ fun printExpression(expression: Expression?, nestSize: Int): PrimeDoc =
                         newArray = newArray + text("{ i -> null")
                 }
 
-                while (counter > 0)
-                    newArray = newArray + text(" }")
+                while (counter > 0) {
+                    newArray = newArray + text(" })")
+                    counter--
+                }
 
-                newArray + text(")")
+                newArray
+            }
+
+            is LambdaFunction -> {
+                val lambdaFunction = expression.getFunction()
+                val arguments = text("{ ") + printMethodParameters(expression.getFunction() as KotlinMethod) + text(" -> ")
+                val body = nest(
+                        lambdaFunction!!.getNestSize(),
+                        printStatements(lambdaFunction.getBody(), lambdaFunction.getNestSize())
+                ) / text("}")
+                arguments + body
             }
             else -> throw IllegalArgumentException("Unknown Expression implementer!")
         }
@@ -121,9 +138,12 @@ fun printStatement(statement: Statement, nestSize: Int): PrimeDoc =
             is Invocation -> {
                 var funName : PrimeDoc = text(statement.getFunction() + "(")
                 if (statement is InstanceInvocation) {
-                    val variableName = statement.getVariable()!!.getName()
-                    if (!variableName.equals("this"))
+                    var variableName = statement.getVariable()!!.getName()
+                    if (!variableName.equals("this")) {
+                        if (variableName.equals("this$"))
+                            variableName = "this"
                         funName = text(variableName + ".") + funName
+                    }
                 }
 
                 val args = statement.getArguments()
@@ -134,7 +154,7 @@ fun printStatement(statement: Statement, nestSize: Int): PrimeDoc =
                             .map { arg -> printExpression(arg, nestSize) + text(", ") }
                     var arguments = nest(2 * nestSize, fill(argsDocs + printExpression(args.last as Expression, nestSize)))
 
-                    group(funName + arguments + text(")"))
+                    funName + arguments + text(")")
                 }
             }
             is Assignment -> printExpression(statement.getLeft(), nestSize) + text(" = ") + printExpression(statement.getRight(), nestSize)
@@ -170,7 +190,7 @@ fun printKotlinClass(kotlinClass: KotlinClass): PrimeDoc {
         importsCode = importsCode / text("import " + importName)
 
     if (kotlinClass.isNormalClass()) {
-        var declaration : PrimeDoc = printAnnotations(kotlinClass.getAnnotations()!!.toList()) + text(kotlinClass.getModifier() + kotlinClass.getType() + kotlinClass.getName())
+        var declaration : PrimeDoc = printKotlinAnnotations(kotlinClass.getAnnotations()!!.toList()) + text(kotlinClass.getModifier() + kotlinClass.getType() + kotlinClass.getName())
 
         val genericsDeclaration = kotlinClass.getGenericDeclaration()
         if (!genericsDeclaration!!.isEmpty()) {
@@ -186,16 +206,16 @@ fun printKotlinClass(kotlinClass: KotlinClass): PrimeDoc {
         }
         val constructor = kotlinClass.getConstructor()
         if (constructor != null)
-            declaration = declaration + printPrimaryConstructorParameters(constructor)
+            declaration = declaration + printPrimaryConstructorParameters(constructor as KotlinMethod)
 
         val superClass = kotlinClass.getSuperClass()
         if (!superClass!!.isEmpty()) {
             declaration = declaration + group(nest(2 * kotlinClass.getNestSize(), line() + text(": " ) + printSuperClassConstructor(kotlinClass.getSuperClassConstructor(), kotlinClass.getNestSize())))
-            val traits = kotlinClass.getTraits()!!.toArray()
+            val traits = kotlinClass.getImplementedInterfaces()!!.toArray()
             for (singleTrait in traits)
                 declaration = declaration + text(",") + group(nest(2 * kotlinClass.getNestSize(), line() + text(singleTrait as String)))
         } else {
-            var traits = kotlinClass.getTraits()
+            var traits = kotlinClass.getImplementedInterfaces()
             if (!traits!!.isEmpty()) {
                 declaration = declaration + text(": ") + text(traits!!.get(0))
                 for (singleTrait in traits!!.drop(1))
@@ -206,26 +226,26 @@ fun printKotlinClass(kotlinClass: KotlinClass): PrimeDoc {
         var kotlinClassCode : PrimeDoc = packageCode + importsCode / declaration + text(" {")
 
         for (classField in kotlinClass.getFields()!!.toList())
-            kotlinClassCode = kotlinClassCode + nest(kotlinClass.getNestSize(), line() + printClassField(classField))
+            kotlinClassCode = kotlinClassCode + nest(kotlinClass.getNestSize(), line() + printClassField(classField as KotlinClassField))
 
-        if (constructor != null && !constructor.hasEmptyBody())
-            kotlinClassCode = kotlinClassCode + nest(kotlinClass.getNestSize(), line() + printInitialConstructor(kotlinClass.getConstructor()))
+        if (constructor != null && !(constructor as KotlinMethod).hasEmptyBody())
+            kotlinClassCode = kotlinClassCode + nest(kotlinClass.getNestSize(), line() + printInitialConstructor(kotlinClass.getConstructor() as KotlinMethod))
 
         for (classMethod in kotlinClass.getMethods()!!.toList())
-            kotlinClassCode = kotlinClassCode + nest(kotlinClass.getNestSize(), line() + printKotlinMethod(classMethod))
+            kotlinClassCode = kotlinClassCode + nest(kotlinClass.getNestSize(), line() + printKotlinMethod(classMethod as KotlinMethod))
 
         return kotlinClassCode / text("}")
     } else {
         var kotlinCode : PrimeDoc = packageCode + importsCode
         for (method in kotlinClass.getMethods()!!.toList())
-            kotlinCode = kotlinCode / printKotlinMethod(method)
+            kotlinCode = kotlinCode / printKotlinMethod(method as KotlinMethod)
 
         return kotlinCode
     }
 }
 
 fun printKotlinMethod(kotlinMethod: KotlinMethod): PrimeDoc {
-    var declaration : PrimeDoc = printAnnotations(kotlinMethod.getAnnotations()!!.toList()) + text(kotlinMethod.getModifier() + "fun ")
+    var declaration : PrimeDoc = printKotlinAnnotations(kotlinMethod.getAnnotations()!!.toList()) + text(kotlinMethod.getModifier() + "fun ")
 
     val genericsDeclaration = kotlinMethod.getGenericDeclaration()
     if (!genericsDeclaration!!.isEmpty()) {
@@ -253,7 +273,7 @@ fun printKotlinMethod(kotlinMethod: KotlinMethod): PrimeDoc {
     if (!returnType!!.isEmpty())
         returnTypeCode = text(": " + returnType + " ")
 
-    return group(declaration + arguments + text(")") + returnTypeCode + text("{")) + body
+    return declaration + arguments + text(")") + returnTypeCode + text("{") + body
 }
 
 fun printClassField(classField: KotlinClassField): PrimeDoc {
@@ -280,10 +300,10 @@ fun printAnnotation(annotation: KotlinAnnotation): PrimeDoc {
     return annotationCode + text(" ")
 }
 
-fun printAnnotations(annotations: List<KotlinAnnotation>): PrimeDoc {
+fun printKotlinAnnotations(annotations: List<AbstractAnnotation>): PrimeDoc {
     var annotationsCode : PrimeDoc = nil()
     for (annotation in annotations)
-        annotationsCode = annotationsCode + printAnnotation(annotation)
+        annotationsCode = annotationsCode + printAnnotation(annotation as KotlinAnnotation)
     return annotationsCode
 }
 
@@ -297,11 +317,11 @@ fun printMethodParameters(method: KotlinMethod?): PrimeDoc {
         var index = 0
         for (variable in variables) {
             if (method.checkParameterForAnnotation(index))
-                arguments = arguments + printAnnotations(method.getParameterAnnotations(index)!!.toList()) + text(variable)
+                arguments = arguments + printKotlinAnnotations(method.getParameterAnnotations(index)!!.toList()) + text(variable)
             else
                 arguments = arguments + text(variable)
             if (index + 1 < variables.size)
-                arguments = group(arguments + text(",") + line())
+                arguments = arguments + text(", ")
 
             index++
         }
