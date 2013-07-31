@@ -262,6 +262,8 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
             List<Expression> dimensions = new ArrayList<Expression>();
             dimensions.add(getTopOfBodyStack());
             myBodyStack.push(new NewArray(1, DeclarationWorker.getClassName(type), dimensions));
+        } else if (opString.contains("INSTANCEOF")) {
+            myBodyStack.push(new InstanceOf(DeclarationWorker.getClassName(type), getTopOfBodyStack()));
         }
     }
 

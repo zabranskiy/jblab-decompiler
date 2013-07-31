@@ -10,6 +10,7 @@ import com.sdc.ast.expressions.identifiers.Field
 import com.sdc.ast.expressions.identifiers.Variable
 import com.sdc.ast.expressions.NewArray
 import com.sdc.ast.expressions.New
+import com.sdc.ast.expressions.InstanceOf
 
 import com.sdc.ast.controlflow.Statement
 import com.sdc.ast.controlflow.Invocation
@@ -114,6 +115,10 @@ abstract class AbstractPrinter {
                 newArray
             }
 
+            is InstanceOf -> {
+                printExpression(expression.getArgument(), nestSize) + printInstanceOfOperator() + text(expression.getType())
+            }
+
             is TernaryExpression -> {
                 val condition = expression.getCondition()
                 val printCondition = printExpression(condition, nestSize)
@@ -170,6 +175,8 @@ abstract class AbstractPrinter {
     open fun printVariableName(variableName : String?): String? = variableName
 
     open fun printStatementsDelimiter(): PrimeDoc = text(";")
+
+    open fun printInstanceOfOperator(): PrimeDoc = text(" instanceof ")
 
     open fun printStatements(statements: List<Statement>?, nestSize: Int): PrimeDoc {
         var body : PrimeDoc = nil()

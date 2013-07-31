@@ -25,6 +25,8 @@ class KotlinPrinter: AbstractPrinter() {
 
     override fun printAnnotationIdentifier(): PrimeDoc = text("")
 
+    override fun printInstanceOfOperator(): PrimeDoc = text(" is ")
+
     override fun printExpression(expression: Expression?, nestSize: Int): PrimeDoc =
         when (expression) {
             is New -> printExpression(expression.getConstructor(), nestSize)
