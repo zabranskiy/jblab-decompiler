@@ -3,12 +3,38 @@ package com.sdc.abstractLanguage;
 import com.sdc.ast.expressions.Expression;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public abstract class AbstractClass {
+    public class InnerClassIdentifier {
+        private final String myOwner;
+        private final String myName;
+        private final String myDescriptor;
+
+        public InnerClassIdentifier(final String owner, final String name, final String descriptor) {
+            this.myOwner = owner;
+            this.myName = name;
+            this.myDescriptor = descriptor;
+        }
+
+        public String getOwner() {
+            return myOwner;
+        }
+
+        public String getName() {
+            return myName;
+        }
+
+        public String getDescriptor() {
+            return myDescriptor;
+        }
+    }
+
     protected final String myModifier;
     protected final String myType;
-    protected final String myName;
+    protected String myName;
     protected final String myPackage;
 
     protected final String mySuperClass;
@@ -28,6 +54,11 @@ public abstract class AbstractClass {
 
     protected boolean myIsNormalClass = true;
     protected boolean myIsLambdaFunctionClass = false;
+
+    protected Map<String, AbstractClass> myAnonymousClasses = new HashMap<String, AbstractClass>();
+    protected Map<String, AbstractClass> myInnerClasses = new HashMap<String, AbstractClass>();
+    protected Map<String, String> myInnerClassNames = new HashMap<String, String>();
+    protected InnerClassIdentifier myInnerClassIdentifier;
 
     protected final int myTextWidth;
     protected final int myNestSize;
@@ -180,6 +211,55 @@ public abstract class AbstractClass {
             }
         }
         return result;
+    }
+
+    public void addAnonymousClass(final String className, final AbstractClass decompiledClass) {
+        myAnonymousClasses.put(className, decompiledClass);
+    }
+
+    public void addInnerClass(final String innerClassNameWithDollars, final AbstractClass decompiledClass) {
+        myInnerClasses.put(innerClassNameWithDollars, decompiledClass);
+    }
+
+    public void setInnerClassIdentifier(final String owner, final String name, final String descriptor) {
+        myInnerClassIdentifier = new InnerClassIdentifier(owner, name, descriptor);
+    }
+
+    public InnerClassIdentifier getInnerClassIdentifier() {
+        return myInnerClassIdentifier;
+    }
+
+    public List<AbstractClass> getMethodInnerClasses(final String methodName, final String descriptor) {
+        List<AbstractClass> result = new ArrayList<AbstractClass>();
+        for (final Map.Entry<String, AbstractClass> innerClass : myInnerClasses.entrySet()) {
+            if (innerClass.getValue().getInnerClassIdentifier().getName().equals(methodName) && innerClass.getValue().getInnerClassIdentifier().getDescriptor().equals(descriptor)) {
+                result.add(innerClass.getValue());
+            }
+        }
+        return result;
+    }
+
+    public void setName(final String name) {
+        this.myName = name;
+    }
+
+    public boolean checkForInnerClass(final String name) {
+        for (final String innerClass : myInnerClassNames.keySet()) {
+            if (innerClass.equals(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public String getInnerClassName(final String classNameWithDollars) {
+        return myInnerClassNames.get(classNameWithDollars);
+    }
+
+    public void addInnerClassName(final String classNameWithDollars, final String className) {
+        final int startIndex = classNameWithDollars.lastIndexOf("$");
+        final String realClassName = className + classNameWithDollars.substring(startIndex, classNameWithDollars.length() - className.length());
+        myInnerClassNames.put(classNameWithDollars, realClassName);
     }
 
     protected boolean checkImportNameForBeingInPackage(final String importName, final String packageName) {

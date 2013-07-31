@@ -128,7 +128,7 @@ public abstract class AbstractFrame {
     }
 
     public int getLastLocalVariableIndex() {
-        if (myLastLocalVariableIndex == -1) {
+        if (myLastLocalVariableIndex == -1 && myParent != null) {
             myLastLocalVariableIndex = myParent.getLastLocalVariableIndex();
         }
         return myLastLocalVariableIndex;

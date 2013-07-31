@@ -3,6 +3,7 @@ package com.sdc.abstractLanguage;
 import com.sdc.util.DeclarationWorker;
 import org.objectweb.asm.*;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -101,6 +102,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
 
     @Override
     public void visitOuterClass(final String owner, final String name, final String desc) {
+        myDecompiledClass.setInnerClassIdentifier(DeclarationWorker.getClassName(owner), name, desc);
     }
 
     @Override
@@ -127,6 +129,26 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
 
     @Override
     public void visitInnerClass(final String name, final String outerName, final String innerName, final int access) {
+        if (!myDecompiledClass.getName().equals(DeclarationWorker.getClassName(name))) {
+            System.out.println("inner " + name + " " + outerName + " " + innerName);
+
+            try {
+                AbstractClassVisitor cv = myVisitorFactory.createClassVisitor(myDecompiledClass.getTextWidth(), myDecompiledClass.getNestSize());
+                ClassReader cr = new ClassReader(name);
+                cr.accept(cv, 0);
+
+                final String className = DeclarationWorker.getClassName(name);
+                AbstractClass decompiledClass = cv.getDecompiledClass();
+                if (innerName != null) {
+                    myDecompiledClass.addInnerClassName(className, innerName);
+                    myDecompiledClass.addInnerClass(className, decompiledClass);
+                    decompiledClass.setName(myDecompiledClass.getInnerClassName(className));
+                } else {
+                    myDecompiledClass.addAnonymousClass(className, decompiledClass);
+                }
+            } catch (IOException e) {
+            }
+        }
     }
 
     @Override
@@ -148,6 +170,8 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
     public MethodVisitor visitMethod(final int access, final String name, final String desc
             , final String signature, final String[] exceptions)
     {
+        System.out.println(name);
+
         final String description = signature != null ? signature : desc;
         final String modifier = DeclarationWorker.getAccess(access, myLanguage);
 
