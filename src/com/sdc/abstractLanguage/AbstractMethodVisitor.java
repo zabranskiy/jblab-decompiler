@@ -273,12 +273,12 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
         final String fieldName = myDecompiledMethod.getDecompiledClass().isLambdaFunctionClass() ? name.substring(1) : name;
 
         if (opString.contains("PUTFIELD")) {
-            if (!myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName())) {
+            if (myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName()) && !myBodyStack.isEmpty() && myBodyStack.peek() instanceof Constant) {
+                myDecompiledMethod.addInitializerToField(name, getTopOfBodyStack());
+            } else {
                 final Identifier v = new Field(fieldName, DeclarationWorker.getDescriptor(desc, 0, myDecompiledMethod.getImports(), myLanguage));
                 final Expression e = getTopOfBodyStack();
                 myStatements.add(new Assignment(v, e));
-            } else {
-                myDecompiledMethod.addInitializerToField(name, getTopOfBodyStack());
             }
             removeThisVariableFromStack();
         } else if (opString.contains("GETFIELD")) {

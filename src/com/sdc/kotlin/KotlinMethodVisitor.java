@@ -30,12 +30,14 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
 
     @Override
     public void visitFieldInsn(final int opcode, final String owner, final String name, final String desc) {
-        super.visitFieldInsn(opcode, owner, name, desc);
-
         final String opString = Printer.OPCODES[opcode];
 
-        if (opString.contains("GETSTATIC")) {
+        if (opString.contains("PUTFIELD") && myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName())) {
+            myDecompiledMethod.addInitializerToField(name, getTopOfBodyStack());
+        } else if (opString.contains("GETSTATIC")) {
             tryVisitLambdaFunction(owner);
+        } else {
+            super.visitFieldInsn(opcode, owner, name, desc);
         }
     }
 

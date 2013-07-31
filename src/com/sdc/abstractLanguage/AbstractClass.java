@@ -265,7 +265,7 @@ public abstract class AbstractClass {
         this.myName = name;
     }
 
-    public boolean checkForInnerClass(final String name) {
+    public boolean hasInnerClass(final String name) {
         for (final String innerClass : myInnerClassNames.keySet()) {
             if (innerClass.equals(name)) {
                 return true;
