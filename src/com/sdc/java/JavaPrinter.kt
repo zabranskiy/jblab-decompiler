@@ -20,10 +20,7 @@ class JavaPrinter: AbstractPrinter() {
     override fun printClass(decompiledClass: AbstractClass): PrimeDoc {
         val javaClass: JavaClass = decompiledClass as JavaClass
 
-        val packageCode = text("package " + javaClass.getPackage() + ";")
-        var imports = group(nil())
-        for (importName in javaClass.getImports()!!.toArray())
-            imports = group(imports / text("import " + importName + ";"))
+        var headerCode : PrimeDoc = printPackageAndImports(decompiledClass)
 
         var declaration : PrimeDoc = group(printAnnotations(javaClass.getAnnotations()!!.toList()) + text(javaClass.getModifier() + javaClass.getType() + javaClass.getName()))
 
@@ -47,21 +44,16 @@ class JavaPrinter: AbstractPrinter() {
             )
         }
 
-        var javaClassCode = group(packageCode + imports / declaration + text(" {"))
+        var javaClassCode : PrimeDoc = group(headerCode + declaration + text(" {")) + nest(javaClass.getNestSize(), printClassBodyInnerClasses(javaClass))
 
-        for (classField in javaClass.getFields()!!.toArray())
-            javaClassCode = group(
-                    javaClassCode
-                    + nest(javaClass.getNestSize(), line() + printField(classField as JavaClassField))
-            )
+        for (classField in javaClass.getFields()!!.toList())
+            javaClassCode = javaClassCode + nest(javaClass.getNestSize(), line() + printField(classField))
 
-        for (classMethod in javaClass.getMethods()!!.toArray())
-            javaClassCode = group(
-                    javaClassCode
-                    + nest(javaClass.getNestSize(), line() + printMethod(classMethod as JavaMethod))
-            )
+        for (classMethod in javaClass.getMethods()!!.toList())
+            javaClassCode = javaClassCode + nest(javaClass.getNestSize(), line() + printMethod(classMethod))
 
-        return group(javaClassCode / text("}"))
+
+        return javaClassCode / text("}")
     }
 
     override fun printMethod(decompiledMethod: AbstractMethod): PrimeDoc {
@@ -85,12 +77,14 @@ class JavaPrinter: AbstractPrinter() {
 
         var arguments: PrimeDoc = printMethodParameters(classMethod)
 
+        val nestedClasses = nest(classMethod.getNestSize(), printMethodInnerClasses(classMethod.getDecompiledClass(), classMethod.getName(), classMethod.getSignature()))
+
         val body = nest(
                        classMethod.getNestSize(),
                        printStatements(classMethod.getBody(), classMethod.getNestSize())
                    ) / text("}")
 
-        return group(declaration + arguments + text(")") + throwsExceptions + text(" {")) + body
+        return group(declaration + arguments + text(")") + throwsExceptions + text(" {")) + nestedClasses + body
     }
 
     override fun printField(decompiledField: AbstractClassField): PrimeDoc {

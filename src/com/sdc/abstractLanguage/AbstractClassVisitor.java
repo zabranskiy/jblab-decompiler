@@ -139,10 +139,14 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
 
                 final String className = DeclarationWorker.getClassName(name);
                 AbstractClass decompiledClass = cv.getDecompiledClass();
+                decompiledClass.setIsNestedClass(true);
                 if (innerName != null) {
                     myDecompiledClass.addInnerClassName(className, innerName);
                     myDecompiledClass.addInnerClass(className, decompiledClass);
                     decompiledClass.setName(myDecompiledClass.getInnerClassName(className));
+                    if (outerName != null) {
+                        decompiledClass.setInnerClassIdentifier(outerName, null, null);
+                    }
                 } else {
                     myDecompiledClass.addAnonymousClass(className, decompiledClass);
                 }
@@ -200,7 +204,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
             myDecompiledClass.appendImports(methodReturnTypeImports);
         }
 
-        final AbstractMethod abstractMethod = myLanguagePartFactory.createMethod(modifier, returnType, methodName
+        final AbstractMethod abstractMethod = myLanguagePartFactory.createMethod(modifier, returnType, methodName, desc
                 , throwedExceptions.toArray(new String[throwedExceptions.size()])
                 , myDecompiledClass, genericTypesList, genericIdentifiersList
                 , myTextWidth, myNestSize);

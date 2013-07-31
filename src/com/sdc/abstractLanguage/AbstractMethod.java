@@ -14,6 +14,7 @@ public abstract class AbstractMethod {
     protected final String myModifier;
     protected final String myReturnType;
     protected String myName;
+    protected final String mySignature;
     protected final String[] myExceptions;
 
     protected List<String> myImports = new ArrayList<String>();
@@ -36,13 +37,14 @@ public abstract class AbstractMethod {
     protected final int myTextWidth;
     protected final int myNestSize;
 
-    public AbstractMethod(final String modifier, final String returnType, final String name, final String[] exceptions,
+    public AbstractMethod(final String modifier, final String returnType, final String name, final String signature, final String[] exceptions,
                       final AbstractClass abstractClass, final List<String> genericTypes, final List<String> genericIdentifiers,
                       final int textWidth, final int nestSize)
     {
         this.myModifier = modifier;
         this.myReturnType = returnType;
         this.myName = name;
+        this.mySignature = signature;
         this.myExceptions = exceptions;
         this.myAbstractClass = abstractClass;
         this.myGenericTypes = genericTypes;
@@ -65,6 +67,10 @@ public abstract class AbstractMethod {
 
     public String getName() {
         return myName;
+    }
+
+    public String getSignature() {
+        return mySignature;
     }
 
     public void setName(final String name) {

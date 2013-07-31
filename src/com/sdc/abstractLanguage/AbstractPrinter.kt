@@ -255,6 +255,33 @@ abstract class AbstractPrinter {
         return generics
     }
 
+    open fun printClasses(decompiledClasses : List<AbstractClass>?): PrimeDoc {
+        var innerClassesCode : PrimeDoc = nil()
+        for (innerClass in decompiledClasses!!.toList()) {
+            innerClassesCode = innerClassesCode / printClass(innerClass)
+        }
+        return innerClassesCode
+    }
+
+    open fun printClassBodyInnerClasses(decompiledClass : AbstractClass): PrimeDoc {
+        return printClasses(decompiledClass.getClassBodyInnerClasses())
+    }
+
+    open fun printMethodInnerClasses(decompiledClass : AbstractClass?, methodName : String?, descriptor : String?): PrimeDoc {
+        return printClasses(decompiledClass!!.getMethodInnerClasses(methodName, descriptor))
+    }
+
+    open fun printPackageAndImports(decompiledClass : AbstractClass?): PrimeDoc =
+        if (!decompiledClass!!.isNestedClass()) {
+            val packageCode = text("package " + decompiledClass.getPackage() + ";") + line()
+            var imports = group(nil())
+            for (importName in decompiledClass.getImports()!!.toArray())
+                imports = group(imports + text("import " + importName + ";") + line())
+            packageCode + imports
+        } else {
+            nil()
+        }
+
     abstract fun printAnnotationIdentifier(): PrimeDoc;
 
     abstract fun printClass(decompiledClass: AbstractClass): PrimeDoc;

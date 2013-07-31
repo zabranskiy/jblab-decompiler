@@ -54,6 +54,7 @@ public abstract class AbstractClass {
 
     protected boolean myIsNormalClass = true;
     protected boolean myIsLambdaFunctionClass = false;
+    protected boolean myIsNestedClass = false;
 
     protected Map<String, AbstractClass> myAnonymousClasses = new HashMap<String, AbstractClass>();
     protected Map<String, AbstractClass> myInnerClasses = new HashMap<String, AbstractClass>();
@@ -136,6 +137,14 @@ public abstract class AbstractClass {
 
     public void setIsLambdaFunctionClass(final boolean isLambdaFunctionClass) {
         this.myIsLambdaFunctionClass = isLambdaFunctionClass;
+    }
+
+    public void setIsNestedClass(final boolean isNestedClass) {
+        this.myIsNestedClass = isNestedClass;
+    }
+
+    public boolean isNestedClass() {
+        return myIsNestedClass;
     }
 
     public boolean isLambdaFunctionClass() {
@@ -232,7 +241,20 @@ public abstract class AbstractClass {
     public List<AbstractClass> getMethodInnerClasses(final String methodName, final String descriptor) {
         List<AbstractClass> result = new ArrayList<AbstractClass>();
         for (final Map.Entry<String, AbstractClass> innerClass : myInnerClasses.entrySet()) {
-            if (innerClass.getValue().getInnerClassIdentifier().getName().equals(methodName) && innerClass.getValue().getInnerClassIdentifier().getDescriptor().equals(descriptor)) {
+            final String name = innerClass.getValue().getInnerClassIdentifier().getName();
+            final String desc = innerClass.getValue().getInnerClassIdentifier().getDescriptor();
+
+            if (name != null && name.equals(methodName) && desc.equals(descriptor)) {
+                result.add(innerClass.getValue());
+            }
+        }
+        return result;
+    }
+
+    public List<AbstractClass> getClassBodyInnerClasses() {
+        List<AbstractClass> result = new ArrayList<AbstractClass>();
+        for (final Map.Entry<String, AbstractClass> innerClass : myInnerClasses.entrySet()) {
+            if (innerClass.getValue().getInnerClassIdentifier().getName() == null) {
                 result.add(innerClass.getValue());
             }
         }
@@ -258,7 +280,9 @@ public abstract class AbstractClass {
 
     public void addInnerClassName(final String classNameWithDollars, final String className) {
         final int startIndex = classNameWithDollars.lastIndexOf("$");
-        final String realClassName = className + classNameWithDollars.substring(startIndex, classNameWithDollars.length() - className.length());
+        final int endIndex = classNameWithDollars.length() - className.length();
+
+        final String realClassName = endIndex - startIndex > 1 ? className + classNameWithDollars.substring(startIndex, endIndex) : className;
         myInnerClassNames.put(classNameWithDollars, realClassName);
     }
 
