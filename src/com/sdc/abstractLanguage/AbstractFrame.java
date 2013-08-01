@@ -83,7 +83,7 @@ public abstract class AbstractFrame {
         } else {
             myLocalVariablesFromDebugInfo.add(index);
             addLocalVariableName(index, name);
-            if (!type.equals("Object") && index > getLastLocalVariableIndex()) {
+            if ((!type.equals("Object") || type.startsWith("Any") && type.length() < 5) && index > getLastLocalVariableIndex()) {
                 addLocalVariableType(index, type);
             }
             return true;

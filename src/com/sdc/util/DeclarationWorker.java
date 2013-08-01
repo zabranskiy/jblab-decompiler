@@ -188,9 +188,10 @@ public class DeclarationWorker {
                 return "? ";
             case '@':
                 return getKotlinDescriptor(descriptor, pos + 1, imports);
-            //case '[':
-            default:
+            case '[':
                 return "Array<" + getKotlinDescriptor(descriptor, pos + 1, imports) + ">";
+            default:
+                return "Any";
         }
     }
 

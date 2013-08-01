@@ -133,8 +133,6 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
         final String innerClassName = DeclarationWorker.getClassName(name);
 
         if (!currentClassName.equals(innerClassName) && !currentClassName.startsWith(innerClassName)) {
-            System.out.println("inner " + name + " " + outerName + " " + innerName);
-
             try {
                 AbstractClassVisitor cv = myVisitorFactory.createClassVisitor(myDecompiledClass.getTextWidth(), myDecompiledClass.getNestSize());
                 ClassReader cr = new ClassReader(name);
@@ -177,8 +175,6 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
     public MethodVisitor visitMethod(final int access, final String name, final String desc
             , final String signature, final String[] exceptions)
     {
-        System.out.println(name);
-
         final String description = signature != null ? signature : desc;
         final String modifier = DeclarationWorker.getAccess(access, myLanguage);
 

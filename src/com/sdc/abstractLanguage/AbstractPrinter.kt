@@ -134,16 +134,16 @@ abstract class AbstractPrinter {
                 }
                 funName + printInvocationArguments(statement.getArguments(), nestSize)
             }
-            is Assignment -> group(
-                    (printExpression(statement.getLeft(), nestSize) + text(" ="))
-                    + nest(nestSize, line() + printExpression(statement.getRight(), nestSize))
-            )
+
+            is Assignment -> printExpression(statement.getLeft(), nestSize) + text(" = ") + printExpression(statement.getRight(), nestSize)
+
             is Return -> {
                 var returnStatement : PrimeDoc = if (statement.needToPrintReturn()) text("return ") else text("")
                 if (statement.getReturnValue() != null)
                     returnStatement = returnStatement + printExpression(statement.getReturnValue(), nestSize)
                 returnStatement
             }
+
             is Throw -> group(
                     text("throw") + nest(nestSize, line()
                     + printExpression(statement.getThrowObject(), nestSize))

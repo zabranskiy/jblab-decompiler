@@ -7,12 +7,16 @@ import com.sdc.ast.expressions.Invocation;
 import com.sdc.ast.expressions.identifiers.Field;
 import com.sdc.ast.expressions.identifiers.Identifier;
 import com.sdc.ast.expressions.identifiers.Variable;
+import com.sdc.ast.expressions.nestedclasses.LambdaFunction;
+
 import com.sdc.cfg.ExceptionHandler;
 import com.sdc.cfg.Node;
 import com.sdc.cfg.Switch;
 import com.sdc.cfg.functionalization.AnonymousClass;
 import com.sdc.cfg.functionalization.Generator;
+
 import com.sdc.util.DeclarationWorker;
+
 import org.objectweb.asm.*;
 import org.objectweb.asm.util.Printer;
 
@@ -231,6 +235,8 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
                 variableType = ((NewArray) expr).getFullType();
             } else if (expr instanceof Identifier) {
                 variableType = ((Identifier) expr).getType();
+            } else if (expr instanceof LambdaFunction) {
+                variableType = ((LambdaFunction) expr).getType();
             }
         }
 
@@ -246,7 +252,7 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
                 descriptorType = DeclarationWorker.getDescriptor(opString, 0, myDecompiledMethod.getImports(), myLanguage);
             }
 
-            if (!descriptorType.equals("Object ") || variableType == null) {
+            if (!descriptorType.equals("Object ") && !descriptorType.equals("Any") || variableType == null) {
                 variableType = descriptorType;
             }
 

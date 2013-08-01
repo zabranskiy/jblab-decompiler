@@ -1,5 +1,6 @@
 package com.sdc.kotlin;
 
+import com.sdc.abstractLanguage.AbstractClass;
 import com.sdc.abstractLanguage.AbstractClassVisitor;
 import com.sdc.abstractLanguage.AbstractMethod;
 import com.sdc.abstractLanguage.AbstractMethodVisitor;
@@ -116,7 +117,8 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
                 cv.setIsLambdaFunction(true);
                 ClassReader cr = new ClassReader(decompiledOwnerName);
                 cr.accept(cv, 0);
-                LambdaFunction lf = new LambdaFunction(cv.getDecompiledClass());
+                final AbstractClass decompiledClass = cv.getDecompiledClass();
+                final LambdaFunction lf = new LambdaFunction(decompiledClass, decompiledClass.getSuperClass().replace("Impl", ""));
                 if (lf.isKotlinLambda()) {
                     myBodyStack.push(lf);
                     return true;
