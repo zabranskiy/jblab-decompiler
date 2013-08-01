@@ -327,7 +327,7 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
             isStaticInvocation = true;
         }
 
-        appendInvocationOrConstructor(isStaticInvocation, name, invocationName, returnType,arguments);
+        appendInvocationOrConstructor(isStaticInvocation, name, invocationName, returnType, arguments);
     }
 
     @Override
@@ -639,7 +639,11 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
                 removeThisVariableFromStack();
                 processSuperClassConstructorInvocation(invocationName, returnType, arguments);
             } else {
-                myBodyStack.push(new New(new com.sdc.ast.expressions.Invocation(invocationName, returnType, arguments)));
+                if (!myDecompiledMethod.getDecompiledClass().hasAnonymousClass(invocationName)) {
+                    myBodyStack.push(new New(new com.sdc.ast.expressions.Invocation(invocationName, returnType, arguments)));
+                } else {
+                    myBodyStack.push(new com.sdc.ast.expressions.nestedclasses.AnonymousClass(myDecompiledMethod.getDecompiledClass().getAnonymousClass(invocationName), arguments));
+                }
             }
         } else {
             if (!isStaticInvocation) {

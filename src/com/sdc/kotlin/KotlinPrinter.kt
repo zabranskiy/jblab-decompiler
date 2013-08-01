@@ -5,6 +5,7 @@ import com.sdc.ast.expressions.Expression
 import com.sdc.ast.expressions.New
 import com.sdc.ast.expressions.NewArray
 import com.sdc.ast.expressions.nestedclasses.LambdaFunction
+import com.sdc.ast.expressions.nestedclasses.AnonymousClass
 
 import com.sdc.kotlin.KotlinClass
 import com.sdc.kotlin.KotlinMethod
@@ -27,10 +28,10 @@ class KotlinPrinter: AbstractPrinter() {
 
     override fun printInstanceOfOperator(): PrimeDoc = text(" is ")
 
+    override fun printNewOperator(): PrimeDoc = text("")
+
     override fun printExpression(expression: Expression?, nestSize: Int): PrimeDoc =
         when (expression) {
-            is New -> printExpression(expression.getConstructor(), nestSize)
-
             is NewArray -> {
                 var newArray : PrimeDoc = text("Array<" + expression.getType() + ">(")
 
@@ -61,6 +62,8 @@ class KotlinPrinter: AbstractPrinter() {
                 ) / text("}")
                 arguments + body
             }
+
+            is AnonymousClass -> text("object : ") + super<AbstractPrinter>.printExpression(expression, nestSize)
 
             else -> super<AbstractPrinter>.printExpression(expression, nestSize)
         }

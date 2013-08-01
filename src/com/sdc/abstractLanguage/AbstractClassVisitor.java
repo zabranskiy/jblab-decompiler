@@ -129,7 +129,10 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
 
     @Override
     public void visitInnerClass(final String name, final String outerName, final String innerName, final int access) {
-        if (!myDecompiledClass.getName().equals(DeclarationWorker.getClassName(name))) {
+        final String currentClassName = myDecompiledClass.getName();
+        final String innerClassName = DeclarationWorker.getClassName(name);
+
+        if (!currentClassName.equals(innerClassName) && !currentClassName.startsWith(innerClassName)) {
             System.out.println("inner " + name + " " + outerName + " " + innerName);
 
             try {

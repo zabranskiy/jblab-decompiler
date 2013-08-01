@@ -266,12 +266,15 @@ public abstract class AbstractClass {
     }
 
     public boolean hasInnerClass(final String name) {
-        for (final String innerClass : myInnerClassNames.keySet()) {
-            if (innerClass.equals(name)) {
-                return true;
-            }
-        }
-        return false;
+        return myInnerClassNames.containsKey(name);
+    }
+
+    public boolean hasAnonymousClass(final String name) {
+        return myAnonymousClasses.containsKey(name);
+    }
+
+    public AbstractClass getAnonymousClass(final String name) {
+        return myAnonymousClasses.get(name);
     }
 
     public String getInnerClassName(final String classNameWithDollars) {
