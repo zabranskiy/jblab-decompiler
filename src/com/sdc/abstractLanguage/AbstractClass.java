@@ -1,6 +1,7 @@
 package com.sdc.abstractLanguage;
 
 import com.sdc.ast.expressions.Expression;
+import com.sdc.util.DeclarationWorker;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -303,5 +304,26 @@ public abstract class AbstractClass {
 
     protected boolean hasImport(final String importName) {
         return myImports.contains(importName);
+    }
+
+    public String getClassName(final String fullClassName) {
+        return replaceInnerClassName(DeclarationWorker.getClassName(fullClassName));
+    }
+
+    public String getDescriptor(final String descriptor, final int pos, List<String> imports
+            , final DeclarationWorker.SupportedLanguage language)
+    {
+        final String result = replaceInnerClassName(DeclarationWorker.getDescriptor(descriptor, pos, imports, language)).trim();
+        switch (language) {
+            case JAVA:
+            case JAVASCRIPT:
+                return result + " ";
+        }
+        return result;
+    }
+
+    protected String replaceInnerClassName(final String className) {
+        final String classNameWithoutPackages = className.replace(".", "$");
+        return hasInnerClass(classNameWithoutPackages.trim()) ? myInnerClassNames.get(classNameWithoutPackages.trim()) : classNameWithoutPackages;
     }
 }

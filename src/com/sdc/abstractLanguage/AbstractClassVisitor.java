@@ -39,6 +39,10 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
         return myDecompiledClass;
     }
 
+    public void setIsLambdaFunction(final boolean isLambdaFunction) {
+        this.myIsLambdaFunction = isLambdaFunction;
+    }
+
     @Override
     public void visit(final int version, final int access, final String name
             , final String signature, final String superName, final String[] interfaces)
@@ -102,13 +106,13 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
 
     @Override
     public void visitOuterClass(final String owner, final String name, final String desc) {
-        myDecompiledClass.setInnerClassIdentifier(DeclarationWorker.getClassName(owner), name, desc);
+        myDecompiledClass.setInnerClassIdentifier(getClassName(owner), name, desc);
     }
 
     @Override
     public AnnotationVisitor visitAnnotation(final String desc, final boolean visible) {
         List<String> annotationImports = new ArrayList<String>();
-        final String annotationName = DeclarationWorker.getDescriptor(desc, 0, annotationImports, myLanguage);
+        final String annotationName = getDescriptor(desc, 0, annotationImports);
 
         if (!checkForAutomaticallyGeneratedAnnotation(annotationName)) {
             AbstractAnnotation annotation = myLanguagePartFactory.createAnnotation();
@@ -130,7 +134,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
     @Override
     public void visitInnerClass(final String name, final String outerName, final String innerName, final int access) {
         final String currentClassName = myDecompiledClass.getName();
-        final String innerClassName = DeclarationWorker.getClassName(name);
+        final String innerClassName = getClassName(name);
 
         if (!currentClassName.equals(innerClassName) && !currentClassName.startsWith(innerClassName)) {
             try {
@@ -138,18 +142,17 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
                 ClassReader cr = new ClassReader(name);
                 cr.accept(cv, 0);
 
-                final String className = DeclarationWorker.getClassName(name);
                 AbstractClass decompiledClass = cv.getDecompiledClass();
                 decompiledClass.setIsNestedClass(true);
                 if (innerName != null) {
-                    myDecompiledClass.addInnerClassName(className, innerName);
-                    myDecompiledClass.addInnerClass(className, decompiledClass);
-                    decompiledClass.setName(myDecompiledClass.getInnerClassName(className));
+                    myDecompiledClass.addInnerClassName(innerClassName, innerName);
+                    myDecompiledClass.addInnerClass(innerClassName, decompiledClass);
+                    decompiledClass.setName(myDecompiledClass.getInnerClassName(innerClassName));
                     if (outerName != null) {
                         decompiledClass.setInnerClassIdentifier(outerName, null, null);
                     }
                 } else {
-                    myDecompiledClass.addAnonymousClass(className, decompiledClass);
+                    myDecompiledClass.addAnonymousClass(innerClassName, decompiledClass);
                 }
             } catch (IOException e) {
             }
@@ -162,7 +165,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
         final String description = signature != null ? signature : desc;
 
         final AbstractClassField cf = myLanguagePartFactory.createClassField(DeclarationWorker.getAccess(access, myLanguage)
-                , DeclarationWorker.getDescriptor(description, 0, fieldDeclarationImports, myLanguage)
+                , getDescriptor(description, 0, fieldDeclarationImports)
                 , name, myTextWidth, myNestSize);
 
         myDecompiledClass.appendField(cf);
@@ -181,7 +184,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
         List<String> throwedExceptions = new ArrayList<String>();
         if (exceptions != null) {
             for (final String exception : exceptions) {
-                throwedExceptions.add(DeclarationWorker.getClassName(exception));
+                throwedExceptions.add(getClassName(exception));
             }
         }
 
@@ -198,7 +201,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
         } else {
             List<String> methodReturnTypeImports = new ArrayList<String>();
             final int returnTypeIndex = description.indexOf(')') + 1;
-            returnType = DeclarationWorker.getDescriptor(description, returnTypeIndex, methodReturnTypeImports, myLanguage);
+            returnType = getDescriptor(description, returnTypeIndex, methodReturnTypeImports);
             methodName = name;
             myDecompiledClass.appendImports(methodReturnTypeImports);
         }
@@ -233,7 +236,11 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
         }
     }
 
-    public void setIsLambdaFunction(final boolean isLambdaFunction) {
-        this.myIsLambdaFunction = isLambdaFunction;
+    protected String getClassName(final String fullClassName) {
+        return myDecompiledClass.getClassName(fullClassName);
+    }
+
+    protected String getDescriptor(final String descriptor, final int pos, List<String> imports) {
+        return myDecompiledClass.getDescriptor(descriptor, pos, imports, myLanguage);
     }
 }

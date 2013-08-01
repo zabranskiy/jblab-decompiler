@@ -65,7 +65,7 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
 
     protected AnnotationVisitor visitAnnotation(final int parameter, final String desc, final boolean visible) {
         List<String> annotationsImports = new ArrayList<String>();
-        final String annotationName = DeclarationWorker.getDescriptor(desc, 0, annotationsImports, myLanguage);
+        final String annotationName = getDescriptor(desc, 0, annotationsImports);
         if (!checkForAutomaticallyGeneratedAnnotation(annotationName)) {
             AbstractAnnotation annotation = myLanguagePartFactory.createAnnotation();
             annotation.setName(annotationName);
@@ -137,7 +137,7 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
                 } else {
                     final String className = (String) stack[0];
                     myDecompiledMethod.addImport(DeclarationWorker.getDecompiledFullClassName(className));
-                    stackedVariableType = DeclarationWorker.getClassName(className) + " ";
+                    stackedVariableType = getClassName(className) + " ";
                 }
 
                 getCurrentFrame().setStackedVariableType(stackedVariableType);
@@ -249,7 +249,7 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
                 descriptorType = getCurrentFrame().getStackedVariableType();
                 getCurrentFrame().setStackedVariableIndex(var);
             } else {
-                descriptorType = DeclarationWorker.getDescriptor(opString, 0, myDecompiledMethod.getImports(), myLanguage);
+                descriptorType = getDescriptor(opString, 0, myDecompiledMethod.getImports());
             }
 
             if (!descriptorType.equals("Object ") && !descriptorType.equals("Any") || variableType == null) {
@@ -267,9 +267,9 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
         if (opString.contains("NEWARRAY")) {
             List<Expression> dimensions = new ArrayList<Expression>();
             dimensions.add(getTopOfBodyStack());
-            myBodyStack.push(new NewArray(1, DeclarationWorker.getClassName(type), dimensions));
+            myBodyStack.push(new NewArray(1, getClassName(type), dimensions));
         } else if (opString.contains("INSTANCEOF")) {
-            myBodyStack.push(new InstanceOf(DeclarationWorker.getClassName(type), getTopOfBodyStack()));
+            myBodyStack.push(new InstanceOf(getClassName(type), getTopOfBodyStack()));
         }
     }
 
@@ -282,14 +282,14 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
             if (myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName()) && !myBodyStack.isEmpty() && myBodyStack.peek() instanceof Constant) {
                 myDecompiledMethod.addInitializerToField(name, getTopOfBodyStack());
             } else {
-                final Identifier v = new Field(fieldName, DeclarationWorker.getDescriptor(desc, 0, myDecompiledMethod.getImports(), myLanguage));
+                final Identifier v = new Field(fieldName, getDescriptor(desc, 0, myDecompiledMethod.getImports()));
                 final Expression e = getTopOfBodyStack();
                 myStatements.add(new Assignment(v, e));
             }
             removeThisVariableFromStack();
         } else if (opString.contains("GETFIELD")) {
             removeThisVariableFromStack();
-            myBodyStack.push(new Field(fieldName, DeclarationWorker.getDescriptor(desc, 0, myDecompiledMethod.getImports(), myLanguage)));
+            myBodyStack.push(new Field(fieldName, getDescriptor(desc, 0, myDecompiledMethod.getImports())));
         }
     }
 
@@ -298,7 +298,7 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
         final String opString = Printer.OPCODES[opcode];
 
         final String decompiledOwnerFullClassName = DeclarationWorker.getDecompiledFullClassName(owner);
-        final String ownerClassName = DeclarationWorker.getClassName(owner);
+        final String ownerClassName = getClassName(owner);
 
         List<Expression> arguments = getInvocationArguments(desc);
         String returnType = getInvocationReturnType(desc);
@@ -422,7 +422,7 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
             dimensions.add(0, getTopOfBodyStack());
         }
 
-        final String className = DeclarationWorker.getDescriptor(desc.substring(dims), 0, myDecompiledMethod.getImports(), myLanguage).trim();
+        final String className = getDescriptor(desc.substring(dims), 0, myDecompiledMethod.getImports()).trim();
         myBodyStack.push(new NewArray(dims, className, dimensions));
     }
 
@@ -460,8 +460,7 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
         }
 
         final String description = signature != null ? signature : desc;
-        myDecompiledMethod.addLocalVariableFromDebugInfo(index, name,
-                DeclarationWorker.getDescriptor(description, 0, myDecompiledMethod.getImports(), myLanguage));
+        myDecompiledMethod.addLocalVariableFromDebugInfo(index, name, getDescriptor(description, 0, myDecompiledMethod.getImports()));
     }
 
     @Override
@@ -626,7 +625,7 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
 
     protected String getInvocationReturnType(final String descriptor) {
         final int returnTypeIndex = descriptor.indexOf(')') + 1;
-        return DeclarationWorker.getDescriptor(descriptor, returnTypeIndex, myDecompiledMethod.getImports(), myLanguage);
+        return getDescriptor(descriptor, returnTypeIndex, myDecompiledMethod.getImports());
     }
 
     protected boolean checkForSuperClassConstructor(final String invocationName) {
@@ -666,5 +665,13 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
         } else {
             return expression;
         }
+    }
+
+    protected String getClassName(final String fullClassName) {
+        return myDecompiledMethod.getDecompiledClass().getClassName(fullClassName);
+    }
+
+    protected String getDescriptor(final String descriptor, final int pos, List<String> imports) {
+        return myDecompiledMethod.getDecompiledClass().getDescriptor(descriptor, pos, imports, myLanguage);
     }
 }
