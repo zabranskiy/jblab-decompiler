@@ -95,7 +95,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
         List<String> genericTypesList = new ArrayList<String>();
         List<String> genericIdentifiersList = new ArrayList<String>();
         List<String> genericTypesImports = new ArrayList<String>();
-        DeclarationWorker.parseGenericDeclaration(signature, genericTypesList, genericIdentifiersList, genericTypesImports);
+        DeclarationWorker.parseGenericDeclaration(signature, genericTypesList, genericIdentifiersList, genericTypesImports, myLanguage);
 
         myDecompiledClass = myLanguagePartFactory.createClass(modifier, type, className, packageName.toString(), implementedInterfaces
                 , superClass, genericTypesList, genericIdentifiersList, myTextWidth, myNestSize);
@@ -201,7 +201,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
         List<String> genericTypesList = new ArrayList<String>();
         List<String> genericIdentifiersList = new ArrayList<String>();
         List<String> genericTypesImports = new ArrayList<String>();
-        DeclarationWorker.parseGenericDeclaration(description, genericTypesList, genericIdentifiersList, genericTypesImports);
+        DeclarationWorker.parseGenericDeclaration(description, genericTypesList, genericIdentifiersList, genericTypesImports, myLanguage);
 
         String returnType;
         String methodName;

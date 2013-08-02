@@ -213,9 +213,9 @@ public abstract class AbstractClass {
     public List<String> getGenericDeclaration() {
         List<String> result = new ArrayList<String>();
         for (int i = 0; i < myGenericTypes.size(); i++) {
-            if (!myGenericTypes.get(i).equals("java/lang/Object")) {
-                final String[] classParts = myGenericTypes.get(i).split("/");
-                result.add(myGenericIdentifiers.get(i) + " " + getInheritanceIdentifier() + " " + classParts[classParts.length - 1]);
+            final String genericType = myGenericTypes.get(i);
+            if (!genericType.equals("Object ") && !genericType.equals("Any?")) {
+                result.add(myGenericIdentifiers.get(i) + " " + getInheritanceIdentifier() + " " + genericType.trim());
             } else {
                 result.add(myGenericIdentifiers.get(i));
             }

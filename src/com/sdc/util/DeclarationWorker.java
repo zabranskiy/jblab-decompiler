@@ -138,7 +138,7 @@ public class DeclarationWorker {
             case 'D':
                 return "double";
             case 'L':
-                if (descriptor.indexOf("<", pos) == -1) {
+                if (descriptor.indexOf("<", pos) == -1 || descriptor.indexOf("<", pos) > descriptor.indexOf(";", pos)) {
                     return getSimpleClassName(descriptor, pos, imports);
                 } else {
                     return getClassNameWithGenerics(descriptor, pos, imports, SupportedLanguage.JAVA);
@@ -326,20 +326,34 @@ public class DeclarationWorker {
     }
 
     public static void parseGenericDeclaration(final String signature, List<String> genericTypesList,
-                                         List<String> genericIdentifiersList, List<String> genericTypesImports)
+                                         List<String> genericIdentifiersList, List<String> genericTypesImports, final SupportedLanguage language)
     {
         if (signature != null && signature.indexOf('<') == 0) {
-            final String genericDeclaration = signature.substring(signature.indexOf("<") + 1, signature.indexOf(">"));
-            final String[] genericTypes = genericDeclaration.split(";");
-            for (final String genericType : genericTypes) {
-                if (!genericType.isEmpty()) {
-                    final String[] genericTypeParts = genericType.split(":");
-                    final String genericSuperClassName = genericTypeParts[1].substring(1);
-                    genericTypesImports.add(getDecompiledFullClassName(genericSuperClassName));
-                    genericTypesList.add(genericSuperClassName);
-                    genericIdentifiersList.add(genericTypeParts[0]);
+            int endPos = 1;
+            int startPos = 1;
+            boolean isGenericName = true;
+            while (signature.charAt(endPos) != '>') {
+                switch (signature.charAt(endPos)) {
+                    case ':':
+                        if (startPos != endPos) {
+                            genericIdentifiersList.add(signature.substring(startPos, endPos));
+                        }
+                        endPos++;
+                        startPos = endPos;
+                        isGenericName = false;
+                        break;
+                    default:
+                        if (!isGenericName) {
+                            genericTypesList.add(getDescriptor(signature, endPos, genericTypesImports, language));
+                            endPos = getNextTypePosition(signature, endPos);
+                            startPos = endPos;
+                            isGenericName = true;
+                        } else {
+                            endPos++;
+                        }
                 }
             }
+            return;
         }
     }
 
