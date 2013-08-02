@@ -1,5 +1,6 @@
 package com.sdc.kotlin;
 
+import com.sdc.abstractLanguage.AbstractClass;
 import com.sdc.abstractLanguage.AbstractClassVisitor;
 import com.sdc.abstractLanguage.AbstractMethod;
 import com.sdc.abstractLanguage.AbstractMethodVisitor;
@@ -30,12 +31,14 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
 
     @Override
     public void visitFieldInsn(final int opcode, final String owner, final String name, final String desc) {
-        super.visitFieldInsn(opcode, owner, name, desc);
-
         final String opString = Printer.OPCODES[opcode];
 
-        if (opString.contains("GETSTATIC")) {
+        if (opString.contains("PUTFIELD") && myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName())) {
+            myDecompiledMethod.addInitializerToField(name, getTopOfBodyStack());
+        } else if (opString.contains("GETSTATIC")) {
             tryVisitLambdaFunction(owner);
+        } else {
+            super.visitFieldInsn(opcode, owner, name, desc);
         }
     }
 
@@ -44,7 +47,7 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
         final String opString = Printer.OPCODES[opcode];
 
         final String decompiledOwnerFullClassName = DeclarationWorker.getDecompiledFullClassName(owner);
-        final String ownerClassName = DeclarationWorker.getClassName(owner);
+        final String ownerClassName = getClassName(owner);
 
         List<Expression> arguments = getInvocationArguments(desc);
         String returnType = getInvocationReturnType(desc);
@@ -111,9 +114,11 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
         if (decompiledOwnerName.contains(methodOwner) && decompiledOwnerName.contains(myDecompiledMethod.getName())) {
             try {
                 AbstractClassVisitor cv = myVisitorFactory.createClassVisitor(myDecompiledMethod.getTextWidth(), myDecompiledMethod.getNestSize());
+                cv.setIsLambdaFunction(true);
                 ClassReader cr = new ClassReader(decompiledOwnerName);
                 cr.accept(cv, 0);
-                LambdaFunction lf = new LambdaFunction(cv.getDecompiledClass());
+                final AbstractClass decompiledClass = cv.getDecompiledClass();
+                final LambdaFunction lf = new LambdaFunction(decompiledClass, decompiledClass.getSuperClass().replace("Impl", ""));
                 if (lf.isKotlinLambda()) {
                     myBodyStack.push(lf);
                     return true;
