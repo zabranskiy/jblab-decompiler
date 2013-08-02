@@ -5,7 +5,9 @@ import org.objectweb.asm.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.objectweb.asm.Opcodes.ASM4;
 
@@ -20,6 +22,8 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
     protected AbstractVisitorFactory myVisitorFactory;
 
     protected DeclarationWorker.SupportedLanguage myLanguage;
+
+    protected Set<String> myVisitedClasses = new HashSet<String>();
 
     public AbstractClassVisitor(final int textWidth, final int nestSize) {
         super(ASM4);
@@ -43,6 +47,10 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
         this.myIsLambdaFunction = isLambdaFunction;
     }
 
+    public void setVisitedClasses(final Set<String> visitedClasses) {
+        this.myVisitedClasses = visitedClasses;
+    }
+
     @Override
     public void visit(final int version, final int access, final String name
             , final String signature, final String superName, final String[] interfaces)
@@ -57,6 +65,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
         }
 
         final String className = DeclarationWorker.getClassName(name);
+        myVisitedClasses.add(className);
 
         final String[] classParts = name.split("/");
         StringBuilder packageName = new StringBuilder("");
@@ -133,23 +142,24 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
 
     @Override
     public void visitInnerClass(final String name, final String outerName, final String innerName, final int access) {
-        final String currentClassName = myDecompiledClass.getName();
         final String innerClassName = getClassName(name);
+        final String outerClassName = outerName == null ? null : getClassName(outerName);
 
-        if (!currentClassName.equals(innerClassName) && !currentClassName.startsWith(innerClassName)) {
+        if (!myVisitedClasses.contains(innerClassName)) {
             try {
                 AbstractClassVisitor cv = myVisitorFactory.createClassVisitor(myDecompiledClass.getTextWidth(), myDecompiledClass.getNestSize());
+                cv.setVisitedClasses(myVisitedClasses);
+
                 ClassReader cr = new ClassReader(name);
                 cr.accept(cv, 0);
 
                 AbstractClass decompiledClass = cv.getDecompiledClass();
                 decompiledClass.setIsNestedClass(true);
+
                 if (innerName != null) {
-                    myDecompiledClass.addInnerClassName(innerClassName, innerName);
                     myDecompiledClass.addInnerClass(innerClassName, decompiledClass);
-                    decompiledClass.setName(myDecompiledClass.getInnerClassName(innerClassName));
-                    if (outerName != null) {
-                        decompiledClass.setInnerClassIdentifier(outerName, null, null);
+                    if (outerClassName != null) {
+                        decompiledClass.setInnerClassIdentifier(outerClassName, null, null);
                     }
                 } else {
                     myDecompiledClass.addAnonymousClass(innerClassName, decompiledClass);

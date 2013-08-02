@@ -35,7 +35,7 @@ public abstract class AbstractClass {
 
     protected final String myModifier;
     protected final String myType;
-    protected String myName;
+    protected final String myName;
     protected final String myPackage;
 
     protected final String mySuperClass;
@@ -227,8 +227,8 @@ public abstract class AbstractClass {
         myAnonymousClasses.put(className, decompiledClass);
     }
 
-    public void addInnerClass(final String innerClassNameWithDollars, final AbstractClass decompiledClass) {
-        myInnerClasses.put(innerClassNameWithDollars, decompiledClass);
+    public void addInnerClass(final String innerClassName, final AbstractClass decompiledClass) {
+        myInnerClasses.put(innerClassName, decompiledClass);
     }
 
     public void setInnerClassIdentifier(final String owner, final String name, final String descriptor) {
@@ -255,19 +255,12 @@ public abstract class AbstractClass {
     public List<AbstractClass> getClassBodyInnerClasses() {
         List<AbstractClass> result = new ArrayList<AbstractClass>();
         for (final Map.Entry<String, AbstractClass> innerClass : myInnerClasses.entrySet()) {
-            if (innerClass.getValue().getInnerClassIdentifier().getName() == null) {
+            final InnerClassIdentifier innerClassIdentifier = innerClass.getValue().getInnerClassIdentifier();
+            if (innerClassIdentifier.getName() == null && innerClassIdentifier.getOwner().equals(myName)) {
                 result.add(innerClass.getValue());
             }
         }
         return result;
-    }
-
-    public void setName(final String name) {
-        this.myName = name;
-    }
-
-    public boolean hasInnerClass(final String name) {
-        return myInnerClassNames.containsKey(name);
     }
 
     public boolean hasAnonymousClass(final String name) {
@@ -276,18 +269,6 @@ public abstract class AbstractClass {
 
     public AbstractClass getAnonymousClass(final String name) {
         return myAnonymousClasses.get(name);
-    }
-
-    public String getInnerClassName(final String classNameWithDollars) {
-        return myInnerClassNames.get(classNameWithDollars);
-    }
-
-    public void addInnerClassName(final String classNameWithDollars, final String className) {
-        final int startIndex = classNameWithDollars.lastIndexOf("$");
-        final int endIndex = classNameWithDollars.length() - className.length();
-
-        final String realClassName = endIndex - startIndex > 1 ? className + classNameWithDollars.substring(startIndex, endIndex) : className;
-        myInnerClassNames.put(classNameWithDollars, realClassName);
     }
 
     protected boolean checkImportNameForBeingInPackage(final String importName, final String packageName) {
@@ -307,23 +288,12 @@ public abstract class AbstractClass {
     }
 
     public String getClassName(final String fullClassName) {
-        return replaceInnerClassName(DeclarationWorker.getClassName(fullClassName));
+        return DeclarationWorker.getClassName(fullClassName);
     }
 
     public String getDescriptor(final String descriptor, final int pos, List<String> imports
             , final DeclarationWorker.SupportedLanguage language)
     {
-        final String result = replaceInnerClassName(DeclarationWorker.getDescriptor(descriptor, pos, imports, language)).trim();
-        switch (language) {
-            case JAVA:
-            case JAVASCRIPT:
-                return result + " ";
-        }
-        return result;
-    }
-
-    protected String replaceInnerClassName(final String className) {
-        final String classNameWithoutPackages = className.replace(".", "$");
-        return hasInnerClass(classNameWithoutPackages.trim()) ? myInnerClassNames.get(classNameWithoutPackages.trim()) : classNameWithoutPackages;
+        return DeclarationWorker.getDescriptor(descriptor, pos, imports, language);
     }
 }
