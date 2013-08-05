@@ -73,12 +73,14 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
         final String className = DeclarationWorker.getClassName(name);
         myVisitedClasses.add(className);
 
-        final String[] classParts = name.split("/");
         StringBuilder packageName = new StringBuilder("");
-        for (int i = 0; i < classParts.length - 2; i++) {
-            packageName.append(classParts[i]).append(".");
+        if (name.contains("/")) {
+            final String[] classParts = name.split("/");
+            for (int i = 0; i < classParts.length - 2; i++) {
+                packageName.append(classParts[i]).append(".");
+            }
+            packageName.append(classParts[classParts.length - 2]);
         }
-        packageName.append(classParts[classParts.length - 2]);
 
         String superClass = "";
         String superClassImport = "";
