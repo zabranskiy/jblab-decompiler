@@ -182,7 +182,7 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
             myBodyStack.push(expr1);
             myBodyStack.push(expr2);
         } else if (opString.equals("DUP") && !myBodyStack.isEmpty()) {
-            myBodyStack.push(myBodyStack.peek());
+//            myBodyStack.push(myBodyStack.peek());
         } else if (opString.equals("DUP_X1")) {
             Expression expr1 = myBodyStack.pop();
             Expression expr2 = myBodyStack.pop();
@@ -459,6 +459,7 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
             myHasDebugInformation = true;
         }
 
+        myDecompiledMethod.addLocalVariableName(index, name);
         final String description = signature != null ? signature : desc;
         myDecompiledMethod.addLocalVariableFromDebugInfo(index, name, getDescriptor(description, 0, myDecompiledMethod.getImports()));
     }
