@@ -5,6 +5,7 @@ import com.sdc.ast.expressions.Expression
 import com.sdc.ast.expressions.New
 import com.sdc.ast.expressions.NewArray
 import com.sdc.ast.expressions.nestedclasses.LambdaFunction
+import com.sdc.ast.expressions.nestedclasses.AnonymousClass
 
 import com.sdc.kotlin.KotlinClass
 import com.sdc.kotlin.KotlinMethod
@@ -25,10 +26,12 @@ class KotlinPrinter: AbstractPrinter() {
 
     override fun printAnnotationIdentifier(): PrimeDoc = text("")
 
+    override fun printInstanceOfOperator(): PrimeDoc = text(" is ")
+
+    override fun printNewOperator(): PrimeDoc = text("")
+
     override fun printExpression(expression: Expression?, nestSize: Int): PrimeDoc =
         when (expression) {
-            is New -> printExpression(expression.getConstructor(), nestSize)
-
             is NewArray -> {
                 var newArray : PrimeDoc = text("Array<" + expression.getType() + ">(")
 
@@ -60,17 +63,15 @@ class KotlinPrinter: AbstractPrinter() {
                 arguments + body
             }
 
+            is AnonymousClass -> text("object : ") + super<AbstractPrinter>.printExpression(expression, nestSize)
+
             else -> super<AbstractPrinter>.printExpression(expression, nestSize)
         }
 
     override fun printClass(decompiledClass: AbstractClass): PrimeDoc {
         val kotlinClass: KotlinClass = decompiledClass as KotlinClass
 
-        val packageCode = text("package " + kotlinClass.getPackage())
-
-        var importsCode : PrimeDoc = nil()
-        for (importName in kotlinClass.getImports()!!.toArray())
-            importsCode = importsCode / text("import " + importName)
+        var headerCode : PrimeDoc = printPackageAndImports(decompiledClass)
 
         if (kotlinClass.isNormalClass()) {
             var declaration : PrimeDoc = printAnnotations(kotlinClass.getAnnotations()!!.toList()) + text(kotlinClass.getModifier() + kotlinClass.getType() + kotlinClass.getName())
@@ -97,7 +98,7 @@ class KotlinPrinter: AbstractPrinter() {
                 }
             }
 
-            var kotlinClassCode : PrimeDoc = packageCode + importsCode / declaration + text(" {")
+            var kotlinClassCode : PrimeDoc = headerCode + declaration + text(" {") + nest(kotlinClass.getNestSize(), printClassBodyInnerClasses(kotlinClass))
 
             for (classField in kotlinClass.getFields()!!.toList())
                 kotlinClassCode = kotlinClassCode + nest(kotlinClass.getNestSize(), line() + printField(classField))
@@ -110,7 +111,7 @@ class KotlinPrinter: AbstractPrinter() {
 
             return kotlinClassCode / text("}")
         } else {
-            var kotlinCode : PrimeDoc = packageCode + importsCode
+            var kotlinCode : PrimeDoc = headerCode
             for (method in kotlinClass.getMethods()!!.toList())
                 kotlinCode = kotlinCode / printMethod(method)
 
@@ -129,6 +130,8 @@ class KotlinPrinter: AbstractPrinter() {
 
         val arguments = printMethodParameters(kotlinMethod)
 
+        val nestedClasses = nest(decompiledMethod.getNestSize(), printMethodInnerClasses(decompiledMethod.getDecompiledClass(), decompiledMethod.getName(), decompiledMethod.getSignature()))
+
         val body = nest(
                 kotlinMethod.getNestSize(),
                 printStatements(kotlinMethod.getBody(), kotlinMethod.getNestSize())
@@ -139,7 +142,7 @@ class KotlinPrinter: AbstractPrinter() {
         if (!returnType!!.isEmpty())
             returnTypeCode = text(": " + returnType + " ")
 
-        return declaration + arguments + text(")") + returnTypeCode + text("{") + body
+        return declaration + arguments + text(")") + returnTypeCode + text("{") + nestedClasses + body
     }
 
     override fun printField(decompiledField: AbstractClassField): PrimeDoc {

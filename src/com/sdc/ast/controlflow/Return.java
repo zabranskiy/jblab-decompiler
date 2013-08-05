@@ -4,9 +4,10 @@ import com.sdc.ast.expressions.Expression;
 
 public class Return extends Statement {
     private final Expression myReturnValue;
+    private boolean myNeedToPrintReturn = true;
 
     public Return() {
-        myReturnValue = null;
+        this.myReturnValue = null;
     }
 
     public Return(final Expression returnValue) {
@@ -15,5 +16,13 @@ public class Return extends Statement {
 
     public Expression getReturnValue() {
         return myReturnValue;
+    }
+
+    public boolean needToPrintReturn() {
+        return myNeedToPrintReturn;
+    }
+
+    public void setNeedToPrintReturn(final boolean needToPrintReturn) {
+        this.myNeedToPrintReturn = needToPrintReturn;
     }
 }

@@ -96,54 +96,65 @@ public class DeclarationWorker {
     public static String getDescriptor(final String descriptor, final int pos, List<String> imports
             , final SupportedLanguage language)
     {
+        String result = "";
         switch (language) {
             case JAVA:
             case JAVASCRIPT:
-                return getJavaDescriptor(descriptor, pos, imports);
+                result = getJavaDescriptor(descriptor, pos, imports);
+                break;
             case KOTLIN:
-                return getKotlinDescriptor(descriptor, pos, imports);
+                result = getKotlinDescriptor(descriptor, pos, imports);
+                break;
         }
-        return "";
+
+        result = replaceInnerClassName(result).trim();
+        switch (language) {
+            case JAVA:
+            case JAVASCRIPT:
+                result = result + " ";
+        }
+
+        return result;
     }
 
     public static String getJavaDescriptor(final String descriptor, final int pos, List<String> imports) {
         switch (descriptor.charAt(pos)) {
             case 'V':
-                return "void ";
+                return "void";
             case 'B':
-                return "byte ";
+                return "byte";
             case 'J':
-                return "long ";
+                return "long";
             case 'Z':
-                return "boolean ";
+                return "boolean";
             case 'I':
-                return "int ";
+                return "int";
             case 'S':
-                return "short ";
+                return "short";
             case 'C':
-                return "char ";
+                return "char";
             case 'F':
-                return "float ";
+                return "float";
             case 'D':
-                return "double ";
+                return "double";
             case 'L':
-                if (descriptor.indexOf("<", pos) == -1) {
-                    return getSimpleClassName(descriptor, pos, imports) + " ";
+                if (descriptor.indexOf("<", pos) == -1 || descriptor.indexOf("<", pos) > descriptor.indexOf(";", pos)) {
+                    return getSimpleClassName(descriptor, pos, imports);
                 } else {
-                    return getClassNameWithGenerics(descriptor, pos, imports, SupportedLanguage.JAVA) + " ";
+                    return getClassNameWithGenerics(descriptor, pos, imports, SupportedLanguage.JAVA);
                 }
             case 'T':
-                return descriptor.substring(pos + 1, descriptor.indexOf(";", pos)) + " ";
+                return descriptor.substring(pos + 1, descriptor.indexOf(";", pos));
             case '+':
                 return "? extends " + getJavaDescriptor(descriptor, pos + 1, imports);
             case '-':
                 return "? super " + getJavaDescriptor(descriptor, pos + 1, imports);
             case '*':
-                return "? ";
+                return "?";
             case '[':
-                return getJavaDescriptor(descriptor, pos + 1, imports).trim() + "[] ";
+                return getJavaDescriptor(descriptor, pos + 1, imports).trim() + "[]";
             default:
-                return "Object ";
+                return "Object";
         }
     }
 
@@ -188,9 +199,10 @@ public class DeclarationWorker {
                 return "? ";
             case '@':
                 return getKotlinDescriptor(descriptor, pos + 1, imports);
-            //case '[':
-            default:
+            case '[':
                 return "Array<" + getKotlinDescriptor(descriptor, pos + 1, imports) + ">";
+            default:
+                return "Any";
         }
     }
 
@@ -297,8 +309,16 @@ public class DeclarationWorker {
     }
 
     public static String getClassName(final String fullClassName) {
-        final String[] classParts = fullClassName.split("/");
-        return classParts[classParts.length - 1];
+        final String[] classPackageParts = fullClassName.contains("/") ? fullClassName.split("/") : new String[] { fullClassName };
+        final String actualClassName = classPackageParts[classPackageParts.length - 1];
+
+        final String[] classParts = actualClassName.contains("$") ? actualClassName.split("\\$") : new String[] { actualClassName };
+        return replaceInnerClassName(classParts[classParts.length - 1]);
+    }
+
+    public static String replaceInnerClassName(final String className) {
+        final String result = convertInnerClassesToAcceptableName(className.trim());
+        return className.contains(" ") ? result + " " : result;
     }
 
     public static String getDecompiledFullClassName(final String fullClassName) {
@@ -306,26 +326,60 @@ public class DeclarationWorker {
     }
 
     public static void parseGenericDeclaration(final String signature, List<String> genericTypesList,
-                                         List<String> genericIdentifiersList, List<String> genericTypesImports)
+                                         List<String> genericIdentifiersList, List<String> genericTypesImports, final SupportedLanguage language)
     {
         if (signature != null && signature.indexOf('<') == 0) {
-            final String genericDeclaration = signature.substring(signature.indexOf("<") + 1, signature.indexOf(">"));
-            final String[] genericTypes = genericDeclaration.split(";");
-            for (final String genericType : genericTypes) {
-                if (!genericType.isEmpty()) {
-                    final String[] genericTypeParts = genericType.split(":");
-                    final String genericSuperClassName = genericTypeParts[1].substring(1);
-                    genericTypesImports.add(getDecompiledFullClassName(genericSuperClassName));
-                    genericTypesList.add(genericSuperClassName);
-                    genericIdentifiersList.add(genericTypeParts[0]);
+            int endPos = 1;
+            int startPos = 1;
+            boolean isGenericName = true;
+            while (signature.charAt(endPos) != '>') {
+                switch (signature.charAt(endPos)) {
+                    case ':':
+                        if (startPos != endPos) {
+                            genericIdentifiersList.add(signature.substring(startPos, endPos));
+                        }
+                        endPos++;
+                        startPos = endPos;
+                        isGenericName = false;
+                        break;
+                    default:
+                        if (!isGenericName) {
+                            genericTypesList.add(getDescriptor(signature, endPos, genericTypesImports, language));
+                            endPos = getNextTypePosition(signature, endPos);
+                            startPos = endPos;
+                            isGenericName = true;
+                        } else {
+                            endPos++;
+                        }
                 }
             }
+            return;
         }
     }
 
     public static boolean isPrimitiveClass(final String type) {
         Set<String> primitiveTypes = new HashSet<String>(Arrays.asList("Byte", "Long", "Boolean", "Integer", "Int", "Short", "Character", "Float", "Double", "Object"));
         return primitiveTypes.contains(type);
+    }
+
+    public static String convertInnerClassesToAcceptableName(final String initialClassName) {
+        final String[] classParts = initialClassName.contains(".") ? initialClassName.split("\\.") : new String[] { initialClassName };
+        StringBuilder result = new StringBuilder("");
+
+        for (final String classPart : classParts) {
+            int pos = 0;
+            while (pos < classPart.length() && Character.isDigit(classPart.charAt(pos))) {
+                pos++;
+            }
+            if (pos > 0) {
+                final String anonymousClassIdentifier = pos == classPart.length() ? "AnonymousClass" : "";
+                result = result.append(".").append(classPart.substring(pos)).append(anonymousClassIdentifier).append("__").append(classPart.substring(0, pos));
+            } else {
+                result = result.append(".").append(classPart);
+            }
+        }
+
+        return result.deleteCharAt(0).toString();
     }
 
     private static String convertJavaPrimitiveClassToKotlin(final String javaClass) {

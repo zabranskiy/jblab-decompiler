@@ -6,8 +6,11 @@ import com.sdc.abstractLanguage.AbstractMethod;
 import java.util.List;
 
 public class LambdaFunction extends NestedClass {
-    public LambdaFunction(final AbstractClass nestedClass) {
+    private final String myType;
+
+    public LambdaFunction(final AbstractClass nestedClass, final String type) {
         super(nestedClass);
+        this.myType = type;
     }
 
     public AbstractMethod getFunction() {
@@ -23,5 +26,9 @@ public class LambdaFunction extends NestedClass {
     public boolean isKotlinLambda() {
         final String superClass = myNestedClass.getSuperClass();
         return superClass.startsWith("FunctionImpl");
+    }
+
+    public String getType() {
+        return myType;
     }
 }
