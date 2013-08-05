@@ -60,7 +60,6 @@ public abstract class AbstractClass {
 
     protected Map<String, AbstractClass> myAnonymousClasses = new HashMap<String, AbstractClass>();
     protected Map<String, AbstractClass> myInnerClasses = new HashMap<String, AbstractClass>();
-    protected Map<String, String> myInnerClassNames = new HashMap<String, String>();
     protected InnerClassIdentifier myInnerClassIdentifier;
 
     protected final int myTextWidth;
