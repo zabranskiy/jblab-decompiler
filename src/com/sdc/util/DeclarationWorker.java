@@ -490,6 +490,7 @@ public class DeclarationWorker {
             }
             result = result.append(") -> ").append(parts.get(parametersCount));
 
+//            return result.toString().replaceAll("([\\( ])(in|out) ", "$1");
             return result.toString();
         } else {
             return type;
