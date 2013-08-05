@@ -278,10 +278,17 @@ abstract class AbstractPrinter {
     open fun printAnonymousClass(anonymousClass : AbstractClass?, arguments : List<Expression>?): PrimeDoc {
         val superClassName = anonymousClass!!.getSuperClass()
         val declaration =
-                if (superClassName!!.isEmpty())
-                    text(anonymousClass.getImplementedInterfaces()!!.get(0) + "() {")
-                else
+                if (superClassName!!.isEmpty()) {
+                    val implementedInterfaces = anonymousClass.getImplementedInterfaces()
+                    val declaration =
+                        if (implementedInterfaces!!.isEmpty())
+                            printBaseClass()
+                        else
+                            text(implementedInterfaces.get(0))
+                    declaration + text("() {")
+                } else {
                     text(superClassName) + printInvocationArguments(arguments, anonymousClass.getNestSize())
+                }
 
         var anonClassCode : PrimeDoc = declaration + nest(anonymousClass.getNestSize(), printClassBodyInnerClasses(anonymousClass))
 
@@ -293,6 +300,8 @@ abstract class AbstractPrinter {
 
         return anonClassCode / text("}")
     }
+
+    abstract fun printBaseClass(): PrimeDoc;
 
     abstract fun printAnnotationIdentifier(): PrimeDoc;
 

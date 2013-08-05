@@ -41,6 +41,8 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
 
     protected boolean myHasDebugInformation = false;
 
+    protected String myClassFilesJarPath = "";
+
     protected AbstractLanguagePartFactory myLanguagePartFactory;
     protected AbstractVisitorFactory myVisitorFactory;
 
@@ -61,6 +63,10 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
 
     public AbstractMethod getDecompiledMethod() {
         return myDecompiledMethod;
+    }
+
+    public void setClassFilesJarPath(final String classFilesJarPath) {
+        this.myClassFilesJarPath = classFilesJarPath;
     }
 
     protected AnnotationVisitor visitAnnotation(final int parameter, final String desc, final boolean visible) {
