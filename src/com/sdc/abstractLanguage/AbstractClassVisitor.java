@@ -100,6 +100,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
         myDecompiledClass = myLanguagePartFactory.createClass(modifier, type, className, packageName.toString(), implementedInterfaces
                 , superClass, genericTypesList, genericIdentifiersList, myTextWidth, myNestSize);
         myDecompiledClass.setIsLambdaFunctionClass(myIsLambdaFunction);
+        myDecompiledClass.setFullClassName(DeclarationWorker.getDecompiledFullClassName(name));
 
         if (!superClassImport.isEmpty()) {
             myDecompiledClass.appendImport(superClassImport);
@@ -236,7 +237,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
 
         myDecompiledClass.appendMethod(abstractMethod);
 
-        return myVisitorFactory.createMethodVisitor(abstractMethod, myDecompiledClass.getPackage() + "." + myDecompiledClass.getName(), myDecompiledClass.getSuperClass());
+        return myVisitorFactory.createMethodVisitor(abstractMethod, myDecompiledClass.getFullClassName(), myDecompiledClass.getSuperClass());
     }
 
     @Override
