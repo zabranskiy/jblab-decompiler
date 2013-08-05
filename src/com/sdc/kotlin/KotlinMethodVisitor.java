@@ -74,7 +74,7 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
                 myDecompiledMethod.addImport(decompiledOwnerFullClassName);
                 invocationName = ownerClassName;
                 returnType = invocationName + " ";
-            } else {
+            } else if (!myDecompiledOwnerFullClassName.equals(decompiledOwnerFullClassName)) {
                 invocationName = "super<" + ownerClassName + ">."  + name;
             }
         }
@@ -82,7 +82,7 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
         if (opString.contains("INVOKESTATIC")) {
             myDecompiledMethod.addImport(decompiledOwnerFullClassName);
             if (!ownerClassName.equals("KotlinPackage")) {
-                if (!owner.contains("$src$")) {
+                if (!decompiledOwnerFullClassName.contains("$src$")) {
                     invocationName = ownerClassName + "." + name;
                 } else {
                     invocationName = name;
@@ -100,6 +100,19 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
         }
 
         appendInvocationOrConstructor(isStaticInvocation, name, invocationName, returnType,arguments);
+    }
+
+    @Override
+    public void visitLocalVariable(final String name, final String desc,
+                                   final String signature, final Label start, final Label end,
+                                   final int index)
+    {
+        if (index == 0 && name.equals("$receiver")) {
+            myDecompiledMethod.addLocalVariableName(index, name);
+            return;
+        }
+
+        super.visitLocalVariable(name, desc, signature, start, end, index);
     }
 
     @Override
