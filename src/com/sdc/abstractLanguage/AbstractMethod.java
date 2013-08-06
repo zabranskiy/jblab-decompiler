@@ -31,6 +31,7 @@ public abstract class AbstractMethod {
     protected AbstractFrame myRootAbstractFrame;
     protected AbstractFrame myCurrentAbstractFrame;
 
+    protected MethodVisitorStub.DecompilerException myError = null;
     protected List<Statement> myBody = null;
     protected List<Node> myNodes = null;
 
@@ -95,6 +96,14 @@ public abstract class AbstractMethod {
 
     public int getTextWidth() {
         return myTextWidth;
+    }
+
+    public MethodVisitorStub.DecompilerException getError() {
+        return myError;
+    }
+
+    public void setError(final MethodVisitorStub.DecompilerException error) {
+        this.myError = error;
     }
 
     public List<Statement> getBody() {

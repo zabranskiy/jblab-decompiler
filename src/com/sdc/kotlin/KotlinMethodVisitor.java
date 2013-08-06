@@ -137,6 +137,7 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
                     return true;
                 }
             } catch (IOException e) {
+                throw new RuntimeException(e);
             }
         }
         return false;
