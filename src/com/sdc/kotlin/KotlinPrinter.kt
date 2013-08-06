@@ -138,6 +138,7 @@ class KotlinPrinter: AbstractPrinter() {
         val body = nest(
                 kotlinMethod.getNestSize(),
                 printStatements(kotlinMethod.getBody(), kotlinMethod.getNestSize())
+                + printMethodError(kotlinMethod)
         ) / text("}")
 
         val returnTypeCode = printMethodReturnType(kotlinMethod)
@@ -158,7 +159,10 @@ class KotlinPrinter: AbstractPrinter() {
         text("(") + printMethodParameters(constructor) + text(")")
 
     fun printSuperClassConstructor(superClassConstructor : Expression?, nestSize : Int): PrimeDoc =
-            printExpression(superClassConstructor, nestSize)
+            if (superClassConstructor != null)
+                printExpression(superClassConstructor, nestSize)
+            else
+                text("/* Super class constructor error */")
 
     fun printInitialConstructor(constructor: AbstractMethod?): PrimeDoc {
         val body = nest(
@@ -171,7 +175,7 @@ class KotlinPrinter: AbstractPrinter() {
     fun printMethodReturnType(method : AbstractMethod?): PrimeDoc {
         var returnTypeCode = text(" ")
         val returnType = method!!.getReturnType()
-        if (!returnType!!.isEmpty())
+        if (!returnType!!.equals("Unit"))
             returnTypeCode = text(": " + returnType + " ")
         return returnTypeCode
     }

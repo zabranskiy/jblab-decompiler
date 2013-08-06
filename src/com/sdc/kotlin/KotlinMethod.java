@@ -53,7 +53,7 @@ public class KotlinMethod extends AbstractMethod {
     }
 
     public boolean hasEmptyBody() {
-        return myBody.size() == 1 && ((Return) myBody.get(0)).getReturnValue() == null;
+        return myBody.size() == 0 || myBody.size() == 1 && myBody.get(0) instanceof Return &&((Return) myBody.get(0)).getReturnValue() == null;
     }
 
     public void dragReceiverFromMethodParameters() {

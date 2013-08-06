@@ -161,7 +161,7 @@ public class DeclarationWorker {
     public static String getKotlinDescriptor(final String descriptor, final int pos, List<String> imports) {
         switch (descriptor.charAt(pos)) {
             case 'V':
-                return "";
+                return "Unit";
             case 'B':
                 return "Byte";
             case 'J':

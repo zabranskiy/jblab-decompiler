@@ -257,7 +257,12 @@ abstract class AbstractPrinter {
     }
 
     open fun printClassBodyInnerClasses(decompiledClass : AbstractClass): PrimeDoc {
-        return printClasses(decompiledClass.getClassBodyInnerClasses())
+        val errorClasses = decompiledClass.getInnerClassesErrors()
+        var errorClassesCode : PrimeDoc = nil()
+        for ((className, error) in errorClasses)
+            errorClassesCode = errorClassesCode / text("// Error occurred while decompiling class " + className + ": " + error.getMessage())
+
+        return errorClassesCode + printClasses(decompiledClass.getClassBodyInnerClasses())
     }
 
     open fun printMethodInnerClasses(decompiledClass : AbstractClass?, methodName : String?, descriptor : String?): PrimeDoc {
@@ -299,6 +304,11 @@ abstract class AbstractPrinter {
             anonClassCode = anonClassCode + nest(anonymousClass.getNestSize(), line() + printMethod(classMethod))
 
         return anonClassCode / text("}")
+    }
+
+    open fun printMethodError(decompiledMethod : AbstractMethod?): PrimeDoc {
+        val error = decompiledMethod!!.getError()
+        return if (error != null) line() + text("// " + error.getErrorLocation() + ": " + error.getException()!!.getMessage()) else nil()
     }
 
     abstract fun printBaseClass(): PrimeDoc;
