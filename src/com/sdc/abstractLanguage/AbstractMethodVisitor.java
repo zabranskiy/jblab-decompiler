@@ -1,9 +1,10 @@
 package com.sdc.abstractLanguage;
 
-import com.sdc.ast.controlflow.*;
+import com.sdc.ast.controlflow.Assignment;
+import com.sdc.ast.controlflow.Return;
+import com.sdc.ast.controlflow.Statement;
+import com.sdc.ast.controlflow.Throw;
 import com.sdc.ast.expressions.*;
-import com.sdc.ast.expressions.InstanceInvocation;
-import com.sdc.ast.expressions.Invocation;
 import com.sdc.ast.expressions.identifiers.Field;
 import com.sdc.ast.expressions.identifiers.Identifier;
 import com.sdc.ast.expressions.identifiers.Variable;
@@ -20,7 +21,7 @@ import java.util.*;
 
 import static org.objectweb.asm.Opcodes.ASM4;
 
-public abstract class AbstractMethodVisitor  extends MethodVisitor {
+public abstract class AbstractMethodVisitor extends MethodVisitor {
     protected AbstractMethod myDecompiledMethod;
 
     protected final String myDecompiledOwnerFullClassName;
@@ -143,6 +144,7 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
 
     @Override
     public void visitInsn(final int opcode) {
+        int size = myBodyStack.size();
         final String opString = Printer.OPCODES[opcode];
 
         if (opString.contains("ADD") || opString.contains("SUB")
@@ -169,18 +171,139 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
         } else if (opString.contains("ATHROW")) {
             myStatements.add(new Throw(getTopOfBodyStack()));
         } else if (opString.equals("SWAP")) {
+            if (size < 2) return;
             Expression expr1 = myBodyStack.pop();
             Expression expr2 = myBodyStack.pop();
-            myBodyStack.push(expr1);
-            myBodyStack.push(expr2);
+            if (expr1.hasDoubleLength() || expr2.hasDoubleLength()) {
+                //There is a wrong condition, we return elements of stack as they were there
+                multiPush(expr2, expr1);
+            } else {
+                multiPush(expr1, expr2);
+            }
         } else if (opString.equals("DUP") && !myBodyStack.isEmpty()) {
-            myBodyStack.push(myBodyStack.peek());
+            Expression expr = myBodyStack.peek();
+            if (expr.hasDoubleLength()) return;
+            myBodyStack.push(expr);
         } else if (opString.equals("DUP_X1")) {
+            if (size < 2) return;
             Expression expr1 = myBodyStack.pop();
             Expression expr2 = myBodyStack.pop();
-            myBodyStack.push(expr1);
-            myBodyStack.push(expr2);
-            myBodyStack.push(expr1);
+            if (expr1.hasDoubleLength() || expr2.hasDoubleLength()) {
+                //There is a wrong condition, we return elements of stack as they were there
+                multiPush(expr2, expr1);
+                return;
+            }
+            multiPush(expr1, expr2, expr1);
+        } else if (opString.equals("DUP_X2")) {
+            if (size < 2) return;
+            Expression expr1 = myBodyStack.pop();
+            Expression expr2 = myBodyStack.pop();
+            if (expr1.hasDoubleLength()) {
+                //There is a wrong condition, we return elements of stack as they were there
+                multiPush(expr2, expr1);
+                return;
+            }
+            if (expr2.hasDoubleLength()) {
+                //Form 2
+                multiPush(expr1, expr2, expr1);
+            } else {
+                if (size < 3 || myBodyStack.peek().hasDoubleLength()) {
+                    //There is a wrong condition, we return elements of stack as they were there
+                    multiPush(expr2, expr1);
+                    return;
+                }
+                Expression expr3 = myBodyStack.pop();
+                //Form 1
+                multiPush(expr1, expr3, expr2, expr1);
+            }
+        } else if (opString.equals("DUP2")) {
+            if (size < 1) return;
+            Expression expr1 = myBodyStack.pop();
+            if (expr1.hasDoubleLength()) {
+                //Form 2
+                multiPush(expr1, expr1);
+            } else {
+                if (size < 2 || myBodyStack.peek().hasDoubleLength()) {
+                    //There is a wrong condition, we return elements of stack as they were there
+                    multiPush(expr1);
+                    return;
+                }
+                Expression expr2 = myBodyStack.pop();
+                //Form 1
+                multiPush(expr2, expr1, expr2, expr1);
+            }
+        } else if (opString.equals("DUP2_X1")) {
+            if (size < 2) return;
+            Expression expr1 = myBodyStack.pop();
+            Expression expr2 = myBodyStack.pop();
+            if (expr1.hasDoubleLength() && !expr2.hasDoubleLength()) {
+                //Form 2
+                multiPush(expr1, expr2, expr1);
+            } else {
+                if (size < 3 || myBodyStack.peek().hasDoubleLength()
+                        || expr1.hasDoubleLength() || expr2.hasDoubleLength()) {
+                    //There is a wrong condition, we return elements of stack as they were there
+                    multiPush(expr2, expr1);
+                    return;
+                }
+                Expression expr3 = myBodyStack.pop();
+                //Form 1
+                multiPush(expr2, expr1, expr3, expr2, expr1);
+            }
+        } else if (opString.equals("DUP2_X2")) {
+            if (size < 2) return;
+            Expression expr1 = myBodyStack.pop();
+            Expression expr2 = myBodyStack.pop();
+            if (!expr1.hasDoubleLength() && !expr2.hasDoubleLength()) {
+                if (size < 3) {
+                    //There is a wrong condition, we return elements of stack as they were there
+                    multiPush(expr2, expr1);
+                    return;
+                }
+                Expression expr3 = myBodyStack.pop();
+                if (expr3.hasDoubleLength()) {
+                    //Form 3
+                    multiPush(expr2, expr1, expr3, expr2, expr1);
+                    return;
+                }
+                if (size < 4 || myBodyStack.peek().hasDoubleLength()) {
+                    //There is a wrong condition, we return elements of stack as they were there
+                    multiPush(expr3, expr2, expr1);
+                    return;
+                }
+                Expression expr4 = myBodyStack.pop();
+                //Form 1
+                multiPush(expr2, expr1, expr4, expr3, expr2, expr1);
+            } else if (expr1.hasDoubleLength() && !expr2.hasDoubleLength()) {
+                if (size < 3 || myBodyStack.peek().hasDoubleLength()) {
+                    //There is a wrong condition, we return elements of stack as they were there
+                    multiPush(expr2, expr1);
+                    return;
+                }
+                Expression expr3 = myBodyStack.pop();
+                //Form 2
+                multiPush(expr1, expr3, expr2, expr1);
+            } else if (expr1.hasDoubleLength() && expr2.hasDoubleLength()) {
+                //Form 4
+                multiPush(expr1, expr2, expr1);
+            }
+        } else if (opString.equals("POP")) {
+            if (size < 1 || myBodyStack.peek().hasDoubleLength()) return;
+            myBodyStack.pop();
+        } else if (opString.equals("POP2")) {
+            if (size < 1) return;
+            Expression expr1 = myBodyStack.pop();
+            if(expr1.hasDoubleLength()){
+               //Form 2
+            }  else{
+                if (size <2 || myBodyStack.peek().hasDoubleLength() ) {
+                    //There is a wrong condition, we return elements of stack as they were there
+                    multiPush(expr1);
+                    return;
+                }
+                //Form 1
+                myBodyStack.pop();
+            }
         } else if (opString.contains("ALOAD")) {
             final Expression arrayIndex = getTopOfBodyStack();
             myBodyStack.push(new Variable(arrayIndex, (Identifier) getTopOfBodyStack()));
@@ -294,8 +417,7 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
         boolean isStaticInvocation = false;
 
         if (opString.contains("INVOKEVIRTUAL") || opString.contains("INVOKEINTERFACE")
-                || (decompiledOwnerFullClassName.equals(myDecompiledOwnerFullClassName) && !name.equals("<init>")))
-        {
+                || (decompiledOwnerFullClassName.equals(myDecompiledOwnerFullClassName) && !name.equals("<init>"))) {
             if (!myBodyStack.isEmpty() && myBodyStack.peek() instanceof Variable) {
                 appendInstanceInvocation(name, returnType, arguments, (Variable) myBodyStack.pop());
                 return;
@@ -320,7 +442,7 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
             isStaticInvocation = true;
         }
 
-        appendInvocationOrConstructor(isStaticInvocation, name, invocationName, returnType,arguments);
+        appendInvocationOrConstructor(isStaticInvocation, name, invocationName, returnType, arguments);
     }
 
     @Override
@@ -367,7 +489,8 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
 
     @Override
     public void visitLdcInsn(final Object cst) {
-        myBodyStack.push(new Constant(cst, cst instanceof String));
+        final boolean hasDoubleLength = true;
+        myBodyStack.push(new Constant(cst, cst instanceof String, hasDoubleLength));
     }
 
     @Override
@@ -440,8 +563,7 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
     @Override
     public void visitLocalVariable(final String name, final String desc,
                                    final String signature, final Label start, final Label end,
-                                   final int index)
-    {
+                                   final int index) {
         if (!myHasDebugInformation) {
             myHasDebugInformation = true;
         }
@@ -569,8 +691,7 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
 
     protected void removeThisVariableFromStack() {
         if (myDecompiledMethod.isNormalClassMethod() && !myBodyStack.isEmpty()
-                && myBodyStack.peek() instanceof Variable && ((Variable) myBodyStack.peek()).getName().equals("this"))
-        {
+                && myBodyStack.peek() instanceof Variable && ((Variable) myBodyStack.peek()).getName().equals("this")) {
             myBodyStack.pop();
         }
     }
@@ -625,8 +746,7 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
     }
 
     protected void appendInvocationOrConstructor(final boolean isStaticInvocation, final String visitMethodName,
-                                                 final String invocationName, final String returnType, final List<Expression> arguments)
-    {
+                                                 final String invocationName, final String returnType, final List<Expression> arguments) {
         if (visitMethodName.equals("<init>")) {
             if (checkForSuperClassConstructor(invocationName)) {
                 removeThisVariableFromStack();
@@ -640,6 +760,12 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
             }
 
             appendInvocation(invocationName, returnType, arguments);
+        }
+    }
+
+    private void multiPush(Expression... expressions) {
+        for (Expression expr : expressions) {
+            myBodyStack.push(expr);
         }
     }
 }

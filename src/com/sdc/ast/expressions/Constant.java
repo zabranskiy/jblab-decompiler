@@ -7,8 +7,14 @@ public class Constant extends Expression {
     public Constant(final Object value, final boolean isStringValue) {
         this.myValue = value;
         this.myIsStringValue = isStringValue;
+        setDoubleLength(false);
     }
 
+    public Constant(final Object value, final boolean isStringValue, final boolean hasDoubleLength) {
+        this.myValue = value;
+        this.myIsStringValue = isStringValue;
+        setDoubleLength(hasDoubleLength);
+    }
     public Object getValue() {
         return myValue;
     }

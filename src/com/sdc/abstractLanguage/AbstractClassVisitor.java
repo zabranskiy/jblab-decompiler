@@ -56,7 +56,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
         for (int i = 0; i < classParts.length - 2; i++) {
             packageName.append(classParts[i]).append(".");
         }
-        packageName.append(classParts[classParts.length - 2]);
+        if(classParts.length >=2) packageName.append(classParts[classParts.length - 2]);
 
         String superClass = "";
         String superClassImport = "";
