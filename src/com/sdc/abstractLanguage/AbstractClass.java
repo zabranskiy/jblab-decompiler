@@ -62,6 +62,8 @@ public abstract class AbstractClass {
     protected Map<String, AbstractClass> myInnerClasses = new HashMap<String, AbstractClass>();
     protected InnerClassIdentifier myInnerClassIdentifier;
 
+    protected Map<String, Exception> myInnerClassesErrors = new HashMap<String, Exception>();
+
     protected final int myTextWidth;
     protected final int myNestSize;
 
@@ -277,6 +279,14 @@ public abstract class AbstractClass {
 
     public AbstractClass getAnonymousClass(final String name) {
         return myAnonymousClasses.get(name);
+    }
+
+    public void addInnerClassError(final String className, final Exception exception) {
+        myInnerClassesErrors.put(className, exception);
+    }
+
+    public Map<String, Exception> getInnerClassesErrors() {
+        return myInnerClassesErrors;
     }
 
     protected boolean checkImportNameForBeingInPackage(final String importName, final String packageName) {

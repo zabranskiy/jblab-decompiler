@@ -84,6 +84,7 @@ class JavaPrinter: AbstractPrinter() {
         val body = nest(
                        classMethod.getNestSize(),
                        printStatements(classMethod.getBody(), classMethod.getNestSize())
+                       + printMethodError(classMethod)
                    ) / text("}")
 
         return group(declaration + arguments + text(")") + throwsExceptions + text(" {")) + nestedClasses + body

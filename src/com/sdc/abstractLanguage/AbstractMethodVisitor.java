@@ -69,6 +69,14 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
         this.myClassFilesJarPath = classFilesJarPath;
     }
 
+    public String getDecompiledOwnerFullClassName() {
+        return myDecompiledOwnerFullClassName;
+    }
+
+    public String getDecompiledOwnerSuperClassName() {
+        return myDecompiledOwnerSuperClassName;
+    }
+
     protected AnnotationVisitor visitAnnotation(final int parameter, final String desc, final boolean visible) {
         List<String> annotationsImports = new ArrayList<String>();
         final String annotationName = getDescriptor(desc, 0, annotationsImports);
@@ -480,6 +488,9 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
 
     @Override
     public void visitEnd() {
+        myDecompiledMethod.setBody(myStatements);
+        myDecompiledMethod.setNodes(myNodes);
+
         applyNode();
         // GOTO
         for (final Label lbl : myMap1.keySet()) {
@@ -521,8 +532,6 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
         Generator generator = new Generator(myNodes);
         AnonymousClass aClass = generator.genAnonymousClass();
         // myKotlinMethod.setAnonymousClass(aClass);
-        myDecompiledMethod.setBody(myStatements);
-        myDecompiledMethod.setNodes(myNodes);
         //myKotlinMethod.drawCFG();
     }
 

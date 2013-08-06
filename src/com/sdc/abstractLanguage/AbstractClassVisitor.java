@@ -173,7 +173,8 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
                 } else {
                     myDecompiledClass.addAnonymousClass(innerClassName, decompiledClass);
                 }
-            } catch (IOException e) {
+            } catch (Exception e) {
+                myDecompiledClass.addInnerClassError(name, e);
             }
         }
     }
@@ -248,7 +249,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
         AbstractMethodVisitor methodVisitor = myVisitorFactory.createMethodVisitor(abstractMethod, myDecompiledClass.getFullClassName(), myDecompiledClass.getSuperClass());
         methodVisitor.setClassFilesJarPath(myClassFilesJarPath);
 
-        return methodVisitor;
+        return new MethodVisitorStub(methodVisitor);
     }
 
     @Override
