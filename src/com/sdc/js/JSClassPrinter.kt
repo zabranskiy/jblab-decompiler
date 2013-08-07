@@ -15,6 +15,8 @@ import com.sdc.abstractLanguage.AbstractPrinter
 class JSPrinter : AbstractPrinter() {
     override fun printAnnotationIdentifier(): PrimeDoc = text("")
 
+    override fun printBaseClass(): PrimeDoc = text("Object")
+
     override fun printClass(decompiledClass: AbstractClass): PrimeDoc {
         val javaClass: JSClass = decompiledClass as JSClass
 
@@ -52,6 +54,7 @@ class JSPrinter : AbstractPrinter() {
         val body = nest(
                        classMethod.getNestSize(),
                        printStatements(classMethod.getBody()!!, classMethod.getNestSize())
+                       + printMethodError(classMethod)
                    ) / text("}")
 
         return group(declaration + arguments + text(")") + throwsExceptions / text("{")) + body

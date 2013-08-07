@@ -161,7 +161,7 @@ public class DeclarationWorker {
     public static String getKotlinDescriptor(final String descriptor, final int pos, List<String> imports) {
         switch (descriptor.charAt(pos)) {
             case 'V':
-                return "";
+                return "Unit";
             case 'B':
                 return "Byte";
             case 'J':
@@ -353,7 +353,6 @@ public class DeclarationWorker {
                         }
                 }
             }
-            return;
         }
     }
 
@@ -490,6 +489,7 @@ public class DeclarationWorker {
             }
             result = result.append(") -> ").append(parts.get(parametersCount));
 
+//            return result.toString().replaceAll("([\\( ])(in|out) ", "$1");
             return result.toString();
         } else {
             return type;

@@ -36,6 +36,7 @@ public abstract class AbstractClass {
     protected final String myModifier;
     protected final String myType;
     protected final String myName;
+    protected String myFullClassName;
     protected final String myPackage;
 
     protected final String mySuperClass;
@@ -59,8 +60,9 @@ public abstract class AbstractClass {
 
     protected Map<String, AbstractClass> myAnonymousClasses = new HashMap<String, AbstractClass>();
     protected Map<String, AbstractClass> myInnerClasses = new HashMap<String, AbstractClass>();
-    protected Map<String, String> myInnerClassNames = new HashMap<String, String>();
     protected InnerClassIdentifier myInnerClassIdentifier;
+
+    protected Map<String, Exception> myInnerClassesErrors = new HashMap<String, Exception>();
 
     protected final int myTextWidth;
     protected final int myNestSize;
@@ -128,6 +130,14 @@ public abstract class AbstractClass {
         return myTextWidth;
     }
 
+    public void setFullClassName(final String fullClassName) {
+        this.myFullClassName = fullClassName;
+    }
+
+    public String getFullClassName() {
+        return myFullClassName;
+    }
+
     public void setIsNormalClass(final boolean isNormalClass) {
         this.myIsNormalClass = isNormalClass;
     }
@@ -167,7 +177,7 @@ public abstract class AbstractClass {
     }
 
     public void appendImport(final String importName) {
-        if (!hasImport(importName) && checkImportNameForBeingInPackages(importName, myDefaultPackages)) {
+        if (!hasImport(importName) && !checkImportNameForBeingInPackages(importName, myDefaultPackages)) {
             myImports.add(importName);
         }
     }
@@ -271,8 +281,16 @@ public abstract class AbstractClass {
         return myAnonymousClasses.get(name);
     }
 
+    public void addInnerClassError(final String className, final Exception exception) {
+        myInnerClassesErrors.put(className, exception);
+    }
+
+    public Map<String, Exception> getInnerClassesErrors() {
+        return myInnerClassesErrors;
+    }
+
     protected boolean checkImportNameForBeingInPackage(final String importName, final String packageName) {
-        return importName.indexOf(packageName) == 0 && importName.lastIndexOf(".") == packageName.length() + 1;
+        return importName.indexOf(packageName) == 0 && importName.lastIndexOf(".") == packageName.length();
     }
 
     protected boolean checkImportNameForBeingInPackages(final String importName, final List<String> packageNames) {

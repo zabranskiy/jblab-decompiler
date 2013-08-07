@@ -30,6 +30,8 @@ class KotlinPrinter: AbstractPrinter() {
 
     override fun printNewOperator(): PrimeDoc = text("")
 
+    override fun printBaseClass(): PrimeDoc = text("Any?")
+
     override fun printExpression(expression: Expression?, nestSize: Int): PrimeDoc =
         when (expression) {
             is NewArray -> {
@@ -55,7 +57,8 @@ class KotlinPrinter: AbstractPrinter() {
 
             is LambdaFunction -> {
                 val lambdaFunction = expression.getFunction()
-                val arguments = text("{ ") + printMethodParameters(lambdaFunction) + text(" -> ")
+                val returnTypeCode = printMethodReturnType(lambdaFunction)
+                val arguments = text("{ (") + printMethodParameters(lambdaFunction) + text(")") + returnTypeCode + text("-> ")
                 val body = nest(
                         lambdaFunction!!.getNestSize(),
                         printStatements(lambdaFunction.getBody(), lambdaFunction.getNestSize())
@@ -135,12 +138,10 @@ class KotlinPrinter: AbstractPrinter() {
         val body = nest(
                 kotlinMethod.getNestSize(),
                 printStatements(kotlinMethod.getBody(), kotlinMethod.getNestSize())
+                + printMethodError(kotlinMethod)
         ) / text("}")
 
-        var returnTypeCode = text(" ")
-        val returnType = kotlinMethod.getReturnType()
-        if (!returnType!!.isEmpty())
-            returnTypeCode = text(": " + returnType + " ")
+        val returnTypeCode = printMethodReturnType(kotlinMethod)
 
         return declaration + arguments + text(")") + returnTypeCode + text("{") + nestedClasses + body
     }
@@ -158,7 +159,10 @@ class KotlinPrinter: AbstractPrinter() {
         text("(") + printMethodParameters(constructor) + text(")")
 
     fun printSuperClassConstructor(superClassConstructor : Expression?, nestSize : Int): PrimeDoc =
-            printExpression(superClassConstructor, nestSize)
+            if (superClassConstructor != null)
+                printExpression(superClassConstructor, nestSize)
+            else
+                text("/* Super class constructor error */")
 
     fun printInitialConstructor(constructor: AbstractMethod?): PrimeDoc {
         val body = nest(
@@ -166,5 +170,13 @@ class KotlinPrinter: AbstractPrinter() {
                 printStatements(constructor.getBody(), constructor.getNestSize())
         )
         return text("initial constructor {") + body / text("}")
+    }
+
+    fun printMethodReturnType(method : AbstractMethod?): PrimeDoc {
+        var returnTypeCode = text(" ")
+        val returnType = method!!.getReturnType()
+        if (!returnType!!.equals("Unit"))
+            returnTypeCode = text(": " + returnType + " ")
+        return returnTypeCode
     }
 }

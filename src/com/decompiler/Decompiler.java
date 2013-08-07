@@ -48,7 +48,7 @@ public class Decompiler {
             cr = new ClassReader(new FileInputStream(decompilerParameters.getClassPath()));
         }
 
-        System.out.println(getDecompiledCode(language, cr, textWidth, tabSize));
+        System.out.println(getDecompiledCode(language, cr, "", textWidth, tabSize));
     }
 
     @Nullable
@@ -67,8 +67,13 @@ public class Decompiler {
             if (magic == 0xCAFEBABE) {
                 is.reset();
                 final Language lang = config.getChosenLanguage();
+
+                final String initialClassFilePath = virtualFile.getPath();
+                final int jarIndex = initialClassFilePath.indexOf(".jar!/");
+                final String jarPath = jarIndex == -1 ? "" : initialClassFilePath.substring(0, jarIndex + 4);
+
                 decompiledFile = new LightVirtualFile(virtualFile.getNameWithoutExtension() + lang.getExtension(),
-                        getDecompiledCode(lang.getName(), is, config.getTextWidth(), config.getTabSize()));
+                        getDecompiledCode(lang.getName(), is, jarPath, config.getTextWidth(), config.getTabSize()));
             }
             is.close();
         } catch (IOException e1) {
@@ -78,11 +83,11 @@ public class Decompiler {
         return decompiledFile;
     }
 
-    private static String getDecompiledCode(final String languageName, final InputStream is, final Integer textWidth, final Integer tabSize) throws IOException {
-        return getDecompiledCode(languageName, new ClassReader(is), textWidth, tabSize);
+    private static String getDecompiledCode(final String languageName, final InputStream is, final String classFilesJarPath, final Integer textWidth, final Integer tabSize) throws IOException {
+        return getDecompiledCode(languageName, new ClassReader(is), classFilesJarPath, textWidth, tabSize);
     }
 
-    private static String getDecompiledCode(final String languageName, final ClassReader cr, final Integer textWidth, final Integer tabSize) throws IOException {
+    private static String getDecompiledCode(final String languageName, final ClassReader cr, final String classFilesJarPath, final Integer textWidth, final Integer tabSize) throws IOException {
         AbstractClassVisitor cv;
 
         if (languageName.equals("JavaScript")) {
@@ -93,8 +98,13 @@ public class Decompiler {
             // Java
             cv = new JavaClassVisitor(textWidth, tabSize);
         }
+        cv.setClassFilesJarPath(classFilesJarPath);
 
-        cr.accept(cv, 0);
-        return cv.getDecompiledCode();
+        try {
+            cr.accept(cv, 0);
+            return cv.getDecompiledCode();
+        } catch (RuntimeException e) {
+            return "General class decompiling error occurred: " + e.getMessage();
+        }
     }
 }

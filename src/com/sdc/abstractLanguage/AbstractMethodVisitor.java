@@ -41,6 +41,8 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
 
     protected boolean myHasDebugInformation = false;
 
+    protected String myClassFilesJarPath = "";
+
     protected AbstractLanguagePartFactory myLanguagePartFactory;
     protected AbstractVisitorFactory myVisitorFactory;
 
@@ -61,6 +63,18 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
 
     public AbstractMethod getDecompiledMethod() {
         return myDecompiledMethod;
+    }
+
+    public void setClassFilesJarPath(final String classFilesJarPath) {
+        this.myClassFilesJarPath = classFilesJarPath;
+    }
+
+    public String getDecompiledOwnerFullClassName() {
+        return myDecompiledOwnerFullClassName;
+    }
+
+    public String getDecompiledOwnerSuperClassName() {
+        return myDecompiledOwnerSuperClassName;
     }
 
     protected AnnotationVisitor visitAnnotation(final int parameter, final String desc, final boolean visible) {
@@ -182,7 +196,7 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
             myBodyStack.push(expr1);
             myBodyStack.push(expr2);
         } else if (opString.equals("DUP") && !myBodyStack.isEmpty()) {
-            myBodyStack.push(myBodyStack.peek());
+//            myBodyStack.push(myBodyStack.peek());
         } else if (opString.equals("DUP_X1")) {
             Expression expr1 = myBodyStack.pop();
             Expression expr2 = myBodyStack.pop();
@@ -459,6 +473,7 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
             myHasDebugInformation = true;
         }
 
+        myDecompiledMethod.addLocalVariableName(index, name);
         final String description = signature != null ? signature : desc;
         myDecompiledMethod.addLocalVariableFromDebugInfo(index, name, getDescriptor(description, 0, myDecompiledMethod.getImports()));
     }
@@ -473,6 +488,9 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
 
     @Override
     public void visitEnd() {
+        myDecompiledMethod.setBody(myStatements);
+        myDecompiledMethod.setNodes(myNodes);
+
         applyNode();
         // GOTO
         for (final Label lbl : myMap1.keySet()) {
@@ -514,8 +532,6 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
         Generator generator = new Generator(myNodes);
         AnonymousClass aClass = generator.genAnonymousClass();
         // myKotlinMethod.setAnonymousClass(aClass);
-        myDecompiledMethod.setBody(myStatements);
-        myDecompiledMethod.setNodes(myNodes);
         //myKotlinMethod.drawCFG();
     }
 

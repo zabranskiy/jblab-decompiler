@@ -4,10 +4,10 @@ import com.sdc.util.DeclarationWorker;
 import org.objectweb.asm.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.io.InputStream;
+import java.util.*;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 import static org.objectweb.asm.Opcodes.ASM4;
 
@@ -17,6 +17,8 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
     protected final int myNestSize;
 
     protected boolean myIsLambdaFunction = false;
+
+    protected String myClassFilesJarPath = "";
 
     protected AbstractLanguagePartFactory myLanguagePartFactory;
     protected AbstractVisitorFactory myVisitorFactory;
@@ -51,6 +53,10 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
         this.myVisitedClasses = visitedClasses;
     }
 
+    public void setClassFilesJarPath(final String classFilesJarPath) {
+        this.myClassFilesJarPath = classFilesJarPath;
+    }
+
     @Override
     public void visit(final int version, final int access, final String name
             , final String signature, final String superName, final String[] interfaces)
@@ -67,12 +73,14 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
         final String className = DeclarationWorker.getClassName(name);
         myVisitedClasses.add(className);
 
-        final String[] classParts = name.split("/");
         StringBuilder packageName = new StringBuilder("");
-        for (int i = 0; i < classParts.length - 2; i++) {
-            packageName.append(classParts[i]).append(".");
+        if (name.contains("/")) {
+            final String[] classParts = name.split("/");
+            for (int i = 0; i < classParts.length - 2; i++) {
+                packageName.append(classParts[i]).append(".");
+            }
+            packageName.append(classParts[classParts.length - 2]);
         }
-        packageName.append(classParts[classParts.length - 2]);
 
         String superClass = "";
         String superClassImport = "";
@@ -100,6 +108,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
         myDecompiledClass = myLanguagePartFactory.createClass(modifier, type, className, packageName.toString(), implementedInterfaces
                 , superClass, genericTypesList, genericIdentifiersList, myTextWidth, myNestSize);
         myDecompiledClass.setIsLambdaFunctionClass(myIsLambdaFunction);
+        myDecompiledClass.setFullClassName(DeclarationWorker.getDecompiledFullClassName(name));
 
         if (!superClassImport.isEmpty()) {
             myDecompiledClass.appendImport(superClassImport);
@@ -150,7 +159,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
                 AbstractClassVisitor cv = myVisitorFactory.createClassVisitor(myDecompiledClass.getTextWidth(), myDecompiledClass.getNestSize());
                 cv.setVisitedClasses(myVisitedClasses);
 
-                ClassReader cr = new ClassReader(name);
+                ClassReader cr = getInnerClassClassReader(myClassFilesJarPath, name);
                 cr.accept(cv, 0);
 
                 AbstractClass decompiledClass = cv.getDecompiledClass();
@@ -164,7 +173,8 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
                 } else {
                     myDecompiledClass.addAnonymousClass(innerClassName, decompiledClass);
                 }
-            } catch (IOException e) {
+            } catch (Exception e) {
+                myDecompiledClass.addInnerClassError(name, e);
             }
         }
     }
@@ -236,7 +246,10 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
 
         myDecompiledClass.appendMethod(abstractMethod);
 
-        return myVisitorFactory.createMethodVisitor(abstractMethod, myDecompiledClass.getPackage() + "." + myDecompiledClass.getName(), myDecompiledClass.getSuperClass());
+        AbstractMethodVisitor methodVisitor = myVisitorFactory.createMethodVisitor(abstractMethod, myDecompiledClass.getFullClassName(), myDecompiledClass.getSuperClass());
+        methodVisitor.setClassFilesJarPath(myClassFilesJarPath);
+
+        return new MethodVisitorStub(methodVisitor);
     }
 
     @Override
@@ -252,5 +265,29 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
 
     protected String getDescriptor(final String descriptor, final int pos, List<String> imports) {
         return myDecompiledClass.getDescriptor(descriptor, pos, imports, myLanguage);
+    }
+
+    public static ClassReader getInnerClassClassReader(final String jarPath, final String fullClassName) throws IOException {
+        if (jarPath.isEmpty()) {
+            return new ClassReader(fullClassName);
+        } else {
+            return new ClassReader(getInnerClassInputStreamFromJarFile(jarPath, fullClassName));
+        }
+    }
+
+    private static InputStream getInnerClassInputStreamFromJarFile(final String jarPath, final String fullClassName) throws IOException {
+        JarFile jarFile = new JarFile(jarPath);
+        Enumeration<JarEntry> jarFileEntries = jarFile.entries();
+
+        InputStream is = null;
+        while (jarFileEntries.hasMoreElements()) {
+            JarEntry file = jarFileEntries.nextElement();
+            final String insideJarClassName = file.getName();
+            if (insideJarClassName.equals(fullClassName + ".class")) {
+                is = jarFile.getInputStream(file);
+            }
+        }
+
+        return is;
     }
 }

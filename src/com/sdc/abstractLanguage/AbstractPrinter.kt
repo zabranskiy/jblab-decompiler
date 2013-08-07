@@ -257,7 +257,12 @@ abstract class AbstractPrinter {
     }
 
     open fun printClassBodyInnerClasses(decompiledClass : AbstractClass): PrimeDoc {
-        return printClasses(decompiledClass.getClassBodyInnerClasses())
+        val errorClasses = decompiledClass.getInnerClassesErrors()
+        var errorClassesCode : PrimeDoc = nil()
+        for ((className, error) in errorClasses)
+            errorClassesCode = errorClassesCode / text("// Error occurred while decompiling class " + className + ": " + error.getMessage())
+
+        return errorClassesCode + printClasses(decompiledClass.getClassBodyInnerClasses())
     }
 
     open fun printMethodInnerClasses(decompiledClass : AbstractClass?, methodName : String?, descriptor : String?): PrimeDoc {
@@ -278,10 +283,17 @@ abstract class AbstractPrinter {
     open fun printAnonymousClass(anonymousClass : AbstractClass?, arguments : List<Expression>?): PrimeDoc {
         val superClassName = anonymousClass!!.getSuperClass()
         val declaration =
-                if (superClassName!!.isEmpty())
-                    text(anonymousClass.getImplementedInterfaces()!!.get(0) + "() {")
-                else
+                if (superClassName!!.isEmpty()) {
+                    val implementedInterfaces = anonymousClass.getImplementedInterfaces()
+                    val declaration =
+                        if (implementedInterfaces!!.isEmpty())
+                            printBaseClass()
+                        else
+                            text(implementedInterfaces.get(0))
+                    declaration + text("() {")
+                } else {
                     text(superClassName) + printInvocationArguments(arguments, anonymousClass.getNestSize())
+                }
 
         var anonClassCode : PrimeDoc = declaration + nest(anonymousClass.getNestSize(), printClassBodyInnerClasses(anonymousClass))
 
@@ -293,6 +305,13 @@ abstract class AbstractPrinter {
 
         return anonClassCode / text("}")
     }
+
+    open fun printMethodError(decompiledMethod : AbstractMethod?): PrimeDoc {
+        val error = decompiledMethod!!.getError()
+        return if (error != null) line() + text("// " + error.getErrorLocation() + ": " + error.getException()!!.getMessage()) else nil()
+    }
+
+    abstract fun printBaseClass(): PrimeDoc;
 
     abstract fun printAnnotationIdentifier(): PrimeDoc;
 
