@@ -2,9 +2,8 @@ package com.sdc.cfg.functionalization;
 
 import com.sdc.ast.controlflow.Return;
 import com.sdc.ast.controlflow.Statement;
-import com.sdc.ast.expressions.Expression;
 import com.sdc.ast.expressions.Invocation;
-import com.sdc.cfg.Node;
+import com.sdc.cfg.nodes.Node;
 
 import java.util.ArrayList;
 import java.util.List;

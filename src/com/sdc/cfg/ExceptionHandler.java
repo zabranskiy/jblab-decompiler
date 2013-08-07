@@ -1,5 +1,7 @@
 package com.sdc.cfg;
 
+import com.sdc.cfg.nodes.Node;
+
 public class ExceptionHandler extends Node {
     private String exceptionType;
 

@@ -1,22 +1,20 @@
 package com.sdc.abstractLanguage;
 
-import com.sdc.ast.controlflow.*;
+import com.sdc.ast.controlflow.Assignment;
+import com.sdc.ast.controlflow.Return;
+import com.sdc.ast.controlflow.Statement;
+import com.sdc.ast.controlflow.Throw;
 import com.sdc.ast.expressions.*;
-import com.sdc.ast.expressions.InstanceInvocation;
-import com.sdc.ast.expressions.Invocation;
 import com.sdc.ast.expressions.identifiers.Field;
 import com.sdc.ast.expressions.identifiers.Identifier;
 import com.sdc.ast.expressions.identifiers.Variable;
 import com.sdc.ast.expressions.nestedclasses.LambdaFunction;
-
+import com.sdc.cfg.DominatorTreeGenerator;
 import com.sdc.cfg.ExceptionHandler;
-import com.sdc.cfg.Node;
-import com.sdc.cfg.Switch;
-import com.sdc.cfg.functionalization.AnonymousClass;
 import com.sdc.cfg.functionalization.Generator;
-
+import com.sdc.cfg.nodes.Node;
+import com.sdc.cfg.nodes.Switch;
 import com.sdc.util.DeclarationWorker;
-
 import org.objectweb.asm.*;
 import org.objectweb.asm.util.Printer;
 
@@ -24,7 +22,7 @@ import java.util.*;
 
 import static org.objectweb.asm.Opcodes.ASM4;
 
-public abstract class AbstractMethodVisitor  extends MethodVisitor {
+public abstract class AbstractMethodVisitor extends MethodVisitor {
     protected AbstractMethod myDecompiledMethod;
 
     protected final String myDecompiledOwnerFullClassName;
@@ -321,8 +319,7 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
         boolean isStaticInvocation = false;
 
         if (opString.contains("INVOKEVIRTUAL") || opString.contains("INVOKEINTERFACE")
-                || (decompiledOwnerFullClassName.equals(myDecompiledOwnerFullClassName) && !name.equals("<init>")))
-        {
+                || (decompiledOwnerFullClassName.equals(myDecompiledOwnerFullClassName) && !name.equals("<init>"))) {
             if (!myBodyStack.isEmpty() && myBodyStack.peek() instanceof Variable) {
                 appendInstanceInvocation(name, returnType, arguments, (Variable) myBodyStack.pop());
                 return;
@@ -357,7 +354,7 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
     @Override
     public void visitJumpInsn(final int opcode, final Label label) {
         final String opString = Printer.OPCODES[opcode];
-        //System.out.println(opString + ": " + label);
+        System.out.println(opString + ": " + label);
         if (opString.contains("IF")) {
             final Label myLastIFLabel = label;
             if (myNodes.isEmpty() || !myNodeInnerLabels.isEmpty() || (myNodes.get(getLeftEmptyNodeIndex() - 1).getCondition() == null)) {
@@ -383,13 +380,13 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
 
     @Override
     public void visitLabel(final Label label) {
-        if (myLabels.contains(label) && (!myStatements.isEmpty())) {
+        if (myLabels.contains(label)) {
             applyNode();
             myLabels.remove(label);
         }
         myNodeInnerLabels.add(label);
 
-        //System.out.println(label);
+        System.out.println(label);
     }
 
     @Override
@@ -467,8 +464,7 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
     @Override
     public void visitLocalVariable(final String name, final String desc,
                                    final String signature, final Label start, final Label end,
-                                   final int index)
-    {
+                                   final int index) {
         if (!myHasDebugInformation) {
             myHasDebugInformation = true;
         }
@@ -497,7 +493,10 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
             for (final Node node : myNodes) {
                 if (node.containsLabel(lbl)) {
                     for (final Integer i : myMap1.get(lbl)) {
-                        myNodes.get(i).addTail(node);
+                        if (i != myNodes.indexOf(node)) {
+                            myNodes.get(i).addTail(node);
+                            node.addAncestor(myNodes.get(i));
+                        }
                     }
                     break;
                 }
@@ -511,12 +510,14 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
                     for (int j = i + 1; j < myNodes.size(); j++) {
                         if (myNodes.get(j).containsLabel(label)) {
                             node.addTail(myNodes.get(j));
+                            myNodes.get(j).addAncestor(node);
                             break;
                         }
                     }
                 }
             } else if (node.getListOfTails().isEmpty() && !node.isLastStatementReturn()) {
                 node.addTail(myNodes.get(i + 1));
+                myNodes.get(i + 1).addAncestor(node);
             }
         }
         // IF ELSE Branch
@@ -524,13 +525,59 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
             for (final Node node : myNodes) {
                 if (node.containsLabel(myMap2.get(index))) {
                     myNodes.get(index).addTail(node);
+                    node.addAncestor(myNodes.get(index));
                     break;
                 }
             }
         }
+        DominatorTreeGenerator gen = new DominatorTreeGenerator(myNodes);
+        int[] dominators = gen.getDominatorTreeArray();
 
+        for (Node node : myNodes) {
+            if (node instanceof Switch) {
+                final int index = myNodes.indexOf(node);
+                for (int i = 0; i < myNodes.size(); i++) {
+                    if (dominators[i] == index) {
+                        for (Node tail : node.getListOfTails()) {
+                            if (i != myNodes.indexOf(tail)) {
+                                node.setNextNode(myNodes.get(i));
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            if (node.getCondition() != null) {
+                if (myNodes.indexOf(node) < myNodes.indexOf(node.getListOfTails().get(0)) && myNodes.indexOf(node) < myNodes.indexOf(node.getListOfTails().get(1))) {
+                    boolean fl = false;
+                    for (Node ancestor : node.getAncestors()) {
+                        if (myNodes.indexOf(ancestor) > myNodes.indexOf(node)) {
+                            fl = true;
+                            break;
+                        }
+                    }
+
+                    if (!fl) {
+                        final int index = myNodes.indexOf(node);
+                        for (int i = 0; i < myNodes.size(); i++) {
+                            if (dominators[i] == index) {
+                                for (Node tail : node.getListOfTails()) {
+                                    if (i != myNodes.indexOf(tail)) {
+                                        node.setNextNode(myNodes.get(i));
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (node.getNextNode() == null) {
+                            node.setNextNode(node.getListOfTails().get(1));
+                        }
+                    }
+                }
+            }
+        }
         Generator generator = new Generator(myNodes);
-        AnonymousClass aClass = generator.genAnonymousClass();
+//        AnonymousClass aClass = generator.genAnonymousClass();
         // myKotlinMethod.setAnonymousClass(aClass);
         //myKotlinMethod.drawCFG();
     }
@@ -597,8 +644,7 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
 
     protected void removeThisVariableFromStack() {
         if (myDecompiledMethod.isNormalClassMethod() && !myBodyStack.isEmpty()
-                && myBodyStack.peek() instanceof Variable && ((Variable) myBodyStack.peek()).getName().equals("this"))
-        {
+                && myBodyStack.peek() instanceof Variable && ((Variable) myBodyStack.peek()).getName().equals("this")) {
             myBodyStack.pop();
         }
     }
@@ -653,8 +699,7 @@ public abstract class AbstractMethodVisitor  extends MethodVisitor {
     }
 
     protected void appendInvocationOrConstructor(final boolean isStaticInvocation, final String visitMethodName,
-                                                 final String invocationName, final String returnType, final List<Expression> arguments)
-    {
+                                                 final String invocationName, final String returnType, final List<Expression> arguments) {
         if (visitMethodName.equals("<init>")) {
             if (checkForSuperClassConstructor(invocationName)) {
                 removeThisVariableFromStack();

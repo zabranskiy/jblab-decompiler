@@ -1,5 +1,7 @@
 package com.sdc.cfg;
 
+import com.sdc.cfg.nodes.Node;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -108,7 +110,6 @@ public class DominatorTreeGenerator {
         build();
         return semi;
     }
-
 }
 
 

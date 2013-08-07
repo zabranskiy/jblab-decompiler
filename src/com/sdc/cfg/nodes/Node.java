@@ -1,4 +1,4 @@
-package com.sdc.cfg;
+package com.sdc.cfg.nodes;
 
 import com.sdc.ast.controlflow.Return;
 import com.sdc.ast.controlflow.Statement;
@@ -12,7 +12,10 @@ public class Node {
     private List<Statement> myStatements = new ArrayList<Statement>();
     private Expression myCondition;
     private List<Label> myInnerLabels;
+    private Node myNextNode;
     private List<Node> myNodeTails = new ArrayList<Node>();
+    private List<Node> myAncestors = new ArrayList<Node>();  // Fathers of a vertex
+
     private boolean isEmpty = false;
 
     public Node() {
@@ -27,8 +30,16 @@ public class Node {
         myNodeTails.add(node);
     }
 
+    public void addAncestor(Node node) {
+        myAncestors.add(node);
+    }
+
     public List<Node> getListOfTails() {
         return myNodeTails;
+    }
+
+    public List<Node> getAncestors() {
+        return myAncestors;
     }
 
     public List<Statement> getStatements() {
@@ -65,6 +76,14 @@ public class Node {
 
     public boolean isLastStatementReturn() {
         return (myStatements.size() != 0) && (myStatements.get(myStatements.size() - 1) instanceof Return);
+    }
+
+    public Node getNextNode() {
+        return myNextNode;
+    }
+
+    public void setNextNode(Node myNextNode) {
+        this.myNextNode = myNextNode;
     }
 
     public boolean isEmpty() {
