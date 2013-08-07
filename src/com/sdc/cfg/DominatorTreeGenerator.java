@@ -65,9 +65,13 @@ public class DominatorTreeGenerator {
     }
 
     private void FindSemi() {
+        int[] indexes = new int[size];
         for (int i = 0; i < size; i++) {
+            indexes[id[i]] = i;
+        }
+        for (int i = size - 1; i > 0; i--) {
             Arrays.fill(mark, false);
-            FindSemi(i, i);
+            FindSemi(indexes[i], indexes[i]);
         }
     }
 
@@ -104,6 +108,7 @@ public class DominatorTreeGenerator {
         build();
         return semi;
     }
+
 }
 
 
