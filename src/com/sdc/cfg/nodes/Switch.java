@@ -1,4 +1,4 @@
-package com.sdc.cfg;
+package com.sdc.cfg.nodes;
 
 import com.sdc.ast.expressions.Expression;
 import org.objectweb.asm.Label;
@@ -32,6 +32,7 @@ public class Switch extends Node {
 
     public int[] getKeys() {
         return myKeys;
+
     }
 
     public Expression getExpr() {

@@ -3,7 +3,7 @@ package com.sdc.abstractLanguage;
 import com.sdc.ast.controlflow.Statement;
 import com.sdc.ast.expressions.Expression;
 import com.sdc.cfg.GraphDrawer;
-import com.sdc.cfg.Node;
+import com.sdc.cfg.nodes.Node;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,6 +14,7 @@ public abstract class AbstractMethod {
     protected final String myModifier;
     protected final String myReturnType;
     protected String myName;
+    protected final String mySignature;
     protected final String[] myExceptions;
 
     protected List<String> myImports = new ArrayList<String>();
@@ -30,19 +31,21 @@ public abstract class AbstractMethod {
     protected AbstractFrame myRootAbstractFrame;
     protected AbstractFrame myCurrentAbstractFrame;
 
+    protected MethodVisitorStub.DecompilerException myError = null;
     protected List<Statement> myBody = null;
     protected List<Node> myNodes = null;
 
     protected final int myTextWidth;
     protected final int myNestSize;
 
-    public AbstractMethod(final String modifier, final String returnType, final String name, final String[] exceptions,
+    public AbstractMethod(final String modifier, final String returnType, final String name, final String signature, final String[] exceptions,
                       final AbstractClass abstractClass, final List<String> genericTypes, final List<String> genericIdentifiers,
                       final int textWidth, final int nestSize)
     {
         this.myModifier = modifier;
         this.myReturnType = returnType;
         this.myName = name;
+        this.mySignature = signature;
         this.myExceptions = exceptions;
         this.myAbstractClass = abstractClass;
         this.myGenericTypes = genericTypes;
@@ -67,6 +70,10 @@ public abstract class AbstractMethod {
         return myName;
     }
 
+    public String getSignature() {
+        return mySignature;
+    }
+
     public void setName(final String name) {
         this.myName = name;
     }
@@ -89,6 +96,14 @@ public abstract class AbstractMethod {
 
     public int getTextWidth() {
         return myTextWidth;
+    }
+
+    public MethodVisitorStub.DecompilerException getError() {
+        return myError;
+    }
+
+    public void setError(final MethodVisitorStub.DecompilerException error) {
+        this.myError = error;
     }
 
     public List<Statement> getBody() {
@@ -163,9 +178,9 @@ public abstract class AbstractMethod {
     public List<String> getGenericDeclaration() {
         List<String> result = new ArrayList<String>();
         for (int i = 0; i < myGenericTypes.size(); i++) {
-            if (!myGenericTypes.get(i).equals("java/lang/Object")) {
-                final String[] classParts = myGenericTypes.get(i).split("/");
-                result.add(myGenericIdentifiers.get(i) + " " + getInheritanceIdentifier() + " " + classParts[classParts.length - 1]);
+            final String genericType = myGenericTypes.get(i);
+            if (!genericType.equals("Object ") && !genericType.equals("Any?")) {
+                result.add(myGenericIdentifiers.get(i) + " " + getInheritanceIdentifier() + " " + genericType.trim());
             } else {
                 result.add(myGenericIdentifiers.get(i));
             }

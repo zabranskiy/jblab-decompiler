@@ -8,11 +8,12 @@ import com.sdc.ast.expressions.*;
 import com.sdc.ast.expressions.identifiers.Field;
 import com.sdc.ast.expressions.identifiers.Identifier;
 import com.sdc.ast.expressions.identifiers.Variable;
+import com.sdc.ast.expressions.nestedclasses.LambdaFunction;
+import com.sdc.cfg.DominatorTreeGenerator;
 import com.sdc.cfg.ExceptionHandler;
-import com.sdc.cfg.Node;
-import com.sdc.cfg.Switch;
-import com.sdc.cfg.functionalization.AnonymousClass;
 import com.sdc.cfg.functionalization.Generator;
+import com.sdc.cfg.nodes.Node;
+import com.sdc.cfg.nodes.Switch;
 import com.sdc.util.DeclarationWorker;
 import org.objectweb.asm.*;
 import org.objectweb.asm.util.Printer;
@@ -38,6 +39,8 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
     protected boolean myHasDebugInformation = false;
 
+    protected String myClassFilesJarPath = "";
+
     protected AbstractLanguagePartFactory myLanguagePartFactory;
     protected AbstractVisitorFactory myVisitorFactory;
 
@@ -60,9 +63,21 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         return myDecompiledMethod;
     }
 
+    public void setClassFilesJarPath(final String classFilesJarPath) {
+        this.myClassFilesJarPath = classFilesJarPath;
+    }
+
+    public String getDecompiledOwnerFullClassName() {
+        return myDecompiledOwnerFullClassName;
+    }
+
+    public String getDecompiledOwnerSuperClassName() {
+        return myDecompiledOwnerSuperClassName;
+    }
+
     protected AnnotationVisitor visitAnnotation(final int parameter, final String desc, final boolean visible) {
         List<String> annotationsImports = new ArrayList<String>();
-        final String annotationName = DeclarationWorker.getDescriptor(desc, 0, annotationsImports, myLanguage);
+        final String annotationName = getDescriptor(desc, 0, annotationsImports);
         if (!checkForAutomaticallyGeneratedAnnotation(annotationName)) {
             AbstractAnnotation annotation = myLanguagePartFactory.createAnnotation();
             annotation.setName(annotationName);
@@ -134,7 +149,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 } else {
                     final String className = (String) stack[0];
                     myDecompiledMethod.addImport(DeclarationWorker.getDecompiledFullClassName(className));
-                    stackedVariableType = DeclarationWorker.getClassName(className) + " ";
+                    stackedVariableType = getClassName(className) + " ";
                 }
 
                 getCurrentFrame().setStackedVariableType(stackedVariableType);
@@ -159,11 +174,15 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             myBodyStack.push(new Constant(opString.substring(7).toLowerCase(), false));
         } else if (opString.equals("RETURN")) {
             replaceInvocationsFromExpressionsToStatements();
-            myStatements.add(new Return());
+            Return returnStatement = new Return();
+            returnStatement.setNeedToPrintReturn(!myDecompiledMethod.getDecompiledClass().isLambdaFunctionClass());
+            myStatements.add(returnStatement);
         } else if (opString.contains("RETURN")) {
-            final Expression expression = getTopOfBodyStack();
+            Expression expression = replaceBooleanConstant(getTopOfBodyStack());
             replaceInvocationsFromExpressionsToStatements();
-            myStatements.add(new Return(expression));
+            Return returnStatement = new Return(expression);
+            returnStatement.setNeedToPrintReturn(!myDecompiledMethod.getDecompiledClass().isLambdaFunctionClass());
+            myStatements.add(returnStatement);
         } else if (opString.contains("CMP")) {
             Expression e1 = getTopOfBodyStack();
             Expression e2 = getTopOfBodyStack();
@@ -181,9 +200,9 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 multiPush(expr1, expr2);
             }
         } else if (opString.equals("DUP") && !myBodyStack.isEmpty()) {
-            Expression expr = myBodyStack.peek();
+/*            Expression expr = myBodyStack.peek();
             if (expr.hasDoubleLength()) return;
-            myBodyStack.push(expr);
+            myBodyStack.push(expr);*/
         } else if (opString.equals("DUP_X1")) {
             if (size < 2) return;
             Expression expr1 = myBodyStack.pop();
@@ -350,6 +369,8 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 variableType = ((NewArray) expr).getFullType();
             } else if (expr instanceof Identifier) {
                 variableType = ((Identifier) expr).getType();
+            } else if (expr instanceof LambdaFunction) {
+                variableType = ((LambdaFunction) expr).getType();
             }
         }
 
@@ -362,10 +383,10 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 descriptorType = getCurrentFrame().getStackedVariableType();
                 getCurrentFrame().setStackedVariableIndex(var);
             } else {
-                descriptorType = DeclarationWorker.getDescriptor(opString, 0, myDecompiledMethod.getImports(), myLanguage);
+                descriptorType = getDescriptor(opString, 0, myDecompiledMethod.getImports());
             }
 
-            if (!descriptorType.equals("Object ") || variableType == null) {
+            if (!descriptorType.equals("Object ") && !descriptorType.equals("Any") || variableType == null) {
                 variableType = descriptorType;
             }
 
@@ -380,26 +401,29 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         if (opString.contains("NEWARRAY")) {
             List<Expression> dimensions = new ArrayList<Expression>();
             dimensions.add(getTopOfBodyStack());
-            myBodyStack.push(new NewArray(1, DeclarationWorker.getClassName(type), dimensions));
+            myBodyStack.push(new NewArray(1, getClassName(type), dimensions));
+        } else if (opString.contains("INSTANCEOF")) {
+            myBodyStack.push(new InstanceOf(getClassName(type), getTopOfBodyStack()));
         }
     }
 
     @Override
     public void visitFieldInsn(final int opcode, final String owner, final String name, final String desc) {
         final String opString = Printer.OPCODES[opcode];
+        final String fieldName = myDecompiledMethod.getDecompiledClass().isLambdaFunctionClass() ? name.substring(1) : name;
 
         if (opString.contains("PUTFIELD")) {
-            if (!myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName())) {
-                final Identifier v = new Field(name, DeclarationWorker.getDescriptor(desc, 0, myDecompiledMethod.getImports(), myLanguage));
+            if (myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName()) && !myBodyStack.isEmpty() && myBodyStack.peek() instanceof Constant) {
+                myDecompiledMethod.addInitializerToField(name, getTopOfBodyStack());
+            } else {
+                final Identifier v = new Field(fieldName, getDescriptor(desc, 0, myDecompiledMethod.getImports()));
                 final Expression e = getTopOfBodyStack();
                 myStatements.add(new Assignment(v, e));
-            } else {
-                myDecompiledMethod.addInitializerToField(name, getTopOfBodyStack());
             }
             removeThisVariableFromStack();
         } else if (opString.contains("GETFIELD")) {
             removeThisVariableFromStack();
-            myBodyStack.push(new Field(name, DeclarationWorker.getDescriptor(desc, 0, myDecompiledMethod.getImports(), myLanguage)));
+            myBodyStack.push(new Field(fieldName, getDescriptor(desc, 0, myDecompiledMethod.getImports())));
         }
     }
 
@@ -408,7 +432,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         final String opString = Printer.OPCODES[opcode];
 
         final String decompiledOwnerFullClassName = DeclarationWorker.getDecompiledFullClassName(owner);
-        final String ownerClassName = DeclarationWorker.getClassName(owner);
+        final String ownerClassName = getClassName(owner);
 
         List<Expression> arguments = getInvocationArguments(desc);
         String returnType = getInvocationReturnType(desc);
@@ -452,7 +476,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
     @Override
     public void visitJumpInsn(final int opcode, final Label label) {
         final String opString = Printer.OPCODES[opcode];
-        //System.out.println(opString + ": " + label);
+        System.out.println(opString + ": " + label);
         if (opString.contains("IF")) {
             final Label myLastIFLabel = label;
             if (myNodes.isEmpty() || !myNodeInnerLabels.isEmpty() || (myNodes.get(getLeftEmptyNodeIndex() - 1).getCondition() == null)) {
@@ -478,13 +502,13 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
     @Override
     public void visitLabel(final Label label) {
-        if (myLabels.contains(label) && (!myStatements.isEmpty())) {
+        if (myLabels.contains(label)) {
             applyNode();
             myLabels.remove(label);
         }
         myNodeInnerLabels.add(label);
 
-        //System.out.println(label);
+        System.out.println(label);
     }
 
     @Override
@@ -532,7 +556,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             dimensions.add(0, getTopOfBodyStack());
         }
 
-        final String className = DeclarationWorker.getDescriptor(desc.substring(dims), 0, myDecompiledMethod.getImports(), myLanguage).trim();
+        final String className = getDescriptor(desc.substring(dims), 0, myDecompiledMethod.getImports()).trim();
         myBodyStack.push(new NewArray(dims, className, dimensions));
     }
 
@@ -568,9 +592,9 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             myHasDebugInformation = true;
         }
 
+        myDecompiledMethod.addLocalVariableName(index, name);
         final String description = signature != null ? signature : desc;
-        myDecompiledMethod.addLocalVariableFromDebugInfo(index, name,
-                DeclarationWorker.getDescriptor(description, 0, myDecompiledMethod.getImports(), myLanguage));
+        myDecompiledMethod.addLocalVariableFromDebugInfo(index, name, getDescriptor(description, 0, myDecompiledMethod.getImports()));
     }
 
     @Override
@@ -583,13 +607,19 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
     @Override
     public void visitEnd() {
+        myDecompiledMethod.setBody(myStatements);
+        myDecompiledMethod.setNodes(myNodes);
+
         applyNode();
         // GOTO
         for (final Label lbl : myMap1.keySet()) {
             for (final Node node : myNodes) {
                 if (node.containsLabel(lbl)) {
                     for (final Integer i : myMap1.get(lbl)) {
-                        myNodes.get(i).addTail(node);
+                        if (i != myNodes.indexOf(node)) {
+                            myNodes.get(i).addTail(node);
+                            node.addAncestor(myNodes.get(i));
+                        }
                     }
                     break;
                 }
@@ -603,12 +633,14 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                     for (int j = i + 1; j < myNodes.size(); j++) {
                         if (myNodes.get(j).containsLabel(label)) {
                             node.addTail(myNodes.get(j));
+                            myNodes.get(j).addAncestor(node);
                             break;
                         }
                     }
                 }
             } else if (node.getListOfTails().isEmpty() && !node.isLastStatementReturn()) {
                 node.addTail(myNodes.get(i + 1));
+                myNodes.get(i + 1).addAncestor(node);
             }
         }
         // IF ELSE Branch
@@ -616,16 +648,60 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             for (final Node node : myNodes) {
                 if (node.containsLabel(myMap2.get(index))) {
                     myNodes.get(index).addTail(node);
+                    node.addAncestor(myNodes.get(index));
                     break;
                 }
             }
         }
+        DominatorTreeGenerator gen = new DominatorTreeGenerator(myNodes);
+        int[] dominators = gen.getDominatorTreeArray();
 
+        for (Node node : myNodes) {
+            if (node instanceof Switch) {
+                final int index = myNodes.indexOf(node);
+                for (int i = 0; i < myNodes.size(); i++) {
+                    if (dominators[i] == index) {
+                        for (Node tail : node.getListOfTails()) {
+                            if (i != myNodes.indexOf(tail)) {
+                                node.setNextNode(myNodes.get(i));
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            if (node.getCondition() != null) {
+                if (myNodes.indexOf(node) < myNodes.indexOf(node.getListOfTails().get(0)) && myNodes.indexOf(node) < myNodes.indexOf(node.getListOfTails().get(1))) {
+                    boolean fl = false;
+                    for (Node ancestor : node.getAncestors()) {
+                        if (myNodes.indexOf(ancestor) > myNodes.indexOf(node)) {
+                            fl = true;
+                            break;
+                        }
+                    }
+
+                    if (!fl) {
+                        final int index = myNodes.indexOf(node);
+                        for (int i = 0; i < myNodes.size(); i++) {
+                            if (dominators[i] == index) {
+                                for (Node tail : node.getListOfTails()) {
+                                    if (i != myNodes.indexOf(tail)) {
+                                        node.setNextNode(myNodes.get(i));
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (node.getNextNode() == null) {
+                            node.setNextNode(node.getListOfTails().get(1));
+                        }
+                    }
+                }
+            }
+        }
         Generator generator = new Generator(myNodes);
-        AnonymousClass aClass = generator.genAnonymousClass();
+//        AnonymousClass aClass = generator.genAnonymousClass();
         // myKotlinMethod.setAnonymousClass(aClass);
-        myDecompiledMethod.setBody(myStatements);
-        myDecompiledMethod.setNodes(myNodes);
         //myKotlinMethod.drawCFG();
     }
 
@@ -734,7 +810,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
     protected String getInvocationReturnType(final String descriptor) {
         final int returnTypeIndex = descriptor.indexOf(')') + 1;
-        return DeclarationWorker.getDescriptor(descriptor, returnTypeIndex, myDecompiledMethod.getImports(), myLanguage);
+        return getDescriptor(descriptor, returnTypeIndex, myDecompiledMethod.getImports());
     }
 
     protected boolean checkForSuperClassConstructor(final String invocationName) {
@@ -752,7 +828,11 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 removeThisVariableFromStack();
                 processSuperClassConstructorInvocation(invocationName, returnType, arguments);
             } else {
-                myBodyStack.push(new New(new com.sdc.ast.expressions.Invocation(invocationName, returnType, arguments)));
+                if (!myDecompiledMethod.getDecompiledClass().hasAnonymousClass(invocationName)) {
+                    myBodyStack.push(new New(new com.sdc.ast.expressions.Invocation(invocationName, returnType, arguments)));
+                } else {
+                    myBodyStack.push(new com.sdc.ast.expressions.nestedclasses.AnonymousClass(myDecompiledMethod.getDecompiledClass().getAnonymousClass(invocationName), arguments));
+                }
             }
         } else {
             if (!isStaticInvocation) {
@@ -767,5 +847,21 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         for (Expression expr : expressions) {
             myBodyStack.push(expr);
         }
+    }
+
+    protected Expression replaceBooleanConstant(final Expression expression) {
+        if (expression instanceof Constant && myDecompiledMethod.getReturnType().toLowerCase().contains("boolean")) {
+            return new Constant(((Constant) expression).getValue().toString().equals("1"), false);
+        } else {
+            return expression;
+        }
+    }
+
+    protected String getClassName(final String fullClassName) {
+        return myDecompiledMethod.getDecompiledClass().getClassName(fullClassName);
+    }
+
+    protected String getDescriptor(final String descriptor, final int pos, List<String> imports) {
+        return myDecompiledMethod.getDecompiledClass().getDescriptor(descriptor, pos, imports, myLanguage);
     }
 }

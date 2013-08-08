@@ -15,11 +15,11 @@ public class JavaLanguagePartFactory extends AbstractLanguagePartFactory {
     }
 
     @Override
-    public AbstractMethod createMethod(final String modifier, final String returnType, final String name, final String[] exceptions,
+    public AbstractMethod createMethod(final String modifier, final String returnType, final String name, final String signature, final String[] exceptions,
                                        final AbstractClass abstractClass, final List<String> genericTypes, final List<String> genericIdentifiers,
                                        final int textWidth, final int nestSize)
     {
-        return new JavaMethod(modifier, returnType, name, exceptions, abstractClass, genericTypes, genericIdentifiers, textWidth, nestSize);
+        return new JavaMethod(modifier, returnType, name, signature, exceptions, abstractClass, genericTypes, genericIdentifiers, textWidth, nestSize);
     }
 
     @Override

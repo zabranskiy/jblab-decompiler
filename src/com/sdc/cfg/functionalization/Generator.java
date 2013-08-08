@@ -1,8 +1,8 @@
 package com.sdc.cfg.functionalization;
 
 import com.sdc.ast.controlflow.Statement;
-import com.sdc.cfg.Node;
-import com.sdc.cfg.Switch;
+import com.sdc.cfg.nodes.Node;
+import com.sdc.cfg.nodes.Switch;
 
 import java.util.ArrayList;
 import java.util.List;

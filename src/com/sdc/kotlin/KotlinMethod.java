@@ -12,12 +12,12 @@ import java.util.List;
 public class KotlinMethod extends AbstractMethod {
     private boolean hasReceiverParameter = false;
 
-    public KotlinMethod(final String modifier, final String returnType, final String name, final String[] exceptions,
+    public KotlinMethod(final String modifier, final String returnType, final String name, final String signature, final String[] exceptions,
                       final AbstractClass abstractClass,
                       final List<String> genericTypes, final List<String> genericIdentifiers,
                       final int textWidth, final int nestSize)
     {
-        super(modifier, returnType, name, exceptions, abstractClass, genericTypes, genericIdentifiers, textWidth, nestSize);
+        super(modifier, returnType, name, signature, exceptions, abstractClass, genericTypes, genericIdentifiers, textWidth, nestSize);
         this.myRootAbstractFrame = new KotlinFrame();
         this.myCurrentAbstractFrame = myRootAbstractFrame;
     }
@@ -35,7 +35,7 @@ public class KotlinMethod extends AbstractMethod {
     @Override
     public void setLastLocalVariableIndex(int lastLocalVariableIndex) {
         super.setLastLocalVariableIndex(lastLocalVariableIndex);
-        ((KotlinFrame) myRootAbstractFrame).setLastLocalVariableIndex(lastLocalVariableIndex);
+        myRootAbstractFrame.setLastLocalVariableIndex(lastLocalVariableIndex);
     }
 
     @Override
@@ -53,7 +53,7 @@ public class KotlinMethod extends AbstractMethod {
     }
 
     public boolean hasEmptyBody() {
-        return myBody.size() == 1 && ((Return) myBody.get(0)).getReturnValue() == null;
+        return myBody.size() == 0 || myBody.size() == 1 && myBody.get(0) instanceof Return &&((Return) myBody.get(0)).getReturnValue() == null;
     }
 
     public void dragReceiverFromMethodParameters() {

@@ -8,7 +8,7 @@ public abstract class AbstractLanguagePartFactory {
                                               final List<String> genericTypes, final List<String> genericIdentifiers,
                                               final int textWidth, final int nestSize);
 
-    public abstract AbstractMethod createMethod(final String modifier, final String returnType, final String name, final String[] exceptions,
+    public abstract AbstractMethod createMethod(final String modifier, final String returnType, final String name, final String signature, final String[] exceptions,
                                                 final AbstractClass abstractClass, final List<String> genericTypes, final List<String> genericIdentifiers,
                                                 final int textWidth, final int nestSize);
 
