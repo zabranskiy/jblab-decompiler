@@ -19,6 +19,8 @@ import com.sdc.ast.controlflow.Return
 import com.sdc.ast.controlflow.Throw
 import com.sdc.ast.controlflow.InstanceInvocation
 import com.sdc.ast.expressions.nestedclasses.AnonymousClass
+import com.sdc.cfg.nodes.Node
+import com.sdc.cfg.nodes.Switch
 
 
 abstract class AbstractPrinter {
@@ -151,6 +153,37 @@ abstract class AbstractPrinter {
 
             else -> throw IllegalArgumentException("Unknown Statement implementer!")
         }
+
+    open fun printNode(node : Node?, nestSize : Int): PrimeDoc {
+        val startCode = printStatements(node!!.getStatements(), nestSize)
+
+        val followingCode =
+            when (node) {
+                is Switch -> {
+                    var switchCode : PrimeDoc =  line() + text("switch (") + printExpression(node.getExpr(), nestSize) + text(") {")
+
+                    var keysCode : PrimeDoc = nil()
+                    val keys = node.getKeys()!!.toList()
+                    for (key in keys) {
+                        keysCode = keysCode / text("case " + key + ":") + nest(nestSize, printNode(node.getNodeByKey(key), nestSize) + line() + text("break;"))
+                    }
+
+                    switchCode + nest(nestSize, keysCode) / text("}") + printNode(node.getNextNode(), nestSize)
+                }
+                else ->
+                    if (node.getCondition() == null) {
+                        if (node.getListOfTails()!!.isEmpty()) nil() else printNode(node.getListOfTails()!!.get(0), nestSize)
+                    } else if (node.getNextNode() != null) {
+                        if (node.getListOfTails()!!.get(1).equals(node.getNextNode())) {
+                            line() + text("if (!(") + printExpression(node.getCondition(), nestSize) + text(")) {") + nest(nestSize, printNode(node.getListOfTails()!!.get(0), nestSize)) / text("}") + printNode(node.getNextNode(), nestSize)
+                        } else {
+                            line() + text("if (!(") + printExpression(node.getCondition(), nestSize) + text(")) {") + nest(nestSize, printNode(node.getListOfTails()!!.get(0), nestSize)) / text("} else {") + nest(nestSize, printNode(node.getListOfTails()!!.get(1), nestSize)) / text("}") + printNode(node.getNextNode(), nestSize)
+                        }
+                    } else text("")
+            }
+        return startCode + followingCode
+    }
+
 
     open fun printVariableName(variableName : String?): String? = variableName
 

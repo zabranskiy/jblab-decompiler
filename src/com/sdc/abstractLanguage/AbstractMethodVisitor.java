@@ -125,11 +125,12 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             // F_SAME
             AbstractFrame newAbstractFrame = myLanguagePartFactory.createFrame();
             newAbstractFrame.setSameFrame(getCurrentFrame());
-            newAbstractFrame.setParent(getCurrentFrame().getParent());
             if (getCurrentFrame().getParent() != null) {
                 getCurrentFrame().getParent().addChild(newAbstractFrame);
+                newAbstractFrame.setParent(getCurrentFrame().getParent());
             } else {
                 getCurrentFrame().addChild(newAbstractFrame);
+                newAbstractFrame.setParent(getCurrentFrame());
             }
 
             myDecompiledMethod.setCurrentFrame(newAbstractFrame);
@@ -354,7 +355,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
     @Override
     public void visitJumpInsn(final int opcode, final Label label) {
         final String opString = Printer.OPCODES[opcode];
-        System.out.println(opString + ": " + label);
+//        System.out.println(opString + ": " + label);
         if (opString.contains("IF")) {
             final Label myLastIFLabel = label;
             if (myNodes.isEmpty() || !myNodeInnerLabels.isEmpty() || (myNodes.get(getLeftEmptyNodeIndex() - 1).getCondition() == null)) {
@@ -362,7 +363,10 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 myMap2.put(myNodes.size(), label);
                 applyNode();
                 final int last = myNodes.size() - 1;
-                myNodes.get(last).setCondition(new BinaryExpression(null, null));
+                Expression e1 = getTopOfBodyStack();
+                Expression e2 = getTopOfBodyStack();
+                Expression cond = new BinaryExpression(BinaryExpression.OperationType.valueOf(opString.substring(7)), e2, e1);
+                myNodes.get(last).setCondition(cond);
                 myNodes.get(last).setEmpty(true);
             }
         } else if (opString.contains("GOTO")) {
@@ -386,7 +390,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         }
         myNodeInnerLabels.add(label);
 
-        System.out.println(label);
+//        System.out.println(label);
     }
 
     @Override
@@ -538,11 +542,17 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 final int index = myNodes.indexOf(node);
                 for (int i = 0; i < myNodes.size(); i++) {
                     if (dominators[i] == index) {
+                        boolean isTail = false;
                         for (Node tail : node.getListOfTails()) {
-                            if (i != myNodes.indexOf(tail)) {
-                                node.setNextNode(myNodes.get(i));
+                            if (i == myNodes.indexOf(tail)) {
+                                isTail = true;
                                 break;
                             }
+                        }
+                        if (!isTail) {
+                                removeLinkFromAllAncestors(myNodes.get(i));
+                                node.setNextNode(myNodes.get(i));
+                                break;
                         }
                     }
                 }
@@ -561,16 +571,24 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                         final int index = myNodes.indexOf(node);
                         for (int i = 0; i < myNodes.size(); i++) {
                             if (dominators[i] == index) {
+                                boolean isTail = false;
                                 for (Node tail : node.getListOfTails()) {
-                                    if (i != myNodes.indexOf(tail)) {
-                                        node.setNextNode(myNodes.get(i));
+                                    if (i == myNodes.indexOf(tail)) {
+                                        isTail = true;
                                         break;
                                     }
+                                }
+                                if (!isTail) {
+                                    removeLinkFromAllAncestors(myNodes.get(i));
+                                    node.setNextNode(myNodes.get(i));
+                                    break;
                                 }
                             }
                         }
                         if (node.getNextNode() == null) {
                             node.setNextNode(node.getListOfTails().get(1));
+                            removeLinkFromAllAncestors(node.getListOfTails().get(1));
+                            node.addTail(node.getNextNode());
                         }
                     }
                 }
@@ -607,7 +625,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             myNodes.add(node);
         }
         myNodeInnerLabels.clear();
-        // myStatements.clear();
+        myStatements.clear();
     }
 
     protected Expression getTopOfBodyStack() {
@@ -734,5 +752,11 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
     protected String getDescriptor(final String descriptor, final int pos, List<String> imports) {
         return myDecompiledMethod.getDecompiledClass().getDescriptor(descriptor, pos, imports, myLanguage);
+    }
+
+    protected void removeLinkFromAllAncestors(final Node child) {
+        for (final Node parent : child.getAncestors()) {
+            parent.removeChild(child);
+        }
     }
 }

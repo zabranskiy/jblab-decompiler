@@ -93,4 +93,8 @@ public class Node {
     public void setEmpty(boolean empty) {
         isEmpty = empty;
     }
+
+    public void removeChild(final Node child) {
+        myNodeTails.remove(child);
+    }
 }

@@ -158,6 +158,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
             try {
                 AbstractClassVisitor cv = myVisitorFactory.createClassVisitor(myDecompiledClass.getTextWidth(), myDecompiledClass.getNestSize());
                 cv.setVisitedClasses(myVisitedClasses);
+                cv.setClassFilesJarPath(myClassFilesJarPath);
 
                 ClassReader cr = getInnerClassClassReader(myClassFilesJarPath, name);
                 cr.accept(cv, 0);
