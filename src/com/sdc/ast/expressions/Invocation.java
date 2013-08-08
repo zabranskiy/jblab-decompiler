@@ -11,6 +11,7 @@ public class Invocation extends Expression {
         this.myFunction = function;
         this.myArguments = arguments;
         this.myReturnType = returnType;
+        setDoubleLength(returnType.contains("double") || returnType.contains("long"));
     }
 
     public String getFunction() {

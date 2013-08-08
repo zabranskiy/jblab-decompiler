@@ -5,6 +5,7 @@ public class New extends Expression {
 
     public New(final Invocation constructor) {
         this.myConstructor = constructor;
+        setDoubleLength(false);
     }
 
     public Invocation getConstructor() {

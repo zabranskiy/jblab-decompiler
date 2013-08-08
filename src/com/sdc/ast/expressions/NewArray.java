@@ -11,6 +11,7 @@ public class NewArray extends Expression {
         this.myDimensionsCount = dimensionsCount;
         this.myType = type;
         this.myDimensions = dimensions;
+        setDoubleLength(false);
     }
 
     public List<Expression> getDimensions() {

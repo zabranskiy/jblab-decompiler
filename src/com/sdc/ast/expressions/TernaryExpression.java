@@ -16,6 +16,7 @@ public class TernaryExpression extends Expression {
         this.myCondition = myCondition;
         this.myLeft = myLeft;
         this.myRight = myRight;
+        setDoubleLength(myLeft.hasDoubleLength() || myRight.hasDoubleLength());
     }
 
     public Expression getLeft() {
