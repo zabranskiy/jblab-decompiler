@@ -5,6 +5,7 @@ import com.sdc.abstractLanguage.AbstractClassVisitor;
 import com.sdc.abstractLanguage.AbstractMethod;
 import com.sdc.abstractLanguage.AbstractMethodVisitor;
 import com.sdc.ast.expressions.*;
+import com.sdc.ast.expressions.identifiers.Field;
 import com.sdc.ast.expressions.identifiers.Variable;
 import com.sdc.ast.expressions.nestedclasses.LambdaFunction;
 import com.sdc.util.DeclarationWorker;
@@ -33,13 +34,14 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
     public void visitFieldInsn(final int opcode, final String owner, final String name, final String desc) {
         final String opString = Printer.OPCODES[opcode];
 
-        if (opString.contains("PUTFIELD") && myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName())) {
+        if (opString.contains("GETSTATIC") && tryVisitLambdaFunction(owner)) {
+            return;
+        } else if (opString.contains("PUTFIELD") && myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName())) {
             myDecompiledMethod.addInitializerToField(name, getTopOfBodyStack());
-        } else if (opString.contains("GETSTATIC")) {
-            tryVisitLambdaFunction(owner);
-        } else {
-            super.visitFieldInsn(opcode, owner, name, desc);
+            return;
         }
+
+        super.visitFieldInsn(opcode, owner, name, desc);
     }
 
     @Override
