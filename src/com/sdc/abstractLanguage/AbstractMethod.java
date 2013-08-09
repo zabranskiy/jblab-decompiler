@@ -223,6 +223,10 @@ public abstract class AbstractMethod {
         this.myNodes = myNodes;
     }
 
+    public List<Node> getNodes() {
+        return myNodes;
+    }
+
     public void drawCFG() {
         GraphDrawer graphDrawer = new GraphDrawer(myNodes, myNestSize, myTextWidth);
         graphDrawer.draw();

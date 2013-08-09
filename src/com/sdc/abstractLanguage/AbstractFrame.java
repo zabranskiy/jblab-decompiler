@@ -69,7 +69,9 @@ public abstract class AbstractFrame {
     }
 
     public void addLocalVariableType(final int index, final String type) {
-        myLocalVariableTypes.put(index, type);
+        if (myParent == null  || !myParent.containsIndex(index)) {
+            myLocalVariableTypes.put(index, type);
+        }
     }
 
     public boolean addLocalVariableFromDebugInfo(final int index, final String name, final String type) {
