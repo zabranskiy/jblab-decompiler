@@ -14,6 +14,8 @@ import com.sdc.abstractLanguage.AbstractClassField
 import com.sdc.abstractLanguage.AbstractPrinter
 import com.sdc.abstractLanguage.AbstractOperationPrinter
 import com.sdc.kotlin.KotlinOperationPrinter
+import com.sdc.cfg.nodes.Node
+import com.sdc.cfg.nodes.Switch
 
 class KotlinPrinter: AbstractPrinter() {
     override fun getOperationPrinter(): AbstractOperationPrinter{
@@ -68,6 +70,31 @@ class KotlinPrinter: AbstractPrinter() {
             is AnonymousClass -> text("object : ") + super<AbstractPrinter>.printExpression(expression, nestSize)
 
             else -> super<AbstractPrinter>.printExpression(expression, nestSize)
+        }
+
+    override fun printNode(node : Node?, nestSize : Int): PrimeDoc =
+        when (node) {
+            is Switch -> {
+                val startCode = printStatements(node.getStatements(), nestSize)
+
+                var whenCode : PrimeDoc = line() + text("when (") + printExpression(node.getExpr(), nestSize) + text(") {")
+
+                var keysCode : PrimeDoc = nil()
+                val keys = node.getKeys()
+                for (index in keys!!.indices) {
+                    keysCode = keysCode / text("" + keys[index] + " -> ") + nest(nestSize, printNode(node.getNodeByKey(index), nestSize))
+                }
+                val defaultBranch = node.getNodeByKey(-1)
+                if (defaultBranch != null) {
+                    keysCode = keysCode / text("else -> ") + nest(nestSize, printNode(defaultBranch, nestSize))
+                } else {
+                    keysCode = keysCode / text("else -> {}")
+                }
+
+                startCode + whenCode + nest(nestSize, keysCode) / text("}") + printNode(node.getNextNode(), nestSize)
+            }
+
+            else -> super.printNode(node, nestSize)
         }
 
     override fun printClass(decompiledClass: AbstractClass): PrimeDoc {
@@ -136,7 +163,8 @@ class KotlinPrinter: AbstractPrinter() {
 
         val body = nest(
                 kotlinMethod.getNestSize(),
-                printStatements(kotlinMethod.getBody(), kotlinMethod.getNestSize())
+//                printStatements(kotlinMethod.getBody(), kotlinMethod.getNestSize())
+                printNode(kotlinMethod.getNodes()!!.get(0), kotlinMethod.getNestSize())
                 + printMethodError(kotlinMethod)
         ) / text("}")
 

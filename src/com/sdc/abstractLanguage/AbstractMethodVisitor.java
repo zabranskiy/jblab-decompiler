@@ -19,8 +19,8 @@ import org.objectweb.asm.util.Printer;
 
 import java.util.*;
 
-import static com.sdc.ast.expressions.BinaryExpression.OperationType.EQUALITY;
-import static com.sdc.ast.expressions.BinaryExpression.OperationType.LESS;
+import static com.sdc.ast.expressions.BinaryExpression.OperationType.EQ;
+import static com.sdc.ast.expressions.BinaryExpression.OperationType.LT;
 import static com.sdc.ast.expressions.Constant.*;
 import static com.sdc.ast.expressions.UnaryExpression.OperationType.*;
 import static org.objectweb.asm.Opcodes.ASM4;
@@ -128,11 +128,12 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             // F_SAME
             AbstractFrame newAbstractFrame = myLanguagePartFactory.createFrame();
             newAbstractFrame.setSameFrame(getCurrentFrame());
-            newAbstractFrame.setParent(getCurrentFrame().getParent());
             if (getCurrentFrame().getParent() != null) {
                 getCurrentFrame().getParent().addChild(newAbstractFrame);
+                newAbstractFrame.setParent(getCurrentFrame().getParent());
             } else {
                 getCurrentFrame().addChild(newAbstractFrame);
+                newAbstractFrame.setParent(getCurrentFrame());
             }
 
             myDecompiledMethod.setCurrentFrame(newAbstractFrame);
@@ -196,9 +197,9 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             Expression b = getTopOfBodyStack();
             Expression a = getTopOfBodyStack();
             myBodyStack.push(new TernaryExpression(
-                    new BinaryExpression(EQUALITY, a, b),
+                    new BinaryExpression(EQ, a, b),
                     ZERO,
-                    new TernaryExpression(new BinaryExpression(LESS, a, b), M_ONE, ONE)
+                    new TernaryExpression(new BinaryExpression(LT, a, b), M_ONE, ONE)
             ));
         } else if (opString.contains("ATHROW")) {
             myStatements.add(new Throw(getTopOfBodyStack()));
@@ -452,19 +453,29 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
     public void visitFieldInsn(final int opcode, final String owner, final String name, final String desc) {
         final String opString = Printer.OPCODES[opcode];
         final String fieldName = myDecompiledMethod.getDecompiledClass().isLambdaFunctionClass() ? name.substring(1) : name;
+        Field field = new Field(fieldName, getDescriptor(desc, 0, myDecompiledMethod.getImports()));
 
-        if (opString.contains("PUTFIELD")) {
-            if (myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName()) && !myBodyStack.isEmpty() && myBodyStack.peek() instanceof Constant) {
-                myDecompiledMethod.addInitializerToField(name, getTopOfBodyStack());
+        Expression e = null;
+        if (opString.contains("PUTFIELD") || opString.contains("PUTSTATIC")) {
+            e = getTopOfBodyStack();
+        }
+
+        if (opString.contains("PUTFIELD") || opString.contains("GETFIELD")) {
+            final Identifier fieldOwner = (Identifier) getTopOfBodyStack();
+            field.setOwner(fieldOwner);
+        } else {
+            final String fieldOwner = getClassName(owner);
+            field.setStaticOwnerName(fieldOwner);
+        }
+
+        if (opString.contains("PUTFIELD") || opString.contains("PUTSTATIC")) {
+            if (myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName()) && e instanceof Constant) {
+                myDecompiledMethod.addInitializerToField(name, e);
             } else {
-                final Identifier v = new Field(fieldName, getDescriptor(desc, 0, myDecompiledMethod.getImports()));
-                final Expression e = getTopOfBodyStack();
-                myStatements.add(new Assignment(v, e));
+                myStatements.add(new Assignment(field, e));
             }
-            removeThisVariableFromStack();
-        } else if (opString.contains("GETFIELD")) {
-            removeThisVariableFromStack();
-            myBodyStack.push(new Field(fieldName, getDescriptor(desc, 0, myDecompiledMethod.getImports())));
+        } else if (opString.contains("GETFIELD") || opString.contains("GETSTATIC")) {
+            myBodyStack.push(field);
         }
     }
 
@@ -517,7 +528,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
     @Override
     public void visitJumpInsn(final int opcode, final Label label) {
         final String opString = Printer.OPCODES[opcode];
-        System.out.println(opString + ": " + label);
+//        System.out.println(opString + ": " + label);
         if (opString.contains("IF")) {
             final Label myLastIFLabel = label;
             if (myNodes.isEmpty() || !myNodeInnerLabels.isEmpty() || (myNodes.get(getLeftEmptyNodeIndex() - 1).getCondition() == null)) {
@@ -525,7 +536,10 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 myMap2.put(myNodes.size(), label);
                 applyNode();
                 final int last = myNodes.size() - 1;
-                myNodes.get(last).setCondition(new BinaryExpression(null, null));
+                Expression e1 = getTopOfBodyStack();
+                Expression e2 = getTopOfBodyStack();
+                Expression cond = new BinaryExpression(BinaryExpression.OperationType.valueOf(opString.substring(7)), e2, e1);
+                myNodes.get(last).setCondition(cond);
                 myNodes.get(last).setEmpty(true);
             }
         } else if (opString.contains("GOTO")) {
@@ -549,7 +563,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         }
         myNodeInnerLabels.add(label);
 
-        System.out.println(label);
+//        System.out.println(label);
     }
 
     @Override
@@ -703,11 +717,32 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 final int index = myNodes.indexOf(node);
                 for (int i = 0; i < myNodes.size(); i++) {
                     if (dominators[i] == index) {
+                        boolean isTail = false;
                         for (Node tail : node.getListOfTails()) {
-                            if (i != myNodes.indexOf(tail)) {
-                                node.setNextNode(myNodes.get(i));
+                            if (i == myNodes.indexOf(tail)) {
+                                isTail = true;
                                 break;
                             }
+                        }
+                        if (!isTail) {
+                            removeLinkFromAllAncestors(myNodes.get(i), true);
+                            node.setNextNode(myNodes.get(i));
+                            break;
+                        }
+                    }
+                }
+                if (node.getNextNode() == null) {
+                    Node defaultBranch = ((Switch) node).getNodeByKey(-1);
+                    node.removeChild(defaultBranch);
+                    defaultBranch.removeAncestor(node);
+                    removeLinkFromAllAncestors(defaultBranch, true);
+                    defaultBranch.setIsCaseEndNode(false);
+                    node.setNextNode(defaultBranch);
+                }
+                for (final Node tail : node.getListOfTails()) {
+                    for (final Node ancestor : tail.getAncestors()) {
+                        if (!ancestor.equals(node) && myNodes.indexOf(ancestor) < myNodes.indexOf(tail)) {
+                            ancestor.removeChild(tail);
                         }
                     }
                 }
@@ -726,16 +761,24 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                         final int index = myNodes.indexOf(node);
                         for (int i = 0; i < myNodes.size(); i++) {
                             if (dominators[i] == index) {
+                                boolean isTail = false;
                                 for (Node tail : node.getListOfTails()) {
-                                    if (i != myNodes.indexOf(tail)) {
-                                        node.setNextNode(myNodes.get(i));
+                                    if (i == myNodes.indexOf(tail)) {
+                                        isTail = true;
                                         break;
                                     }
+                                }
+                                if (!isTail) {
+                                    removeLinkFromAllAncestors(myNodes.get(i), false);
+                                    node.setNextNode(myNodes.get(i));
+                                    break;
                                 }
                             }
                         }
                         if (node.getNextNode() == null) {
                             node.setNextNode(node.getListOfTails().get(1));
+                            removeLinkFromAllAncestors(node.getListOfTails().get(1), false);
+                            node.addTail(node.getNextNode());
                         }
                     }
                 }
@@ -772,7 +815,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             myNodes.add(node);
         }
         myNodeInnerLabels.clear();
-        // myStatements.clear();
+        myStatements.clear();
     }
 
     protected Expression getTopOfBodyStack() {
@@ -905,5 +948,12 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
     protected String getDescriptor(final String descriptor, final int pos, List<String> imports) {
         return myDecompiledMethod.getDecompiledClass().getDescriptor(descriptor, pos, imports, myLanguage);
+    }
+
+    protected void removeLinkFromAllAncestors(final Node child, final boolean needToBreak) {
+        for (final Node parent : child.getAncestors()) {
+            parent.removeChild(child);
+            parent.setIsCaseEndNode(needToBreak);
+        }
     }
 }

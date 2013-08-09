@@ -21,9 +21,10 @@ public class Switch extends Node {
         return myLabels;
     }
 
-    public Node getDefault() {
-        for (Node node : this.getListOfTails()) {
-            if (node.containsLabel(myLabels.get(myLabels.size() - 1))) {
+    public Node getNodeByKey(final int keyIndex) {
+        final int labelIndex = keyIndex == -1 ? myLabels.size() - 1 : keyIndex;
+        for (Node node : getListOfTails()) {
+            if (node.containsLabel(myLabels.get(labelIndex))) {
                 return node;
             }
         }

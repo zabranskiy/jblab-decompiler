@@ -49,7 +49,7 @@ public abstract class AbstractOperationPrinter {
         return "== ";
     }
 
-    public String getInequalityView() {
+    public String getNotEqualityView() {
         return "!= ";
     }
     public String getGEView() {

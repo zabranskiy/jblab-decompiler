@@ -5,7 +5,7 @@ import com.sdc.abstractLanguage.AbstractOperationPrinter;
 public class BinaryExpression extends Expression {
     public enum OperationType {
         ADD, SUB, MUL, DIV, REM,
-        AND, OR, EQUALITY, INEQUALITY, GE, GREATER, LE, LESS, SHR, SHL,USHR, XOR
+        AND, OR, EQ, NE, GE, GT, LE, LT, SHR, SHL,USHR, XOR
     }
 
     private final Expression myLeft;
@@ -54,17 +54,17 @@ public class BinaryExpression extends Expression {
                 return "&& ";
             case OR:
                 return "|| ";
-            case EQUALITY:
+            case EQ:
                 return "== ";
-            case INEQUALITY:
+            case NE:
                 return "!= ";
             case GE:
                 return ">= ";
-            case GREATER:
+            case GT:
                 return "> ";
             case LE:
                 return "<= ";
-            case LESS:
+            case LT:
                 return "< ";
             default:
                 return "";
@@ -87,17 +87,17 @@ public class BinaryExpression extends Expression {
                 return operationPrinter.getBitewiseAndView();
             case OR:
                 return operationPrinter.getBitewseOrView();
-            case EQUALITY:
+            case EQ:
                 return operationPrinter.getEqualityView();
-            case INEQUALITY:
-                return operationPrinter.getInequalityView();
+            case NE:
+                return operationPrinter.getNotEqualityView();
             case GE:
                 return operationPrinter.getGEView();
-            case GREATER:
+            case GT:
                 return operationPrinter.getGreaterView();
             case LE:
                 return operationPrinter.getLEView();
-            case LESS:
+            case LT:
                 return operationPrinter.getLessView();
             case SHL:
                 return operationPrinter.getSHLView();

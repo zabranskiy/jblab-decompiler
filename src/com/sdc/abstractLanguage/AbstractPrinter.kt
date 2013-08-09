@@ -19,6 +19,8 @@ import com.sdc.ast.controlflow.Return
 import com.sdc.ast.controlflow.Throw
 import com.sdc.ast.controlflow.InstanceInvocation
 import com.sdc.ast.expressions.nestedclasses.AnonymousClass
+import com.sdc.cfg.nodes.Node
+import com.sdc.cfg.nodes.Switch
 
 abstract class AbstractPrinter {
     abstract fun getOperationPrinter(): AbstractOperationPrinter;
@@ -70,7 +72,11 @@ abstract class AbstractPrinter {
                 text(expression.getOperation()) + expr
             }
 
-            is Field -> text(expression.getName())
+            is Field -> {
+                val owner = expression.getOwner()
+                var ownerName = if (owner != null) owner.getName() else expression.getStaticOwnerName()
+                if (ownerName.equals("this")) text(expression.getName()) else text(ownerName + "." + expression.getName())
+            }
 
             is Variable -> {
                 if (expression.getArrayIndex() == null)
@@ -153,6 +159,42 @@ abstract class AbstractPrinter {
             else -> throw IllegalArgumentException("Unknown Statement implementer!")
         }
 
+    open fun printNode(node : Node?, nestSize : Int): PrimeDoc {
+        val startCode = printStatements(node!!.getStatements(), nestSize)
+        val breakCode = if (node.isCaseEndNode()) printBreak() else nil()
+
+        val followingCode =
+            when (node) {
+                is Switch -> {
+                    var switchCode : PrimeDoc =  line() + text("switch (") + printExpression(node.getExpr(), nestSize) + text(") {")
+
+                    var keysCode : PrimeDoc = nil()
+                    val keys = node.getKeys()
+                    for (index in keys!!.indices) {
+                        keysCode = keysCode / text("case " + keys[index] + ":") + nest(nestSize, printNode(node.getNodeByKey(index), nestSize))
+                    }
+                    val defaultBranch = node.getNodeByKey(-1)
+                    if (defaultBranch != null) {
+                        keysCode = keysCode / text("default:") + nest(nestSize, printNode(defaultBranch, nestSize))
+                    }
+
+                    switchCode + nest(nestSize, keysCode) / text("}") + printNode(node.getNextNode(), nestSize)
+                }
+                else ->
+                    if (node.getCondition() == null) {
+                        if (node.getListOfTails()!!.isEmpty()) nil() else printNode(node.getListOfTails()!!.get(0), nestSize)
+                    } else if (node.getNextNode() != null) {
+                        if (node.getListOfTails()!!.get(1).equals(node.getNextNode())) {
+                            line() + text("if (!(") + printExpression(node.getCondition(), nestSize) + text(")) {") + nest(nestSize, printNode(node.getListOfTails()!!.get(0), nestSize)) / text("}") + printNode(node.getNextNode(), nestSize)
+                        } else {
+                            line() + text("if (!(") + printExpression(node.getCondition(), nestSize) + text(")) {") + nest(nestSize, printNode(node.getListOfTails()!!.get(0), nestSize)) / text("} else {") + nest(nestSize, printNode(node.getListOfTails()!!.get(1), nestSize)) / text("}") + printNode(node.getNextNode(), nestSize)
+                        }
+                    } else text("")
+            }
+
+        return startCode + followingCode + breakCode
+    }
+
     open fun printVariableName(variableName : String?): String? = variableName
 
     open fun printStatementsDelimiter(): PrimeDoc = text(";")
@@ -160,6 +202,8 @@ abstract class AbstractPrinter {
     open fun printInstanceOfOperator(): PrimeDoc = text(" instanceof ")
 
     open fun printNewOperator(): PrimeDoc = text("new ")
+
+    open fun printBreak(): PrimeDoc = line() + text("break")
 
     open fun printStatements(statements: List<Statement>?, nestSize: Int): PrimeDoc {
         var body : PrimeDoc = nil()
