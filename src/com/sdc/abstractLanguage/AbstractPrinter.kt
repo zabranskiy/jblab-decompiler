@@ -156,7 +156,7 @@ abstract class AbstractPrinter {
 
     open fun printNode(node : Node?, nestSize : Int): PrimeDoc {
         val startCode = printStatements(node!!.getStatements(), nestSize)
-        val breakCode = if (node.isCaseEndNode()) line() + text("break;") else nil()
+        val breakCode = if (node.isCaseEndNode()) line() + printBreak() + text(";") else nil()
 
         val followingCode =
             when (node) {
@@ -197,6 +197,8 @@ abstract class AbstractPrinter {
     open fun printInstanceOfOperator(): PrimeDoc = text(" instanceof ")
 
     open fun printNewOperator(): PrimeDoc = text("new ")
+
+    open fun printBreak(): PrimeDoc = text("break")
 
     open fun printStatements(statements: List<Statement>?, nestSize: Int): PrimeDoc {
         var body : PrimeDoc = nil()
