@@ -156,6 +156,7 @@ abstract class AbstractPrinter {
 
     open fun printNode(node : Node?, nestSize : Int): PrimeDoc {
         val startCode = printStatements(node!!.getStatements(), nestSize)
+        val breakCode = if (node.isCaseEndNode()) line() + text("break;") else nil()
 
         val followingCode =
             when (node) {
@@ -163,9 +164,13 @@ abstract class AbstractPrinter {
                     var switchCode : PrimeDoc =  line() + text("switch (") + printExpression(node.getExpr(), nestSize) + text(") {")
 
                     var keysCode : PrimeDoc = nil()
-                    val keys = node.getKeys()!!.toList()
-                    for (key in keys) {
-                        keysCode = keysCode / text("case " + key + ":") + nest(nestSize, printNode(node.getNodeByKey(key), nestSize) + line() + text("break;"))
+                    val keys = node.getKeys()
+                    for (index in keys!!.indices) {
+                        keysCode = keysCode / text("case " + keys[index] + ":") + nest(nestSize, printNode(node.getNodeByKey(index), nestSize))
+                    }
+                    val defaultBranch = node.getNodeByKey(-1)
+                    if (defaultBranch != null) {
+                        keysCode = keysCode / text("default:") + nest(nestSize, printNode(defaultBranch, nestSize))
                     }
 
                     switchCode + nest(nestSize, keysCode) / text("}") + printNode(node.getNextNode(), nestSize)
@@ -181,9 +186,9 @@ abstract class AbstractPrinter {
                         }
                     } else text("")
             }
-        return startCode + followingCode
-    }
 
+        return startCode + followingCode + breakCode
+    }
 
     open fun printVariableName(variableName : String?): String? = variableName
 

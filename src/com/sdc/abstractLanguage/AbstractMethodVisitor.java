@@ -550,9 +550,24 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                             }
                         }
                         if (!isTail) {
-                                removeLinkFromAllAncestors(myNodes.get(i));
-                                node.setNextNode(myNodes.get(i));
-                                break;
+                            removeLinkFromAllAncestors(myNodes.get(i), true);
+                            node.setNextNode(myNodes.get(i));
+                            break;
+                        }
+                    }
+                }
+                if (node.getNextNode() == null) {
+                    Node defaultBranch = ((Switch) node).getNodeByKey(-1);
+                    node.removeChild(defaultBranch);
+                    defaultBranch.removeAncestor(node);
+                    removeLinkFromAllAncestors(defaultBranch, true);
+                    defaultBranch.setIsCaseEndNode(false);
+                    node.setNextNode(defaultBranch);
+                }
+                for (final Node tail : node.getListOfTails()) {
+                    for (final Node ancestor : tail.getAncestors()) {
+                        if (!ancestor.equals(node) && myNodes.indexOf(ancestor) < myNodes.indexOf(tail)) {
+                            ancestor.removeChild(tail);
                         }
                     }
                 }
@@ -579,7 +594,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                                     }
                                 }
                                 if (!isTail) {
-                                    removeLinkFromAllAncestors(myNodes.get(i));
+                                    removeLinkFromAllAncestors(myNodes.get(i), false);
                                     node.setNextNode(myNodes.get(i));
                                     break;
                                 }
@@ -587,7 +602,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                         }
                         if (node.getNextNode() == null) {
                             node.setNextNode(node.getListOfTails().get(1));
-                            removeLinkFromAllAncestors(node.getListOfTails().get(1));
+                            removeLinkFromAllAncestors(node.getListOfTails().get(1), false);
                             node.addTail(node.getNextNode());
                         }
                     }
@@ -754,9 +769,10 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         return myDecompiledMethod.getDecompiledClass().getDescriptor(descriptor, pos, imports, myLanguage);
     }
 
-    protected void removeLinkFromAllAncestors(final Node child) {
+    protected void removeLinkFromAllAncestors(final Node child, final boolean needToBreak) {
         for (final Node parent : child.getAncestors()) {
             parent.removeChild(child);
+            parent.setIsCaseEndNode(needToBreak);
         }
     }
 }

@@ -9,14 +9,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Node {
-    private List<Statement> myStatements = new ArrayList<Statement>();
-    private Expression myCondition;
-    private List<Label> myInnerLabels;
-    private Node myNextNode;
-    private List<Node> myNodeTails = new ArrayList<Node>();
-    private List<Node> myAncestors = new ArrayList<Node>();  // Fathers of a vertex
+    protected List<Statement> myStatements = new ArrayList<Statement>();
+    protected Expression myCondition;
+    protected List<Label> myInnerLabels;
+    protected Node myNextNode;
+    protected List<Node> myNodeTails = new ArrayList<Node>();
+    protected List<Node> myAncestors = new ArrayList<Node>();  // Fathers of a vertex
 
-    private boolean isEmpty = false;
+    protected boolean isEmpty = false;
+    protected boolean myIsCaseEndNode = false;
 
     public Node() {
     }
@@ -96,5 +97,17 @@ public class Node {
 
     public void removeChild(final Node child) {
         myNodeTails.remove(child);
+    }
+
+    public void removeAncestor(final Node ancestor) {
+        myAncestors.remove(ancestor);
+    }
+
+    public boolean isCaseEndNode() {
+        return myIsCaseEndNode;
+    }
+
+    public void setIsCaseEndNode(final boolean isCaseEndNode) {
+        this.myIsCaseEndNode = myIsCaseEndNode || isCaseEndNode;
     }
 }
