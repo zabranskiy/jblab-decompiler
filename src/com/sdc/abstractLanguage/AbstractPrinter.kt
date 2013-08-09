@@ -71,7 +71,11 @@ abstract class AbstractPrinter {
                 text(expression.getOperation()) + expr
             }
 
-            is Field -> text(expression.getName())
+            is Field -> {
+                val owner = expression.getOwner()
+                var ownerName = if (owner != null) owner.getName() else expression.getStaticOwnerName()
+                if (ownerName.equals("this")) text(expression.getName()) else text(ownerName + "." + expression.getName())
+            }
 
             is Variable -> {
                 if (expression.getArrayIndex() == null)
@@ -156,7 +160,7 @@ abstract class AbstractPrinter {
 
     open fun printNode(node : Node?, nestSize : Int): PrimeDoc {
         val startCode = printStatements(node!!.getStatements(), nestSize)
-        val breakCode = if (node.isCaseEndNode()) line() + text("break;") else nil()
+        val breakCode = if (node.isCaseEndNode()) printBreak() else nil()
 
         val followingCode =
             when (node) {
@@ -197,6 +201,8 @@ abstract class AbstractPrinter {
     open fun printInstanceOfOperator(): PrimeDoc = text(" instanceof ")
 
     open fun printNewOperator(): PrimeDoc = text("new ")
+
+    open fun printBreak(): PrimeDoc = line() + text("break")
 
     open fun printStatements(statements: List<Statement>?, nestSize: Int): PrimeDoc {
         var body : PrimeDoc = nil()
