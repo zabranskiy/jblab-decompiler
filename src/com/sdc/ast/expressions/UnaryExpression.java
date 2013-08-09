@@ -11,6 +11,7 @@ public class UnaryExpression extends Expression {
     public UnaryExpression(final OperationType type, final Expression operand) {
         this.myType = type;
         this.myOperand = operand;
+        setDoubleLength(operand.hasDoubleLength());
     }
 
     public UnaryExpression(final Expression operand) {

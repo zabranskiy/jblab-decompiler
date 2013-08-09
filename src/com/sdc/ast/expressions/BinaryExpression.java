@@ -14,6 +14,7 @@ public class BinaryExpression extends Expression {
         this.myType = type;
         this.myLeft = left;
         this.myRight = right;
+        setDoubleLength(left.hasDoubleLength() && right.hasDoubleLength());
     }
 
     public BinaryExpression(final Expression left, final Expression right) {
