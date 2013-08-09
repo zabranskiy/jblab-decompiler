@@ -137,7 +137,8 @@ class KotlinPrinter: AbstractPrinter() {
 
         val body = nest(
                 kotlinMethod.getNestSize(),
-                printStatements(kotlinMethod.getBody(), kotlinMethod.getNestSize())
+//                printStatements(kotlinMethod.getBody(), kotlinMethod.getNestSize())
+                printNode(kotlinMethod.getNodes()!!.get(0), kotlinMethod.getNestSize())
                 + printMethodError(kotlinMethod)
         ) / text("}")
 

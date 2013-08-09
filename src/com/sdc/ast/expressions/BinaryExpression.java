@@ -3,7 +3,7 @@ package com.sdc.ast.expressions;
 public class BinaryExpression extends Expression {
     public enum OperationType {
         ADD, SUB, MUL, DIV,
-        AND, OR, EQUALITY, INEQUALITY, GE, GREATER, LE, LESS
+        AND, OR, EQ, NE, GE, GT, LE, LT
     }
 
     private final Expression myLeft;
@@ -52,17 +52,17 @@ public class BinaryExpression extends Expression {
                 return "&& ";
             case OR:
                 return "|| ";
-            case EQUALITY:
+            case EQ:
                 return "== ";
-            case INEQUALITY:
+            case NE:
                 return "!= ";
             case GE:
                 return ">= ";
-            case GREATER:
+            case GT:
                 return "> ";
             case LE:
                 return "<= ";
-            case LESS:
+            case LT:
                 return "< ";
             default:
                 return "";
