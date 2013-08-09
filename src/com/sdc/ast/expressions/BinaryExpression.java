@@ -1,9 +1,11 @@
 package com.sdc.ast.expressions;
 
+import com.sdc.abstractLanguage.AbstractOperationPrinter;
+
 public class BinaryExpression extends Expression {
     public enum OperationType {
-        ADD, SUB, MUL, DIV,
-        AND, OR, EQUALITY, INEQUALITY, GE, GREATER, LE, LESS
+        ADD, SUB, MUL, DIV, REM,
+        AND, OR, EQUALITY, INEQUALITY, GE, GREATER, LE, LESS, SHR, SHL,USHR, XOR
     }
 
     private final Expression myLeft;
@@ -69,6 +71,47 @@ public class BinaryExpression extends Expression {
         }
     }
 
+    public String getOperation(AbstractOperationPrinter operationPrinter) {
+        switch (myType) {
+            case ADD:
+                return operationPrinter.getAddView();
+            case SUB:
+                return operationPrinter.getSubView();
+            case DIV:
+                return operationPrinter.getDivView();
+            case MUL:
+                return operationPrinter.getMulView();
+            case REM:
+                 return operationPrinter.getRemView();
+            case AND:
+                return operationPrinter.getBitewiseAndView();
+            case OR:
+                return operationPrinter.getBitewseOrView();
+            case EQUALITY:
+                return operationPrinter.getEqualityView();
+            case INEQUALITY:
+                return operationPrinter.getInequalityView();
+            case GE:
+                return operationPrinter.getGEView();
+            case GREATER:
+                return operationPrinter.getGreaterView();
+            case LE:
+                return operationPrinter.getLEView();
+            case LESS:
+                return operationPrinter.getLessView();
+            case SHL:
+                return operationPrinter.getSHLView();
+            case SHR:
+                return operationPrinter.getSHRView();
+            case USHR:
+                return operationPrinter.getUSHRView();
+            case XOR:
+                return operationPrinter.getXorView();
+            default:
+                return "";
+        }
+    }
+
     public int getPriority() {
         switch (myType) {
             case ADD:
@@ -82,5 +125,14 @@ public class BinaryExpression extends Expression {
             default:
                 return -1;
         }
+    }
+
+    @Override
+    public String toString() {
+        return "BinaryExpression{" +
+                "myLeft=" + myLeft +
+                ", myRight=" + myRight +
+                ", myType=" + myType +
+                '}';
     }
 }

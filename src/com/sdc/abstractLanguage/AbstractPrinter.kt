@@ -20,8 +20,9 @@ import com.sdc.ast.controlflow.Throw
 import com.sdc.ast.controlflow.InstanceInvocation
 import com.sdc.ast.expressions.nestedclasses.AnonymousClass
 
-
 abstract class AbstractPrinter {
+    abstract fun getOperationPrinter(): AbstractOperationPrinter;
+
     open fun printExpression(expression: Expression?, nestSize: Int): PrimeDoc =
         when (expression) {
             is Constant ->
@@ -52,9 +53,9 @@ abstract class AbstractPrinter {
                             printExpression(r, nestSize)
                     else -> printExpression(r, nestSize)
                 }
+                 group(left / (text(expression.getOperation(getOperationPrinter())) + right))
+             }
 
-                group(left / (text(expression.getOperation()) + right))
-            }
 
             is UnaryExpression -> {
                 val operand = expression.getOperand()

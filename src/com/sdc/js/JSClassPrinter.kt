@@ -1,18 +1,20 @@
 package JSPrinter
 
 import pretty.*
-
 import com.sdc.js.JSClass
 import com.sdc.js.JSClassField
 import com.sdc.js.JSClassMethod
-
 import com.sdc.abstractLanguage.AbstractClass
 import com.sdc.abstractLanguage.AbstractMethod
 import com.sdc.abstractLanguage.AbstractClassField
 import com.sdc.abstractLanguage.AbstractPrinter
-
+import com.sdc.abstractLanguage.AbstractOperationPrinter
+import com.sdc.js.JSOperationPrinter
 
 class JSPrinter : AbstractPrinter() {
+    override fun getOperationPrinter():AbstractOperationPrinter{
+        return JSOperationPrinter.getInstance() as AbstractOperationPrinter;
+    }
     override fun printAnnotationIdentifier(): PrimeDoc = text("")
 
     override fun printBaseClass(): PrimeDoc = text("Object")

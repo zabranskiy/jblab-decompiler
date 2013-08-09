@@ -1,10 +1,9 @@
 package com.sdc.abstractLanguage;
 
-import com.sdc.ast.controlflow.Assignment;
-import com.sdc.ast.controlflow.Return;
-import com.sdc.ast.controlflow.Statement;
-import com.sdc.ast.controlflow.Throw;
+import com.sdc.ast.controlflow.*;
 import com.sdc.ast.expressions.*;
+import com.sdc.ast.expressions.InstanceInvocation;
+import com.sdc.ast.expressions.Invocation;
 import com.sdc.ast.expressions.identifiers.Field;
 import com.sdc.ast.expressions.identifiers.Identifier;
 import com.sdc.ast.expressions.identifiers.Variable;
@@ -20,6 +19,10 @@ import org.objectweb.asm.util.Printer;
 
 import java.util.*;
 
+import static com.sdc.ast.expressions.BinaryExpression.OperationType.EQUALITY;
+import static com.sdc.ast.expressions.BinaryExpression.OperationType.LESS;
+import static com.sdc.ast.expressions.Constant.*;
+import static com.sdc.ast.expressions.UnaryExpression.OperationType.*;
 import static org.objectweb.asm.Opcodes.ASM4;
 
 public abstract class AbstractMethodVisitor extends MethodVisitor {
@@ -161,15 +164,21 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
     public void visitInsn(final int opcode) {
         int size = myBodyStack.size();
         final String opString = Printer.OPCODES[opcode];
-
         if (opString.contains("ADD") || opString.contains("SUB")
-                || opString.contains("MUL") || opString.contains("DIV")) {
+                || opString.contains("MUL") || opString.contains("DIV")
+                || opString.contains("USHR") || opString.contains("SHL") || opString.contains("SHR")
+                || opString.contains("XOR") || opString.contains("REM")
+                || opString.contains("OR") || opString.contains("AND")) {
             Expression e1 = getTopOfBodyStack();
             Expression e2 = getTopOfBodyStack();
             Expression res = new BinaryExpression(BinaryExpression.OperationType.valueOf(opString.substring(1)), e2, e1);
             myBodyStack.push(res);
         } else if (opString.contains("NEG")) {
-            myBodyStack.push(new UnaryExpression(UnaryExpression.OperationType.NEGATE, getTopOfBodyStack()));
+            myBodyStack.push(new UnaryExpression(NEGATE, getTopOfBodyStack()));
+        } else if (opString.contains("CONST_M1")) {
+            myBodyStack.push(M_ONE);
+        } else if (opString.contains("CONST_NULL")) {
+            myBodyStack.push(new Constant("null", false));
         } else if (opString.contains("CONST_")) {
             myBodyStack.push(new Constant(opString.substring(7).toLowerCase(), false));
         } else if (opString.equals("RETURN")) {
@@ -184,9 +193,13 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             returnStatement.setNeedToPrintReturn(!myDecompiledMethod.getDecompiledClass().isLambdaFunctionClass());
             myStatements.add(returnStatement);
         } else if (opString.contains("CMP")) {
-            Expression e1 = getTopOfBodyStack();
-            Expression e2 = getTopOfBodyStack();
-            myBodyStack.push(new BinaryExpression(e2, e1));
+            Expression b = getTopOfBodyStack();
+            Expression a = getTopOfBodyStack();
+            myBodyStack.push(new TernaryExpression(
+                    new BinaryExpression(EQUALITY, a, b),
+                    ZERO,
+                    new TernaryExpression(new BinaryExpression(LESS, a, b), M_ONE, ONE)
+            ));
         } else if (opString.contains("ATHROW")) {
             myStatements.add(new Throw(getTopOfBodyStack()));
         } else if (opString.equals("SWAP")) {
@@ -312,10 +325,10 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         } else if (opString.equals("POP2")) {
             if (size < 1) return;
             Expression expr1 = myBodyStack.pop();
-            if(expr1.hasDoubleLength()){
-               //Form 2
-            }  else{
-                if (size <2 || myBodyStack.peek().hasDoubleLength() ) {
+            if (expr1.hasDoubleLength()) {
+                //Form 2
+            } else {
+                if (size < 2 || myBodyStack.peek().hasDoubleLength()) {
                     //There is a wrong condition, we return elements of stack as they were there
                     multiPush(expr1);
                     return;
@@ -332,7 +345,32 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             final Identifier v = new Variable(arrayIndex, (Identifier) getTopOfBodyStack());
 
             myStatements.add(new Assignment(v, expr));
+        } else if (opString.equals("NOP")) {
+            //do nothing
+        } else if ((opString.contains("I2L") || opString.contains("F2L") || opString.contains("D2L")) && !myBodyStack.empty()) {
+            myBodyStack.push(new UnaryExpression(LONG_CAST, getTopOfBodyStack()));
+        } else if ((opString.contains("I2D") || opString.contains("F2D") || opString.contains("L2D")) && !myBodyStack.isEmpty()) {
+            myBodyStack.push(new UnaryExpression(DOUBLE_CAST, getTopOfBodyStack()));
+        } else if ((opString.contains("I2F") || opString.contains("L2F") || opString.contains("D2F")) && !myBodyStack.isEmpty()) {
+            myBodyStack.push(new UnaryExpression(FLOAT_CAST, getTopOfBodyStack()));
+        } else if ((opString.contains("L2I") || opString.contains("F2I") || opString.contains("D2I")) && !myBodyStack.isEmpty()) {
+            myBodyStack.push(new UnaryExpression(INT_CAST, getTopOfBodyStack()));
+        } else if ((opString.contains("I2B")) && !myBodyStack.isEmpty()) {
+            myBodyStack.push(new UnaryExpression(BYTE_CAST, getTopOfBodyStack()));
+        } else if ((opString.contains("I2C")) && !myBodyStack.isEmpty()) {
+            myBodyStack.push(new UnaryExpression(CHAR_CAST, getTopOfBodyStack()));
+        } else if ((opString.contains("I2S")) && !myBodyStack.isEmpty()) {
+            myBodyStack.push(new UnaryExpression(SHORT_CAST, getTopOfBodyStack()));
         }
+        // All opcodes :
+        //  +NOP, +ACONST_NULL, +ICONST_M1, +CONST_0, +ICONST_1, +ICONST_2, +ICONST_3, +ICONST_4, +ICONST_5,
+        //  +LCONST_0, +LCONST_1, +FCONST_0, +FCONST_1, +FCONST_2, +DCONST_0, +DCONST_1, +IALOAD, +LALOAD, +FALOAD, +DALOAD,
+        //  +AALOAD, +BALOAD, +CALOAD, +SALOAD, +IASTORE, +LASTORE, +FASTORE, +DASTORE, +AASTORE, +BASTORE, +CASTORE, +SASTORE,
+        //  +POP, +POP2, +DUP, +DUP_X1, +DUP_X2, +DUP2, +DUP2_X1, +DUP2_X2, +SWAP, +IADD, +LADD, +FADD, +DADD, +ISUB, +LSUB, +FSUB,
+        //  +DSUB, +IMUL, +LMUL, +FMUL, +DMUL, +IDIV, +LDIV, +FDIV, +DDIV, +IREM, +LREM, +FREM, +DREM, +INEG, +LNEG, +FNEG, +DNEG,
+        //  +ISHL, +LSHL, +ISHR, +LSHR, +IUSHR, +LUSHR, +IAND, +LAND, +IOR, +LOR, +IXOR, +LXOR, +I2L, +I2F, +I2D, +L2I, +L2F, +L2D,
+        //  +F2I, +F2L, +F2D, +D2I, +D2L, +D2F, +I2B, +I2C, +I2S, LCMP, FCMPL, FCMPG, DCMPL, DCMPG, +IRETURN, +LRETURN, +FRETURN,
+        //  +DRETURN, +ARETURN, +RETURN, ARRAYLENGTH, +ATHROW, MONITORENTER, or MONITOREXIT.
     }
 
     @Override
@@ -404,6 +442,9 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             myBodyStack.push(new NewArray(1, getClassName(type), dimensions));
         } else if (opString.contains("INSTANCEOF")) {
             myBodyStack.push(new InstanceOf(getClassName(type), getTopOfBodyStack()));
+        } else if (opString.contains("CHECKCAST") && !myBodyStack.empty()) {
+            //type is for name of class
+            myBodyStack.push(new UnaryExpression(CHECK_CAST, myBodyStack.pop(), type));
         }
     }
 
@@ -519,6 +560,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
     @Override
     public void visitIincInsn(final int var, final int increment) {
+        myStatements.add(new Increment(var,increment,getCurrentFrame()));
     }
 
     @Override
