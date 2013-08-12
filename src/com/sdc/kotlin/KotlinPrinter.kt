@@ -74,31 +74,6 @@ class KotlinPrinter: AbstractPrinter() {
             else -> super<AbstractPrinter>.printExpression(expression, nestSize)
         }
 
-    override fun printNode(node : Node?, nestSize : Int): PrimeDoc =
-        when (node) {
-            is Switch -> {
-                val startCode = printStatements(node.getStatements(), nestSize)
-
-                var whenCode : PrimeDoc = line() + text("when (") + printExpression(node.getExpr(), nestSize) + text(") {")
-
-                var keysCode : PrimeDoc = nil()
-                val keys = node.getKeys()
-                for (index in keys!!.indices) {
-                    keysCode = keysCode / text("" + keys[index] + " -> ") + nest(nestSize, printNode(node.getNodeByKey(index), nestSize))
-                }
-                val defaultBranch = node.getNodeByKey(-1)
-                if (defaultBranch != null) {
-                    keysCode = keysCode / text("else -> ") + nest(nestSize, printNode(defaultBranch, nestSize))
-                } else {
-                    keysCode = keysCode / text("else -> {}")
-                }
-
-                startCode + whenCode + nest(nestSize, keysCode) / text("}") + printNode(node.getNextNode(), nestSize)
-            }
-
-            else -> super.printNode(node, nestSize)
-        }
-
     override fun printClass(decompiledClass: AbstractClass): PrimeDoc {
         val kotlinClass: KotlinClass = decompiledClass as KotlinClass
 
