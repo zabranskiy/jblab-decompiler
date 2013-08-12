@@ -11,10 +11,11 @@ public class Switch extends Node {
     private final int[] myKeys;
     private List<Label> myLabels = new ArrayList<Label>();
 
-    public Switch(Expression myExpr, int[] myKeys, List<Label> labels) {
+    public Switch(Expression myExpr, int[] myKeys, List<Label> labels, int index) {
         this.myExpr = myExpr;
         this.myKeys = myKeys;
         this.myLabels = labels;
+        this.index = index;
     }
 
     public List<Label> getLabels() {

@@ -5,6 +5,7 @@ import com.sdc.cfg.nodes.Node;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.ListIterator;
 
 public class DominatorTreeGenerator {
     private List<Node> myNodes;
@@ -95,7 +96,10 @@ public class DominatorTreeGenerator {
 
         Arrays.fill(semi, -1);
 
-        for (Node node : myNodes) {
+        ListIterator li = myNodes.listIterator(isPostDominatorTree ? myNodes.size() : -1);
+
+        while (isPostDominatorTree ? li.hasPrevious() : li.hasNext()) {
+            Node node = (Node) (isPostDominatorTree ? li.previous() : li.next());
             List<Node> nodes = isPostDominatorTree ? node.getAncestors() : node.getListOfTails();
             ArrayList<Integer> indexesOfTails = new ArrayList<Integer>();
             ArrayList<Boolean> markEdges = new ArrayList<Boolean>();
@@ -112,7 +116,15 @@ public class DominatorTreeGenerator {
         FindDomi();
     }
 
-    public int[] getDominatorTreeArray(boolean isPostDominatorTree) {
+    public int[] getDominators() {
+        return getTree(false);
+    }
+
+    public int[] getPostDominators() {
+        return getTree(true);
+    }
+
+    private int[] getTree(boolean isPostDominatorTree) {
         build(isPostDominatorTree);
         return semi;
     }

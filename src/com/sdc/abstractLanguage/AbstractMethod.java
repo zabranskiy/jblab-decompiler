@@ -2,8 +2,9 @@ package com.sdc.abstractLanguage;
 
 import com.sdc.ast.controlflow.Statement;
 import com.sdc.ast.expressions.Expression;
-import com.sdc.util.graph.GraphDrawer;
+import com.sdc.cfg.constructions.Construction;
 import com.sdc.cfg.nodes.Node;
+import com.sdc.util.graph.GraphDrawer;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,14 +35,14 @@ public abstract class AbstractMethod {
     protected MethodVisitorStub.DecompilerException myError = null;
     protected List<Statement> myBody = null;
     protected List<Node> myNodes = null;
+    protected Construction myBegin;
 
     protected final int myTextWidth;
     protected final int myNestSize;
 
     public AbstractMethod(final String modifier, final String returnType, final String name, final String signature, final String[] exceptions,
-                      final AbstractClass abstractClass, final List<String> genericTypes, final List<String> genericIdentifiers,
-                      final int textWidth, final int nestSize)
-    {
+                          final AbstractClass abstractClass, final List<String> genericTypes, final List<String> genericIdentifiers,
+                          final int textWidth, final int nestSize) {
         this.myModifier = modifier;
         this.myReturnType = returnType;
         this.myName = name;
@@ -225,6 +226,14 @@ public abstract class AbstractMethod {
 
     public List<Node> getNodes() {
         return myNodes;
+    }
+
+    public void setBegin(Construction myBegin) {
+        this.myBegin = myBegin;
+    }
+
+    public Construction getBegin() {
+        return myBegin;
     }
 
     public void drawCFG() {
