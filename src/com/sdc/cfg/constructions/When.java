@@ -38,7 +38,7 @@ public class When extends Construction {
         myCases.put(key, body);
     }
 
-    public boolean hasDefaultCase() {
-        return myDefaultCase != null;
+    public boolean hasEmptyDefaultCase() {
+        return myDefaultCase == null;
     }
 }

@@ -15,6 +15,10 @@ public abstract class Construction {
         this.myNextConstruction = nextConstruction;
     }
 
+    public boolean hasNextConstruction() {
+        return myNextConstruction != null;
+    }
+
     public String getBreak() {
         return myBreak;
     }
@@ -44,7 +48,7 @@ public abstract class Construction {
     }
 
     public boolean hasBreakToLabel() {
-        return !myBreak.isEmpty();
+        return hasBreak() && !myBreak.isEmpty();
     }
 
     public boolean hasContinue() {
@@ -52,6 +56,6 @@ public abstract class Construction {
     }
 
     public boolean hasContinueToLabel() {
-        return !myContinue.isEmpty();
+        return hasContinue() && !myContinue.isEmpty();
     }
 }
