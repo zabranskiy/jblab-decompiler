@@ -1,10 +1,7 @@
 package com.sdc.abstractLanguage;
 
-import com.sdc.ast.controlflow.Statement;
 import com.sdc.ast.expressions.Expression;
 import com.sdc.cfg.constructions.Construction;
-import com.sdc.cfg.nodes.Node;
-import com.sdc.util.graph.GraphDrawer;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,8 +30,7 @@ public abstract class AbstractMethod {
     protected AbstractFrame myCurrentAbstractFrame;
 
     protected MethodVisitorStub.DecompilerException myError = null;
-    protected List<Statement> myBody = null;
-    protected List<Node> myNodes = null;
+
     protected Construction myBegin;
 
     protected final int myTextWidth;
@@ -105,14 +101,6 @@ public abstract class AbstractMethod {
 
     public void setError(final MethodVisitorStub.DecompilerException error) {
         this.myError = error;
-    }
-
-    public List<Statement> getBody() {
-        return myBody;
-    }
-
-    public void setBody(final List<Statement> body) {
-        this.myBody = body;
     }
 
     public void setLastLocalVariableIndex(int lastLocalVariableIndex) {
@@ -220,14 +208,6 @@ public abstract class AbstractMethod {
         myRootAbstractFrame.getLocalVariableName(0);
     }
 
-    public void setNodes(List<Node> myNodes) {
-        this.myNodes = myNodes;
-    }
-
-    public List<Node> getNodes() {
-        return myNodes;
-    }
-
     public void setBegin(Construction myBegin) {
         this.myBegin = myBegin;
     }
@@ -236,9 +216,11 @@ public abstract class AbstractMethod {
         return myBegin;
     }
 
+/*
     public void drawCFG() {
         GraphDrawer graphDrawer = new GraphDrawer(myNodes, myNestSize, myTextWidth);
         graphDrawer.draw();
         graphDrawer.simplyDraw();
     }
+*/
 }

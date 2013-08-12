@@ -2,12 +2,9 @@ package com.sdc.cfg.constructions;
 
 import com.sdc.ast.expressions.Expression;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class Loop extends Construction {
     protected final Expression myCondition;
-    protected List<Construction> myBody = new ArrayList<Construction>();
+    protected Construction myBody;
 
     public Loop(final Expression condition) {
         this.myCondition = condition;
@@ -17,15 +14,11 @@ public class Loop extends Construction {
         return myCondition;
     }
 
-    public List<Construction> getBody() {
+    public Construction getBody() {
         return myBody;
     }
 
-    public void setBody(final List<Construction> body) {
+    public void setBody(final Construction body) {
         this.myBody = body;
-    }
-
-    public void addConstructionToBody(final Construction construction) {
-        myBody.add(construction);
     }
 }
