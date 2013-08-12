@@ -95,8 +95,12 @@ public class DominatorTreeGenerator {
         myMarkEdge = new ArrayList<ArrayList<Boolean>>();
 
         Arrays.fill(semi, -1);
+        for (int i = 0; i < size; i++) {
+            myGraph.add(null);
+            myMarkEdge.add(null);
+        }
 
-        ListIterator li = myNodes.listIterator(isPostDominatorTree ? myNodes.size() : -1);
+        ListIterator li = myNodes.listIterator(isPostDominatorTree ? myNodes.size() : 0);
 
         while (isPostDominatorTree ? li.hasPrevious() : li.hasNext()) {
             Node node = (Node) (isPostDominatorTree ? li.previous() : li.next());
@@ -104,11 +108,12 @@ public class DominatorTreeGenerator {
             ArrayList<Integer> indexesOfTails = new ArrayList<Integer>();
             ArrayList<Boolean> markEdges = new ArrayList<Boolean>();
             for (Node tailNode : nodes) {
-                indexesOfTails.add(myNodes.indexOf(tailNode));
+                indexesOfTails.add(tailNode.getIndex());
+
                 markEdges.add(false);
             }
-            myGraph.add(indexesOfTails);
-            myMarkEdge.add(markEdges);
+            myGraph.set(node.getIndex(), indexesOfTails);
+            myMarkEdge.set(node.getIndex(), markEdges);
         }
 
         dfs(isPostDominatorTree ? size - 1 : 0);
@@ -117,11 +122,11 @@ public class DominatorTreeGenerator {
     }
 
     public int[] getDominators() {
-        return getTree(false);
+        return size > 1 ? getTree(false) : null;
     }
 
     public int[] getPostDominators() {
-        return getTree(true);
+        return size > 1 ? getTree(true) : null;
     }
 
     private int[] getTree(boolean isPostDominatorTree) {

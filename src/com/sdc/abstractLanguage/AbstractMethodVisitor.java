@@ -515,7 +515,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
     @Override
     public void visitLabel(final Label label) {
-        if (myLabels.contains(label) && (!myStatements.isEmpty())) {
+        if (myLabels.contains(label)) {
             applyNode();
             myLabels.remove(label);
         }
@@ -833,15 +833,5 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
     protected String getDescriptor(final String descriptor, final int pos, List<String> imports) {
         return myDecompiledMethod.getDecompiledClass().getDescriptor(descriptor, pos, imports, myLanguage);
-    }
-
-    protected void removeLinkFromAllAncestors(final Node child, final boolean needToBreak) {
-        for (final Node parent : child.getAncestors()) {
-            if (parent.getCondition() == null) {
-                parent.removeChild(child);
-                child.removeAncestor(parent);
-                parent.setIsCaseEndNode(needToBreak);
-            }
-        }
     }
 }
