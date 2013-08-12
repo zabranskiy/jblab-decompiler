@@ -1,4 +1,4 @@
-package com.sdc.cfg;
+package com.sdc.util;
 
 import com.sdc.cfg.nodes.Node;
 
@@ -7,32 +7,17 @@ import java.util.Arrays;
 import java.util.List;
 
 public class DominatorTreeGenerator {
+    private List<Node> myNodes;
     private ArrayList<ArrayList<Integer>> myGraph;
     private ArrayList<ArrayList<Boolean>> myMarkEdge;
     private boolean[] mark;
     private int[] id, semi;
     private final int size;
-    private int index = 0;
+    private int index;
 
     public DominatorTreeGenerator(List<Node> myNodes) {
+        this.myNodes = myNodes;
         this.size = myNodes.size();
-        this.mark = new boolean[size];
-        this.id = new int[size];
-        this.semi = new int[size];
-        this.myGraph = new ArrayList<ArrayList<Integer>>();
-        this.myMarkEdge = new ArrayList<ArrayList<Boolean>>();
-        // init
-        for (Node node : myNodes) {
-            ArrayList<Integer> indexesOfTails = new ArrayList<Integer>();
-            ArrayList<Boolean> markEdges = new ArrayList<Boolean>();
-            for (Node tailNode : node.getListOfTails()) {
-                indexesOfTails.add(myNodes.indexOf(tailNode));
-                markEdges.add(false);
-            }
-            myGraph.add(indexesOfTails);
-            myMarkEdge.add(markEdges);
-        }
-        Arrays.fill(semi, -1);
     }
 
     // walk graph
@@ -100,14 +85,35 @@ public class DominatorTreeGenerator {
         }
     }
 
-    private void build() {
-        dfs(0);
+    private void build(boolean isPostDominatorTree) {
+        index = 0;
+        mark = new boolean[size];
+        id = new int[size];
+        semi = new int[size];
+        myGraph = new ArrayList<ArrayList<Integer>>();
+        myMarkEdge = new ArrayList<ArrayList<Boolean>>();
+
+        Arrays.fill(semi, -1);
+
+        for (Node node : myNodes) {
+            List<Node> nodes = isPostDominatorTree ? node.getAncestors() : node.getListOfTails();
+            ArrayList<Integer> indexesOfTails = new ArrayList<Integer>();
+            ArrayList<Boolean> markEdges = new ArrayList<Boolean>();
+            for (Node tailNode : nodes) {
+                indexesOfTails.add(myNodes.indexOf(tailNode));
+                markEdges.add(false);
+            }
+            myGraph.add(indexesOfTails);
+            myMarkEdge.add(markEdges);
+        }
+
+        dfs(isPostDominatorTree ? size - 1 : 0);
         FindSemi();
         FindDomi();
     }
 
-    public int[] getDominatorTreeArray() {
-        build();
+    public int[] getDominatorTreeArray(boolean isPostDominatorTree) {
+        build(isPostDominatorTree);
         return semi;
     }
 }

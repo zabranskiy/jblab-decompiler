@@ -1,4 +1,4 @@
-package com.sdc.cfg;
+package com.sdc.cfg.nodes;
 
 import com.sdc.cfg.nodes.Node;
 

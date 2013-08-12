@@ -1,4 +1,4 @@
-package com.sdc.cfg;
+package com.sdc.util.graph;
 
 import com.sdc.cfg.nodes.Node;
 
@@ -7,8 +7,6 @@ import java.util.List;
 
 public class GraphDrawer {
     private final List<Node> myNodes;
-    //   private final List<Edge> myEdges;
-
     private GraphViz myGraphViz;
 
     private final int myNestSize;

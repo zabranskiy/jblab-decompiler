@@ -2,7 +2,7 @@ package com.sdc.abstractLanguage;
 
 import com.sdc.ast.controlflow.Statement;
 import com.sdc.ast.expressions.Expression;
-import com.sdc.cfg.GraphDrawer;
+import com.sdc.util.graph.GraphDrawer;
 import com.sdc.cfg.nodes.Node;
 
 import java.util.ArrayList;

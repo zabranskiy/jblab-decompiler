@@ -9,11 +9,12 @@ import com.sdc.ast.expressions.identifiers.Field;
 import com.sdc.ast.expressions.identifiers.Identifier;
 import com.sdc.ast.expressions.identifiers.Variable;
 import com.sdc.ast.expressions.nestedclasses.LambdaFunction;
-import com.sdc.cfg.DominatorTreeGenerator;
-import com.sdc.cfg.ExceptionHandler;
+import com.sdc.util.DominatorTreeGenerator;
+import com.sdc.cfg.nodes.ExceptionHandler;
 import com.sdc.cfg.functionalization.Generator;
 import com.sdc.cfg.nodes.Node;
 import com.sdc.cfg.nodes.Switch;
+import com.sdc.cfg.nodes.While;
 import com.sdc.util.DeclarationWorker;
 import org.objectweb.asm.*;
 import org.objectweb.asm.util.Printer;
@@ -313,10 +314,10 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         } else if (opString.equals("POP2")) {
             if (size < 1) return;
             Expression expr1 = myBodyStack.pop();
-            if(expr1.hasDoubleLength()){
-               //Form 2
-            }  else{
-                if (size <2 || myBodyStack.peek().hasDoubleLength() ) {
+            if (expr1.hasDoubleLength()) {
+                //Form 2
+            } else {
+                if (size < 2 || myBodyStack.peek().hasDoubleLength()) {
                     //There is a wrong condition, we return elements of stack as they were there
                     multiPush(expr1);
                     return;
@@ -477,7 +478,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
     @Override
     public void visitJumpInsn(final int opcode, final Label label) {
         final String opString = Printer.OPCODES[opcode];
-//        System.out.println(opString + ": " + label);
+        System.out.println(opString + ": " + label);
         if (opString.contains("IF")) {
             final Label myLastIFLabel = label;
             if (myNodes.isEmpty() || !myNodeInnerLabels.isEmpty() || (myNodes.get(getLeftEmptyNodeIndex() - 1).getCondition() == null)) {
@@ -506,13 +507,13 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
     @Override
     public void visitLabel(final Label label) {
-        if (myLabels.contains(label)) {
+        if (myLabels.contains(label) && (!myStatements.isEmpty())) {
             applyNode();
             myLabels.remove(label);
         }
         myNodeInnerLabels.add(label);
 
-//        System.out.println(label);
+        System.out.println(label);
     }
 
     @Override
@@ -609,12 +610,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
     public void visitMaxs(final int maxStack, final int maxLocals) {
     }
 
-    @Override
-    public void visitEnd() {
-        myDecompiledMethod.setBody(myStatements);
-        myDecompiledMethod.setNodes(myNodes);
-
-        applyNode();
+    private void placeEdges() {
         // GOTO
         for (final Label lbl : myMap1.keySet()) {
             for (final Node node : myNodes) {
@@ -657,8 +653,21 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 }
             }
         }
+    }
+
+
+    @Override
+    public void visitEnd() {
+        myDecompiledMethod.setBody(myStatements);
+        myDecompiledMethod.setNodes(myNodes);
+
+        applyNode();
+
+        placeEdges();
+
         DominatorTreeGenerator gen = new DominatorTreeGenerator(myNodes);
-        int[] dominators = gen.getDominatorTreeArray();
+        int[] dominators = gen.getDominatorTreeArray(false);
+        int[] postdominators = gen.getDominatorTreeArray(true);
 
         for (Node node : myNodes) {
             if (node instanceof Switch) {
@@ -696,7 +705,21 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 }
             }
             if (node.getCondition() != null) {
-                if (myNodes.indexOf(node) < myNodes.indexOf(node.getListOfTails().get(0)) && myNodes.indexOf(node) < myNodes.indexOf(node.getListOfTails().get(1))) {
+                boolean fl1 = true;
+                for (Node ancestor : node.getAncestors()) {
+                    if (myNodes.indexOf(node) < myNodes.indexOf(ancestor)) {
+                        if (dominators[myNodes.indexOf(node)] != dominators[myNodes.indexOf(node.getListOfTails().get(1))]) {
+                            node.setNextNode(node.getListOfTails().get(1));
+                        }
+                        removeLinkFromAllAncestors(node.getListOfTails().get(1), false);
+                        removeLinkFromAllAncestors(node, false);
+                        fl1 = false;
+                        myNodes.set(myNodes.indexOf(node), new While(node));
+                        break;
+                    }
+                }
+
+                if (fl1 && myNodes.indexOf(node) < myNodes.indexOf(node.getListOfTails().get(1))) {
                     boolean fl = false;
                     for (Node ancestor : node.getAncestors()) {
                         if (myNodes.indexOf(ancestor) > myNodes.indexOf(node)) {
@@ -900,8 +923,11 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
     protected void removeLinkFromAllAncestors(final Node child, final boolean needToBreak) {
         for (final Node parent : child.getAncestors()) {
-            parent.removeChild(child);
-            parent.setIsCaseEndNode(needToBreak);
+            if (parent.getCondition() == null || parent instanceof While) {
+                parent.removeChild(child);
+                child.removeAncestor(parent);
+                parent.setIsCaseEndNode(needToBreak);
+            }
         }
     }
 }
