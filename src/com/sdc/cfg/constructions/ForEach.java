@@ -3,13 +3,10 @@ package com.sdc.cfg.constructions;
 import com.sdc.ast.expressions.Expression;
 import com.sdc.ast.expressions.identifiers.Variable;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class ForEach extends Construction {
     private final Variable myVariable;
     private final Expression myContainer;
-    private List<Construction> myBody = new ArrayList<Construction>();
+    private Construction myBody;
 
     public ForEach(final Variable variable, final Expression container) {
         this.myVariable = variable;
@@ -24,15 +21,11 @@ public class ForEach extends Construction {
         return myContainer;
     }
 
-    public List<Construction> getBody() {
+    public Construction getBody() {
         return myBody;
     }
 
-    public void setBody(final List<Construction> body) {
+    public void setBody(final Construction body) {
         this.myBody = body;
-    }
-
-    public void addConstructionToBody(final Construction construction) {
-        myBody.add(construction);
     }
 }
