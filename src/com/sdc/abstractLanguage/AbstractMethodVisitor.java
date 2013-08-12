@@ -11,7 +11,6 @@ import com.sdc.ast.expressions.identifiers.Variable;
 import com.sdc.ast.expressions.nestedclasses.LambdaFunction;
 import com.sdc.cfg.nodes.Node;
 import com.sdc.cfg.nodes.Switch;
-import com.sdc.cfg.nodes.While;
 import com.sdc.util.ConstructionBuilder;
 import com.sdc.util.DeclarationWorker;
 import com.sdc.util.DominatorTreeGenerator;
@@ -619,6 +618,18 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
     public void visitMaxs(final int maxStack, final int maxLocals) {
     }
 
+    @Override
+    public void visitEnd() {
+        applyNode();
+
+        placeEdges();
+
+        DominatorTreeGenerator gen = new DominatorTreeGenerator(myNodes);
+        ConstructionBuilder cb = new ConstructionBuilder(myNodes, gen.getDominators(), gen.getPostDominators());
+
+        myDecompiledMethod.setBegin(cb.build());
+    }
+
     private void placeEdges() {
         // GOTO
         for (final Label lbl : myMap1.keySet()) {
@@ -662,18 +673,6 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 }
             }
         }
-    }
-
-    @Override
-    public void visitEnd() {
-        applyNode();
-
-        placeEdges();
-
-        DominatorTreeGenerator gen = new DominatorTreeGenerator(myNodes);
-        ConstructionBuilder cb = new ConstructionBuilder(myNodes, gen.getDominators(), gen.getPostDominators());
-
-        myDecompiledMethod.setBegin(cb.build());
     }
 
     protected Integer getLeftEmptyNodeIndex() {
@@ -838,7 +837,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
     protected void removeLinkFromAllAncestors(final Node child, final boolean needToBreak) {
         for (final Node parent : child.getAncestors()) {
-            if (parent.getCondition() == null || parent instanceof While) {
+            if (parent.getCondition() == null) {
                 parent.removeChild(child);
                 child.removeAncestor(parent);
                 parent.setIsCaseEndNode(needToBreak);

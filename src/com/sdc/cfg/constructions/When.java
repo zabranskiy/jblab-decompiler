@@ -2,15 +2,13 @@ package com.sdc.cfg.constructions;
 
 import com.sdc.ast.expressions.Expression;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class When extends Construction {
     private final Expression myCondition;
-    private Map<Expression, List<Construction>> myCases = new HashMap<Expression, List<Construction>>();
-    private List<Construction> myDefaultCase = new ArrayList<Construction>();
+    private Map<Expression, Construction> myCases = new HashMap<Expression, Construction>();
+    private Construction myDefaultCase;
 
     public When(final Expression condition) {
         this.myCondition = condition;
@@ -20,27 +18,27 @@ public class When extends Construction {
         return myCondition;
     }
 
-    public Map<Expression, List<Construction>> getCases() {
+    public Map<Expression, Construction> getCases() {
         return myCases;
     }
 
-    public List<Construction> getDefaultCase() {
+    public Construction getDefaultCase() {
         return myDefaultCase;
     }
 
-    public void setDefaultCase(final List<Construction> defaultCase) {
+    public void setDefaultCase(final Construction defaultCase) {
         this.myDefaultCase = defaultCase;
     }
 
-    public void setCases(final Map<Expression, List<Construction>> cases) {
+    public void setCases(final Map<Expression, Construction> cases) {
         this.myCases = cases;
     }
 
-    public void addCase(final Expression key, final List<Construction> body) {
+    public void addCase(final Expression key, final Construction body) {
         myCases.put(key, body);
     }
 
     public boolean hasDefaultCase() {
-        return myDefaultCase.isEmpty();
+        return myDefaultCase != null;
     }
 }

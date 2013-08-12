@@ -2,13 +2,10 @@ package com.sdc.cfg.constructions;
 
 import com.sdc.ast.expressions.Expression;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class ConditionalBlock extends Construction {
     private final Expression myCondition;
-    private List<Construction> myThenBlock = new ArrayList<Construction>();
-    private List<Construction> myElseBlock = new ArrayList<Construction>();
+    private Construction myThenBlock;
+    private Construction myElseBlock;
 
     public ConditionalBlock(final Expression condition) {
         this.myCondition = condition;
@@ -18,31 +15,23 @@ public class ConditionalBlock extends Construction {
         return myCondition;
     }
 
-    public List<Construction> getThenBlock() {
+    public Construction getThenBlock() {
         return myThenBlock;
     }
 
-    public void setThenBlock(final List<Construction> thenBlock) {
+    public void setThenBlock(final Construction thenBlock) {
         this.myThenBlock = thenBlock;
     }
 
-    public List<Construction> getElseBlock() {
+    public Construction getElseBlock() {
         return myElseBlock;
     }
 
-    public void setElseBlock(final List<Construction> elseBlock) {
+    public void setElseBlock(final Construction elseBlock) {
         this.myElseBlock = elseBlock;
     }
 
     public boolean hasElseBlock() {
-        return !myElseBlock.isEmpty();
-    }
-
-    public void addConstructionToThenBlock(final Construction construction) {
-        myThenBlock.add(construction);
-    }
-
-    public void addConstructionToElseBlock(final Construction construction) {
-        myElseBlock.add(construction);
+        return myElseBlock != null;
     }
 }
