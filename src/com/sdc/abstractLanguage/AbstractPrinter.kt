@@ -21,6 +21,7 @@ import com.sdc.ast.controlflow.InstanceInvocation
 import com.sdc.ast.expressions.nestedclasses.AnonymousClass
 import com.sdc.cfg.nodes.Node
 import com.sdc.cfg.nodes.Switch
+import com.sdc.cfg.constructions.Construction
 
 
 abstract class AbstractPrinter {
@@ -153,6 +154,10 @@ abstract class AbstractPrinter {
 
             else -> throw IllegalArgumentException("Unknown Statement implementer!")
         }
+
+    open fun printConstruction(construction : Construction?, nestSize : Int): PrimeDoc {
+        return nil()
+    }
 
     open fun printNode(node : Node?, nestSize : Int): PrimeDoc {
         val startCode = printStatements(node!!.getStatements(), nestSize)

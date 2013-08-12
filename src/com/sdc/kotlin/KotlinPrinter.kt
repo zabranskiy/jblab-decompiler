@@ -64,7 +64,7 @@ class KotlinPrinter: AbstractPrinter() {
                 val arguments = text("{ (") + printMethodParameters(lambdaFunction) + text(")") + returnTypeCode + text("-> ")
                 val body = nest(
                         lambdaFunction!!.getNestSize(),
-                        printStatements(lambdaFunction.getBody(), lambdaFunction.getNestSize())
+                          printConstruction(lambdaFunction.getBegin(), lambdaFunction.getNestSize())
                 ) / text("}")
                 arguments + body
             }
@@ -165,8 +165,7 @@ class KotlinPrinter: AbstractPrinter() {
 
         val body = nest(
                 kotlinMethod.getNestSize(),
-//                printStatements(kotlinMethod.getBody(), kotlinMethod.getNestSize())
-                printNode(kotlinMethod.getNodes()!!.get(0), kotlinMethod.getNestSize())
+                printConstruction(kotlinMethod.getBegin(), kotlinMethod.getNestSize())
                 + printMethodError(kotlinMethod)
         ) / text("}")
 
@@ -196,7 +195,7 @@ class KotlinPrinter: AbstractPrinter() {
     fun printInitialConstructor(constructor: AbstractMethod?): PrimeDoc {
         val body = nest(
                 constructor!!.getNestSize(),
-                printStatements(constructor.getBody(), constructor.getNestSize())
+                printConstruction(constructor.getBegin(), constructor.getNestSize())
         )
         return text("initial constructor {") + body / text("}")
     }
