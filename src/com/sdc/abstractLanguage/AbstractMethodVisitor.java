@@ -413,19 +413,29 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
     public void visitFieldInsn(final int opcode, final String owner, final String name, final String desc) {
         final String opString = Printer.OPCODES[opcode];
         final String fieldName = myDecompiledMethod.getDecompiledClass().isLambdaFunctionClass() ? name.substring(1) : name;
+        Field field = new Field(fieldName, getDescriptor(desc, 0, myDecompiledMethod.getImports()));
 
-        if (opString.contains("PUTFIELD")) {
-            if (myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName()) && !myBodyStack.isEmpty() && myBodyStack.peek() instanceof Constant) {
-                myDecompiledMethod.addInitializerToField(name, getTopOfBodyStack());
+        Expression e = null;
+        if (opString.contains("PUTFIELD") || opString.contains("PUTSTATIC")) {
+            e = getTopOfBodyStack();
+        }
+
+        if (opString.contains("PUTFIELD") || opString.contains("GETFIELD")) {
+            final Identifier fieldOwner = (Identifier) getTopOfBodyStack();
+            field.setOwner(fieldOwner);
+        } else {
+            final String fieldOwner = getClassName(owner);
+            field.setStaticOwnerName(fieldOwner);
+        }
+
+        if (opString.contains("PUTFIELD") || opString.contains("PUTSTATIC")) {
+            if (myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName()) && e instanceof Constant) {
+                myDecompiledMethod.addInitializerToField(name, e);
             } else {
-                final Identifier v = new Field(fieldName, getDescriptor(desc, 0, myDecompiledMethod.getImports()));
-                final Expression e = getTopOfBodyStack();
-                myStatements.add(new Assignment(v, e));
+                myStatements.add(new Assignment(field, e));
             }
-            removeThisVariableFromStack();
-        } else if (opString.contains("GETFIELD")) {
-            removeThisVariableFromStack();
-            myBodyStack.push(new Field(fieldName, getDescriptor(desc, 0, myDecompiledMethod.getImports())));
+        } else if (opString.contains("GETFIELD") || opString.contains("GETSTATIC")) {
+            myBodyStack.push(field);
         }
     }
 
