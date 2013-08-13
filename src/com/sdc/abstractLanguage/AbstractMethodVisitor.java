@@ -9,12 +9,11 @@ import com.sdc.ast.expressions.identifiers.Field;
 import com.sdc.ast.expressions.identifiers.Identifier;
 import com.sdc.ast.expressions.identifiers.Variable;
 import com.sdc.ast.expressions.nestedclasses.LambdaFunction;
-import com.sdc.cfg.DominatorTreeGenerator;
-import com.sdc.cfg.ExceptionHandler;
-import com.sdc.cfg.functionalization.Generator;
 import com.sdc.cfg.nodes.Node;
 import com.sdc.cfg.nodes.Switch;
+import com.sdc.util.ConstructionBuilder;
 import com.sdc.util.DeclarationWorker;
+import com.sdc.util.DominatorTreeGenerator;
 import org.objectweb.asm.*;
 import org.objectweb.asm.util.Printer;
 
@@ -559,7 +558,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
     @Override
     public void visitJumpInsn(final int opcode, final Label label) {
         final String opString = Printer.OPCODES[opcode];
-//        System.out.println(opString + ": " + label);
+        System.out.println(opString + ": " + label);
         if (opString.contains("IF")) {
             final Label myLastIFLabel = label;
             if (myNodes.isEmpty() || !myNodeInnerLabels.isEmpty() || (myNodes.get(getLeftEmptyNodeIndex() - 1).getCondition() == null)) {
@@ -594,7 +593,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         }
         myNodeInnerLabels.add(label);
 
-//        System.out.println(label);
+        System.out.println(label);
     }
 
     @Override
@@ -627,7 +626,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         }
         list.add(dflt);
         myLabels.add(dflt);
-        Node switch_node = new Switch(myBodyStack.pop(), keys, list);
+        Node switch_node = new Switch(myBodyStack.pop(), keys, list, myNodes.size());
         myNodes.add(switch_node);
     }
 
@@ -640,7 +639,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         }
         list.add(dflt);
         myLabels.add(dflt);
-        Node switch_node = new Switch(myBodyStack.pop(), keys, list);
+        Node switch_node = new Switch(myBodyStack.pop(), keys, list, myNodes.size());
         myNodes.add(switch_node);
     }
 
@@ -655,7 +654,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         myBodyStack.push(new NewArray(dims, className, dimensions));
     }
 
-    @Override
+/*    @Override
     public void visitTryCatchBlock(final Label start, final Label end, final Label handler, final String type) {
         //System.out.println(start + " " + end + " " + handler + " " + type);
 
@@ -677,7 +676,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
         }
         //  myMap1.put(handler, list);
-    }
+    }*/
 
     @Override
     public void visitLocalVariable(final String name, final String desc,
@@ -702,10 +701,17 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
     @Override
     public void visitEnd() {
-        myDecompiledMethod.setBody(myStatements);
-        myDecompiledMethod.setNodes(myNodes);
-
         applyNode();
+
+        placeEdges();
+
+        DominatorTreeGenerator gen = new DominatorTreeGenerator(myNodes);
+        ConstructionBuilder cb = new ConstructionBuilder(myNodes, gen.getDominators(), gen.getPostDominators());
+
+        myDecompiledMethod.setBegin(cb.build());
+    }
+
+    private void placeEdges() {
         // GOTO
         for (final Label lbl : myMap1.keySet()) {
             for (final Node node : myNodes) {
@@ -748,85 +754,6 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 }
             }
         }
-        DominatorTreeGenerator gen = new DominatorTreeGenerator(myNodes);
-        int[] dominators = gen.getDominatorTreeArray();
-
-        for (Node node : myNodes) {
-            if (node instanceof Switch) {
-                final int index = myNodes.indexOf(node);
-                for (int i = 0; i < myNodes.size(); i++) {
-                    if (dominators[i] == index) {
-                        boolean isTail = false;
-                        for (Node tail : node.getListOfTails()) {
-                            if (i == myNodes.indexOf(tail)) {
-                                isTail = true;
-                                break;
-                            }
-                        }
-                        if (!isTail) {
-                            removeLinkFromAllAncestors(myNodes.get(i), true);
-                            node.setNextNode(myNodes.get(i));
-                            break;
-                        }
-                    }
-                }
-                if (node.getNextNode() == null) {
-                    Node defaultBranch = ((Switch) node).getNodeByKey(-1);
-                    node.removeChild(defaultBranch);
-                    defaultBranch.removeAncestor(node);
-                    removeLinkFromAllAncestors(defaultBranch, true);
-                    defaultBranch.setIsCaseEndNode(false);
-                    node.setNextNode(defaultBranch);
-                }
-                for (final Node tail : node.getListOfTails()) {
-                    for (final Node ancestor : tail.getAncestors()) {
-                        if (!ancestor.equals(node) && myNodes.indexOf(ancestor) < myNodes.indexOf(tail)) {
-                            ancestor.removeChild(tail);
-                        }
-                    }
-                }
-            }
-            if (node.getCondition() != null) {
-                if (myNodes.indexOf(node) < myNodes.indexOf(node.getListOfTails().get(0)) && myNodes.indexOf(node) < myNodes.indexOf(node.getListOfTails().get(1))) {
-                    boolean fl = false;
-                    for (Node ancestor : node.getAncestors()) {
-                        if (myNodes.indexOf(ancestor) > myNodes.indexOf(node)) {
-                            fl = true;
-                            break;
-                        }
-                    }
-
-                    if (!fl) {
-                        final int index = myNodes.indexOf(node);
-                        for (int i = 0; i < myNodes.size(); i++) {
-                            if (dominators[i] == index) {
-                                boolean isTail = false;
-                                for (Node tail : node.getListOfTails()) {
-                                    if (i == myNodes.indexOf(tail)) {
-                                        isTail = true;
-                                        break;
-                                    }
-                                }
-                                if (!isTail) {
-                                    removeLinkFromAllAncestors(myNodes.get(i), false);
-                                    node.setNextNode(myNodes.get(i));
-                                    break;
-                                }
-                            }
-                        }
-                        if (node.getNextNode() == null) {
-                            node.setNextNode(node.getListOfTails().get(1));
-                            removeLinkFromAllAncestors(node.getListOfTails().get(1), false);
-                            node.addTail(node.getNextNode());
-                        }
-                    }
-                }
-            }
-        }
-        Generator generator = new Generator(myNodes);
-//        AnonymousClass aClass = generator.genAnonymousClass();
-        // myKotlinMethod.setAnonymousClass(aClass);
-        //myKotlinMethod.drawCFG();
     }
 
     protected Integer getLeftEmptyNodeIndex() {
@@ -847,7 +774,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 myNodes.get(i).setEmpty(true);
             }
         } else {
-            Node node = new Node(new ArrayList<Statement>(myStatements), new ArrayList<Label>(myNodeInnerLabels));
+            Node node = new Node(new ArrayList<Statement>(myStatements), new ArrayList<Label>(myNodeInnerLabels), myNodes.size());
             if (node.getStatements().isEmpty()) {
                 node.setEmpty(true);
             }
@@ -987,12 +914,5 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
     protected String getDescriptor(final String descriptor, final int pos, List<String> imports) {
         return myDecompiledMethod.getDecompiledClass().getDescriptor(descriptor, pos, imports, myLanguage);
-    }
-
-    protected void removeLinkFromAllAncestors(final Node child, final boolean needToBreak) {
-        for (final Node parent : child.getAncestors()) {
-            parent.removeChild(child);
-            parent.setIsCaseEndNode(needToBreak);
-        }
     }
 }

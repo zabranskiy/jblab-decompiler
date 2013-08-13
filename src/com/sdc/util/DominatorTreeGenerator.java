@@ -1,38 +1,24 @@
-package com.sdc.cfg;
+package com.sdc.util;
 
 import com.sdc.cfg.nodes.Node;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.ListIterator;
 
 public class DominatorTreeGenerator {
+    private List<Node> myNodes;
     private ArrayList<ArrayList<Integer>> myGraph;
     private ArrayList<ArrayList<Boolean>> myMarkEdge;
     private boolean[] mark;
     private int[] id, semi;
     private final int size;
-    private int index = 0;
+    private int index;
 
     public DominatorTreeGenerator(List<Node> myNodes) {
+        this.myNodes = myNodes;
         this.size = myNodes.size();
-        this.mark = new boolean[size];
-        this.id = new int[size];
-        this.semi = new int[size];
-        this.myGraph = new ArrayList<ArrayList<Integer>>();
-        this.myMarkEdge = new ArrayList<ArrayList<Boolean>>();
-        // init
-        for (Node node : myNodes) {
-            ArrayList<Integer> indexesOfTails = new ArrayList<Integer>();
-            ArrayList<Boolean> markEdges = new ArrayList<Boolean>();
-            for (Node tailNode : node.getListOfTails()) {
-                indexesOfTails.add(myNodes.indexOf(tailNode));
-                markEdges.add(false);
-            }
-            myGraph.add(indexesOfTails);
-            myMarkEdge.add(markEdges);
-        }
-        Arrays.fill(semi, -1);
     }
 
     // walk graph
@@ -100,14 +86,51 @@ public class DominatorTreeGenerator {
         }
     }
 
-    private void build() {
-        dfs(0);
+    private void build(boolean isPostDominatorTree) {
+        index = 0;
+        mark = new boolean[size];
+        id = new int[size];
+        semi = new int[size];
+        myGraph = new ArrayList<ArrayList<Integer>>();
+        myMarkEdge = new ArrayList<ArrayList<Boolean>>();
+
+        Arrays.fill(semi, -1);
+        for (int i = 0; i < size; i++) {
+            myGraph.add(null);
+            myMarkEdge.add(null);
+        }
+
+        ListIterator li = myNodes.listIterator(isPostDominatorTree ? myNodes.size() : 0);
+
+        while (isPostDominatorTree ? li.hasPrevious() : li.hasNext()) {
+            Node node = (Node) (isPostDominatorTree ? li.previous() : li.next());
+            List<Node> nodes = isPostDominatorTree ? node.getAncestors() : node.getListOfTails();
+            ArrayList<Integer> indexesOfTails = new ArrayList<Integer>();
+            ArrayList<Boolean> markEdges = new ArrayList<Boolean>();
+            for (Node tailNode : nodes) {
+                indexesOfTails.add(tailNode.getIndex());
+
+                markEdges.add(false);
+            }
+            myGraph.set(node.getIndex(), indexesOfTails);
+            myMarkEdge.set(node.getIndex(), markEdges);
+        }
+
+        dfs(isPostDominatorTree ? size - 1 : 0);
         FindSemi();
         FindDomi();
     }
 
-    public int[] getDominatorTreeArray() {
-        build();
+    public int[] getDominators() {
+        return size > 1 ? getTree(false) : null;
+    }
+
+    public int[] getPostDominators() {
+        return size > 1 ? getTree(true) : null;
+    }
+
+    private int[] getTree(boolean isPostDominatorTree) {
+        build(isPostDominatorTree);
         return semi;
     }
 }

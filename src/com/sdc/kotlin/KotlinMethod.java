@@ -1,6 +1,8 @@
 package com.sdc.kotlin;
 
 import KotlinPrinter.KotlinPrinter;
+import com.sdc.ast.controlflow.Statement;
+import com.sdc.cfg.constructions.ElementaryBlock;
 import pretty.PrettyPackage;
 
 import com.sdc.abstractLanguage.AbstractClass;
@@ -53,7 +55,11 @@ public class KotlinMethod extends AbstractMethod {
     }
 
     public boolean hasEmptyBody() {
-        return myBody.size() == 0 || myBody.size() == 1 && myBody.get(0) instanceof Return && ((Return) myBody.get(0)).getReturnValue() == null;
+        if (myBegin instanceof ElementaryBlock) {
+            final List<Statement> statements = ((ElementaryBlock) myBegin).getStatements();
+            return statements.isEmpty() || statements.size() == 1 && statements.get(0) instanceof Return && ((Return) statements.get(0)).getReturnValue() == null;
+        }
+        return false;
     }
 
     public void dragReceiverFromMethodParameters() {

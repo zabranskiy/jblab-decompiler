@@ -3,6 +3,7 @@ package com.sdc.cfg.nodes;
 import com.sdc.ast.controlflow.Return;
 import com.sdc.ast.controlflow.Statement;
 import com.sdc.ast.expressions.Expression;
+import com.sdc.cfg.constructions.Construction;
 import org.objectweb.asm.Label;
 
 import java.util.ArrayList;
@@ -13,6 +14,8 @@ public class Node {
     protected Expression myCondition;
     protected List<Label> myInnerLabels;
     protected Node myNextNode;
+    protected int index;
+    protected Construction construction;
     protected List<Node> myNodeTails = new ArrayList<Node>();
     protected List<Node> myAncestors = new ArrayList<Node>();  // Fathers of a vertex
 
@@ -22,9 +25,10 @@ public class Node {
     public Node() {
     }
 
-    public Node(List<Statement> myStatements, List<Label> myInnerLabels) {
+    public Node(List<Statement> myStatements, List<Label> myInnerLabels, int index) {
         this.myStatements = myStatements;
         this.myInnerLabels = myInnerLabels;
+        this.index = index;
     }
 
     public void addTail(Node node) {
@@ -83,8 +87,20 @@ public class Node {
         return myNextNode;
     }
 
+    public int getIndex() {
+        return index;
+    }
+
     public void setNextNode(Node myNextNode) {
         this.myNextNode = myNextNode;
+    }
+
+    public void setConstruction(Construction construction) {
+        this.construction = construction;
+    }
+
+    public Construction getConstruction() {
+        return construction;
     }
 
     public boolean isEmpty() {

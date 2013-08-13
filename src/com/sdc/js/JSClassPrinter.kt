@@ -55,7 +55,7 @@ class JSPrinter : AbstractPrinter() {
 
         val body = nest(
                        classMethod.getNestSize(),
-                       printStatements(classMethod.getBody()!!, classMethod.getNestSize())
+                       printConstruction(classMethod.getBegin(), classMethod.getNestSize())
                        + printMethodError(classMethod)
                    ) / text("}")
 
