@@ -4,17 +4,16 @@ import com.sdc.abstractLanguage.AbstractClass;
 import com.sdc.abstractLanguage.AbstractClassVisitor;
 import com.sdc.abstractLanguage.AbstractMethod;
 import com.sdc.abstractLanguage.AbstractMethodVisitor;
-import com.sdc.ast.expressions.*;
-import com.sdc.ast.expressions.identifiers.Field;
+import com.sdc.ast.expressions.Expression;
 import com.sdc.ast.expressions.identifiers.Variable;
 import com.sdc.ast.expressions.nestedclasses.LambdaFunction;
 import com.sdc.util.DeclarationWorker;
-
-import org.objectweb.asm.*;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.Label;
 import org.objectweb.asm.util.Printer;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.List;
 
 public class KotlinMethodVisitor extends AbstractMethodVisitor {
     public KotlinMethodVisitor(final AbstractMethod abstractMethod, final String decompiledOwnerFullClassName, final String decompiledOwnerSuperClassName) {

@@ -1,20 +1,22 @@
 package JavaPrinter
 
 import pretty.*
-
 import com.sdc.java.JavaClass
 import com.sdc.java.JavaClassField
 import com.sdc.java.JavaMethod
-import com.sdc.java.JavaAnnotation
-
 import com.sdc.abstractLanguage.AbstractClass
 import com.sdc.abstractLanguage.AbstractMethod
 import com.sdc.abstractLanguage.AbstractClassField
-import com.sdc.abstractLanguage.AbstractAnnotation
 import com.sdc.abstractLanguage.AbstractPrinter
-
+import com.sdc.abstractLanguage.AbstractOperationPrinter
+import com.sdc.java.JavaOperationPrinter
 
 class JavaPrinter: AbstractPrinter() {
+    override fun getOperationPrinter():AbstractOperationPrinter{
+       return JavaOperationPrinter.getInstance() as AbstractOperationPrinter;
+    }
+
+
     override fun printAnnotationIdentifier(): PrimeDoc = text("@")
 
     override fun printBaseClass(): PrimeDoc = text("Object")

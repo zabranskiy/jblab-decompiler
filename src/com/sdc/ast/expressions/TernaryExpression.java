@@ -31,4 +31,12 @@ public class TernaryExpression extends Expression {
         return myCondition;
     }
 
+    @Override
+    public String toString() {
+        return "TernaryExpression{" +
+                "myCondition=" + myCondition +
+                ", myLeft=" + myLeft +
+                ", myRight=" + myRight +
+                '}';
+    }
 }
