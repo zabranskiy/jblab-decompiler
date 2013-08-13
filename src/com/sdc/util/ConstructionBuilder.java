@@ -1,9 +1,11 @@
 package com.sdc.util;
 
+import com.sdc.cfg.constructions.ConditionalBlock;
 import com.sdc.cfg.constructions.Construction;
 import com.sdc.cfg.constructions.ElementaryBlock;
 import com.sdc.cfg.nodes.Node;
 import com.sdc.cfg.nodes.Switch;
+import com.sdc.cfg.nodes.While;
 
 import java.util.List;
 
@@ -136,12 +138,16 @@ public class ConstructionBuilder {
     }
 
     private Node findNextNodeToSwitchWithDefaultCase(Switch switchNode) {
+        return findNextNode(switchNode);
+    }
+
+    private Node findNextNode(Node node) {
         Node result = null;
 
-        for (int i = 0; i < size; i++) {
-            if (domi[i] == switchNode.getIndex()) {
+        for (int i = 0; i < domi.length; i++) {
+            if (domi[i] == node.getIndex()) {
                 boolean isTail = false;
-                for (final Node tail : switchNode.getListOfTails()) {
+                for (final Node tail : node.getListOfTails()) {
                     if (i == tail.getIndex()) {
                         isTail = true;
                         break;
@@ -157,6 +163,7 @@ public class ConstructionBuilder {
         return result;
     }
 
+
     private Node findNextNodeToSwitchWithoutDefaultCase(Switch switchNode) {
         Node defaultBranch = switchNode.getNodeByKey(-1);
 
@@ -167,56 +174,64 @@ public class ConstructionBuilder {
     }
 
     private Construction extractConditionBlock(Node node) {
-               /* if (node.getCondition() != null) {
+        if (node.getCondition() != null) {
             boolean fl1 = true;
             for (Node ancestor : node.getAncestors()) {
                 if (myNodes.indexOf(node) < myNodes.indexOf(ancestor)) {
                     if (domi[myNodes.indexOf(node)] != domi[myNodes.indexOf(node.getListOfTails().get(1))]) {
                         node.setNextNode(node.getListOfTails().get(1));
                     }
-//                    removeLinkFromAllAncestors(node.getListOfTails().get(1), false);
-//                    removeLinkFromAllAncestors(node, false);
                     fl1 = false;
+                    com.sdc.cfg.constructions.While whileConstruction = new com.sdc.cfg.constructions.While(node.getCondition());
                     myNodes.set(myNodes.indexOf(node), new While(node));
                     break;
                 }
             }
 
-            if (fl1 && myNodes.indexOf(node) < myNodes.indexOf(node.getListOfTails().get(1))) {
+
+            /// IF
+            if (fl1 && node.getIndex() < node.getListOfTails().get(1).getIndex()) {
+                com.sdc.cfg.constructions.ConditionalBlock conditionalBlock = new ConditionalBlock(node.getCondition());
+
                 boolean fl = false;
                 for (Node ancestor : node.getAncestors()) {
-                    if (myNodes.indexOf(ancestor) > myNodes.indexOf(node)) {
+                    if (ancestor.getIndex() > node.getIndex()) {
                         fl = true;
                         break;
                     }
                 }
 
                 if (!fl) {
-                    final int index = myNodes.indexOf(node);
-                    for (int i = 0; i < size; i++) {
-                        if (domi[i] == index) {
-                            boolean isTail = false;
-                            for (Node tail : node.getListOfTails()) {
-                                if (i == myNodes.indexOf(tail)) {
-                                    isTail = true;
-                                    break;
-                                }
-                            }
-                            if (!isTail) {
-//                                removeLinkFromAllAncestors(myNodes.get(i), false);
-                                node.setNextNode(myNodes.get(i));
-                                break;
-                            }
-                        }
-                    }
+                    Node nextNode = findNextNode(node);
+                    node.setNextNode(nextNode);
+
+                    Node leftNode = node.getListOfTails().get(0);
+                    Node rightNode = node.getListOfTails().get(1);
+                    int rightIndex = getRelativeIndex(rightNode);
+
                     if (node.getNextNode() == null) {
-                        node.setNextNode(node.getListOfTails().get(1));
-//                        removeLinkFromAllAncestors(node.getListOfTails().get(1), false);
-                        node.addTail(node.getNextNode());
+                        if (rightNode.getAncestors().size() > 1) {
+                            if (rightNode.getIndex() <= myNodes.get(size - 1).getIndex()) {
+                                node.setNextNode(rightNode);
+                            }
+//                            int rightIndex = getRelativeIndex(rightNode);
+                            conditionalBlock.setThenBlock(new ConstructionBuilder(myNodes.subList(getRelativeIndex(leftNode), rightIndex > size ? size : rightIndex), domi, post).build());
+                        } else {
+                            conditionalBlock.setThenBlock(new ConstructionBuilder(myNodes.subList(getRelativeIndex(leftNode), rightIndex), domi, post).build());
+                            conditionalBlock.setElseBlock(new ConstructionBuilder(myNodes.subList(getRelativeIndex(rightNode), size), domi, post).build());
+                        }
+                    } else {
+                        conditionalBlock.setThenBlock(new ConstructionBuilder(myNodes.subList(getRelativeIndex(leftNode), rightIndex), domi, post).build());
+                        conditionalBlock.setElseBlock(new ConstructionBuilder(myNodes.subList(rightIndex, getRelativeIndex(node.getNextNode())), domi, post).build());
                     }
                 }
+                // TODO: test second condition for switch with if in a case
+                if (node.getNextNode() != null && getRelativeIndex(node.getNextNode()) < size) {
+                    extractNextConstruction(conditionalBlock, node);
+                }
+                return conditionalBlock;
             }
-        }*/
+        }
         return null;
     }
 
