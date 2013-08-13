@@ -164,43 +164,6 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
     public void visitInsn(final int opcode) {
         int size = myBodyStack.size();
         final String opString = Printer.OPCODES[opcode];
-  /*      if (opString.contains("IADD") || opString.contains("ISUB")
-                || opString.contains("IMUL") || opString.contains("IDIV") || opString.contains("IREM")) {
-            if (size < 1) return;
-            Expression e1 = getTopOfBodyStack();
-            Expression e2 = getTopOfBodyStack();
-            if (e1 instanceof IntConstant && e2 instanceof Variable) {
-                // for increment without instruction iinc
-                IntConstant constant = (IntConstant) e1;
-                if (opString.contains("IADD") && constant.isOne() ||
-                        opString.contains("ISUB") && constant.isMinusOne()) {
-                    myBodyStack.push(new ExprIncrement(e2, 1));
-                } else if (opString.contains("IADD") && constant.isMinusOne() ||
-                        opString.contains("ISUB") && constant.isOne()) {
-                    myBodyStack.push(new ExprIncrement(e2, -1));
-                } else if (opString.contains("IADD") && constant.isPosInt() ||
-                        opString.contains("ISUB") && constant.isNegInt()) {
-                    myBodyStack.push(new ExprIncrement(e2, Math.abs(constant.getIntValue())));
-                } else if (opString.contains("IADD") && constant.isNegInt() ||
-                        opString.contains("ISUB") && constant.isPosInt()) {
-                    myBodyStack.push(new ExprIncrement(e2, -Math.abs(constant.getIntValue())));
-                } else if (opString.contains("IMUL") && constant.isPosInt()) {
-                    myBodyStack.push(new ExprIncrement(e2, constant.getIntValue(), MUL));
-                } else if (opString.contains("IDIV") && constant.isPosInt()) {
-                    myBodyStack.push(new ExprIncrement(e2, constant.getIntValue(), DIV));
-                } else if (opString.contains("IREM") && constant.isPosInt()) {
-                    myBodyStack.push(new ExprIncrement(e2, constant.getIntValue(), REM));
-                } else {
-                    // if not for increment
-                    Expression res = new BinaryExpression(OperationType.valueOf(opString.substring(1)), e2, e1);
-                    myBodyStack.push(res);
-                }
-            } else {
-                // if not for increment
-                Expression res = new BinaryExpression(OperationType.valueOf(opString.substring(1)), e2, e1);
-                myBodyStack.push(res);
-            }
-        } else*/
         if (opString.contains("ADD") || opString.contains("SUB")
                 || opString.contains("MUL") || opString.contains("DIV") || opString.contains("REM")
                 || opString.contains("USHR") || opString.contains("SHL")
