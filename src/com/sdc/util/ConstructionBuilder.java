@@ -71,6 +71,7 @@ public class ConstructionBuilder {
             Switch switchNode = (Switch) node;
             com.sdc.cfg.constructions.Switch switchConstruction = new com.sdc.cfg.constructions.Switch(switchNode.getExpr());
 
+
             Node nextNode = findNextNodeToSwitchWithDefaultCase(switchNode);
             switchNode.setNextNode(nextNode);
 
@@ -78,26 +79,42 @@ public class ConstructionBuilder {
                 List<Node> tails = switchNode.getListOfTails();
                 Node past = switchNode.getListOfTails().get(0);
                 for (int i = 1; i < tails.size(); i++) {
-                    switchConstruction.addCase(switchNode.getKeys()[i - 1], new ConstructionBuilder(myNodes.subList(past.getIndex(), tails.get(i).getIndex()), domi, post).build());
+                    switchConstruction.addCase(switchNode.getKeys()[i - 1], new ConstructionBuilder(myNodes.subList(getRelativeIndex(past), getRelativeIndex(tails.get(i))), domi, post).build());
                     past = tails.get(i);
                 }
 
                 nextNode = findNextNodeToSwitchWithoutDefaultCase(switchNode);
                 switchNode.setNextNode(nextNode);
+
+                for (final Node tail : switchNode.getListOfTails()) {
+                    for (final Node ancestor : tail.getAncestors()) {
+                        if (!ancestor.equals(switchNode) && ancestor.getIndex() < tail.getIndex()) {
+                            ancestor.removeChild(tail);
+                        }
+                    }
+                }
             } else {
+                for (final Node tail : switchNode.getListOfTails()) {
+                    for (final Node ancestor : tail.getAncestors()) {
+                        if (!ancestor.equals(switchNode) && ancestor.getIndex() < tail.getIndex()) {
+                            ancestor.removeChild(tail);
+                        }
+                    }
+                }
+
                 switchNode.addTail(switchNode.getNextNode());
 
                 List<Node> tails = switchNode.getListOfTails();
                 Node past = switchNode.getListOfTails().get(0);
-                int defaultIndex = switchNode.getNodeByKey(-1).getIndex();
+                Node defaultNode = switchNode.getNodeByKey(-1);
                 for (int i = 1; i < tails.size(); i++) {
-                    if (tails.get(i).getIndex() == defaultIndex) {
-                        switchConstruction.addCase(switchNode.getKeys()[i - 1], new ConstructionBuilder(myNodes.subList(past.getIndex(), defaultIndex), domi, post).build());
+                    if (tails.get(i).getIndex() == defaultNode.getIndex()) {
+                        switchConstruction.addCase(switchNode.getKeys()[i - 1], new ConstructionBuilder(myNodes.subList(getRelativeIndex(past), getRelativeIndex(defaultNode)), domi, post).build());
                         i++;
-                        switchConstruction.setDefaultCase(new ConstructionBuilder(myNodes.subList(defaultIndex, tails.get(i).getIndex()), domi, post).build());
+                        switchConstruction.setDefaultCase(new ConstructionBuilder(myNodes.subList(getRelativeIndex(defaultNode), getRelativeIndex(tails.get(i))), domi, post).build());
                     } else {
-                        Construction construction = new ConstructionBuilder(myNodes.subList(past.getIndex(), tails.get(i).getIndex()), domi, post).build();
-                        if (past.getIndex() == defaultIndex) {
+                        Construction construction = new ConstructionBuilder(myNodes.subList(getRelativeIndex(past), getRelativeIndex(tails.get(i))), domi, post).build();
+                        if (past.getIndex() == defaultNode.getIndex()) {
                             switchConstruction.setDefaultCase(construction);
                         } else {
                             switchConstruction.addCase(switchNode.getKeys()[i - 1], construction);
@@ -105,11 +122,14 @@ public class ConstructionBuilder {
                     }
                     past = tails.get(i);
                 }
+
+                switchNode.removeChild(switchNode.getNextNode());
             }
+
 
             addBreakToAncestors(nextNode);
 
-            extractNextConstruction(switchConstruction, node);
+            extractNextConstruction(switchConstruction, switchNode);
             return switchConstruction;
         }
         return null;
@@ -128,7 +148,7 @@ public class ConstructionBuilder {
                     }
                 }
                 if (!isTail) {
-                    result = myNodes.get(i);
+                    result = myNodes.get(getRelativeIndex(i));
                     break;
                 }
             }
@@ -200,13 +220,23 @@ public class ConstructionBuilder {
         return null;
     }
 
+    private int getRelativeIndex(Node node) {
+        return getRelativeIndex(node.getIndex());
+    }
+
+    private int getRelativeIndex(int index) {
+        return index - myNodes.get(0).getIndex();
+    }
+
     private void extractNextConstruction(Construction construction, final Node currentNode) {
         construction.setNextConstruction(build(currentNode.getNextNode()));
     }
 
     protected void addBreakToAncestors(final Node child) {
         for (final Node parent : child.getAncestors()) {
-            parent.getConstruction().setBreak("");
+            if (parent.getConstruction() != null) {
+                parent.getConstruction().setBreak("");
+            }
         }
     }
 }
