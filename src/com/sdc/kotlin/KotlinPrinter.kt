@@ -2,27 +2,25 @@ package KotlinPrinter
 
 import pretty.*
 import com.sdc.ast.expressions.Expression
-import com.sdc.ast.expressions.New
 import com.sdc.ast.expressions.NewArray
 import com.sdc.ast.expressions.nestedclasses.LambdaFunction
 import com.sdc.ast.expressions.nestedclasses.AnonymousClass
-
 import com.sdc.kotlin.KotlinClass
 import com.sdc.kotlin.KotlinMethod
 import com.sdc.kotlin.KotlinClassField
-import com.sdc.kotlin.KotlinAnnotation
-
 import com.sdc.abstractLanguage.AbstractClass
 import com.sdc.abstractLanguage.AbstractMethod
 import com.sdc.abstractLanguage.AbstractClassField
-import com.sdc.abstractLanguage.AbstractAnnotation
 import com.sdc.abstractLanguage.AbstractPrinter
-
+import com.sdc.abstractLanguage.AbstractOperationPrinter
+import com.sdc.kotlin.KotlinOperationPrinter
 import com.sdc.cfg.nodes.Node
 import com.sdc.cfg.nodes.Switch
 
-
 class KotlinPrinter: AbstractPrinter() {
+    override fun getOperationPrinter(): AbstractOperationPrinter{
+        return KotlinOperationPrinter.getInstance() as AbstractOperationPrinter;
+    }
     override fun printVariableName(variableName: String?): String? = if (variableName.equals("this$")) "this" else variableName
 
     override fun printStatementsDelimiter(): PrimeDoc = text("")
