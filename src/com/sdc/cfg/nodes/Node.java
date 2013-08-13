@@ -99,6 +99,10 @@ public class Node {
         this.construction = construction;
     }
 
+    public Construction getConstruction() {
+        return construction;
+    }
+
     public boolean isEmpty() {
         return isEmpty;
     }
