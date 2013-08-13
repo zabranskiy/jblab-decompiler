@@ -166,114 +166,117 @@ abstract class AbstractPrinter {
         }
 
     open fun printConstruction(construction : Construction?, nestSize : Int): PrimeDoc {
-        val breakCode =
-                if (construction!!.hasBreak())
-                    text("break") + (if (construction.hasBreakToLabel()) text(" " + construction.getBreak()) else nil()) + printStatementsDelimiter()
-                else
-                    nil()
+        if (construction == null)
+            return nil()
+        else {
+            val breakCode =
+                    if (construction.hasBreak())
+                        line() + text("break") + (if (construction.hasBreakToLabel()) text(" " + construction.getBreak()) else nil()) + printStatementsDelimiter()
+                    else
+                        nil()
 
-        val continueCode =
-                if (construction.hasContinue())
-                    text("continue") + (if (construction.hasContinueToLabel()) text(" " + construction.getContinue()) else nil()) + printStatementsDelimiter()
-                else
-                    nil()
+            val continueCode =
+                    if (construction.hasContinue())
+                        line() + text("continue") + (if (construction.hasContinueToLabel()) text(" " + construction.getContinue()) else nil()) + printStatementsDelimiter()
+                    else
+                        nil()
 
-        val mainCode =
-            when (construction) {
-                is ElementaryBlock -> printStatements(construction.getStatements(), nestSize)
+            val mainCode =
+                when (construction) {
+                    is ElementaryBlock -> printStatements(construction.getStatements(), nestSize)
 
-                is ConditionalBlock -> {
-                    val thenPart = printConstruction(construction.getThenBlock(), nestSize)
+                    is ConditionalBlock -> {
+                        val thenPart = printConstruction(construction.getThenBlock(), nestSize)
 
-                    var elsePart : PrimeDoc = nil()
-                    if (construction.hasElseBlock()) {
-                        elsePart = text(" else {") + nest(nestSize, line() + printConstruction(construction.getElseBlock(), nestSize)) / text("}")
+                        var elsePart : PrimeDoc = nil()
+                        if (construction.hasElseBlock()) {
+                            elsePart = text(" else {") + nest(nestSize, line() + printConstruction(construction.getElseBlock(), nestSize)) / text("}")
+                        }
+
+                        text("if (!(") + printExpression(construction.getCondition(), nestSize) + text(")) {") + nest(nestSize, line() + thenPart) / text("}") + nest(nestSize, line() + elsePart)
                     }
 
-                    text("if (!(") + printExpression(construction.getCondition(), nestSize) + text(")) {") + nest(nestSize, line() + thenPart) / text("}") + nest(nestSize, line() + elsePart)
-                }
-
-                is While -> {
-                    val body = printConstruction(construction.getBody(), nestSize)
-                    text("while (!(") + printExpression(construction.getCondition(), nestSize) + text(")) {") + nest(nestSize, line() + body) / text("}")
-                }
-
-                is DoWhile -> {
-                    val body = text("do {") + nest(nestSize, line() + printConstruction(construction.getBody(), nestSize)) / text("}")
-                    body / text("while (!(") + printExpression(construction.getCondition(), nestSize) + text("))")
-                }
-
-                is For -> {
-                    val body = printConstruction(construction.getBody(), nestSize)
-                    val initialization = printStatement(construction.getVariableInitialization(), nestSize)
-                    val afterThought = printStatement(construction.getAfterThought(), nestSize)
-                    text("for (") + initialization + text(", !(") + printExpression(construction.getCondition(), nestSize) + text("), ") + afterThought + text(") {") + nest(nestSize, line() + body) / text("}")
-                }
-
-                is ForEach -> {
-                    val body = printConstruction(construction.getBody(), nestSize)
-                    text("for (") + printExpression(construction.getVariable(), nestSize) + text(" : ") + printExpression(construction.getContainer(), nestSize) + text(") {") + nest(nestSize, line() + body) / text("}")
-                }
-
-                is TryCatch -> {
-                    val body = printConstruction(construction.getTryBody(), nestSize)
-
-                    var catchBlockCode : PrimeDoc = nil()
-                    for ((variable, catchBody) in construction.getCatches()!!.entrySet()) {
-                        catchBlockCode = catchBlockCode / text("catch (") + printExpression(variable, nestSize) + text(") {") + nest(nestSize, line() + printConstruction(catchBody, nestSize)) + text("}")
+                    is While -> {
+                        val body = printConstruction(construction.getBody(), nestSize)
+                        text("while (!(") + printExpression(construction.getCondition(), nestSize) + text(")) {") + nest(nestSize, line() + body) / text("}")
                     }
 
-                    val finallyCode =
-                            if (construction.hasFinallyBlock())
-                                text("finally {") + nest(nestSize, line() + printConstruction(construction.getFinallyBody(), nestSize)) / text("}")
-                            else
-                                nil()
-
-                    text("try {") + nest(nestSize, line() + body) / text("}") + catchBlockCode / finallyCode
-                }
-
-                is Switch -> {
-                    var switchCode : PrimeDoc =  text("switch (") + printExpression(construction.getCondition(), nestSize) + text(") {")
-
-                    var keysCode : PrimeDoc = nil()
-                    for ((key, caseBody) in construction.getCases()!!.entrySet()) {
-                        keysCode = keysCode / text("case " + key + ":") + nest(nestSize, line() + printConstruction(caseBody, nestSize))
+                    is DoWhile -> {
+                        val body = text("do {") + nest(nestSize, line() + printConstruction(construction.getBody(), nestSize)) / text("}")
+                        body / text("while (!(") + printExpression(construction.getCondition(), nestSize) + text("))")
                     }
 
-                    val defaultCaseCode =
-                            if (construction.hasDefaultCase())
-                                text("default:") + nest(nestSize, line() + printConstruction(construction.getDefaultCase(), nestSize))
-                            else
-                                nil()
-
-                    switchCode + keysCode + defaultCaseCode / text("}")
-                }
-
-                is When -> {
-                    var whenCode : PrimeDoc = text("when (") + printExpression(construction.getCondition(), nestSize) + text(") {")
-
-                    var keysCode : PrimeDoc = nil()
-                    for ((key, caseBody) in construction.getCases()!!.entrySet()) {
-                        keysCode = keysCode / printExpression(key, nestSize) + text(" -> ") + nest(nestSize, line() + printConstruction(caseBody, nestSize))
+                    is For -> {
+                        val body = printConstruction(construction.getBody(), nestSize)
+                        val initialization = printStatement(construction.getVariableInitialization(), nestSize)
+                        val afterThought = printStatement(construction.getAfterThought(), nestSize)
+                        text("for (") + initialization + text(", !(") + printExpression(construction.getCondition(), nestSize) + text("), ") + afterThought + text(") {") + nest(nestSize, line() + body) / text("}")
                     }
 
-                    val defaultCaseCode = text("else -> ") +
-                            if (construction.hasEmptyDefaultCase())
-                                text("{}")
-                            else
-                                nest(nestSize, line() + printConstruction(construction.getDefaultCase(), nestSize))
+                    is ForEach -> {
+                        val body = printConstruction(construction.getBody(), nestSize)
+                        text("for (") + printExpression(construction.getVariable(), nestSize) + text(" : ") + printExpression(construction.getContainer(), nestSize) + text(") {") + nest(nestSize, line() + body) / text("}")
+                    }
+
+                    is TryCatch -> {
+                        val body = printConstruction(construction.getTryBody(), nestSize)
+
+                        var catchBlockCode : PrimeDoc = nil()
+                        for ((variable, catchBody) in construction.getCatches()!!.entrySet()) {
+                            catchBlockCode = catchBlockCode / text("catch (") + printExpression(variable, nestSize) + text(") {") + nest(nestSize, line() + printConstruction(catchBody, nestSize)) + text("}")
+                        }
+
+                        val finallyCode =
+                                if (construction.hasFinallyBlock())
+                                    text("finally {") + nest(nestSize, line() + printConstruction(construction.getFinallyBody(), nestSize)) / text("}")
+                                else
+                                    nil()
+
+                        text("try {") + nest(nestSize, line() + body) / text("}") + catchBlockCode / finallyCode
+                    }
+
+                    is Switch -> {
+                        var switchCode : PrimeDoc =  text("switch (") + printExpression(construction.getCondition(), nestSize) + text(") {")
+
+                        var keysCode : PrimeDoc = nil()
+                        for ((key, caseBody) in construction.getCases()!!.entrySet()) {
+                            keysCode = keysCode + nest(nestSize, line() + text("case " + key + ":") + nest(nestSize, printConstruction(caseBody, nestSize)))
+                        }
+
+                        val defaultCaseCode =
+                                if (construction.hasDefaultCase())
+                                    nest(nestSize, line() + text("default:") + nest(nestSize, printConstruction(construction.getDefaultCase(), nestSize)))
+                                else
+                                    nil()
+
+                        switchCode + keysCode + defaultCaseCode / text("}")
+                    }
+
+                    is When -> {
+                        var whenCode : PrimeDoc = text("when (") + printExpression(construction.getCondition(), nestSize) + text(") {")
+
+                        var keysCode : PrimeDoc = nil()
+                        for ((key, caseBody) in construction.getCases()!!.entrySet()) {
+                            keysCode = keysCode / printExpression(key, nestSize) + text(" -> ") + nest(nestSize, line() + printConstruction(caseBody, nestSize))
+                        }
+
+                        val defaultCaseCode = text("else -> ") +
+                                if (construction.hasEmptyDefaultCase())
+                                    text("{}")
+                                else
+                                    nest(nestSize, line() + printConstruction(construction.getDefaultCase(), nestSize))
 
 
-                    whenCode + keysCode + defaultCaseCode / text("}")
+                        whenCode + keysCode + defaultCaseCode / text("}")
+                    }
+
+                    else -> throw IllegalArgumentException("Unknown Construction implementer!")
                 }
 
-                null -> nil()
-                else -> throw IllegalArgumentException("Unknown Construction implementer!")
-            }
+            val nextConstructionCode = if (construction.hasNextConstruction()) printConstruction(construction.getNextConstruction(), nestSize) else nil()
 
-        val nextConstructionCode = if (construction.hasNextConstruction()) printConstruction(construction.getNextConstruction(), nestSize) else nil()
-
-        return mainCode + breakCode + continueCode / nextConstructionCode
+            return (if (construction !is ElementaryBlock) line() else nil()) + mainCode + breakCode + continueCode + nextConstructionCode
+        }
     }
 
     open fun printVariableName(variableName : String?): String? = variableName
