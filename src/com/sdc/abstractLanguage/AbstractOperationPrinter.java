@@ -37,11 +37,11 @@ public abstract class AbstractOperationPrinter {
         return "% ";
     }
 
-    public String getBitewiseAndView() {
+    public String getAndView() {
         return "&& ";
     }
 
-    public String getBitewseOrView() {
+    public String getOrView() {
         return "|| ";
     }
 
@@ -91,4 +91,65 @@ public abstract class AbstractOperationPrinter {
         return ">>> ";
     }
 
+    public String getAddIncView() {
+        return "+= ";
+    }
+
+    public String getSubIncView() {
+        return "-= ";
+    }
+
+    public String getDivIncView() {
+        return "/= ";
+    }
+
+    public String getMulIncView() {
+        return "*= ";
+    }
+
+    public String getRemIncView() {
+        return "%= ";
+    }
+
+    public String getIncView() {
+        return "++";
+    }
+
+    public String getNotView() {
+        return "!";
+    }
+
+    public String getNegateView() {
+        return "-";
+    }
+
+    public String getDoubleCastView() {
+        return "(double) ";
+    }
+
+    public String getIntCastView() {
+        return "(int) ";
+    }
+
+    public String getLongCastView() {
+        return "(long) ";
+    }
+
+    public String getFloatCastView() {
+        return "(float) ";
+    }
+
+    public String getCharCastView() {
+        return "(char) ";
+    }
+
+    public String getShortCastView() {
+        return "(short) ";
+    }
+    public String getByteCastView() {
+        return "(byte) ";
+    }
+    public String getCheckCast(String myParam){
+        return ("("+myParam+") ");
+    }
 }

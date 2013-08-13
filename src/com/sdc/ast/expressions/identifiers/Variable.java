@@ -58,4 +58,8 @@ public class Variable extends Identifier {
     public int getIndex() {
         return myIndex;
     }
+
+    public AbstractFrame getAbstractFrame() {
+        return myAbstractFrame;
+    }
 }

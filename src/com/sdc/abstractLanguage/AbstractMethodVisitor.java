@@ -1,5 +1,6 @@
 package com.sdc.abstractLanguage;
 
+import com.sdc.ast.OperationType;
 import com.sdc.ast.controlflow.*;
 import com.sdc.ast.expressions.*;
 import com.sdc.ast.expressions.InstanceInvocation;
@@ -19,10 +20,8 @@ import org.objectweb.asm.util.Printer;
 
 import java.util.*;
 
-import static com.sdc.ast.expressions.BinaryExpression.OperationType.EQ;
-import static com.sdc.ast.expressions.BinaryExpression.OperationType.LT;
-import static com.sdc.ast.expressions.Constant.*;
-import static com.sdc.ast.expressions.UnaryExpression.OperationType.*;
+import static com.sdc.ast.OperationType.*;
+import static com.sdc.ast.expressions.IntConstant.*;
 import static org.objectweb.asm.Opcodes.ASM4;
 
 public abstract class AbstractMethodVisitor extends MethodVisitor {
@@ -165,14 +164,51 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
     public void visitInsn(final int opcode) {
         int size = myBodyStack.size();
         final String opString = Printer.OPCODES[opcode];
+  /*      if (opString.contains("IADD") || opString.contains("ISUB")
+                || opString.contains("IMUL") || opString.contains("IDIV") || opString.contains("IREM")) {
+            if (size < 1) return;
+            Expression e1 = getTopOfBodyStack();
+            Expression e2 = getTopOfBodyStack();
+            if (e1 instanceof IntConstant && e2 instanceof Variable) {
+                // for increment without instruction iinc
+                IntConstant constant = (IntConstant) e1;
+                if (opString.contains("IADD") && constant.isOne() ||
+                        opString.contains("ISUB") && constant.isMinusOne()) {
+                    myBodyStack.push(new ExprIncrement(e2, 1));
+                } else if (opString.contains("IADD") && constant.isMinusOne() ||
+                        opString.contains("ISUB") && constant.isOne()) {
+                    myBodyStack.push(new ExprIncrement(e2, -1));
+                } else if (opString.contains("IADD") && constant.isPosInt() ||
+                        opString.contains("ISUB") && constant.isNegInt()) {
+                    myBodyStack.push(new ExprIncrement(e2, Math.abs(constant.getIntValue())));
+                } else if (opString.contains("IADD") && constant.isNegInt() ||
+                        opString.contains("ISUB") && constant.isPosInt()) {
+                    myBodyStack.push(new ExprIncrement(e2, -Math.abs(constant.getIntValue())));
+                } else if (opString.contains("IMUL") && constant.isPosInt()) {
+                    myBodyStack.push(new ExprIncrement(e2, constant.getIntValue(), MUL));
+                } else if (opString.contains("IDIV") && constant.isPosInt()) {
+                    myBodyStack.push(new ExprIncrement(e2, constant.getIntValue(), DIV));
+                } else if (opString.contains("IREM") && constant.isPosInt()) {
+                    myBodyStack.push(new ExprIncrement(e2, constant.getIntValue(), REM));
+                } else {
+                    // if not for increment
+                    Expression res = new BinaryExpression(OperationType.valueOf(opString.substring(1)), e2, e1);
+                    myBodyStack.push(res);
+                }
+            } else {
+                // if not for increment
+                Expression res = new BinaryExpression(OperationType.valueOf(opString.substring(1)), e2, e1);
+                myBodyStack.push(res);
+            }
+        } else*/
         if (opString.contains("ADD") || opString.contains("SUB")
-                || opString.contains("MUL") || opString.contains("DIV")
-                || opString.contains("USHR") || opString.contains("SHL") || opString.contains("SHR")
-                || opString.contains("XOR") || opString.contains("REM")
+                || opString.contains("MUL") || opString.contains("DIV") || opString.contains("REM")
+                || opString.contains("USHR") || opString.contains("SHL")
+                || opString.contains("XOR") || opString.contains("SHR")
                 || opString.contains("OR") || opString.contains("AND")) {
             Expression e1 = getTopOfBodyStack();
             Expression e2 = getTopOfBodyStack();
-            Expression res = new BinaryExpression(BinaryExpression.OperationType.valueOf(opString.substring(1)), e2, e1);
+            Expression res = new BinaryExpression(OperationType.valueOf(opString.substring(1)), e2, e1);
             myBodyStack.push(res);
         } else if (opString.contains("NEG")) {
             myBodyStack.push(new UnaryExpression(NEGATE, getTopOfBodyStack()));
@@ -181,7 +217,11 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         } else if (opString.contains("CONST_NULL")) {
             myBodyStack.push(new Constant("null", false));
         } else if (opString.contains("CONST_")) {
-            myBodyStack.push(new Constant(opString.substring(7).toLowerCase(), false));
+            if (opString.contains("ICONST_")) {
+                myBodyStack.push(new IntConstant(Integer.valueOf(opString.substring(7).toLowerCase())));
+            } else {
+                myBodyStack.push(new Constant(opString.substring(7).toLowerCase(), false));
+            }
         } else if (opString.equals("RETURN")) {
             replaceInvocationsFromExpressionsToStatements();
             Return returnStatement = new Return();
@@ -379,7 +419,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         final String opString = Printer.OPCODES[opcode];
 
         if (opString.contains("IPUSH")) {
-            myBodyStack.push(new Constant(operand, false));
+            myBodyStack.push(new IntConstant(operand));
         } else if (opString.contains("NEWARRAY")) {
             List<Expression> dimensions = new ArrayList<Expression>();
             dimensions.add(getTopOfBodyStack());
@@ -395,13 +435,27 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         String variableType = null;
 
         if (opString.contains("LOAD")) {
-            myBodyStack.push(new Variable(var, getCurrentFrame()));
+            if (myStatements.isEmpty()) {
+                myBodyStack.push(new Variable(var, getCurrentFrame()));
+            } else {
+                int lastStatementIndex = myStatements.size() - 1;
+                Statement lastStatement = myStatements.get(lastStatementIndex);
+                if (opString.contains("ILOAD") && lastStatement instanceof Increment
+                        && var == ((Increment) lastStatement).getIndex()
+                        && getCurrentFrame() == ((Increment) lastStatement).getAbstractFrame()) {
+                    Increment increment = (Increment) lastStatement;
+                    myStatements.remove(lastStatementIndex);
+                    myBodyStack.push(new ExprIncrement(increment.getVariable(), increment.getIncrement(),increment.getType()));
+                } else {
+                    myBodyStack.push(new Variable(var, getCurrentFrame()));
+                }
+            }
         } else if (opString.contains("STORE") && !currentFrameHasStack) {
             Identifier v = new Variable(var, getCurrentFrame());
             final Expression expr = getTopOfBodyStack();
             myStatements.add(new Assignment(v, expr));
-            if (expr instanceof com.sdc.ast.expressions.Invocation) {
-                variableType = ((com.sdc.ast.expressions.Invocation) expr).getReturnType();
+            if (expr instanceof Invocation) {
+                variableType = ((Invocation) expr).getReturnType();
             } else if (expr instanceof New) {
                 variableType = ((New) expr).getReturnType();
             } else if (expr instanceof NewArray) {
@@ -410,6 +464,20 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 variableType = ((Identifier) expr).getType();
             } else if (expr instanceof LambdaFunction) {
                 variableType = ((LambdaFunction) expr).getType();
+            }
+
+            int lastIndex = myStatements.size() - 1;
+            if (expr instanceof BinaryExpression && ((BinaryExpression) expr).isArithmeticType()) {
+                BinaryExpression binaryExpression = (BinaryExpression) expr;
+                Expression left = binaryExpression.getLeft();
+                Expression right = binaryExpression.getRight();
+                if (left instanceof Variable && ((Variable) left).getIndex() == var && right instanceof IntConstant) {
+                    myStatements.remove(lastIndex);
+                    myStatements.add(new Increment((Variable) left, ((IntConstant) right).getIntValue(), binaryExpression.getOperationType()));
+                } else if (right instanceof Variable && ((Variable) right).getIndex() == var && left instanceof IntConstant) {
+                    myStatements.remove(lastIndex);
+                    myStatements.add(new Increment((Variable) right, ((IntConstant) left).getIntValue(), binaryExpression.getOperationType()));
+                }
             }
         }
 
@@ -538,7 +606,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 final int last = myNodes.size() - 1;
                 Expression e1 = getTopOfBodyStack();
                 Expression e2 = getTopOfBodyStack();
-                Expression cond = new BinaryExpression(BinaryExpression.OperationType.valueOf(opString.substring(7)), e2, e1);
+                Expression cond = new BinaryExpression(OperationType.valueOf(opString.substring(7)), e2, e1);
                 myNodes.get(last).setCondition(cond);
                 myNodes.get(last).setEmpty(true);
             }
@@ -574,7 +642,15 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
     @Override
     public void visitIincInsn(final int var, final int increment) {
-        myStatements.add(new Increment(var,increment,getCurrentFrame()));
+        if (!myBodyStack.empty()) {
+            Expression expr = myBodyStack.peek();
+            if (expr != null && expr instanceof Variable && ((Variable) expr).getIndex() == var) {
+                myBodyStack.pop();
+                myBodyStack.push(new ExprIncrement(expr, increment));
+                return;
+            }
+        }
+        myStatements.add(new Increment(var, increment, getCurrentFrame()));
     }
 
     @Override

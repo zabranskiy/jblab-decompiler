@@ -1,12 +1,12 @@
 package com.sdc.ast.expressions;
 
 import com.sdc.abstractLanguage.AbstractOperationPrinter;
+import com.sdc.ast.OperationType;
+
+import static com.sdc.ast.OperationType.*;
 
 public class BinaryExpression extends Expression {
-    public enum OperationType {
-        ADD, SUB, MUL, DIV, REM,
-        AND, OR, EQ, NE, GE, GT, LE, LT, SHR, SHL,USHR, XOR
-    }
+
 
     private final Expression myLeft;
     private final Expression myRight;
@@ -84,9 +84,9 @@ public class BinaryExpression extends Expression {
             case REM:
                  return operationPrinter.getRemView();
             case AND:
-                return operationPrinter.getBitewiseAndView();
+                return operationPrinter.getBitwiseAndView();
             case OR:
-                return operationPrinter.getBitewseOrView();
+                return operationPrinter.getBitwiseOrView();
             case EQ:
                 return operationPrinter.getEqualityView();
             case NE:
@@ -134,5 +134,8 @@ public class BinaryExpression extends Expression {
                 ", myRight=" + myRight +
                 ", myType=" + myType +
                 '}';
+    }
+    public boolean isArithmeticType(){
+        return myType== ADD || myType == SUB || myType == MUL || myType == DIV || myType == REM;
     }
 }

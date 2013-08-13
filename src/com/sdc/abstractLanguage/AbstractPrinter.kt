@@ -11,7 +11,6 @@ import com.sdc.ast.expressions.identifiers.Variable
 import com.sdc.ast.expressions.NewArray
 import com.sdc.ast.expressions.New
 import com.sdc.ast.expressions.InstanceOf
-
 import com.sdc.ast.controlflow.Statement
 import com.sdc.ast.controlflow.Invocation
 import com.sdc.ast.controlflow.Assignment
@@ -21,6 +20,9 @@ import com.sdc.ast.controlflow.InstanceInvocation
 import com.sdc.ast.expressions.nestedclasses.AnonymousClass
 import com.sdc.cfg.nodes.Node
 import com.sdc.cfg.nodes.Switch
+import com.sdc.ast.expressions.ExprIncrement
+import com.sdc.ast.controlflow.Increment
+import com.sdc.ast.OperationType
 
 abstract class AbstractPrinter {
     abstract fun getOperationPrinter(): AbstractOperationPrinter;
@@ -125,6 +127,12 @@ abstract class AbstractPrinter {
                 group(nest(nestSize, line() + text("(") + printCondition+text(") ? ") + printLeftExp + text(" : ") + printRightExp))
             }
 
+            is ExprIncrement -> {
+                val expr = expression.getOperand();
+                val printExpr = printExpression(expr,nestSize)
+                group(nest(nestSize, line() + printExpr + text(expression.getOperation())))
+            }
+
             else -> throw IllegalArgumentException("Unknown Expression implementer!")
         }
 
@@ -155,6 +163,10 @@ abstract class AbstractPrinter {
                     text("throw") + nest(nestSize, line()
                     + printExpression(statement.getThrowObject(), nestSize))
             )
+
+            is Increment ->{
+                    group(text(statement.getName())+text(statement.getOperation()));
+            }
 
             else -> throw IllegalArgumentException("Unknown Statement implementer!")
         }
