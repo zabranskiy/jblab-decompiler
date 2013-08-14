@@ -7,15 +7,13 @@ import com.sdc.cfg.nodes.Node;
 import com.sdc.cfg.nodes.Switch;
 import com.sdc.cfg.nodes.SwitchCase;
 
-import java.util.*;
+import java.util.List;
 
 public class ConstructionBuilder {
     private List<Node> myNodes;
     private final DominatorTreeGenerator gen;
     private final int size;
     private final int[] domi;
-    private final int[] post;
-    private int[] intersection;
 
     public ConstructionBuilder(final List<Node> myNodes, final DominatorTreeGenerator gen) {
         this.myNodes = myNodes;
@@ -84,7 +82,7 @@ public class ConstructionBuilder {
                         ? getRelativeIndex(switchCases.get(i + 1).getCaseBody().getIndex())
                         : nextNode == null ? size : getRelativeIndex(nextNode.getIndex());
 
-                final Construction caseBody = new ConstructionBuilder(myNodes.subList(leftBound, rightBound), domi, post).build();
+                final Construction caseBody = new ConstructionBuilder(myNodes.subList(leftBound, rightBound), gen).build();
 
                 com.sdc.cfg.constructions.SwitchCase switchCase = new com.sdc.cfg.constructions.SwitchCase(caseBody);
                 switchCase.setKeys(switchCases.get(i).getKeys());
@@ -161,9 +159,7 @@ public class ConstructionBuilder {
                 }
             }
 
-
             /// IF
-//            if (node.getIndex() < node.getListOfTails().get(1).getIndex()) {
             com.sdc.cfg.constructions.ConditionalBlock conditionalBlock = new ConditionalBlock(node.getCondition());
 
             boolean fl = false;
