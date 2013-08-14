@@ -38,7 +38,7 @@ public class ConstructionBuilder {
         Construction elementaryBlock = extractElementaryBlock(node);
         Construction currentConstruction = extractConstruction(node);
 
-        if (node.getCondition() == null) {
+        if (node.getCondition() == null && !(node instanceof Switch)) {
             node.setConstruction(elementaryBlock);
         } else {
             node.setConstruction(currentConstruction);
