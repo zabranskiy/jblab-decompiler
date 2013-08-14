@@ -179,11 +179,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             myBodyStack.push(res);
         } else if (opString.contains("NEG")) {
             Expression e = getTopOfBodyStack();
-            if (e instanceof UnaryExpression && ((UnaryExpression) e).getOperationType() == NEGATE) {
-                myBodyStack.push(((UnaryExpression) e).getOperand());
-            } else {
-                myBodyStack.push(new UnaryExpression(NEGATE, e));
-            }
+            myBodyStack.push(new UnaryExpression(NEGATE, e));
         } else if (opString.contains("CONST_M1")) {
             myBodyStack.push(M_ONE);
         } else if (opString.contains("CONST_NULL")) {
@@ -226,9 +222,9 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 multiPush(expr1, expr2);
             }
         } else if (opString.equals("DUP") && !myBodyStack.isEmpty()) {
-/*            Expression expr = myBodyStack.peek();
+            Expression expr = myBodyStack.peek();
             if (expr.hasDoubleLength()) return;
-            myBodyStack.push(expr);*/
+            myBodyStack.push(expr);
         } else if (opString.equals("DUP_X1")) {
             if (size < 2) return;
             Expression expr1 = myBodyStack.pop();
@@ -413,12 +409,20 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 int lastStatementIndex = myStatements.size() - 1;
                 Statement lastStatement = myStatements.get(lastStatementIndex);
                 if (opString.contains("ILOAD") && lastStatement instanceof Increment
-                        && ((Increment) lastStatement).getVariable().getIndex() == var
-                        && (((Increment) lastStatement).getType() == INC || ((Increment) lastStatement).getType() == DEC)) {
+                        && ((Increment) lastStatement).getVariable().getIndex() == var) {
                     Increment increment = (Increment) lastStatement;
                     myStatements.remove(lastStatementIndex);
-                    OperationType type = (increment.getType() == INC ? INC_REV : DEC_REV);
-                    myBodyStack.push(new ExprIncrement(increment.getVariable(), increment.getIncrement(), type));
+                    OperationType type = increment.getType();
+                    switch (type) {
+                        case INC:
+                            type = INC_REV;
+                            break;
+                        case DEC:
+                            type = DEC_REV;
+                            break;
+                        default:
+                    }
+                    myBodyStack.push(new ExprIncrement(increment.getVariable(), increment.getIncrementExpression(), type));
                 } else {
                     myBodyStack.push(new Variable(var, getCurrentFrame()));
                 }
@@ -440,16 +444,27 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             }
 
             int lastIndex = myStatements.size() - 1;
+            Expression expr2 = (myBodyStack.empty() ? null : myBodyStack.peek());
             if (expr instanceof BinaryExpression && ((BinaryExpression) expr).isArithmeticType()) {
                 BinaryExpression binaryExpression = (BinaryExpression) expr;
                 Expression left = binaryExpression.getLeft();
                 Expression right = binaryExpression.getRight();
-                if (left instanceof Variable && ((Variable) left).getIndex() == var && right instanceof IntConstant) {
+                if (left instanceof Variable && ((Variable) left).getIndex() == var /*&& right instanceof IntConstant*/) {
                     myStatements.remove(lastIndex);
-                    myStatements.add(new Increment((Variable) left, ((IntConstant) right).getIntValue(), binaryExpression.getOperationType()));
-                } else if (right instanceof Variable && ((Variable) right).getIndex() == var && left instanceof IntConstant) {
+                    if (expr.equals(expr2)) {
+                        myBodyStack.pop();
+                        myBodyStack.add(new ExprIncrement(left,right, binaryExpression.getOperationType()));
+                    } else {
+                        myStatements.add(new Increment((Variable) left,  right, binaryExpression.getOperationType()));
+                    }
+                } else if (right instanceof Variable && ((Variable) right).getIndex() == var/* && left instanceof IntConstant*/) {
                     myStatements.remove(lastIndex);
-                    myStatements.add(new Increment((Variable) right, ((IntConstant) left).getIntValue(), binaryExpression.getOperationType()));
+                    if (expr.equals(expr2)) {
+                        myBodyStack.pop();
+                        myBodyStack.add(new ExprIncrement(right, left, binaryExpression.getOperationType()));
+                    } else {
+                        myStatements.add(new Increment((Variable) right, left, binaryExpression.getOperationType()));
+                    }
                 }
             }
         }
