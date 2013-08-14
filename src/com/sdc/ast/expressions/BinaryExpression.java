@@ -5,12 +5,9 @@ import com.sdc.ast.OperationType;
 
 import static com.sdc.ast.OperationType.*;
 
-public class BinaryExpression extends Expression {
-
-
+public class BinaryExpression extends PriorityExpression {
     private final Expression myLeft;
     private final Expression myRight;
-    private OperationType myType;
 
     public BinaryExpression(final OperationType type, final Expression left, final Expression right) {
         this.myType = type;
@@ -32,45 +29,6 @@ public class BinaryExpression extends Expression {
         return myRight;
     }
 
-    public void setType(final OperationType type) {
-        this.myType = type;
-    }
-
-    public OperationType getOperationType() {
-        return myType;
-    }
-
-    public String getOperation() {
-        switch (myType) {
-            case ADD:
-                return "+ ";
-            case SUB:
-                return "- ";
-            case DIV:
-                return "/ ";
-            case MUL:
-                return "* ";
-            case AND:
-                return "&& ";
-            case OR:
-                return "|| ";
-            case EQ:
-                return "== ";
-            case NE:
-                return "!= ";
-            case GE:
-                return ">= ";
-            case GT:
-                return "> ";
-            case LE:
-                return "<= ";
-            case LT:
-                return "< ";
-            default:
-                return "";
-        }
-    }
-
     public String getOperation(AbstractOperationPrinter operationPrinter) {
         switch (myType) {
             case ADD:
@@ -83,9 +41,9 @@ public class BinaryExpression extends Expression {
                 return operationPrinter.getMulView();
             case REM:
                  return operationPrinter.getRemView();
-            case AND:
+            case BITWISE_AND:
                 return operationPrinter.getBitwiseAndView();
-            case OR:
+            case BITWISE_OR:
                 return operationPrinter.getBitwiseOrView();
             case EQ:
                 return operationPrinter.getEqualityView();
@@ -105,25 +63,10 @@ public class BinaryExpression extends Expression {
                 return operationPrinter.getSHRView();
             case USHR:
                 return operationPrinter.getUSHRView();
-            case XOR:
+            case BITWISE_XOR:
                 return operationPrinter.getXorView();
             default:
                 return "";
-        }
-    }
-
-    public int getPriority() {
-        switch (myType) {
-            case ADD:
-                return 0;
-            case SUB:
-                return 1;
-            case MUL:
-                return 3;
-            case DIV:
-                return 4;
-            default:
-                return -1;
         }
     }
 

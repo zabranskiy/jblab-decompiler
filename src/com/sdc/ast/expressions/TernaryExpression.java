@@ -1,5 +1,7 @@
 package com.sdc.ast.expressions;
 
+import com.sdc.ast.OperationType;
+
 /**
  * Created with IntelliJ IDEA.
  * User: 1
@@ -7,7 +9,7 @@ package com.sdc.ast.expressions;
  * Time: 15:47
  * To change this template use File | Settings | File Templates.
  */
-public class TernaryExpression extends Expression {
+public class TernaryExpression extends PriorityExpression {
     private final Expression myCondition;
     private final Expression myLeft;
     private final Expression myRight;
@@ -17,6 +19,7 @@ public class TernaryExpression extends Expression {
         this.myLeft = myLeft;
         this.myRight = myRight;
         setDoubleLength(myLeft.hasDoubleLength() || myRight.hasDoubleLength());
+        myType= OperationType.TERNARY_IF;
     }
 
     public Expression getLeft() {

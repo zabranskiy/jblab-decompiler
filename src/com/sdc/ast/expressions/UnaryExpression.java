@@ -5,11 +5,8 @@ import com.sdc.ast.OperationType;
 
 import static com.sdc.ast.OperationType.*;
 
-public class UnaryExpression extends Expression {
-
-
+public class UnaryExpression extends PriorityExpression {
     private final Expression myOperand;
-    private OperationType myType;
     private String myParam="";     // for CHECK_CAST
 
     public UnaryExpression(final OperationType type, final Expression operand) {
@@ -33,41 +30,6 @@ public class UnaryExpression extends Expression {
 
     public Expression getOperand() {
         return myOperand;
-    }
-
-    public OperationType getType() {
-        return myType;
-    }
-
-    public void setType(final OperationType type) {
-        this.myType = type;
-    }
-
-    public String getOperation() {
-        switch (myType) {
-            case NOT:
-                return "!";
-            case NEGATE:
-                return "-";
-            case DOUBLE_CAST:
-                return "(double) ";
-            case INT_CAST:
-                return "(int) ";
-            case LONG_CAST:
-                return "(long) ";
-            case SHORT_CAST:
-                return "(short) ";
-            case BYTE_CAST:
-                return "(byte) ";
-            case FLOAT_CAST:
-                return "(float) ";
-            case CHAR_CAST:
-                return "(char) ";
-            case CHECK_CAST:
-                return "("+myParam+") ";
-            default:
-                return "";
-        }
     }
 
     public String getOperation(AbstractOperationPrinter operationPrinter) {

@@ -1,5 +1,9 @@
 package com.sdc.abstractLanguage;
 
+import com.sdc.ast.OperationType;
+
+import static com.sdc.ast.OperationType.*;
+
 /**
  * Created with IntelliJ IDEA.
  * User: Dmitrii.Pozdin
@@ -52,6 +56,7 @@ public abstract class AbstractOperationPrinter {
     public String getNotEqualityView() {
         return "!= ";
     }
+
     public String getGEView() {
         return ">= ";
     }
@@ -67,6 +72,7 @@ public abstract class AbstractOperationPrinter {
     public String getLessView() {
         return "< ";
     }
+
     public String getSHLView() {
         return "<< ";
     }
@@ -83,7 +89,7 @@ public abstract class AbstractOperationPrinter {
         return "| ";
     }
 
-    public String getBitwiseAndView(){
+    public String getBitwiseAndView() {
         return "& ";
     }
 
@@ -113,6 +119,16 @@ public abstract class AbstractOperationPrinter {
 
     public String getIncView() {
         return "++";
+    }
+
+    public String getIncRevView() {
+        return "++";
+    }
+    public String getDecView(){
+        return "--";
+    }
+    public String getDecRevView(){
+        return "--";
     }
 
     public String getNotView() {
@@ -146,10 +162,57 @@ public abstract class AbstractOperationPrinter {
     public String getShortCastView() {
         return "(short) ";
     }
+
     public String getByteCastView() {
         return "(byte) ";
     }
-    public String getCheckCast(String myParam){
-        return ("("+myParam+") ");
+
+    public String getCheckCast(String myParam) {
+        return ("(" + myParam + ") ");
     }
+
+    public int getPriority(OperationType type) {
+        if (type == DEC || type == INC || type == DEC_REV || type == INC_REV) {
+            return -1;
+        } else if (type == INT_CAST || type == DOUBLE_CAST || type == LONG_CAST || type == SHORT_CAST
+                || type == BYTE_CAST || type == CHAR_CAST || type == FLOAT_CAST || type == CHECK_CAST) {
+            return 0;
+        } else if (type == NOT || type == NEGATE) {
+            return 1;
+        } else if (type == MUL || type == DIV || type == REM) {
+            return 2;
+        } else if (type == SUB) {
+            return 3;
+        } else if (type == ADD) {
+            return 4;
+        } else if (type == SHL || type == SHR || type == USHR) {
+            return 5;
+        } else if (type == GE || type == LE || type == LT || type == GT) {
+            return 6;
+        } else if (type == EQ || type == NE) {
+            return 7;
+        } else if (type == MUL_INC || type == DIV_INC || type == REM_INC || type == ADD_INC || type == SUB_INC) {
+            return 14;
+        }
+
+        switch (type) {
+            case BITWISE_AND:
+                return 8;
+            case BITWISE_XOR:
+                return 9;
+            case BITWISE_OR:
+                return 10;
+            case AND:
+                return 11;
+            case OR:
+                return 12;
+            case TERNARY_IF:
+                return 13;
+            default:
+                return 100;
+        }
+
+    }
+
+
 }

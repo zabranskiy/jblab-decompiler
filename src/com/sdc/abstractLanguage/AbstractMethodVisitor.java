@@ -170,10 +170,20 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 || opString.contains("OR") || opString.contains("AND")) {
             Expression e1 = getTopOfBodyStack();
             Expression e2 = getTopOfBodyStack();
-            Expression res = new BinaryExpression(OperationType.valueOf(opString.substring(1)), e2, e1);
+            String type = opString.substring(1);
+            if (opString.contains("OR") || opString.contains("AND")) {
+                type = "BITWISE_" + type;
+            }
+            Expression res;
+            res = new BinaryExpression(OperationType.valueOf(type), e2, e1);
             myBodyStack.push(res);
         } else if (opString.contains("NEG")) {
-            myBodyStack.push(new UnaryExpression(NEGATE, getTopOfBodyStack()));
+            Expression e = getTopOfBodyStack();
+            if (e instanceof UnaryExpression && ((UnaryExpression) e).getOperationType() == NEGATE) {
+                myBodyStack.push(((UnaryExpression) e).getOperand());
+            } else {
+                myBodyStack.push(new UnaryExpression(NEGATE, e));
+            }
         } else if (opString.contains("CONST_M1")) {
             myBodyStack.push(M_ONE);
         } else if (opString.contains("CONST_NULL")) {
@@ -403,11 +413,12 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 int lastStatementIndex = myStatements.size() - 1;
                 Statement lastStatement = myStatements.get(lastStatementIndex);
                 if (opString.contains("ILOAD") && lastStatement instanceof Increment
-                        && var == ((Increment) lastStatement).getIndex()
-                        && getCurrentFrame() == ((Increment) lastStatement).getAbstractFrame()) {
+                        && ((Increment) lastStatement).getVariable().getIndex() == var
+                        && (((Increment) lastStatement).getType() == INC || ((Increment) lastStatement).getType() == DEC)) {
                     Increment increment = (Increment) lastStatement;
                     myStatements.remove(lastStatementIndex);
-                    myBodyStack.push(new ExprIncrement(increment.getVariable(), increment.getIncrement(),increment.getType()));
+                    OperationType type = (increment.getType() == INC ? INC_REV : DEC_REV);
+                    myBodyStack.push(new ExprIncrement(increment.getVariable(), increment.getIncrement(), type));
                 } else {
                     myBodyStack.push(new Variable(var, getCurrentFrame()));
                 }
@@ -612,7 +623,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 return;
             }
         }
-        myStatements.add(new Increment(var, increment, getCurrentFrame()));
+        myStatements.add(new Increment(new Variable(var, getCurrentFrame()), increment));
     }
 
     @Override
