@@ -22,14 +22,12 @@ public class ConstructionBuilder {
         this.myNodes = myNodes;
         this.domi = domi;
         this.post = post;
+        this.size = myNodes.size();
         if (domi != null && domi.length > 1) {
-            this.size = domi.length;
             this.intersection = new int[domi.length];
             for (int i = 0; i < domi.length; i++) {
                 intersection[i] = domi[i] == post[i] ? domi[i] : -1;
             }
-        } else {
-            this.size = 1;
         }
     }
 
