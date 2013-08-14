@@ -124,10 +124,12 @@ public abstract class AbstractOperationPrinter {
     public String getIncRevView() {
         return "++";
     }
-    public String getDecView(){
+
+    public String getDecView() {
         return "--";
     }
-    public String getDecRevView(){
+
+    public String getDecRevView() {
         return "--";
     }
 
@@ -172,12 +174,9 @@ public abstract class AbstractOperationPrinter {
     }
 
     public int getPriority(OperationType type) {
-        if (type == DEC || type == INC || type == DEC_REV || type == INC_REV) {
-            return -1;
-        } else if (type == INT_CAST || type == DOUBLE_CAST || type == LONG_CAST || type == SHORT_CAST
+        if (type == NOT || type == NEGATE || type == DEC || type == INC ||type == DEC_REV || type == INC_REV
+                || type == INT_CAST || type == DOUBLE_CAST || type == LONG_CAST || type == SHORT_CAST
                 || type == BYTE_CAST || type == CHAR_CAST || type == FLOAT_CAST || type == CHECK_CAST) {
-            return 0;
-        } else if (type == NOT || type == NEGATE) {
             return 1;
         } else if (type == MUL || type == DIV || type == REM) {
             return 2;

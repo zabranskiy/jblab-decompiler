@@ -422,7 +422,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                             break;
                         default:
                     }
-                    myBodyStack.push(new ExprIncrement(increment.getVariable(), increment.getIncrement(), type));
+                    myBodyStack.push(new ExprIncrement(increment.getVariable(), increment.getIncrementExpression(), type));
                 } else {
                     myBodyStack.push(new Variable(var, getCurrentFrame()));
                 }
@@ -449,21 +449,21 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 BinaryExpression binaryExpression = (BinaryExpression) expr;
                 Expression left = binaryExpression.getLeft();
                 Expression right = binaryExpression.getRight();
-                if (left instanceof Variable && ((Variable) left).getIndex() == var && right instanceof IntConstant) {
+                if (left instanceof Variable && ((Variable) left).getIndex() == var /*&& right instanceof IntConstant*/) {
                     myStatements.remove(lastIndex);
                     if (expr.equals(expr2)) {
                         myBodyStack.pop();
-                        myBodyStack.add(new ExprIncrement(left, ((IntConstant) right).getIntValue(), binaryExpression.getOperationType()));
+                        myBodyStack.add(new ExprIncrement(left,right, binaryExpression.getOperationType()));
                     } else {
-                        myStatements.add(new Increment((Variable) left, ((IntConstant) right).getIntValue(), binaryExpression.getOperationType()));
+                        myStatements.add(new Increment((Variable) left,  right, binaryExpression.getOperationType()));
                     }
-                } else if (right instanceof Variable && ((Variable) right).getIndex() == var && left instanceof IntConstant) {
+                } else if (right instanceof Variable && ((Variable) right).getIndex() == var/* && left instanceof IntConstant*/) {
                     myStatements.remove(lastIndex);
                     if (expr.equals(expr2)) {
                         myBodyStack.pop();
-                        myBodyStack.add(new ExprIncrement(left, ((IntConstant) left).getIntValue(), binaryExpression.getOperationType()));
+                        myBodyStack.add(new ExprIncrement(right, left, binaryExpression.getOperationType()));
                     } else {
-                        myStatements.add(new Increment((Variable) right, ((IntConstant) left).getIntValue(), binaryExpression.getOperationType()));
+                        myStatements.add(new Increment((Variable) right, left, binaryExpression.getOperationType()));
                     }
                 }
             }

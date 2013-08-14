@@ -118,7 +118,12 @@ abstract class AbstractPrinter {
                 if(myType==OperationType.INC_REV || myType==OperationType.DEC_REV){
                     group(nest(nestSize, line() + text(operation) + printExpr))
                 }   else{
-                    group(nest(nestSize, line() + printExpr + text(operation)))
+                    val printIncrement = printExpressionCheckBrackets(expression.getIncrementExpression(), expression.getPriority(getOperationPrinter()), nestSize)
+                    if(expression.IsIncrementSimple()){
+                        group(nest(nestSize, line() + printExpr + text(operation)))
+                    } else{
+                        group(nest(nestSize, line() + printExpr + text(operation)+printIncrement))
+                    }
                 }
             }
 
@@ -164,7 +169,14 @@ abstract class AbstractPrinter {
             )
 
             is Increment ->{
-                    group(text(statement.getName())+text(statement.getOperation()));
+                var printVariable=printExpression(statement.getVariable(),nestSize)
+                var operation = statement.getOperation(getOperationPrinter());
+                val printIncrement = printExpressionWithBrackets(statement.getIncrementExpression(), nestSize)
+                if(statement.IsIncrementSimple()){
+                    group(nest(nestSize, line() + printVariable + text(operation)))
+                } else{
+                    group(nest(nestSize, line() + printVariable + text(operation)+printIncrement))
+                }
             }
 
             else -> throw IllegalArgumentException("Unknown Statement implementer!")
@@ -325,7 +337,7 @@ abstract class AbstractPrinter {
         return annotationsCode
     }
 
-    open fun printExpressionWithBrackets(expression: Expression, nestSize: Int): PrimeDoc =
+    open fun printExpressionWithBrackets(expression: Expression?, nestSize: Int): PrimeDoc =
         text("(") + printExpression(expression, nestSize) + text(")")
 
     open fun printMethodParameters(method: AbstractMethod?): PrimeDoc {
