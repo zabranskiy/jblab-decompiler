@@ -2,6 +2,8 @@ package com.sdc.ast.controlflow;
 
 import com.sdc.abstractLanguage.AbstractOperationPrinter;
 import com.sdc.ast.OperationType;
+import com.sdc.ast.expressions.Constant;
+import com.sdc.ast.expressions.Expression;
 import com.sdc.ast.expressions.identifiers.Variable;
 
 import static com.sdc.ast.OperationType.*;
@@ -15,17 +17,19 @@ import static com.sdc.ast.OperationType.*;
  */
 public class Increment extends Statement {
     private Variable myVariable;
-    private int myIncrement;
+    private Expression myIncrement;
     private OperationType myType;
+    private boolean myIsIncrementSimple=false;
 
     public Increment(Variable v, int increment) {
         super();
-        myIncrement = increment;
         myVariable=v;
-        myIncrement = Math.abs(increment);
+        myIncrement = new Constant(Math.abs(increment),false);
         if (increment == 1) {
+            myIsIncrementSimple=true;
             myType = INC;
         } else if (increment == -1) {
+            myIsIncrementSimple=true;
             myType = DEC;
         } else if (increment >= 0) {
             myType = ADD_INC;
@@ -34,44 +38,31 @@ public class Increment extends Statement {
         }
     }
 
-    public Increment(Variable v, int increment, OperationType type) {
+
+    public Increment(Variable v, Expression increment, OperationType type) {
         myVariable=v;
         myIncrement = increment;
+        myType=type;
         switch (type) {
             case INC:
-                myIncrement = 1; //i.e. we ignore increment here
                 myType = INC;
+                myIsIncrementSimple=true;
                 return;
             case DEC:
-                myIncrement = 1; //i.e. we ignore increment here
                 myType = DEC;
-                return;
-            case ADD_INC:
-                addType(increment);
+                myIsIncrementSimple=true;
                 return;
             case ADD:
-                addType(increment);
-                return;
-            case SUB_INC:
-                subType(increment);
+                myType=ADD_INC;
                 return;
             case SUB:
-                subType(increment);
-                return;
-            case MUL_INC:
-                myType = MUL_INC;
+                myType=SUB_INC;
                 return;
             case MUL:
                 myType = MUL_INC;
                 return;
-            case DIV_INC:
-                myType = DIV_INC;
-                return;
             case DIV:
                 myType = DIV_INC;
-                return;
-            case REM_INC:
-                myType = REM_INC;
                 return;
             case REM:
                 myType = REM_INC;
@@ -83,36 +74,13 @@ public class Increment extends Statement {
     }
 
 
-    public int getIncrement() {
+    public Expression getIncrementExpression() {
         return myIncrement;
     }
 
-    public int getSignIncrement() {
-        return myIncrement * (myType == SUB_INC || myType == DEC ? -1 : 1);
-    }
+
     public String getName() {
         return myVariable.getName();
-    }
-
-    public String getOperation() {
-        switch (myType) {
-            case INC:
-                return "++";
-            case DEC:
-                return "--";
-            case ADD_INC:
-                return " += " + myIncrement;
-            case SUB_INC:
-                return " -= " + myIncrement;
-            case MUL_INC:
-                return " *= " + myIncrement;
-            case DIV:
-                return " /= " + myIncrement;
-            case REM_INC:
-                return " %= " + myIncrement;
-            default:
-                return "";
-        }
     }
 
     public String getOperation(AbstractOperationPrinter operationPrinter) {
@@ -122,15 +90,15 @@ public class Increment extends Statement {
             case DEC:
                 return operationPrinter.getDecView();
             case ADD_INC:
-                return operationPrinter.getAddIncView() + myIncrement;
+                return operationPrinter.getAddIncView();
             case SUB_INC:
-                return operationPrinter.getSubIncView() + myIncrement;
+                return operationPrinter.getSubIncView();
             case MUL_INC:
-                return operationPrinter.getMulIncView() + myIncrement;
+                return operationPrinter.getMulIncView();
             case DIV_INC:
-                return operationPrinter.getDivIncView() + myIncrement;
+                return operationPrinter.getDivIncView();
             case REM_INC:
-                return operationPrinter.getRemIncView() + myIncrement;
+                return operationPrinter.getRemIncView();
             default:
                 return "";
         }
@@ -143,30 +111,7 @@ public class Increment extends Statement {
     public Variable getVariable() {
         return myVariable;
     }
-
-    private void addType(int increment) {
-        if (increment == 1) {
-            myType = INC;
-        } else if (increment == -1) {
-            myType = DEC;
-        } else if (increment > 0) {
-            myType = ADD_INC;
-        } else if (increment < 0) {
-            myType = SUB_INC;
-        }
-        myIncrement = Math.abs(myIncrement);
-    }
-
-    private void subType(int increment) {
-        if (increment == 1) {
-            myType = DEC;
-        } else if (increment == -1) {
-            myType = INC;
-        } else if (increment > 0) {
-            myType = SUB_INC;
-        } else if (increment < 0) {
-            myType = ADD_INC;
-        }
-        myIncrement = Math.abs(myIncrement);
+    public boolean IsIncrementSimple(){
+        return myIsIncrementSimple;
     }
 }

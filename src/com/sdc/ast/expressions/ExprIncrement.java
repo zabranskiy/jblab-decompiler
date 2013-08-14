@@ -14,67 +14,53 @@ import static com.sdc.ast.OperationType.*;
  */
 public class ExprIncrement extends PriorityExpression {
     private Expression myOperand;
-    private int myIncrement;
+    private Expression myIncrement;
+    private boolean myIsIncrementSimple=false;
 
-    public ExprIncrement(final Expression operand, final int increment, final OperationType type) {
+    public ExprIncrement(final Expression operand, final Expression increment, final OperationType type) {
         myOperand = operand;
         myIncrement = increment;
         myType = type;
         switch (type) {
             case INC:
-                myIncrement = 1; //i.e. we ignore increment here
                 myType = INC;
-                return;
+                myIsIncrementSimple=true;
+                break;
             case DEC:
-                myIncrement = 1; //i.e. we ignore increment here
                 myType = DEC;
-                return;
+                myIsIncrementSimple=true;
+                break;
             case INC_REV:
-                myIncrement = 1; //i.e. we ignore increment here
                 myType = INC_REV;
-                return;
+                myIsIncrementSimple=true;
+                break;
             case DEC_REV:
-                myIncrement = 1; //i.e. we ignore increment here
                 myType = DEC_REV;
-                return;
-            case ADD_INC:
-                addType(increment);
-                return;
+                myIsIncrementSimple=true;
+                break;
             case ADD:
-                addType(increment);
-                return;
-            case SUB_INC:
-                subType(increment);
-                return;
+                myType=ADD_INC;
+                break;
             case SUB:
-                subType(increment);
-                return;
-            case MUL_INC:
-                myType = MUL_INC;
-                return;
+                myType=SUB_INC;
+                break;
             case MUL:
                 myType = MUL_INC;
-                return;
-            case DIV_INC:
-                myType = DIV_INC;
-                return;
+                break;
             case DIV:
                 myType = DIV_INC;
-                return;
-            case REM_INC:
-                myType = REM_INC;
-                return;
+                break;
             case REM:
                 myType = REM_INC;
-                return;
+                break;
             default:
-                return;
+                break;
         }
     }
 
     public ExprIncrement(final Expression operand, final int increment) {
         myOperand = operand;
-        myIncrement = Math.abs(increment);
+        myIncrement = new Constant(increment,false);
         if (increment == 1) {
             myType = INC;
         } else if (increment == -1) {
@@ -85,28 +71,6 @@ public class ExprIncrement extends PriorityExpression {
             myType = SUB_INC;
         }
     }
-
-/*
-    public String getOperation() {
-        switch (myType) {
-            case INC:
-                return "++";
-            case DEC:
-                return "--";
-            case ADD_INC:
-                return " += " + myIncrement;
-            case SUB_INC:
-                return " -= " + myIncrement;
-            case MUL_INC:
-                return " *= " + myIncrement;
-            case DIV_INC:
-                return " /= " + myIncrement;
-            case REM_INC:
-                return " %= " + myIncrement;
-            default:
-                return "";
-        }
-    }*/
 
     public String getOperation(AbstractOperationPrinter operationPrinter) {
         switch (myType) {
@@ -119,15 +83,15 @@ public class ExprIncrement extends PriorityExpression {
             case DEC_REV:
                 return operationPrinter.getDecRevView();
             case ADD_INC:
-                return operationPrinter.getAddIncView() + myIncrement;
+                return operationPrinter.getAddIncView();
             case SUB_INC:
-                return operationPrinter.getSubIncView() + myIncrement;
+                return operationPrinter.getSubIncView();
             case MUL_INC:
-                return operationPrinter.getMulIncView() + myIncrement;
+                return operationPrinter.getMulIncView();
             case DIV_INC:
-                return operationPrinter.getDivIncView() + myIncrement;
+                return operationPrinter.getDivIncView();
             case REM_INC:
-                return operationPrinter.getRemIncView() + myIncrement;
+                return operationPrinter.getRemIncView();
             default:
                 return "";
         }
@@ -137,34 +101,12 @@ public class ExprIncrement extends PriorityExpression {
         return myOperand;
     }
 
-    public int getIncrement() {
+    public Expression getIncrementExpression() {
         return myIncrement;
     }
 
-    private void addType(int increment) {
-        if (increment == 1) {
-            myType = INC;
-        } else if (increment == -1) {
-            myType = DEC;
-        } else if (increment > 0) {
-            myType = ADD_INC;
-        } else if (increment < 0) {
-            myType = SUB_INC;
-        }
-        myIncrement = Math.abs(myIncrement);
-    }
-
-    private void subType(int increment) {
-        if (increment == 1) {
-            myType = DEC;
-        } else if (increment == -1) {
-            myType = INC;
-        } else if (increment > 0) {
-            myType = ADD_INC;
-        } else if (increment < 0) {
-            myType = SUB_INC;
-        }
-        myIncrement = Math.abs(myIncrement);
+    public boolean IsIncrementSimple(){
+        return myIsIncrementSimple;
     }
 
     @Override
