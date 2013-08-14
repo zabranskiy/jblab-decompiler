@@ -5,27 +5,30 @@ import com.sdc.cfg.constructions.Construction;
 import com.sdc.cfg.constructions.ElementaryBlock;
 import com.sdc.cfg.nodes.Node;
 import com.sdc.cfg.nodes.Switch;
-import com.sdc.cfg.nodes.While;
+//import com.sdc.cfg.nodes.While;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ConstructionBuilder {
     private List<Node> myNodes;
-    private int size;
+    private final int size;
     private final int[] domi;
     private final int[] post;
     private int[] intersection;
 
     public ConstructionBuilder(final List<Node> myNodes, final int[] domi, final int[] post) {
         this.myNodes = myNodes;
-        this.size = myNodes.size();
         this.domi = domi;
         this.post = post;
-        this.intersection = new int[size];
-        if (size > 1)
-            for (int i = 0; i < size; i++) {
+        this.size = myNodes.size();
+        if (domi != null && domi.length > 1) {
+            this.intersection = new int[domi.length];
+            for (int i = 0; i < domi.length; i++) {
                 intersection[i] = domi[i] == post[i] ? domi[i] : -1;
             }
+        }
     }
 
     public Construction build() {
@@ -73,11 +76,9 @@ public class ConstructionBuilder {
             Switch switchNode = (Switch) node;
             com.sdc.cfg.constructions.Switch switchConstruction = new com.sdc.cfg.constructions.Switch(switchNode.getExpr());
 
-
             Node nextNode = findNextNodeToSwitchWithDefaultCase(switchNode);
-            switchNode.setNextNode(nextNode);
 
-            if (switchNode.getNextNode() == null) {
+            if (nextNode == null) {
                 List<Node> tails = switchNode.getListOfTails();
                 Node past = switchNode.getListOfTails().get(0);
                 for (int i = 1; i < tails.size(); i++) {
@@ -86,25 +87,8 @@ public class ConstructionBuilder {
                 }
 
                 nextNode = findNextNodeToSwitchWithoutDefaultCase(switchNode);
-                switchNode.setNextNode(nextNode);
-
-                for (final Node tail : switchNode.getListOfTails()) {
-                    for (final Node ancestor : tail.getAncestors()) {
-                        if (!ancestor.equals(switchNode) && ancestor.getIndex() < tail.getIndex()) {
-                            ancestor.removeChild(tail);
-                        }
-                    }
-                }
             } else {
-                for (final Node tail : switchNode.getListOfTails()) {
-                    for (final Node ancestor : tail.getAncestors()) {
-                        if (!ancestor.equals(switchNode) && ancestor.getIndex() < tail.getIndex()) {
-                            ancestor.removeChild(tail);
-                        }
-                    }
-                }
-
-                switchNode.addTail(switchNode.getNextNode());
+                switchNode.addTail(nextNode);
 
                 List<Node> tails = switchNode.getListOfTails();
                 Node past = switchNode.getListOfTails().get(0);
@@ -125,13 +109,16 @@ public class ConstructionBuilder {
                     past = tails.get(i);
                 }
 
-                switchNode.removeChild(switchNode.getNextNode());
+                switchNode.removeChild(nextNode);
             }
-
 
             addBreakToAncestors(nextNode);
 
-            extractNextConstruction(switchConstruction, switchNode);
+            if (getRelativeIndex(nextNode.getIndex()) < myNodes.size()) {
+                switchNode.setNextNode(nextNode);
+                extractNextConstruction(switchConstruction, switchNode);
+            }
+
             return switchConstruction;
         }
         return null;
@@ -173,6 +160,29 @@ public class ConstructionBuilder {
         return defaultBranch;
     }
 
+    private boolean hasDefaultCase(Switch switchNode) {
+        final Node probableDefaultNode = switchNode.getNodeByKey(-1);
+
+        final List<Node> cases = switchNode.getListOfTails();
+        for (int i = 0; i < cases.size() - 1; i++) {
+            if (!cases.get(i).equals(probableDefaultNode) && !hasLinkFromCase(probableDefaultNode, cases.get(i), cases.get(i + 1)))  {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private boolean hasLinkFromCase(final Node node, final Node caseNode, final Node nextCaseNode) {
+        for (final Node ancestor : node.getAncestors()) {
+            final int ancestorIndex = ancestor.getIndex();
+            if (ancestorIndex >= caseNode.getIndex() && ancestorIndex < nextCaseNode.getIndex()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private Construction extractConditionBlock(Node node) {
         if (node.getCondition() != null) {
             boolean fl1 = true;
@@ -183,7 +193,7 @@ public class ConstructionBuilder {
                     }
                     fl1 = false;
                     com.sdc.cfg.constructions.While whileConstruction = new com.sdc.cfg.constructions.While(node.getCondition());
-                    myNodes.set(myNodes.indexOf(node), new While(node));
+//                    myNodes.set(myNodes.indexOf(node), new While(node));
                     break;
                 }
             }
