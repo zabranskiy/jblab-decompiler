@@ -5,7 +5,9 @@ import com.sdc.cfg.constructions.ElementaryBlock;
 import com.sdc.cfg.nodes.Node;
 import com.sdc.cfg.nodes.Switch;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ConstructionBuilder {
     private List<Node> myNodes;
@@ -121,7 +123,6 @@ public class ConstructionBuilder {
     private Node findNextNodeToSwitchWithDefaultCase(Switch switchNode) {
         Node result = null;
 
-        final int initialDominator = domi[switchNode.getIndex()];
         final List<Node> tails = switchNode.getListOfTails();
         final int startIndex = tails.get(tails.size() - 1).getIndex() + 1;
 
@@ -131,17 +132,6 @@ public class ConstructionBuilder {
                 break;
             }
         }
-
-//        if (result == null) {
-//            for (int i = startIndex; i < domi.length; i++) {
-//                if (domi[i] == initialDominator) {
-//                    if (myNodes.size() > getRelativeIndex(i)) {
-//                        result = myNodes.get(getRelativeIndex(i));
-//                    }
-//                    break;
-//                }
-//            }
-//        }
 
         return result;
     }
@@ -153,6 +143,29 @@ public class ConstructionBuilder {
         defaultBranch.removeAncestor(switchNode);
 
         return defaultBranch;
+    }
+
+    private boolean hasDefaultCase(Switch switchNode) {
+        final Node probableDefaultNode = switchNode.getNodeByKey(-1);
+
+        final List<Node> cases = switchNode.getListOfTails();
+        for (int i = 0; i < cases.size() - 1; i++) {
+            if (!cases.get(i).equals(probableDefaultNode) && !hasLinkFromCase(probableDefaultNode, cases.get(i), cases.get(i + 1)))  {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private boolean hasLinkFromCase(final Node node, final Node caseNode, final Node nextCaseNode) {
+        for (final Node ancestor : node.getAncestors()) {
+            final int ancestorIndex = ancestor.getIndex();
+            if (ancestorIndex >= caseNode.getIndex() && ancestorIndex < nextCaseNode.getIndex()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private Construction extractConditionBlock(Node node) {
