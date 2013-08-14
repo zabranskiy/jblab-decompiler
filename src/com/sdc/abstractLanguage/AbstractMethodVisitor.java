@@ -569,7 +569,6 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
     @Override
     public void visitJumpInsn(final int opcode, final Label label) {
         final String opString = Printer.OPCODES[opcode];
-        System.out.println(opString + ": " + label);
         if (opString.contains("IF")) {
             final Label myLastIFLabel = label;
             if (myNodes.isEmpty() || !myNodeInnerLabels.isEmpty() || (myNodes.get(getLeftEmptyNodeIndex() - 1).getCondition() == null)) {
@@ -603,8 +602,6 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             myLabels.remove(label);
         }
         myNodeInnerLabels.add(label);
-
-        System.out.println(label);
     }
 
     @Override
@@ -717,7 +714,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         placeEdges();
 
         DominatorTreeGenerator gen = new DominatorTreeGenerator(myNodes);
-        ConstructionBuilder cb = new ConstructionBuilder(myNodes, gen.getDominators(), gen.getPostDominators());
+        ConstructionBuilder cb = new ConstructionBuilder(myNodes, gen);
 
         myDecompiledMethod.setBegin(cb.build());
     }
