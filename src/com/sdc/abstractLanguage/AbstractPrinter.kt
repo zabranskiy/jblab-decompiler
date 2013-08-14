@@ -18,14 +18,8 @@ import com.sdc.ast.controlflow.Return
 import com.sdc.ast.controlflow.Throw
 import com.sdc.ast.controlflow.InstanceInvocation
 import com.sdc.ast.expressions.nestedclasses.AnonymousClass
-
-import com.sdc.cfg.nodes.Node
-import com.sdc.cfg.nodes.Switch
 import com.sdc.ast.expressions.ExprIncrement
 import com.sdc.ast.controlflow.Increment
-import com.sdc.ast.OperationType
-
-
 import com.sdc.cfg.constructions.Construction
 import com.sdc.cfg.constructions.ElementaryBlock
 import com.sdc.cfg.constructions.ConditionalBlock
@@ -36,7 +30,8 @@ import com.sdc.cfg.constructions.ForEach
 import com.sdc.cfg.constructions.TryCatch
 import com.sdc.cfg.constructions.When
 import com.sdc.cfg.constructions.Switch
-
+import com.sdc.ast.expressions.PriorityExpression
+import com.sdc.ast.OperationType
 
 abstract class AbstractPrinter {
     abstract fun getOperationPrinter(): AbstractOperationPrinter;
@@ -50,42 +45,19 @@ abstract class AbstractPrinter {
                     text("\"" + expression.getValue().toString() + "\"")
 
             is BinaryExpression -> {
-                val opPriority = expression.getPriority()
-
                 val l = expression.getLeft()
-                val left = when (l) {
-                    is BinaryExpression ->
-                        if (opPriority - l.getPriority() < 2)
-                            printExpression(l, nestSize)
-                        else
-                            printExpressionWithBrackets(l, nestSize)
-                    else -> printExpression(l, nestSize)
-                }
-
                 val r = expression.getRight()
-                val right = when (r) {
-                    is BinaryExpression ->
-                        if (opPriority - r.getPriority() > 0 || opPriority == 3)
-                            printExpressionWithBrackets(r, nestSize)
-                        else
-                            printExpression(r, nestSize)
-                    else -> printExpression(r, nestSize)
-                }
-                 group(left / (text(expression.getOperation(getOperationPrinter())) + right))
+                val opPriority = expression.getPriority(getOperationPrinter())
+                val left = printExpressionCheckBrackets(l,opPriority,nestSize);
+                val right = printExpressionCheckBrackets(r,opPriority,nestSize);
+                group(left / (text(expression.getOperation(getOperationPrinter())) + right))
              }
 
-
             is UnaryExpression -> {
+                val opPriority = expression.getPriority(getOperationPrinter())
                 val operand = expression.getOperand()
-                val expr = when (operand) {
-                    is BinaryExpression ->
-                        if (operand.getPriority() < 2)
-                            printExpressionWithBrackets(operand, nestSize)
-                        else
-                            printExpression(operand, nestSize)
-                    else -> printExpression(operand, nestSize)
-                }
-                text(expression.getOperation()) + expr
+                val expr = printExpressionCheckBrackets(operand,opPriority,nestSize);
+                text(expression.getOperation(getOperationPrinter())) + expr
             }
 
             is Field -> text(expression.getName())
@@ -128,22 +100,39 @@ abstract class AbstractPrinter {
             is AnonymousClass -> printNewOperator() + printAnonymousClass(expression.getNestedClass(), expression.getConstructorArguments())
 
             is TernaryExpression -> {
-                val condition = expression.getCondition()
-                val printCondition = printExpression(condition, nestSize)
-                val leftExp = expression.getLeft()
-                val printLeftExp = printExpression(leftExp,nestSize)
-                val rightExp = expression.getRight()
-                val printRightExp = printExpression(rightExp,nestSize)
-                group(nest(nestSize, line() + text("(") + printCondition+text(") ? ") + printLeftExp + text(" : ") + printRightExp))
+                val l = expression.getLeft()
+                val r = expression.getRight()
+                var c=  expression.getCondition();
+                val opPriority = expression.getPriority(getOperationPrinter())
+                val condition = printExpressionCheckBrackets(c,opPriority,nestSize);
+                val left = printExpressionCheckBrackets(l,opPriority,nestSize);
+                val right = printExpressionCheckBrackets(r,opPriority,nestSize);
+                group(nest(nestSize, line() + text("(") + condition+text(") ? ") + left + text(" : ") + right))
             }
 
             is ExprIncrement -> {
                 val expr = expression.getOperand();
                 val printExpr = printExpression(expr,nestSize)
-                group(nest(nestSize, line() + printExpr + text(expression.getOperation())))
+                var myType= expression.getOperationType();
+                var operation=expression.getOperation(getOperationPrinter());
+                if(myType==OperationType.INC_REV || myType==OperationType.DEC_REV){
+                    group(nest(nestSize, line() + text(operation) + printExpr))
+                }   else{
+                    group(nest(nestSize, line() + printExpr + text(operation)))
+                }
             }
 
             else -> throw IllegalArgumentException("Unknown Expression implementer!")
+        }
+
+    open fun printExpressionCheckBrackets(expression: Expression?, nextOpPriority: Int, nestSize: Int): PrimeDoc =
+        when (expression) {
+            is PriorityExpression ->
+                if (nextOpPriority < expression.getPriority(getOperationPrinter()) )
+                    printExpressionWithBrackets(expression, nestSize)
+                else
+                    printExpression(expression, nestSize)
+            else -> printExpression(expression, nestSize)
         }
 
     open fun printStatement(statement: Statement?, nestSize: Int): PrimeDoc =

@@ -62,4 +62,12 @@ public class Variable extends Identifier {
     public AbstractFrame getAbstractFrame() {
         return myAbstractFrame;
     }
+
+    @Override
+    public String toString() {
+        String name=getName();
+        return "Variable{" +
+                "myIndex=" + myIndex +
+                ", name=" + (name!=null?name:" no name yet")+"}";
+    }
 }

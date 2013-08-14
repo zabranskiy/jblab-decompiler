@@ -1,5 +1,6 @@
 package com.sdc.ast.expressions;
 
+import com.sdc.abstractLanguage.AbstractOperationPrinter;
 import com.sdc.ast.OperationType;
 
 import static com.sdc.ast.OperationType.*;
@@ -11,12 +12,9 @@ import static com.sdc.ast.OperationType.*;
  * Time: 10:26 AM
  * To change this template use File | Settings | File Templates.
  */
-public class ExprIncrement extends Expression {
+public class ExprIncrement extends PriorityExpression {
     private Expression myOperand;
     private int myIncrement;
-    private OperationType myType;
-
-
 
     public ExprIncrement(final Expression operand, final int increment, final OperationType type) {
         myOperand = operand;
@@ -30,6 +28,14 @@ public class ExprIncrement extends Expression {
             case DEC:
                 myIncrement = 1; //i.e. we ignore increment here
                 myType = DEC;
+                return;
+            case INC_REV:
+                myIncrement = 1; //i.e. we ignore increment here
+                myType = INC_REV;
+                return;
+            case DEC_REV:
+                myIncrement = 1; //i.e. we ignore increment here
+                myType = DEC_REV;
                 return;
             case ADD_INC:
                 addType(increment);
@@ -80,7 +86,7 @@ public class ExprIncrement extends Expression {
         }
     }
 
-
+/*
     public String getOperation() {
         switch (myType) {
             case INC:
@@ -100,6 +106,31 @@ public class ExprIncrement extends Expression {
             default:
                 return "";
         }
+    }*/
+
+    public String getOperation(AbstractOperationPrinter operationPrinter) {
+        switch (myType) {
+            case INC:
+                return operationPrinter.getIncView();
+            case DEC:
+                return operationPrinter.getDecView();
+            case INC_REV:
+                return operationPrinter.getIncRevView();
+            case DEC_REV:
+                return operationPrinter.getDecRevView();
+            case ADD_INC:
+                return operationPrinter.getAddIncView() + myIncrement;
+            case SUB_INC:
+                return operationPrinter.getSubIncView() + myIncrement;
+            case MUL_INC:
+                return operationPrinter.getMulIncView() + myIncrement;
+            case DIV_INC:
+                return operationPrinter.getDivIncView() + myIncrement;
+            case REM_INC:
+                return operationPrinter.getRemIncView() + myIncrement;
+            default:
+                return "";
+        }
     }
 
     public Expression getOperand() {
@@ -108,10 +139,6 @@ public class ExprIncrement extends Expression {
 
     public int getIncrement() {
         return myIncrement;
-    }
-
-    public OperationType getType() {
-        return myType;
     }
 
     private void addType(int increment) {
@@ -138,5 +165,13 @@ public class ExprIncrement extends Expression {
             myType = SUB_INC;
         }
         myIncrement = Math.abs(myIncrement);
+    }
+
+    @Override
+    public String toString() {
+        return "ExprIncrement{" +
+                "myOperand=" + myOperand +
+                ", myIncrement=" + myIncrement +
+                '}';
     }
 }
