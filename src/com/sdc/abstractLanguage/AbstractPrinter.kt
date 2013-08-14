@@ -195,19 +195,19 @@ abstract class AbstractPrinter {
 
                         var elsePart : PrimeDoc = nil()
                         if (construction.hasElseBlock()) {
-                            elsePart = text(" else {") + nest(nestSize, line() + printConstruction(construction.getElseBlock(), nestSize)) / text("}")
+                            elsePart = text(" else {") + nest(nestSize, printConstruction(construction.getElseBlock(), nestSize)) / text("}")
                         }
 
-                        text("if (!(") + printExpression(construction.getCondition(), nestSize) + text(")) {") + nest(nestSize, line() + thenPart) / text("}") + nest(nestSize, line() + elsePart)
+                        text("if (!(") + printExpression(construction.getCondition(), nestSize) + text(")) {") + nest(nestSize, thenPart) / text("}") + elsePart
                     }
 
                     is While -> {
                         val body = printConstruction(construction.getBody(), nestSize)
-                        text("while (!(") + printExpression(construction.getCondition(), nestSize) + text(")) {") + nest(nestSize, line() + body) / text("}")
+                        text("while (!(") + printExpression(construction.getCondition(), nestSize) + text(")) {") + nest(nestSize, body) / text("}")
                     }
 
                     is DoWhile -> {
-                        val body = text("do {") + nest(nestSize, line() + printConstruction(construction.getBody(), nestSize)) / text("}")
+                        val body = text("do {") + nest(nestSize, printConstruction(construction.getBody(), nestSize)) / text("}")
                         body / text("while (!(") + printExpression(construction.getCondition(), nestSize) + text("))")
                     }
 
@@ -215,12 +215,12 @@ abstract class AbstractPrinter {
                         val body = printConstruction(construction.getBody(), nestSize)
                         val initialization = printStatement(construction.getVariableInitialization(), nestSize)
                         val afterThought = printStatement(construction.getAfterThought(), nestSize)
-                        text("for (") + initialization + text(", !(") + printExpression(construction.getCondition(), nestSize) + text("), ") + afterThought + text(") {") + nest(nestSize, line() + body) / text("}")
+                        text("for (") + initialization + text(", !(") + printExpression(construction.getCondition(), nestSize) + text("), ") + afterThought + text(") {") + nest(nestSize, body) / text("}")
                     }
 
                     is ForEach -> {
                         val body = printConstruction(construction.getBody(), nestSize)
-                        text("for (") + printExpression(construction.getVariable(), nestSize) + text(" : ") + printExpression(construction.getContainer(), nestSize) + text(") {") + nest(nestSize, line() + body) / text("}")
+                        text("for (") + printExpression(construction.getVariable(), nestSize) + text(" : ") + printExpression(construction.getContainer(), nestSize) + text(") {") + nest(nestSize, body) / text("}")
                     }
 
                     is TryCatch -> {
@@ -228,16 +228,16 @@ abstract class AbstractPrinter {
 
                         var catchBlockCode : PrimeDoc = nil()
                         for ((variable, catchBody) in construction.getCatches()!!.entrySet()) {
-                            catchBlockCode = catchBlockCode / text("catch (") + printExpression(variable, nestSize) + text(") {") + nest(nestSize, line() + printConstruction(catchBody, nestSize)) + text("}")
+                            catchBlockCode = catchBlockCode / text("catch (") + printExpression(variable, nestSize) + text(") {") + nest(nestSize, printConstruction(catchBody, nestSize)) + text("}")
                         }
 
                         val finallyCode =
                                 if (construction.hasFinallyBlock())
-                                    text("finally {") + nest(nestSize, line() + printConstruction(construction.getFinallyBody(), nestSize)) / text("}")
+                                    text("finally {") + nest(nestSize, printConstruction(construction.getFinallyBody(), nestSize)) / text("}")
                                 else
                                     nil()
 
-                        text("try {") + nest(nestSize, line() + body) / text("}") + catchBlockCode / finallyCode
+                        text("try {") + nest(nestSize, body) / text("}") + catchBlockCode / finallyCode
                     }
 
                     is Switch -> {
