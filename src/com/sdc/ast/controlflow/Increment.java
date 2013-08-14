@@ -1,6 +1,6 @@
 package com.sdc.ast.controlflow;
 
-import com.sdc.abstractLanguage.AbstractFrame;
+import com.sdc.abstractLanguage.AbstractOperationPrinter;
 import com.sdc.ast.OperationType;
 import com.sdc.ast.expressions.identifiers.Variable;
 
@@ -14,25 +14,14 @@ import static com.sdc.ast.OperationType.*;
  * To change this template use File | Settings | File Templates.
  */
 public class Increment extends Statement {
-    private int myIndex;
+    private Variable myVariable;
     private int myIncrement;
-    private AbstractFrame myAbstractFrame;
     private OperationType myType;
 
-
-    public Increment(int index, int increment, AbstractFrame abstractFrame, OperationType type) {
+    public Increment(Variable v, int increment) {
         super();
-        myIndex = index;
         myIncrement = increment;
-        myAbstractFrame = abstractFrame;
-        myType = type;
-    }
-
-    public Increment(int index, int increment, AbstractFrame abstractFrame) {
-        super();
-        myIndex = index;
-        myIncrement = increment;
-        myAbstractFrame = abstractFrame;
+        myVariable=v;
         myIncrement = Math.abs(increment);
         if (increment == 1) {
             myType = INC;
@@ -46,8 +35,7 @@ public class Increment extends Statement {
     }
 
     public Increment(Variable v, int increment, OperationType type) {
-        myIndex = v.getIndex();
-        myAbstractFrame = v.getAbstractFrame();
+        myVariable=v;
         myIncrement = increment;
         switch (type) {
             case INC:
@@ -94,9 +82,6 @@ public class Increment extends Statement {
 
     }
 
-    public int getIndex() {
-        return myIndex;
-    }
 
     public int getIncrement() {
         return myIncrement;
@@ -105,14 +90,8 @@ public class Increment extends Statement {
     public int getSignIncrement() {
         return myIncrement * (myType == SUB_INC || myType == DEC ? -1 : 1);
     }
-
-    public AbstractFrame getAbstractFrame() {
-        myIndex++;
-        return myAbstractFrame;
-    }
-
     public String getName() {
-        return myAbstractFrame.getLocalVariableName(myIndex);
+        return myVariable.getName();
     }
 
     public String getOperation() {
@@ -136,13 +115,33 @@ public class Increment extends Statement {
         }
     }
 
+    public String getOperation(AbstractOperationPrinter operationPrinter) {
+        switch (myType) {
+            case INC:
+                return operationPrinter.getIncView();
+            case DEC:
+                return operationPrinter.getDecView();
+            case ADD_INC:
+                return operationPrinter.getAddIncView() + myIncrement;
+            case SUB_INC:
+                return operationPrinter.getSubIncView() + myIncrement;
+            case MUL_INC:
+                return operationPrinter.getMulIncView() + myIncrement;
+            case DIV_INC:
+                return operationPrinter.getDivIncView() + myIncrement;
+            case REM_INC:
+                return operationPrinter.getRemIncView() + myIncrement;
+            default:
+                return "";
+        }
+    }
 
     public OperationType getType() {
         return myType;
     }
 
     public Variable getVariable() {
-        return new Variable(myIndex, myAbstractFrame);
+        return myVariable;
     }
 
     private void addType(int increment) {
@@ -164,9 +163,9 @@ public class Increment extends Statement {
         } else if (increment == -1) {
             myType = INC;
         } else if (increment > 0) {
-            myType = ADD_INC;
-        } else if (increment < 0) {
             myType = SUB_INC;
+        } else if (increment < 0) {
+            myType = ADD_INC;
         }
         myIncrement = Math.abs(myIncrement);
     }
