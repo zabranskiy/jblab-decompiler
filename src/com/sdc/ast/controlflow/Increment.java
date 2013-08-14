@@ -163,9 +163,9 @@ public class Increment extends Statement {
         } else if (increment == -1) {
             myType = INC;
         } else if (increment > 0) {
-            myType = ADD_INC;
-        } else if (increment < 0) {
             myType = SUB_INC;
+        } else if (increment < 0) {
+            myType = ADD_INC;
         }
         myIncrement = Math.abs(myIncrement);
     }
