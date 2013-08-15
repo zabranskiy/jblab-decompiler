@@ -329,8 +329,15 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 multiPush(expr1, expr2, expr1);
             }
         } else if (opString.equals("POP")) {
-            if (size < 1 || myBodyStack.peek().hasDoubleLength()) return;
-            myBodyStack.pop();
+            if (size < 1 || myBodyStack.peek().hasDoubleLength()) {
+                return;
+            }
+
+            if (myBodyStack.peek() instanceof Invocation) {
+                myStatements.add(convertInvocationFromExpressionToStatement((Invocation) myBodyStack.pop()));
+            } else {
+                myBodyStack.pop();
+            }
         } else if (opString.equals("POP2")) {
             if (size < 1) return;
             Expression expr1 = myBodyStack.pop();
@@ -546,6 +553,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
         List<Expression> arguments = getInvocationArguments(desc);
         String returnType = getInvocationReturnType(desc);
+        final boolean hasVoidReturnType = hasVoidReturnType(desc);
         String invocationName = name;
 
         boolean isStaticInvocation = false;
@@ -553,7 +561,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         if (opString.contains("INVOKEVIRTUAL") || opString.contains("INVOKEINTERFACE")
                 || (decompiledOwnerFullClassName.equals(myDecompiledOwnerFullClassName) && !name.equals("<init>")))
         {
-            appendInstanceInvocation(name, returnType, arguments, getTopOfBodyStack());
+            appendInstanceInvocation(name, hasVoidReturnType ? "" : returnType, arguments, getTopOfBodyStack());
             return;
         }
 
@@ -573,7 +581,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             isStaticInvocation = true;
         }
 
-        appendInvocationOrConstructor(isStaticInvocation, name, invocationName, returnType, arguments, decompiledOwnerFullClassName);
+        appendInvocationOrConstructor(isStaticInvocation, name, invocationName, hasVoidReturnType ? "" : returnType, arguments, decompiledOwnerFullClassName);
     }
 
     @Override
@@ -851,18 +859,23 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
     protected void replaceInvocationsFromExpressionsToStatements() {
         for (final Expression expression : myBodyStack) {
-            if (expression instanceof InstanceInvocation) {
-                final InstanceInvocation invocation = (InstanceInvocation) expression;
-                myStatements.add(new com.sdc.ast.controlflow.InstanceInvocation(invocation.getFunction(), invocation.getReturnType(), invocation.getArguments(), invocation.getInstance()));
-            } else if (expression instanceof Invocation) {
-                final Invocation invocation = (Invocation) expression;
-                myStatements.add(new com.sdc.ast.controlflow.Invocation(invocation.getFunction(), invocation.getReturnType(), invocation.getArguments()));
+            if (expression instanceof Invocation) {
+                myStatements.add(convertInvocationFromExpressionToStatement((Invocation) expression));
             }
         }
     }
 
+    protected com.sdc.ast.controlflow.Invocation convertInvocationFromExpressionToStatement(final Invocation expression) {
+        if (expression instanceof InstanceInvocation) {
+            final InstanceInvocation invocation = (InstanceInvocation) expression;
+            return new com.sdc.ast.controlflow.InstanceInvocation(invocation.getFunction(), invocation.getReturnType(), invocation.getArguments(), invocation.getInstance());
+        } else {
+            return new com.sdc.ast.controlflow.Invocation(expression.getFunction(), expression.getReturnType(), expression.getArguments());
+        }
+    }
+
     protected void appendInstanceInvocation(final String function, final String returnType, final List<Expression> arguments, final Expression instance) {
-        if (myBodyStack.isEmpty()) {
+        if (returnType.isEmpty()) {
             myStatements.add(new com.sdc.ast.controlflow.InstanceInvocation(function, returnType, arguments, instance));
         } else {
             myBodyStack.push(new com.sdc.ast.expressions.InstanceInvocation(function, returnType, arguments, instance));
@@ -870,7 +883,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
     }
 
     protected void appendInvocation(final String function, final String returnType, final List<Expression> arguments) {
-        if (myBodyStack.isEmpty()) {
+        if (returnType.isEmpty()) {
             myStatements.add(new com.sdc.ast.controlflow.Invocation(function, returnType, arguments));
         } else {
             myBodyStack.push(new com.sdc.ast.expressions.Invocation(function, returnType, arguments));
@@ -888,6 +901,11 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
     protected String getInvocationReturnType(final String descriptor) {
         final int returnTypeIndex = descriptor.indexOf(')') + 1;
         return getDescriptor(descriptor, returnTypeIndex, myDecompiledMethod.getImports());
+    }
+
+    protected boolean hasVoidReturnType(final String descriptor) {
+        final int returnTypeIndex = descriptor.indexOf(')') + 1;
+        return descriptor.charAt(returnTypeIndex) == 'V';
     }
 
     protected boolean checkForSuperClassConstructor(final String invocationName, final String decompiledOwnerFullClassName) {
