@@ -897,7 +897,9 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
     }
 
     protected void processSuperClassConstructorInvocation(final String invocationName, final String returnType, final List<Expression> arguments) {
-        myStatements.add(new com.sdc.ast.controlflow.Invocation("super", returnType, arguments));
+        if (!arguments.isEmpty()) {
+            myStatements.add(new com.sdc.ast.controlflow.Invocation("super", returnType, arguments));
+        }
     }
 
     protected void appendInvocationOrConstructor(final boolean isStaticInvocation, final String visitMethodName,
