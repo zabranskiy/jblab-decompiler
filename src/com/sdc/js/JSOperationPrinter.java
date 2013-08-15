@@ -10,7 +10,7 @@ import com.sdc.abstractLanguage.AbstractOperationPrinter;
  * To change this template use File | Settings | File Templates.
  */
 public class JSOperationPrinter extends AbstractOperationPrinter {
-    AbstractOperationPrinter operationPrinter=new JSOperationPrinter();
+    protected static AbstractOperationPrinter ourInstance = new JSOperationPrinter();
 
     public static AbstractOperationPrinter getInstance(){
         return ourInstance;

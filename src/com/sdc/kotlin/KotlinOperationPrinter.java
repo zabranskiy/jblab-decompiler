@@ -10,7 +10,8 @@ import com.sdc.abstractLanguage.AbstractOperationPrinter;
  * To change this template use File | Settings | File Templates.
  */
 public class KotlinOperationPrinter extends AbstractOperationPrinter {
-    AbstractOperationPrinter operationPrinter=new KotlinOperationPrinter();
+    protected static AbstractOperationPrinter ourInstance = new KotlinOperationPrinter();
+
     public static AbstractOperationPrinter getInstance(){
         return ourInstance;
     }

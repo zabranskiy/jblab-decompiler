@@ -329,8 +329,15 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 multiPush(expr1, expr2, expr1);
             }
         } else if (opString.equals("POP")) {
-            if (size < 1 || myBodyStack.peek().hasDoubleLength()) return;
-            myBodyStack.pop();
+            if (size < 1 || myBodyStack.peek().hasDoubleLength()) {
+                return;
+            }
+
+            if (myBodyStack.peek() instanceof Invocation) {
+                myStatements.add(convertInvocationFromExpressionToStatement((Invocation) myBodyStack.pop()));
+            } else {
+                myBodyStack.pop();
+            }
         } else if (opString.equals("POP2")) {
             if (size < 1) return;
             Expression expr1 = myBodyStack.pop();
@@ -513,6 +520,8 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         } else if (opString.contains("CHECKCAST") && !myBodyStack.empty()) {
             //type is for name of class
             myBodyStack.push(new UnaryExpression(CHECK_CAST, myBodyStack.pop(), type));
+        } else if (opString.equals("NEW")) {
+            myBodyStack.push(new New(null));
         }
     }
 
@@ -528,7 +537,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         }
 
         if (opString.contains("PUTFIELD") || opString.contains("GETFIELD")) {
-            final Identifier fieldOwner = (Identifier) getTopOfBodyStack();
+            final Expression fieldOwner = getTopOfBodyStack();
             field.setOwner(fieldOwner);
         } else {
             final String fieldOwner = getClassName(owner);
@@ -536,7 +545,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         }
 
         if (opString.contains("PUTFIELD") || opString.contains("PUTSTATIC")) {
-            if (myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName()) && e instanceof Constant) {
+            if (myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName()) && e instanceof Constant && !myDecompiledMethod.hasFieldInitializer(name)) {
                 myDecompiledMethod.addInitializerToField(name, e);
             } else {
                 myStatements.add(new Assignment(field, e));
@@ -555,18 +564,16 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
         List<Expression> arguments = getInvocationArguments(desc);
         String returnType = getInvocationReturnType(desc);
+        final boolean hasVoidReturnType = hasVoidReturnType(desc);
         String invocationName = name;
 
         boolean isStaticInvocation = false;
 
         if (opString.contains("INVOKEVIRTUAL") || opString.contains("INVOKEINTERFACE")
-                || (decompiledOwnerFullClassName.equals(myDecompiledOwnerFullClassName) && !name.equals("<init>"))) {
-            if (!myBodyStack.isEmpty() && myBodyStack.peek() instanceof Variable) {
-                appendInstanceInvocation(name, returnType, arguments, (Variable) myBodyStack.pop());
-                return;
-            } else {
-                invocationName = "." + name;
-            }
+                || (decompiledOwnerFullClassName.equals(myDecompiledOwnerFullClassName) && !name.equals("<init>")))
+        {
+            appendInstanceInvocation(name, hasVoidReturnType ? "" : returnType, arguments, getTopOfBodyStack());
+            return;
         }
 
         if (opString.contains("INVOKESPECIAL")) {
@@ -585,7 +592,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             isStaticInvocation = true;
         }
 
-        appendInvocationOrConstructor(isStaticInvocation, name, invocationName, returnType, arguments);
+        appendInvocationOrConstructor(isStaticInvocation, name, invocationName, hasVoidReturnType ? "" : returnType, arguments, decompiledOwnerFullClassName);
     }
 
     @Override
@@ -595,7 +602,6 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
     @Override
     public void visitJumpInsn(final int opcode, final Label label) {
         final String opString = Printer.OPCODES[opcode];
-        System.out.println(opString + ": " + label);
         if (opString.contains("IF")) {
             final Label myLastIFLabel = label;
             if (myNodes.isEmpty() || !myNodeInnerLabels.isEmpty() || (myNodes.get(getLeftEmptyNodeIndex() - 1).getCondition() == null)) {
@@ -629,8 +635,6 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             myLabels.remove(label);
         }
         myNodeInnerLabels.add(label);
-
-        System.out.println(label);
     }
 
     @Override
@@ -743,7 +747,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         placeEdges();
 
         DominatorTreeGenerator gen = new DominatorTreeGenerator(myNodes);
-        ConstructionBuilder cb = new ConstructionBuilder(myNodes, gen.getDominators(), gen.getPostDominators());
+        ConstructionBuilder cb = new ConstructionBuilder(myNodes, gen);
 
         myDecompiledMethod.setBegin(cb.build());
     }
@@ -829,7 +833,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             if (lastStatement instanceof com.sdc.ast.controlflow.InstanceInvocation) {
                 com.sdc.ast.controlflow.InstanceInvocation invoke = (com.sdc.ast.controlflow.InstanceInvocation) lastStatement;
                 myStatements.remove(lastIndex);
-                return new com.sdc.ast.expressions.InstanceInvocation(invoke.getFunction(), invoke.getReturnType(), invoke.getArguments(), invoke.getVariable());
+                return new com.sdc.ast.expressions.InstanceInvocation(invoke.getFunction(), invoke.getReturnType(), invoke.getArguments(), invoke.getInstance());
             } else if (lastStatement instanceof com.sdc.ast.controlflow.Invocation) {
                 com.sdc.ast.controlflow.Invocation invoke = (com.sdc.ast.controlflow.Invocation) lastStatement;
                 myStatements.remove(lastIndex);
@@ -854,34 +858,43 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
     }
 
     protected void removeThisVariableFromStack() {
-        if (myDecompiledMethod.isNormalClassMethod() && !myBodyStack.isEmpty()
-                && myBodyStack.peek() instanceof Variable && ((Variable) myBodyStack.peek()).getName().equals("this")) {
+        if (isThisVariableOnTopOfStack()) {
             myBodyStack.pop();
         }
     }
 
+    protected boolean isThisVariableOnTopOfStack() {
+        return myDecompiledMethod.isNormalClassMethod() && !myBodyStack.isEmpty()
+                && myBodyStack.peek() instanceof Variable && ((Variable) myBodyStack.peek()).getName().equals("this");
+    }
+
     protected void replaceInvocationsFromExpressionsToStatements() {
         for (final Expression expression : myBodyStack) {
-            if (expression instanceof InstanceInvocation) {
-                final InstanceInvocation invocation = (InstanceInvocation) expression;
-                myStatements.add(new com.sdc.ast.controlflow.InstanceInvocation(invocation.getFunction(), invocation.getReturnType(), invocation.getArguments(), invocation.getVariable()));
-            } else if (expression instanceof Invocation) {
-                final Invocation invocation = (Invocation) expression;
-                myStatements.add(new com.sdc.ast.controlflow.Invocation(invocation.getFunction(), invocation.getReturnType(), invocation.getArguments()));
+            if (expression instanceof Invocation) {
+                myStatements.add(convertInvocationFromExpressionToStatement((Invocation) expression));
             }
         }
     }
 
-    protected void appendInstanceInvocation(final String function, final String returnType, final List<Expression> arguments, final Variable variable) {
-        if (myBodyStack.isEmpty()) {
-            myStatements.add(new com.sdc.ast.controlflow.InstanceInvocation(function, returnType, arguments, variable));
+    protected com.sdc.ast.controlflow.Invocation convertInvocationFromExpressionToStatement(final Invocation expression) {
+        if (expression instanceof InstanceInvocation) {
+            final InstanceInvocation invocation = (InstanceInvocation) expression;
+            return new com.sdc.ast.controlflow.InstanceInvocation(invocation.getFunction(), invocation.getReturnType(), invocation.getArguments(), invocation.getInstance());
         } else {
-            myBodyStack.push(new com.sdc.ast.expressions.InstanceInvocation(function, returnType, arguments, variable));
+            return new com.sdc.ast.controlflow.Invocation(expression.getFunction(), expression.getReturnType(), expression.getArguments());
+        }
+    }
+
+    protected void appendInstanceInvocation(final String function, final String returnType, final List<Expression> arguments, final Expression instance) {
+        if (returnType.isEmpty()) {
+            myStatements.add(new com.sdc.ast.controlflow.InstanceInvocation(function, returnType, arguments, instance));
+        } else {
+            myBodyStack.push(new com.sdc.ast.expressions.InstanceInvocation(function, returnType, arguments, instance));
         }
     }
 
     protected void appendInvocation(final String function, final String returnType, final List<Expression> arguments) {
-        if (myBodyStack.isEmpty()) {
+        if (returnType.isEmpty()) {
             myStatements.add(new com.sdc.ast.controlflow.Invocation(function, returnType, arguments));
         } else {
             myBodyStack.push(new com.sdc.ast.expressions.Invocation(function, returnType, arguments));
@@ -901,22 +914,34 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         return getDescriptor(descriptor, returnTypeIndex, myDecompiledMethod.getImports());
     }
 
-    protected boolean checkForSuperClassConstructor(final String invocationName) {
-        return myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName()) && myDecompiledOwnerSuperClassName.endsWith(invocationName);
+    protected boolean hasVoidReturnType(final String descriptor) {
+        final int returnTypeIndex = descriptor.indexOf(')') + 1;
+        return descriptor.charAt(returnTypeIndex) == 'V';
+    }
+
+    protected boolean checkForSuperClassConstructor(final String invocationName, final String decompiledOwnerFullClassName) {
+        return isThisVariableOnTopOfStack()
+                && (myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName()) && myDecompiledOwnerSuperClassName.endsWith(invocationName)
+                || myDecompiledOwnerSuperClassName.isEmpty() && decompiledOwnerFullClassName.equals("java.lang.Object"));
     }
 
     protected void processSuperClassConstructorInvocation(final String invocationName, final String returnType, final List<Expression> arguments) {
-        myStatements.add(new com.sdc.ast.controlflow.Invocation("super", returnType, arguments));
+        if (!arguments.isEmpty()) {
+            myStatements.add(new com.sdc.ast.controlflow.Invocation("super", returnType, arguments));
+        }
     }
 
     protected void appendInvocationOrConstructor(final boolean isStaticInvocation, final String visitMethodName,
-                                                 final String invocationName, final String returnType, final List<Expression> arguments) {
+                                                 final String invocationName, final String returnType, final List<Expression> arguments, final String decompiledOwnerFullClassName) {
         if (visitMethodName.equals("<init>")) {
-            if (checkForSuperClassConstructor(invocationName)) {
+            if (checkForSuperClassConstructor(invocationName, decompiledOwnerFullClassName)) {
                 removeThisVariableFromStack();
                 processSuperClassConstructorInvocation(invocationName, returnType, arguments);
             } else {
                 if (!myDecompiledMethod.getDecompiledClass().hasAnonymousClass(invocationName)) {
+                    myBodyStack.pop();
+                    myBodyStack.pop();
+
                     myBodyStack.push(new New(new com.sdc.ast.expressions.Invocation(invocationName, returnType, arguments)));
                 } else {
                     myBodyStack.push(new com.sdc.ast.expressions.nestedclasses.AnonymousClass(myDecompiledMethod.getDecompiledClass().getAnonymousClass(invocationName), arguments));
