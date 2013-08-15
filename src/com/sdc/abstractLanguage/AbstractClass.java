@@ -220,6 +220,10 @@ public abstract class AbstractClass {
         return false;
     }
 
+    public boolean hasFieldInitializer(final String fieldName) {
+        return getField(fieldName).getInitializer() != null;
+    }
+
     public List<String> getGenericDeclaration() {
         List<String> result = new ArrayList<String>();
         for (int i = 0; i < myGenericTypes.size(); i++) {
