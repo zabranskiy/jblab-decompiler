@@ -1,19 +1,18 @@
 package com.sdc.ast.controlflow;
 
 import com.sdc.ast.expressions.Expression;
-import com.sdc.ast.expressions.identifiers.Variable;
 
 import java.util.List;
 
 public class InstanceInvocation extends Invocation {
-    private final Variable myVariable;
+    private final Expression myInstance;
 
-    public Variable getVariable() {
-        return myVariable;
+    public Expression getInstance() {
+        return myInstance;
     }
 
-    public InstanceInvocation(final String function, final String returnType, final List<Expression> arguments, final Variable variable) {
+    public InstanceInvocation(final String function, final String returnType, final List<Expression> arguments, final Expression instance) {
         super(function, returnType, arguments);
-        this.myVariable = variable;
+        this.myInstance = instance;
     }
 }

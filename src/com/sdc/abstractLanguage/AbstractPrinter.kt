@@ -80,13 +80,9 @@ abstract class AbstractPrinter {
             }
 
             is com.sdc.ast.expressions.Invocation -> {
-                var funName = group(text(expression.getFunction()))
+                var funName : PrimeDoc = group(text(expression.getFunction()))
                 if (expression is com.sdc.ast.expressions.InstanceInvocation) {
-                    var variableName = expression.getVariable()!!.getName()
-                    if (!variableName.equals("this")) {
-                        variableName =  printVariableName(variableName)
-                        funName = group(text(variableName + ".") + funName)
-                    }
+                    funName = printInstance(expression.getInstance(), nestSize) + funName
                 }
                 funName + printInvocationArguments(expression.getArguments(), nestSize)
             }
@@ -149,13 +145,9 @@ abstract class AbstractPrinter {
     open fun printStatement(statement: Statement?, nestSize: Int): PrimeDoc =
         when (statement) {
             is Invocation -> {
-                var funName = group(text(statement.getFunction()))
+                var funName : PrimeDoc = group(text(statement.getFunction()))
                 if (statement is InstanceInvocation) {
-                    var variableName = statement.getVariable()!!.getName()
-                    if (!variableName.equals("this")) {
-                        variableName = printVariableName(variableName)
-                        funName = group(text(variableName + ".") + funName)
-                    }
+                    funName = printInstance(statement.getInstance(), nestSize) + funName
                 }
                 funName + printInvocationArguments(statement.getArguments(), nestSize)
             }
@@ -315,6 +307,20 @@ abstract class AbstractPrinter {
 
 
         return whenCode + keysCode + defaultCaseCode / text("}")
+    }
+
+    open fun printInstance(instance : Expression?, nestSize : Int): PrimeDoc {
+        var instanceName : PrimeDoc = nil()
+        if (instance is Variable) {
+            var variableName = instance.getName()
+            if (!variableName.equals("this")) {
+                variableName =  printVariableName(variableName)
+                instanceName = text(variableName) + text(".")
+            }
+        } else {
+            instanceName = printExpression(instance, nestSize) + text(".")
+        }
+        return instanceName
     }
 
     open fun printVariableName(variableName : String?): String? = variableName

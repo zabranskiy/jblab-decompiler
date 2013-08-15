@@ -551,13 +551,10 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         boolean isStaticInvocation = false;
 
         if (opString.contains("INVOKEVIRTUAL") || opString.contains("INVOKEINTERFACE")
-                || (decompiledOwnerFullClassName.equals(myDecompiledOwnerFullClassName) && !name.equals("<init>"))) {
-            if (!myBodyStack.isEmpty() && myBodyStack.peek() instanceof Variable) {
-                appendInstanceInvocation(name, returnType, arguments, (Variable) myBodyStack.pop());
-                return;
-            } else {
-                invocationName = "." + name;
-            }
+                || (decompiledOwnerFullClassName.equals(myDecompiledOwnerFullClassName) && !name.equals("<init>")))
+        {
+            appendInstanceInvocation(name, returnType, arguments, getTopOfBodyStack());
+            return;
         }
 
         if (opString.contains("INVOKESPECIAL")) {
@@ -817,7 +814,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             if (lastStatement instanceof com.sdc.ast.controlflow.InstanceInvocation) {
                 com.sdc.ast.controlflow.InstanceInvocation invoke = (com.sdc.ast.controlflow.InstanceInvocation) lastStatement;
                 myStatements.remove(lastIndex);
-                return new com.sdc.ast.expressions.InstanceInvocation(invoke.getFunction(), invoke.getReturnType(), invoke.getArguments(), invoke.getVariable());
+                return new com.sdc.ast.expressions.InstanceInvocation(invoke.getFunction(), invoke.getReturnType(), invoke.getArguments(), invoke.getInstance());
             } else if (lastStatement instanceof com.sdc.ast.controlflow.Invocation) {
                 com.sdc.ast.controlflow.Invocation invoke = (com.sdc.ast.controlflow.Invocation) lastStatement;
                 myStatements.remove(lastIndex);
@@ -852,7 +849,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         for (final Expression expression : myBodyStack) {
             if (expression instanceof InstanceInvocation) {
                 final InstanceInvocation invocation = (InstanceInvocation) expression;
-                myStatements.add(new com.sdc.ast.controlflow.InstanceInvocation(invocation.getFunction(), invocation.getReturnType(), invocation.getArguments(), invocation.getVariable()));
+                myStatements.add(new com.sdc.ast.controlflow.InstanceInvocation(invocation.getFunction(), invocation.getReturnType(), invocation.getArguments(), invocation.getInstance()));
             } else if (expression instanceof Invocation) {
                 final Invocation invocation = (Invocation) expression;
                 myStatements.add(new com.sdc.ast.controlflow.Invocation(invocation.getFunction(), invocation.getReturnType(), invocation.getArguments()));
@@ -860,11 +857,11 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         }
     }
 
-    protected void appendInstanceInvocation(final String function, final String returnType, final List<Expression> arguments, final Variable variable) {
+    protected void appendInstanceInvocation(final String function, final String returnType, final List<Expression> arguments, final Expression instance) {
         if (myBodyStack.isEmpty()) {
-            myStatements.add(new com.sdc.ast.controlflow.InstanceInvocation(function, returnType, arguments, variable));
+            myStatements.add(new com.sdc.ast.controlflow.InstanceInvocation(function, returnType, arguments, instance));
         } else {
-            myBodyStack.push(new com.sdc.ast.expressions.InstanceInvocation(function, returnType, arguments, variable));
+            myBodyStack.push(new com.sdc.ast.expressions.InstanceInvocation(function, returnType, arguments, instance));
         }
     }
 
