@@ -449,15 +449,15 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 BinaryExpression binaryExpression = (BinaryExpression) expr;
                 Expression left = binaryExpression.getLeft();
                 Expression right = binaryExpression.getRight();
-                if (left instanceof Variable && ((Variable) left).getIndex() == var /*&& right instanceof IntConstant*/) {
+                if (left instanceof Variable && ((Variable) left).getIndex() == var) {
                     myStatements.remove(lastIndex);
                     if (expr.equals(expr2)) {
                         myBodyStack.pop();
-                        myBodyStack.add(new ExprIncrement(left,right, binaryExpression.getOperationType()));
+                        myBodyStack.add(new ExprIncrement(left, right, binaryExpression.getOperationType()));
                     } else {
-                        myStatements.add(new Increment((Variable) left,  right, binaryExpression.getOperationType()));
+                        myStatements.add(new Increment((Variable) left, right, binaryExpression.getOperationType()));
                     }
-                } else if (right instanceof Variable && ((Variable) right).getIndex() == var/* && left instanceof IntConstant*/) {
+                } else if (right instanceof Variable && ((Variable) right).getIndex() == var) {
                     myStatements.remove(lastIndex);
                     if (expr.equals(expr2)) {
                         myBodyStack.pop();

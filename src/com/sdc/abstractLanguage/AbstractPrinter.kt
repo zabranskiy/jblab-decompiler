@@ -112,17 +112,24 @@ abstract class AbstractPrinter {
 
             is ExprIncrement -> {
                 val expr = expression.getOperand();
-                val printExpr = printExpression(expr,nestSize)
-                var myType= expression.getOperationType();
-                var operation=expression.getOperation(getOperationPrinter());
-                if(myType==OperationType.INC_REV || myType==OperationType.DEC_REV){
-                    group(nest(nestSize, line() + text(operation) + printExpr))
+                val printExpr = printExpression(expr, nestSize)
+                var myType = expression.getOperationType();
+                var operation = expression.getOperation(getOperationPrinter());
+                if(myType == OperationType.INC_REV || myType == OperationType.DEC_REV){
+                    group(nest(nestSize, text(operation) + printExpr))
                 }   else{
-                    val printIncrement = printExpressionCheckBrackets(expression.getIncrementExpression(), expression.getPriority(getOperationPrinter()), nestSize)
+                    val increment = expression.getIncrementExpression();
+                    val priority = expression.getPriority(getOperationPrinter())
+                    val printIncrement =
+                            if(increment is Constant){
+                                printExpression(increment, nestSize)
+                            } else{
+                                printExpressionCheckBrackets(increment, priority, nestSize)
+                            }
                     if(expression.IsIncrementSimple()){
-                        group(nest(nestSize, line() + printExpr + text(operation)))
+                        group(nest(nestSize, printExpr + text(operation)))
                     } else{
-                        group(nest(nestSize, line() + printExpr + text(operation)+printIncrement))
+                        group(nest(nestSize, printExpr / ( text(operation) + printIncrement)))
                     }
                 }
             }
@@ -157,9 +164,9 @@ abstract class AbstractPrinter {
             is Assignment -> printExpression(statement.getLeft(), nestSize) + text(" = ") + printExpression(statement.getRight(), nestSize)
 
             is Return -> {
-                var returnStatement : PrimeDoc = if (statement.needToPrintReturn()) text("return ") else text("")
+                var returnStatement : PrimeDoc = if (statement.needToPrintReturn()) text("return") else text("")
                 if (statement.getReturnValue() != null)
-                    returnStatement = returnStatement + printExpression(statement.getReturnValue(), nestSize)
+                    returnStatement = returnStatement + text(" ") + printExpression(statement.getReturnValue(), nestSize)
                 returnStatement
             }
 
@@ -169,13 +176,19 @@ abstract class AbstractPrinter {
             )
 
             is Increment ->{
-                var printVariable=printExpression(statement.getVariable(),nestSize)
+                var printVariable = printExpression(statement.getVariable(), nestSize)
                 var operation = statement.getOperation(getOperationPrinter());
-                val printIncrement = printExpressionWithBrackets(statement.getIncrementExpression(), nestSize)
+                val increment = statement.getIncrementExpression()
+                val printIncrement =
+                        if(increment is Constant){
+                            printExpression(increment, nestSize)
+                        } else{
+                            printExpressionWithBrackets(increment, nestSize)
+                        }
                 if(statement.IsIncrementSimple()){
-                    group(nest(nestSize, line() + printVariable + text(operation)))
+                    group(nest(nestSize, printVariable + text(operation)))
                 } else{
-                    group(nest(nestSize, line() + printVariable + text(operation)+printIncrement))
+                    group(nest(nestSize, printVariable / ( text(operation) + printIncrement)))
                 }
             }
 
@@ -210,17 +223,17 @@ abstract class AbstractPrinter {
                             elsePart = text(" else {") + nest(nestSize, printConstruction(construction.getElseBlock(), nestSize)) / text("}")
                         }
 
-                        text("if (!(") + printExpression(construction.getCondition(), nestSize) + text(")) {") + nest(nestSize, thenPart) / text("}") + elsePart
+                        text("if (") + printExpression(construction.getCondition()?.invert(), nestSize) + text(") {") + nest(nestSize, thenPart) / text("}") + elsePart
                     }
 
                     is While -> {
                         val body = printConstruction(construction.getBody(), nestSize)
-                        text("while (!(") + printExpression(construction.getCondition(), nestSize) + text(")) {") + nest(nestSize, body) / text("}")
+                        text("while (") + printExpression(construction.getCondition()?.invert(), nestSize) + text(") {") + nest(nestSize, body) / text("}")
                     }
 
                     is DoWhile -> {
                         val body = text("do {") + nest(nestSize, printConstruction(construction.getBody(), nestSize)) / text("}")
-                        body / text("while (!(") + printExpression(construction.getCondition(), nestSize) + text("))")
+                        body / text("while (") + printExpression(construction.getCondition()?.invert(), nestSize) + text(")")
                     }
 
                     is For -> {

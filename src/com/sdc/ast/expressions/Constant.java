@@ -28,7 +28,6 @@ public class Constant extends Expression {
     public String toString() {
         return "Constant{" +
                 "myValue=" + myValue +
-               // ", myIsStringValue=" + myIsStringValue +
                 '}';
     }
 
