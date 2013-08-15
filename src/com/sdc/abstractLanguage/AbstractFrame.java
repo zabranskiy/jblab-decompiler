@@ -69,7 +69,7 @@ public abstract class AbstractFrame {
     }
 
     public void addLocalVariableType(final int index, final String type) {
-        if (myParent == null  || !myParent.containsIndex(index)) {
+        if (myParent == null  || !myParent.recursiveContainsIndex(index)) {
             myLocalVariableTypes.put(index, type);
         }
     }
@@ -123,6 +123,10 @@ public abstract class AbstractFrame {
 
     public boolean containsIndex(final int index) {
         return myLocalVariableTypes.containsKey(index);
+    }
+
+    public boolean recursiveContainsIndex(final int index) {
+        return containsIndex(index) || myParent != null && myParent.recursiveContainsIndex(index);
     }
 
     public void setLastLocalVariableIndex(final int lastLocalVariableIndex) {

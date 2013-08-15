@@ -204,6 +204,10 @@ public abstract class AbstractMethod {
         myAbstractClass.addInitializerToField(fieldName, initializer);
     }
 
+    public boolean hasFieldInitializer(final String fieldName) {
+        return myAbstractClass.hasFieldInitializer(fieldName);
+    }
+
     public void declareThisVariable() {
         myRootAbstractFrame.getLocalVariableName(0);
     }
