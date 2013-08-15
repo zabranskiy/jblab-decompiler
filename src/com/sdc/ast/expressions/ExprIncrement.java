@@ -2,6 +2,8 @@ package com.sdc.ast.expressions;
 
 import com.sdc.abstractLanguage.AbstractOperationPrinter;
 import com.sdc.ast.OperationType;
+import com.sdc.ast.controlflow.Increment;
+import com.sdc.ast.expressions.identifiers.Variable;
 
 import static com.sdc.ast.OperationType.*;
 
@@ -13,12 +15,16 @@ import static com.sdc.ast.OperationType.*;
  * To change this template use File | Settings | File Templates.
  */
 public class ExprIncrement extends PriorityExpression {
-    private Expression myOperand;
+    private Variable myVariable;
     private Expression myIncrement;
     private boolean myIsIncrementSimple=false;
 
-    public ExprIncrement(final Expression operand, final Expression increment, final OperationType type) {
-        myOperand = operand;
+    public ExprIncrement(Increment increment){
+        this(increment.getVariable(), increment.getIncrementExpression(), increment.getOperationType());
+    }
+
+    public ExprIncrement(final Variable variable, final Expression increment, final OperationType type) {
+        myVariable = variable;
         myIncrement = increment;
         myType = type;
         switch (type) {
@@ -58,8 +64,8 @@ public class ExprIncrement extends PriorityExpression {
         }
     }
 
-    public ExprIncrement(final Expression operand, final int increment) {
-        myOperand = operand;
+    public ExprIncrement(final Variable variable, final int increment) {
+        myVariable = variable;
         myIncrement = new Constant(increment,false);
         if (increment == 1) {
             myType = INC;
@@ -97,8 +103,8 @@ public class ExprIncrement extends PriorityExpression {
         }
     }
 
-    public Expression getOperand() {
-        return myOperand;
+    public Variable getVariable() {
+        return myVariable;
     }
 
     public Expression getIncrementExpression() {
@@ -112,7 +118,7 @@ public class ExprIncrement extends PriorityExpression {
     @Override
     public String toString() {
         return "ExprIncrement{" +
-                "myOperand=" + myOperand +
+                "myVariable=" + myVariable +
                 ", myIncrement=" + myIncrement +
                 '}';
     }

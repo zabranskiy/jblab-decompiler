@@ -250,7 +250,8 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
         AbstractMethodVisitor methodVisitor = myVisitorFactory.createMethodVisitor(abstractMethod, myDecompiledClass.getFullClassName(), myDecompiledClass.getSuperClass());
         methodVisitor.setClassFilesJarPath(myClassFilesJarPath);
 
-        return new MethodVisitorStub(methodVisitor);
+//        return new MethodVisitorStub(methodVisitor);
+        return methodVisitor;
     }
 
     @Override

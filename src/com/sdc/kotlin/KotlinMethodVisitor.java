@@ -33,9 +33,13 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
     public void visitFieldInsn(final int opcode, final String owner, final String name, final String desc) {
         final String opString = Printer.OPCODES[opcode];
 
-        if (opString.contains("GETSTATIC") && tryVisitLambdaFunction(owner)) {
-            return;
-        } else if (opString.contains("PUTFIELD") && myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName())) {
+        if (opString.contains("GETSTATIC")) {
+            final Expression lambdaFunction = tryVisitLambdaFunction(owner);
+            if (lambdaFunction != null) {
+                myBodyStack.push(lambdaFunction);
+                return;
+            }
+        } else if (opString.contains("PUTFIELD") && myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName()) && !myDecompiledMethod.hasFieldInitializer(name)) {
             myDecompiledMethod.addInitializerToField(name, getTopOfBodyStack());
             return;
         }
@@ -52,26 +56,29 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
 
         List<Expression> arguments = getInvocationArguments(desc);
         String returnType = getInvocationReturnType(desc);
+        final boolean hasVoidReturnType = hasVoidReturnType(desc);
         String invocationName = name;
 
         boolean isStaticInvocation = false;
 
         if (opString.contains("INVOKEVIRTUAL") || opString.contains("INVOKEINTERFACE")) {
             if (!name.equals("<init>")) {
-                if (!myBodyStack.isEmpty() && myBodyStack.peek() instanceof Variable) {
-                    appendInstanceInvocation(name, returnType, arguments, (Variable) myBodyStack.pop());
-                    return;
-                } else {
-                    invocationName = "." + name;
-                }
+                appendInstanceInvocation(name, hasVoidReturnType ? "" : returnType, arguments, myBodyStack.pop());
+                return;
             }
         }
 
         if (opString.contains("INVOKESPECIAL")) {
             if (name.equals("<init>")) {
-                if (tryVisitLambdaFunction(owner)) {
+                final Expression lambdaFunction = tryVisitLambdaFunction(owner);
+                if (lambdaFunction != null) {
+                    myBodyStack.pop();
+                    myBodyStack.pop();
+
+                    myBodyStack.push(lambdaFunction);
                     return;
                 }
+
                 myDecompiledMethod.addImport(decompiledOwnerFullClassName);
                 invocationName = ownerClassName;
                 returnType = invocationName + " ";
@@ -89,7 +96,7 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
                     invocationName = name;
                 }
             } else {
-                appendInstanceInvocation(name, returnType, arguments, (Variable) arguments.remove(0));
+                appendInstanceInvocation(name, hasVoidReturnType ? "" : returnType, arguments, arguments.remove(0));
                 return;
             }
 
@@ -100,7 +107,7 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
             }
         }
 
-        appendInvocationOrConstructor(isStaticInvocation, name, invocationName, returnType,arguments);
+        appendInvocationOrConstructor(isStaticInvocation, name, invocationName, hasVoidReturnType ? "" : returnType, arguments, decompiledOwnerFullClassName);
     }
 
     @Override
@@ -121,11 +128,11 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
         ((KotlinClass) myDecompiledMethod.getDecompiledClass()).setSuperClassConstructor(new com.sdc.ast.expressions.Invocation(invocationName, returnType, arguments));
     }
 
-    private boolean tryVisitLambdaFunction(final String owner) {
+    private Expression tryVisitLambdaFunction(final String owner) {
         final String decompiledOwnerName = DeclarationWorker.getDecompiledFullClassName(owner);
         final int srcIndex = myDecompiledOwnerFullClassName.indexOf("$src$");
         final String methodOwner = srcIndex == -1 ? myDecompiledOwnerFullClassName : myDecompiledOwnerFullClassName.substring(0, srcIndex);
-        if (decompiledOwnerName.contains(methodOwner) && decompiledOwnerName.contains(myDecompiledMethod.getName())) {
+        if (!decompiledOwnerName.equals(methodOwner) && decompiledOwnerName.contains(methodOwner) && decompiledOwnerName.contains(myDecompiledMethod.getName())) {
             try {
                 AbstractClassVisitor cv = myVisitorFactory.createClassVisitor(myDecompiledMethod.getTextWidth(), myDecompiledMethod.getNestSize());
                 cv.setIsLambdaFunction(true);
@@ -134,14 +141,13 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
                 final AbstractClass decompiledClass = cv.getDecompiledClass();
                 final LambdaFunction lf = new LambdaFunction(decompiledClass, decompiledClass.getSuperClass().replace("Impl", ""));
                 if (lf.isKotlinLambda()) {
-                    myBodyStack.push(lf);
-                    return true;
+                    return lf;
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         }
-        return false;
+        return null;
     }
 }
 

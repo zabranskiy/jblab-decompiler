@@ -66,7 +66,11 @@ abstract class AbstractPrinter {
                 text(expression.getOperation(getOperationPrinter())) + expr
             }
 
-            is Field -> text(expression.getName())
+            is Field -> {
+                val owner = expression.getOwner()
+                val ownerName = if (owner != null) printInstance(owner, nestSize) else text(expression.getStaticOwnerName() + ".")
+                ownerName + text(expression.getName())
+            }
 
             is Variable -> {
                 if (expression.getArrayIndex() == null)
@@ -80,13 +84,9 @@ abstract class AbstractPrinter {
             }
 
             is com.sdc.ast.expressions.Invocation -> {
-                var funName = group(text(expression.getFunction()))
+                var funName : PrimeDoc = group(text(expression.getFunction()))
                 if (expression is com.sdc.ast.expressions.InstanceInvocation) {
-                    var variableName = expression.getVariable()!!.getName()
-                    if (!variableName.equals("this")) {
-                        variableName =  printVariableName(variableName)
-                        funName = group(text(variableName + ".") + funName)
-                    }
+                    funName = printInstance(expression.getInstance(), nestSize) + funName
                 }
                 funName + printInvocationArguments(expression.getArguments(), nestSize)
             }
@@ -117,18 +117,25 @@ abstract class AbstractPrinter {
             }
 
             is ExprIncrement -> {
-                val expr = expression.getOperand();
-                val printExpr = printExpression(expr,nestSize)
-                var myType= expression.getOperationType();
-                var operation=expression.getOperation(getOperationPrinter());
-                if(myType==OperationType.INC_REV || myType==OperationType.DEC_REV){
-                    group(nest(nestSize, line() + text(operation) + printExpr))
+                val expr = expression.getVariable();
+                val printExpr = printExpression(expr, nestSize)
+                var myType = expression.getOperationType();
+                var operation = expression.getOperation(getOperationPrinter());
+                if(myType == OperationType.INC_REV || myType == OperationType.DEC_REV){
+                    group(nest(nestSize, text(operation) + printExpr))
                 }   else{
-                    val printIncrement = printExpressionCheckBrackets(expression.getIncrementExpression(), expression.getPriority(getOperationPrinter()), nestSize)
+                    val increment = expression.getIncrementExpression();
+                    val priority = expression.getPriority(getOperationPrinter())
+                    val printIncrement =
+                            if(increment is Constant){
+                                printExpression(increment, nestSize)
+                            } else{
+                                printExpressionCheckBrackets(increment, priority, nestSize)
+                            }
                     if(expression.IsIncrementSimple()){
-                        group(nest(nestSize, line() + printExpr + text(operation)))
+                        group(nest(nestSize, printExpr + text(operation)))
                     } else{
-                        group(nest(nestSize, line() + printExpr + text(operation)+printIncrement))
+                        group(nest(nestSize, printExpr / ( text(operation) + printIncrement)))
                     }
                 }
             }
@@ -149,13 +156,9 @@ abstract class AbstractPrinter {
     open fun printStatement(statement: Statement?, nestSize: Int): PrimeDoc =
         when (statement) {
             is Invocation -> {
-                var funName = group(text(statement.getFunction()))
+                var funName : PrimeDoc = group(text(statement.getFunction()))
                 if (statement is InstanceInvocation) {
-                    var variableName = statement.getVariable()!!.getName()
-                    if (!variableName.equals("this")) {
-                        variableName = printVariableName(variableName)
-                        funName = group(text(variableName + ".") + funName)
-                    }
+                    funName = printInstance(statement.getInstance(), nestSize) + funName
                 }
                 funName + printInvocationArguments(statement.getArguments(), nestSize)
             }
@@ -163,9 +166,9 @@ abstract class AbstractPrinter {
             is Assignment -> printExpression(statement.getLeft(), nestSize) + text(" = ") + printExpression(statement.getRight(), nestSize)
 
             is Return -> {
-                var returnStatement : PrimeDoc = if (statement.needToPrintReturn()) text("return ") else text("")
+                var returnStatement : PrimeDoc = if (statement.needToPrintReturn()) text("return") else text("")
                 if (statement.getReturnValue() != null)
-                    returnStatement = returnStatement + printExpression(statement.getReturnValue(), nestSize)
+                    returnStatement = returnStatement + text(" ") + printExpression(statement.getReturnValue(), nestSize)
                 returnStatement
             }
 
@@ -175,13 +178,19 @@ abstract class AbstractPrinter {
             )
 
             is Increment ->{
-                var printVariable=printExpression(statement.getVariable(),nestSize)
+                var printVariable = printExpression(statement.getVariable(), nestSize)
                 var operation = statement.getOperation(getOperationPrinter());
-                val printIncrement = printExpressionWithBrackets(statement.getIncrementExpression(), nestSize)
+                val increment = statement.getIncrementExpression()
+                val printIncrement =
+                        if(increment is Constant || increment is Variable){
+                            printExpression(increment, nestSize)
+                        } else{
+                            printExpressionWithBrackets(increment, nestSize)
+                        }
                 if(statement.IsIncrementSimple()){
-                    group(nest(nestSize, line() + printVariable + text(operation)))
+                    group(nest(nestSize, printVariable + text(operation)))
                 } else{
-                    group(nest(nestSize, line() + printVariable + text(operation)+printIncrement))
+                    group(nest(nestSize, printVariable / ( text(operation) + printIncrement)))
                 }
             }
 
@@ -236,24 +245,24 @@ abstract class AbstractPrinter {
             elsePart = text(" else {") + nest(nestSize, printConstruction(conditionalBlock.getElseBlock(), nestSize)) / text("}")
         }
 
-        return text("if (!(") + printExpression(conditionalBlock.getCondition(), nestSize) + text(")) {") + nest(nestSize, thenPart) / text("}") + elsePart
+        return text("if (") + printExpression(conditionalBlock.getCondition()?.invert(), nestSize) + text(") {") + nest(nestSize, thenPart) / text("}") + elsePart
     }
 
     open fun printWhile(whileBlock : While, nestSize : Int): PrimeDoc {
         val body = printConstruction(whileBlock.getBody(), nestSize)
-        return text("while (!(") + printExpression(whileBlock.getCondition(), nestSize) + text(")) {") + nest(nestSize, body) / text("}")
+        return text("while (") + printExpression(whileBlock.getCondition()?.invert(), nestSize) + text(") {") + nest(nestSize, body) / text("}")
     }
 
     open fun printDoWhile(doWhileBlock : DoWhile, nestSize : Int): PrimeDoc {
         val body = text("do {") + nest(nestSize, printConstruction(doWhileBlock.getBody(), nestSize)) / text("}")
-        return body + text(" while (!(") + printExpression(doWhileBlock.getCondition(), nestSize) + text("));")
+        return body / text("while (") + printExpression(doWhileBlock.getCondition()?.invert(), nestSize) + text(")")
     }
 
     open fun printFor(forBlock : For, nestSize : Int): PrimeDoc {
         val body = printConstruction(forBlock.getBody(), nestSize)
         val initialization = printStatement(forBlock.getVariableInitialization(), nestSize)
         val afterThought = printStatement(forBlock.getAfterThought(), nestSize)
-        return text("for (") + initialization + text(", !(") + printExpression(forBlock.getCondition(), nestSize) + text("), ") + afterThought + text(") {") + nest(nestSize, body) / text("}")
+        return text("for (") + initialization + text(", ") + printExpression(forBlock.getCondition()?.invert(), nestSize) + text(", ") + afterThought + text(") {") + nest(nestSize, body) / text("}")
     }
 
     open fun printForEach(forEachBlock : ForEach, nestSize : Int): PrimeDoc {
@@ -315,6 +324,20 @@ abstract class AbstractPrinter {
 
 
         return whenCode + keysCode + defaultCaseCode / text("}")
+    }
+
+    open fun printInstance(instance : Expression?, nestSize : Int): PrimeDoc {
+        var instanceName : PrimeDoc = nil()
+        if (instance is Variable) {
+            var variableName = instance.getName()
+            if (!variableName.equals("this")) {
+                variableName =  printVariableName(variableName)
+                instanceName = text(variableName) + text(".")
+            }
+        } else {
+            instanceName = printExpression(instance, nestSize) + text(".")
+        }
+        return instanceName
     }
 
     open fun printVariableName(variableName : String?): String? = variableName

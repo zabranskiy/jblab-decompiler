@@ -1,10 +1,12 @@
 package com.sdc.ast.expressions.identifiers;
 
+import com.sdc.ast.expressions.Expression;
+
 public class Field extends Identifier {
     private final String myName;
     private final String myType;
     private String myStaticOwnerName;
-    private Identifier myOwner;
+    private Expression myOwner;
 
     public Field(final String name, final String type) {
         this.myName = name;
@@ -15,7 +17,7 @@ public class Field extends Identifier {
         this.myStaticOwnerName = staticOwnerName;
     }
 
-    public void setOwner(final Identifier owner) {
+    public void setOwner(final Expression owner) {
         this.myOwner = owner;
     }
 
@@ -23,7 +25,7 @@ public class Field extends Identifier {
         return myStaticOwnerName;
     }
 
-    public Identifier getOwner() {
+    public Expression getOwner() {
         return myOwner;
     }
 
