@@ -412,7 +412,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                         && ((Increment) lastStatement).getVariable().getIndex() == var) {
                     Increment increment = (Increment) lastStatement;
                     myStatements.remove(lastStatementIndex);
-                    OperationType type = increment.getType();
+                    OperationType type = increment.getOperationType();
                     switch (type) {
                         case INC:
                             type = INC_REV;
@@ -449,22 +449,33 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 BinaryExpression binaryExpression = (BinaryExpression) expr;
                 Expression left = binaryExpression.getLeft();
                 Expression right = binaryExpression.getRight();
+                OperationType type = binaryExpression.getOperationType();
                 if (left instanceof Variable && ((Variable) left).getIndex() == var) {
                     myStatements.remove(lastIndex);
                     if (expr.equals(expr2)) {
                         myBodyStack.pop();
-                        myBodyStack.add(new ExprIncrement(left, right, binaryExpression.getOperationType()));
+                        myBodyStack.add(new ExprIncrement((Variable) left, right, type));
                     } else {
-                        myStatements.add(new Increment((Variable) left, right, binaryExpression.getOperationType()));
+                        myStatements.add(new Increment((Variable) left, right, type));
                     }
-                } else if (right instanceof Variable && ((Variable) right).getIndex() == var) {
+                } else if (right instanceof Variable && ((Variable) right).getIndex() == var
+                        && (type == ADD || type == MUL)) {
                     myStatements.remove(lastIndex);
                     if (expr.equals(expr2)) {
                         myBodyStack.pop();
-                        myBodyStack.add(new ExprIncrement(right, left, binaryExpression.getOperationType()));
+                        myBodyStack.add(new ExprIncrement((Variable) right, left, type));
                     } else {
-                        myStatements.add(new Increment((Variable) right, left, binaryExpression.getOperationType()));
+                        myStatements.add(new Increment((Variable) right, left, type));
                     }
+                } else if (left instanceof ExprIncrement && ((ExprIncrement) left).getVariable().getIndex() == var) {
+                    myStatements.remove(lastIndex);
+                    myStatements.add(new Increment((ExprIncrement) left));
+                    myStatements.add(new Increment(((ExprIncrement) left).getVariable(), right, type));
+                } else if (right instanceof ExprIncrement && ((ExprIncrement) right).getVariable().getIndex() == var
+                        && (type == ADD || type == MUL)) {
+                    myStatements.remove(lastIndex);
+                    myStatements.add(new Increment((ExprIncrement) right));
+                    myStatements.add(new Increment(((ExprIncrement) right).getVariable(), left, type));
                 }
             }
         }
@@ -634,7 +645,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             Expression expr = myBodyStack.peek();
             if (expr != null && expr instanceof Variable && ((Variable) expr).getIndex() == var) {
                 myBodyStack.pop();
-                myBodyStack.push(new ExprIncrement(expr, increment));
+                myBodyStack.push(new ExprIncrement((Variable) expr, increment));
                 return;
             }
         }

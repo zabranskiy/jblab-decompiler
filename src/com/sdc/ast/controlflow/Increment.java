@@ -3,6 +3,7 @@ package com.sdc.ast.controlflow;
 import com.sdc.abstractLanguage.AbstractOperationPrinter;
 import com.sdc.ast.OperationType;
 import com.sdc.ast.expressions.Constant;
+import com.sdc.ast.expressions.ExprIncrement;
 import com.sdc.ast.expressions.Expression;
 import com.sdc.ast.expressions.IntConstant;
 import com.sdc.ast.expressions.identifiers.Variable;
@@ -39,6 +40,9 @@ public class Increment extends Statement {
         }
     }
 
+    public Increment(ExprIncrement exprIncrement){
+        this(exprIncrement.getVariable(),exprIncrement.getIncrementExpression() ,exprIncrement.getOperationType());
+    }
 
     public Increment(Variable v, Expression increment, OperationType type) {
         myVariable = v;
@@ -50,6 +54,14 @@ public class Increment extends Statement {
                 myIsIncrementSimple = true;
                 return;
             case DEC:
+                myType = DEC;
+                myIsIncrementSimple = true;
+                return;
+            case INC_REV:
+                myType = INC;
+                myIsIncrementSimple = true;
+                return;
+            case DEC_REV:
                 myType = DEC;
                 myIsIncrementSimple = true;
                 return;
@@ -118,7 +130,7 @@ public class Increment extends Statement {
         }
     }
 
-    public OperationType getType() {
+    public OperationType getOperationType() {
         return myType;
     }
 

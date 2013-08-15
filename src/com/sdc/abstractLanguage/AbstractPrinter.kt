@@ -111,7 +111,7 @@ abstract class AbstractPrinter {
             }
 
             is ExprIncrement -> {
-                val expr = expression.getOperand();
+                val expr = expression.getVariable();
                 val printExpr = printExpression(expr, nestSize)
                 var myType = expression.getOperationType();
                 var operation = expression.getOperation(getOperationPrinter());
@@ -180,7 +180,7 @@ abstract class AbstractPrinter {
                 var operation = statement.getOperation(getOperationPrinter());
                 val increment = statement.getIncrementExpression()
                 val printIncrement =
-                        if(increment is Constant){
+                        if(increment is Constant || increment is Variable){
                             printExpression(increment, nestSize)
                         } else{
                             printExpressionWithBrackets(increment, nestSize)
