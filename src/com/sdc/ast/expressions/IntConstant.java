@@ -10,9 +10,9 @@ package com.sdc.ast.expressions;
 public class IntConstant extends Constant {
     private int myIntValue = 0;
 
-    public static final Constant ZERO = new Constant(0, false);
-    public static final Constant ONE = new Constant(1, false);
-    public static final Constant M_ONE = new Constant(-1, false);
+    public static final Constant ZERO = new IntConstant(0);
+    public static final Constant ONE = new IntConstant(1);
+    public static final Constant M_ONE = new IntConstant(-1);
 
     public IntConstant(int value) {
         super(value, false, false);

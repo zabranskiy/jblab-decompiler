@@ -6,8 +6,8 @@ import com.sdc.ast.OperationType;
 import static com.sdc.ast.OperationType.*;
 
 public class BinaryExpression extends PriorityExpression {
-    private final Expression myLeft;
-    private final Expression myRight;
+    protected Expression myLeft;
+    protected Expression myRight;
 
     public BinaryExpression(final OperationType type, final Expression left, final Expression right) {
         this.myType = type;
@@ -40,7 +40,7 @@ public class BinaryExpression extends PriorityExpression {
             case MUL:
                 return operationPrinter.getMulView();
             case REM:
-                 return operationPrinter.getRemView();
+                return operationPrinter.getRemView();
             case BITWISE_AND:
                 return operationPrinter.getBitwiseAndView();
             case BITWISE_OR:
@@ -70,15 +70,58 @@ public class BinaryExpression extends PriorityExpression {
         }
     }
 
+    public Expression invert() {
+        switch (myType) {
+            case AND:
+                myType = OR;
+                invertOperands();
+                break;
+            case OR:
+                myType = AND;
+                invertOperands();
+                break;
+            case EQ:
+                myType = NE;
+                break;
+            case NE:
+                myType = EQ;
+                break;
+            case GE:
+                myType = LT;
+                break;
+            case LT:
+                myType = GE;
+                break;
+            case LE:
+                myType = GT;
+                break;
+            case GT:
+                myType = LE;
+                break;
+            default:
+                return super.invert();
+        }
+        return this;
+    }
+
+    private void invertOperands() {
+        myLeft=myLeft.invert();
+        myRight=myRight.invert();
+    }
+
     @Override
     public String toString() {
         return "BinaryExpression{" +
-                "myLeft=" + myLeft +
+                "myType=" + myType +
+                ", myLeft=" + myLeft +
                 ", myRight=" + myRight +
-                ", myType=" + myType +
                 '}';
     }
-    public boolean isArithmeticType(){
-        return myType== ADD || myType == SUB || myType == MUL || myType == DIV || myType == REM;
+
+    public boolean isArithmeticType() {
+        return myType == ADD || myType == SUB || myType == MUL || myType == DIV || myType == REM;
+    }
+    public boolean isLogicType() {
+        return myType == EQ || myType == NE || myType == GE || myType == LE || myType == LT || myType == GT || myType==AND || myType==OR;
     }
 }

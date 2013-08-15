@@ -6,7 +6,7 @@ import com.sdc.ast.OperationType;
 import static com.sdc.ast.OperationType.*;
 
 public class UnaryExpression extends PriorityExpression {
-    private final Expression myOperand;
+    protected Expression myOperand;
     private String myParam="";     // for CHECK_CAST
 
     public UnaryExpression(final OperationType type, final Expression operand) {
@@ -57,5 +57,26 @@ public class UnaryExpression extends PriorityExpression {
             default:
                 return "";
         }
+    }
+
+    @Override
+    public Expression invert() {
+        switch (myType){
+            case NOT:
+                myOperand =  myOperand.invert();
+                break;
+            default:
+                return super.invert();
+        }
+
+        return this;
+    }
+
+    @Override
+    public String toString() {
+        return "UnaryExpression{" +
+                "myType="+myType+
+                ", myOperand=" + myOperand +
+                '}';
     }
 }

@@ -3,7 +3,9 @@ package com.sdc.ast.controlflow;
 import com.sdc.abstractLanguage.AbstractOperationPrinter;
 import com.sdc.ast.OperationType;
 import com.sdc.ast.expressions.Constant;
+import com.sdc.ast.expressions.ExprIncrement;
 import com.sdc.ast.expressions.Expression;
+import com.sdc.ast.expressions.IntConstant;
 import com.sdc.ast.expressions.identifiers.Variable;
 
 import static com.sdc.ast.OperationType.*;
@@ -19,17 +21,17 @@ public class Increment extends Statement {
     private Variable myVariable;
     private Expression myIncrement;
     private OperationType myType;
-    private boolean myIsIncrementSimple=false;
+    private boolean myIsIncrementSimple = false;
 
     public Increment(Variable v, int increment) {
         super();
-        myVariable=v;
-        myIncrement = new Constant(Math.abs(increment),false);
+        myVariable = v;
+        myIncrement = new Constant(Math.abs(increment), false);
         if (increment == 1) {
-            myIsIncrementSimple=true;
+            myIsIncrementSimple = true;
             myType = INC;
         } else if (increment == -1) {
-            myIsIncrementSimple=true;
+            myIsIncrementSimple = true;
             myType = DEC;
         } else if (increment >= 0) {
             myType = ADD_INC;
@@ -38,25 +40,49 @@ public class Increment extends Statement {
         }
     }
 
+    public Increment(ExprIncrement exprIncrement){
+        this(exprIncrement.getVariable(),exprIncrement.getIncrementExpression() ,exprIncrement.getOperationType());
+    }
 
     public Increment(Variable v, Expression increment, OperationType type) {
-        myVariable=v;
+        myVariable = v;
         myIncrement = increment;
-        myType=type;
+        myType = type;
         switch (type) {
             case INC:
                 myType = INC;
-                myIsIncrementSimple=true;
+                myIsIncrementSimple = true;
                 return;
             case DEC:
                 myType = DEC;
-                myIsIncrementSimple=true;
+                myIsIncrementSimple = true;
+                return;
+            case INC_REV:
+                myType = INC;
+                myIsIncrementSimple = true;
+                return;
+            case DEC_REV:
+                myType = DEC;
+                myIsIncrementSimple = true;
                 return;
             case ADD:
-                myType=ADD_INC;
+                if (increment instanceof IntConstant && ((IntConstant) increment).isOne()) {
+                    myType = INC;
+                } else if (increment instanceof IntConstant && ((IntConstant) increment).isMinusOne()) {
+                   myType = DEC;
+                } else {
+                    myType = ADD_INC;
+                }
                 return;
             case SUB:
-                myType=SUB_INC;
+                if (increment instanceof IntConstant && ((IntConstant) increment).isOne()) {
+                    myType = DEC;
+                } else if (increment instanceof IntConstant && ((IntConstant) increment).isMinusOne()) {
+                    myType = INC;
+                } else {
+                    myType = ADD_INC;
+                }
+                myType = SUB_INC;
                 return;
             case MUL:
                 myType = MUL_INC;
@@ -104,14 +130,15 @@ public class Increment extends Statement {
         }
     }
 
-    public OperationType getType() {
+    public OperationType getOperationType() {
         return myType;
     }
 
     public Variable getVariable() {
         return myVariable;
     }
-    public boolean IsIncrementSimple(){
+
+    public boolean IsIncrementSimple() {
         return myIsIncrementSimple;
     }
 }
