@@ -502,6 +502,8 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         } else if (opString.contains("CHECKCAST") && !myBodyStack.empty()) {
             //type is for name of class
             myBodyStack.push(new UnaryExpression(CHECK_CAST, myBodyStack.pop(), type));
+        } else if (opString.equals("NEW")) {
+            myBodyStack.push(new New(null));
         }
     }
 
@@ -903,6 +905,9 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 processSuperClassConstructorInvocation(invocationName, returnType, arguments);
             } else {
                 if (!myDecompiledMethod.getDecompiledClass().hasAnonymousClass(invocationName)) {
+                    myBodyStack.pop();
+                    myBodyStack.pop();
+
                     myBodyStack.push(new New(new com.sdc.ast.expressions.Invocation(invocationName, returnType, arguments)));
                 } else {
                     myBodyStack.push(new com.sdc.ast.expressions.nestedclasses.AnonymousClass(myDecompiledMethod.getDecompiledClass().getAnonymousClass(invocationName), arguments));
