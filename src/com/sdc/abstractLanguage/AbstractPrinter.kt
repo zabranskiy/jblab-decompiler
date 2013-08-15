@@ -66,7 +66,11 @@ abstract class AbstractPrinter {
                 text(expression.getOperation(getOperationPrinter())) + expr
             }
 
-            is Field -> text(expression.getName())
+            is Field -> {
+                val owner = expression.getOwner()
+                val ownerName = if (owner != null) printInstance(owner, nestSize) else text(expression.getStaticOwnerName() + ".")
+                ownerName + text(expression.getName())
+            }
 
             is Variable -> {
                 if (expression.getArrayIndex() == null)

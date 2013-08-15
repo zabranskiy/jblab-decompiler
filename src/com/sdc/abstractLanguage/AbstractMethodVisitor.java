@@ -519,7 +519,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         }
 
         if (opString.contains("PUTFIELD") || opString.contains("GETFIELD")) {
-            final Identifier fieldOwner = (Identifier) getTopOfBodyStack();
+            final Expression fieldOwner = getTopOfBodyStack();
             field.setOwner(fieldOwner);
         } else {
             final String fieldOwner = getClassName(owner);
@@ -573,7 +573,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             isStaticInvocation = true;
         }
 
-        appendInvocationOrConstructor(isStaticInvocation, name, invocationName, returnType, arguments);
+        appendInvocationOrConstructor(isStaticInvocation, name, invocationName, returnType, arguments, decompiledOwnerFullClassName);
     }
 
     @Override
@@ -839,10 +839,14 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
     }
 
     protected void removeThisVariableFromStack() {
-        if (myDecompiledMethod.isNormalClassMethod() && !myBodyStack.isEmpty()
-                && myBodyStack.peek() instanceof Variable && ((Variable) myBodyStack.peek()).getName().equals("this")) {
+        if (isThisVariableOnTopOfStack()) {
             myBodyStack.pop();
         }
+    }
+
+    protected boolean isThisVariableOnTopOfStack() {
+        return myDecompiledMethod.isNormalClassMethod() && !myBodyStack.isEmpty()
+                && myBodyStack.peek() instanceof Variable && ((Variable) myBodyStack.peek()).getName().equals("this");
     }
 
     protected void replaceInvocationsFromExpressionsToStatements() {
@@ -886,8 +890,10 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         return getDescriptor(descriptor, returnTypeIndex, myDecompiledMethod.getImports());
     }
 
-    protected boolean checkForSuperClassConstructor(final String invocationName) {
-        return myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName()) && myDecompiledOwnerSuperClassName.endsWith(invocationName);
+    protected boolean checkForSuperClassConstructor(final String invocationName, final String decompiledOwnerFullClassName) {
+        return isThisVariableOnTopOfStack()
+                && (myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName()) && myDecompiledOwnerSuperClassName.endsWith(invocationName)
+                || myDecompiledOwnerSuperClassName.isEmpty() && decompiledOwnerFullClassName.equals("java.lang.Object"));
     }
 
     protected void processSuperClassConstructorInvocation(final String invocationName, final String returnType, final List<Expression> arguments) {
@@ -895,9 +901,9 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
     }
 
     protected void appendInvocationOrConstructor(final boolean isStaticInvocation, final String visitMethodName,
-                                                 final String invocationName, final String returnType, final List<Expression> arguments) {
+                                                 final String invocationName, final String returnType, final List<Expression> arguments, final String decompiledOwnerFullClassName) {
         if (visitMethodName.equals("<init>")) {
-            if (checkForSuperClassConstructor(invocationName)) {
+            if (checkForSuperClassConstructor(invocationName, decompiledOwnerFullClassName)) {
                 removeThisVariableFromStack();
                 processSuperClassConstructorInvocation(invocationName, returnType, arguments);
             } else {
