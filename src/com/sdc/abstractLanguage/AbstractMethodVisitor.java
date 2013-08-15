@@ -9,6 +9,7 @@ import com.sdc.ast.expressions.identifiers.Field;
 import com.sdc.ast.expressions.identifiers.Identifier;
 import com.sdc.ast.expressions.identifiers.Variable;
 import com.sdc.ast.expressions.nestedclasses.LambdaFunction;
+import com.sdc.cfg.nodes.DoWhile;
 import com.sdc.cfg.nodes.Node;
 import com.sdc.cfg.nodes.Switch;
 import com.sdc.util.ConstructionBuilder;
@@ -453,9 +454,9 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                     myStatements.remove(lastIndex);
                     if (expr.equals(expr2)) {
                         myBodyStack.pop();
-                        myBodyStack.add(new ExprIncrement(left,right, binaryExpression.getOperationType()));
+                        myBodyStack.add(new ExprIncrement(left, right, binaryExpression.getOperationType()));
                     } else {
-                        myStatements.add(new Increment((Variable) left,  right, binaryExpression.getOperationType()));
+                        myStatements.add(new Increment((Variable) left, right, binaryExpression.getOperationType()));
                     }
                 } else if (right instanceof Variable && ((Variable) right).getIndex() == var/* && left instanceof IntConstant*/) {
                     myStatements.remove(lastIndex);
@@ -587,6 +588,32 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         if (opString.contains("IF")) {
             final Label myLastIFLabel = label;
             if (myNodes.isEmpty() || !myNodeInnerLabels.isEmpty() || (myNodes.get(getLeftEmptyNodeIndex() - 1).getCondition() == null)) {
+
+
+                for (Node node : myNodes) {
+                    if (node.getInnerLabels().contains(label)) {
+                        myMap2.put(myNodes.size(), label);
+                        int index = node.getInnerLabels().indexOf(label);
+                        DoWhile dw = new DoWhile(new ArrayList<Statement>(myStatements), new ArrayList<Label>(myNodeInnerLabels), myNodes.size());
+                        myNodes.add(dw);
+                        myNodeInnerLabels.clear();
+                        myStatements.clear();
+
+                        dw.setStatements(new ArrayList<Statement>(node.getStatements().subList(0, index)));
+                        dw.getInnerLabels().addAll(new ArrayList<Label>(node.getInnerLabels().subList(0, index)));
+                        Expression e1 = getTopOfBodyStack();
+                        Expression e2 = getTopOfBodyStack();
+                        Expression cond = new BinaryExpression(OperationType.valueOf(opString.substring(7)), e2, e1);
+                        dw.setCondition(cond);
+                        dw.setEmpty(true);
+
+                        node.setStatements(new ArrayList<Statement>(node.getStatements().subList(index, node.getStatements().size())));
+                        node.setInnerLabels(new ArrayList<Label>(node.getInnerLabels().subList(index, node.getInnerLabels().size())));
+                        return;
+                    }
+                }
+
+
                 myLabels.add(myLastIFLabel);
                 myMap2.put(myNodes.size(), label);
                 applyNode();
@@ -596,6 +623,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 Expression cond = new BinaryExpression(OperationType.valueOf(opString.substring(7)), e2, e1);
                 myNodes.get(last).setCondition(cond);
                 myNodes.get(last).setEmpty(true);
+
             }
         } else if (opString.contains("GOTO")) {
             myLabels.add(label);

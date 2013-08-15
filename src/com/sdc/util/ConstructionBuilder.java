@@ -3,6 +3,7 @@ package com.sdc.util;
 import com.sdc.cfg.constructions.ConditionalBlock;
 import com.sdc.cfg.constructions.Construction;
 import com.sdc.cfg.constructions.ElementaryBlock;
+import com.sdc.cfg.nodes.DoWhile;
 import com.sdc.cfg.nodes.Node;
 import com.sdc.cfg.nodes.Switch;
 import com.sdc.cfg.nodes.SwitchCase;
@@ -27,17 +28,23 @@ public class ConstructionBuilder {
     }
 
     private Construction build(Node node) {
-        Construction elementaryBlock = extractElementaryBlock(node);
-        Construction currentConstruction = extractConstruction(node);
+        final Node doWhileNode = checkForDoWhileLoop(node);
 
-        if (node.getCondition() == null && !(node instanceof Switch)) {
-            node.setConstruction(elementaryBlock);
+        if (doWhileNode == null) {
+            Construction elementaryBlock = extractElementaryBlock(node);
+            Construction currentConstruction = extractConstruction(node);
+
+            if (node.getCondition() == null && !(node instanceof Switch)) {
+                node.setConstruction(elementaryBlock);
+            } else {
+                node.setConstruction(currentConstruction);
+            }
+
+            elementaryBlock.setNextConstruction(currentConstruction);
+            return elementaryBlock;
         } else {
-            node.setConstruction(currentConstruction);
+            return extractDoWhile(node, doWhileNode);
         }
-
-        elementaryBlock.setNextConstruction(currentConstruction);
-        return elementaryBlock;
     }
 
     private Construction extractConstruction(Node node) {
@@ -54,6 +61,42 @@ public class ConstructionBuilder {
         }
 
         return null;
+    }
+
+    private Node checkForDoWhileLoop(final Node node) {
+        for (int i = node.getAncestors().size() - 1; i >= 0; i--) {
+            Node ancestor = node.getAncestors().get(i);
+            if (ancestor instanceof DoWhile && node.getIndex() < ancestor.getIndex() && ancestor.getIndex() >= myNodes.get(0).getIndex() && ancestor.getIndex() <= myNodes.get(size - 1).getIndex()) {
+                return ancestor;
+            }
+        }
+        return null;
+    }
+
+    private Construction extractDoWhile(Node begin, Node node) {
+        ElementaryBlock elementaryBlock = new ElementaryBlock();
+        elementaryBlock.setStatements(node.getStatements());
+
+        com.sdc.cfg.constructions.DoWhile doWhileConstruction = new com.sdc.cfg.constructions.DoWhile(node.getCondition());
+
+        begin.removeAncestor(node);
+
+        final int leftBound = getRelativeIndex(begin.getIndex());
+        final int rightBound = getRelativeIndex(node.getIndex());
+        doWhileConstruction.setBody(new ConstructionBuilder(myNodes.subList(leftBound, rightBound), gen).build());
+
+        final int nextNodeIndex = node.getIndex() + 1;
+        if (nextNodeIndex <= myNodes.get(size - 1).getIndex()) {
+            node.setNextNode(myNodes.get(getRelativeIndex(nextNodeIndex)));
+        }
+
+        elementaryBlock.setNextConstruction(doWhileConstruction);
+
+        if (node.getNextNode() != null) {
+            extractNextConstruction(doWhileConstruction, node);
+        }
+
+        return elementaryBlock;
     }
 
     private Construction extractElementaryBlock(final Node node) {
@@ -179,7 +222,7 @@ public class ConstructionBuilder {
                 int rightIndex = getRelativeIndex(rightNode);
 
                 if (node.getNextNode() == null) {
-                    if (rightNode.getAncestors().size() > 1) {
+                    if (hasElse(rightNode)) {
                         if (rightNode.getIndex() <= myNodes.get(size - 1).getIndex()) {
                             node.setNextNode(rightNode);
                         }
@@ -201,6 +244,18 @@ public class ConstructionBuilder {
 //            }
         }
         return null;
+    }
+
+    private boolean hasElse(final Node node) {
+        int count = 0;
+
+        for (final Node ancestor : node.getAncestors()) {
+            if (node.getIndex() > ancestor.getIndex()) {
+                count++;
+            }
+        }
+
+        return count > 1;
     }
 
     private int getRelativeIndex(Node node) {
