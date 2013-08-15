@@ -35,7 +35,7 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
 
         if (opString.contains("GETSTATIC") && tryVisitLambdaFunction(owner)) {
             return;
-        } else if (opString.contains("PUTFIELD") && myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName())) {
+        } else if (opString.contains("PUTFIELD") && myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName()) && !myDecompiledMethod.hasFieldInitializer(name)) {
             myDecompiledMethod.addInitializerToField(name, getTopOfBodyStack());
             return;
         }
