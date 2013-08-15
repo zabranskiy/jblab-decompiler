@@ -58,12 +58,8 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
 
         if (opString.contains("INVOKEVIRTUAL") || opString.contains("INVOKEINTERFACE")) {
             if (!name.equals("<init>")) {
-                if (!myBodyStack.isEmpty() && myBodyStack.peek() instanceof Variable) {
-                    appendInstanceInvocation(name, returnType, arguments, myBodyStack.pop());
-                    return;
-                } else {
-                    invocationName = "." + name;
-                }
+                appendInstanceInvocation(name, returnType, arguments, myBodyStack.pop());
+                return;
             }
         }
 
@@ -125,7 +121,7 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
         final String decompiledOwnerName = DeclarationWorker.getDecompiledFullClassName(owner);
         final int srcIndex = myDecompiledOwnerFullClassName.indexOf("$src$");
         final String methodOwner = srcIndex == -1 ? myDecompiledOwnerFullClassName : myDecompiledOwnerFullClassName.substring(0, srcIndex);
-        if (decompiledOwnerName.contains(methodOwner) && decompiledOwnerName.contains(myDecompiledMethod.getName())) {
+        if (!decompiledOwnerName.equals(methodOwner) && decompiledOwnerName.contains(methodOwner) && decompiledOwnerName.contains(myDecompiledMethod.getName())) {
             try {
                 AbstractClassVisitor cv = myVisitorFactory.createClassVisitor(myDecompiledMethod.getTextWidth(), myDecompiledMethod.getNestSize());
                 cv.setIsLambdaFunction(true);
