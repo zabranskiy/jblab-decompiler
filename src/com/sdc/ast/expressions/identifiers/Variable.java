@@ -65,9 +65,14 @@ public class Variable extends Identifier {
 
     @Override
     public String toString() {
-        String name=getName();
+        String name;
+        try {
+            name = getName();
+        } catch (NullPointerException e) {
+            name = null;
+        }
         return "Variable{" +
                 "myIndex=" + myIndex +
-                ", name=" + (name!=null?name:" no name yet")+"}";
+                ", name=" + (name != null ? name : " no name yet") + "}";
     }
 }
