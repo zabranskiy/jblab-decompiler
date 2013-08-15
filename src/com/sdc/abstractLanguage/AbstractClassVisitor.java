@@ -34,7 +34,9 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
     }
 
     protected abstract String getDefaultImplementedInterface();
+
     protected abstract String getDefaultExtendedClass();
+
     protected abstract boolean checkForAutomaticallyGeneratedAnnotation(final String annotationName);
 
     public String getDecompiledCode() {
@@ -59,8 +61,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
 
     @Override
     public void visit(final int version, final int access, final String name
-            , final String signature, final String superName, final String[] interfaces)
-    {
+            , final String signature, final String superName, final String[] interfaces) {
         final String modifier = DeclarationWorker.getAccess(access & ~Opcodes.ACC_SUPER, myLanguage);
         String type = "";
 
@@ -197,8 +198,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
 
     @Override
     public MethodVisitor visitMethod(final int access, final String name, final String desc
-            , final String signature, final String[] exceptions)
-    {
+            , final String signature, final String[] exceptions) {
         final String description = signature != null ? signature : desc;
         final String modifier = DeclarationWorker.getAccess(access, myLanguage);
 
@@ -250,8 +250,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
         AbstractMethodVisitor methodVisitor = myVisitorFactory.createMethodVisitor(abstractMethod, myDecompiledClass.getFullClassName(), myDecompiledClass.getSuperClass());
         methodVisitor.setClassFilesJarPath(myClassFilesJarPath);
 
-//        return new MethodVisitorStub(methodVisitor);
-        return methodVisitor;
+        return new MethodVisitorStub(methodVisitor);
     }
 
     @Override

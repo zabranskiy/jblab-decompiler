@@ -10,13 +10,6 @@ import com.sdc.ast.expressions.identifiers.Variable;
 
 import static com.sdc.ast.OperationType.*;
 
-/**
- * Created with IntelliJ IDEA.
- * User: Dmitrii.Pozdin
- * Date: 8/9/13
- * Time: 4:54 PM
- * To change this template use File | Settings | File Templates.
- */
 public class Increment extends Statement {
     private Variable myVariable;
     private Expression myIncrement;
@@ -40,8 +33,8 @@ public class Increment extends Statement {
         }
     }
 
-    public Increment(ExprIncrement exprIncrement){
-        this(exprIncrement.getVariable(),exprIncrement.getIncrementExpression() ,exprIncrement.getOperationType());
+    public Increment(ExprIncrement exprIncrement) {
+        this(exprIncrement.getVariable(), exprIncrement.getIncrementExpression(), exprIncrement.getOperationType());
     }
 
     public Increment(Variable v, Expression increment, OperationType type) {
@@ -68,8 +61,10 @@ public class Increment extends Statement {
             case ADD:
                 if (increment instanceof IntConstant && ((IntConstant) increment).isOne()) {
                     myType = INC;
+                    myIsIncrementSimple = true;
                 } else if (increment instanceof IntConstant && ((IntConstant) increment).isMinusOne()) {
-                   myType = DEC;
+                    myType = DEC;
+                    myIsIncrementSimple = true;
                 } else {
                     myType = ADD_INC;
                 }
@@ -77,8 +72,10 @@ public class Increment extends Statement {
             case SUB:
                 if (increment instanceof IntConstant && ((IntConstant) increment).isOne()) {
                     myType = DEC;
+                    myIsIncrementSimple = true;
                 } else if (increment instanceof IntConstant && ((IntConstant) increment).isMinusOne()) {
                     myType = INC;
+                    myIsIncrementSimple = true;
                 } else {
                     myType = ADD_INC;
                 }
