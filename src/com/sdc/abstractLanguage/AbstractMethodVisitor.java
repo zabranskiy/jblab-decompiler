@@ -777,7 +777,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         placeEdges();
 
         DominatorTreeGenerator gen = new DominatorTreeGenerator(myNodes);
-        ConstructionBuilder cb = new ConstructionBuilder(myNodes, gen);
+        ConstructionBuilder cb = createConstructionBuilder(myNodes, gen);
 
         myDecompiledMethod.setBegin(cb.build());
     }
@@ -853,6 +853,10 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         }
         myNodeInnerLabels.clear();
         myStatements.clear();
+    }
+
+    protected ConstructionBuilder createConstructionBuilder(final List<Node> myNodes, final DominatorTreeGenerator gen) {
+        return new ConstructionBuilder(myNodes, gen);
     }
 
     protected Expression getTopOfBodyStack() {
