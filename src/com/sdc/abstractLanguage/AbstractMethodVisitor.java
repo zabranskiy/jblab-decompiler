@@ -5,6 +5,7 @@ import com.sdc.ast.controlflow.*;
 import com.sdc.ast.expressions.*;
 import com.sdc.ast.expressions.InstanceInvocation;
 import com.sdc.ast.expressions.Invocation;
+import com.sdc.ast.expressions.New;
 import com.sdc.ast.expressions.identifiers.Field;
 import com.sdc.ast.expressions.identifiers.Identifier;
 import com.sdc.ast.expressions.identifiers.Variable;
@@ -336,6 +337,8 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
             if (myBodyStack.peek() instanceof Invocation) {
                 myStatements.add(convertInvocationFromExpressionToStatement((Invocation) myBodyStack.pop()));
+            } else if (myBodyStack.peek() instanceof New) {
+                myStatements.add(new com.sdc.ast.controlflow.New((New) myBodyStack.pop()));
             } else {
                 myBodyStack.pop();
             }
@@ -857,14 +860,10 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             final int lastIndex = myStatements.size() - 1;
             final Statement lastStatement = myStatements.get(lastIndex);
 
-            if (lastStatement instanceof com.sdc.ast.controlflow.InstanceInvocation) {
+            if (lastStatement instanceof com.sdc.ast.controlflow.Invocation) {
                 com.sdc.ast.controlflow.InstanceInvocation invoke = (com.sdc.ast.controlflow.InstanceInvocation) lastStatement;
                 myStatements.remove(lastIndex);
-                return new com.sdc.ast.expressions.InstanceInvocation(invoke.getFunction(), invoke.getReturnType(), invoke.getArguments(), invoke.getInstance());
-            } else if (lastStatement instanceof com.sdc.ast.controlflow.Invocation) {
-                com.sdc.ast.controlflow.Invocation invoke = (com.sdc.ast.controlflow.Invocation) lastStatement;
-                myStatements.remove(lastIndex);
-                return new com.sdc.ast.expressions.Invocation(invoke.getFunction(), invoke.getReturnType(), invoke.getArguments());
+                return invoke.toExpression();
             } else if (lastStatement instanceof Assignment) {
                 return ((Assignment) lastStatement).getRight();
             }
@@ -906,25 +905,25 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
     protected com.sdc.ast.controlflow.Invocation convertInvocationFromExpressionToStatement(final Invocation expression) {
         if (expression instanceof InstanceInvocation) {
             final InstanceInvocation invocation = (InstanceInvocation) expression;
-            return new com.sdc.ast.controlflow.InstanceInvocation(invocation.getFunction(), invocation.getReturnType(), invocation.getArguments(), invocation.getInstance());
+            return new com.sdc.ast.controlflow.InstanceInvocation(invocation);
         } else {
-            return new com.sdc.ast.controlflow.Invocation(expression.getFunction(), expression.getReturnType(), expression.getArguments());
+            return new com.sdc.ast.controlflow.Invocation(expression);
         }
     }
 
     protected void appendInstanceInvocation(final String function, final String returnType, final List<Expression> arguments, final Expression instance) {
         if (returnType.isEmpty()) {
-            myStatements.add(new com.sdc.ast.controlflow.InstanceInvocation(function, returnType, arguments, instance));
+            myStatements.add(new com.sdc.ast.controlflow.InstanceInvocation(new InstanceInvocation(function, returnType, arguments, instance)));
         } else {
-            myBodyStack.push(new com.sdc.ast.expressions.InstanceInvocation(function, returnType, arguments, instance));
+            myBodyStack.push(new InstanceInvocation(function, returnType, arguments, instance));
         }
     }
 
     protected void appendInvocation(final String function, final String returnType, final List<Expression> arguments) {
         if (returnType.isEmpty()) {
-            myStatements.add(new com.sdc.ast.controlflow.Invocation(function, returnType, arguments));
+            myStatements.add(new com.sdc.ast.controlflow.Invocation(new Invocation(function, returnType, arguments)));
         } else {
-            myBodyStack.push(new com.sdc.ast.expressions.Invocation(function, returnType, arguments));
+            myBodyStack.push(new Invocation(function, returnType, arguments));
         }
     }
 
@@ -954,7 +953,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
     protected void processSuperClassConstructorInvocation(final String invocationName, final String returnType, final List<Expression> arguments) {
         if (!arguments.isEmpty()) {
-            myStatements.add(new com.sdc.ast.controlflow.Invocation("super", returnType, arguments));
+            myStatements.add(new com.sdc.ast.controlflow.Invocation(new Invocation("super", returnType, arguments)));
         }
     }
 

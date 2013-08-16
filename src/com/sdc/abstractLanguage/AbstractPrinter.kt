@@ -12,7 +12,6 @@ import com.sdc.ast.expressions.TernaryExpression
 import com.sdc.ast.expressions.identifiers.Field
 import com.sdc.ast.expressions.identifiers.Variable
 import com.sdc.ast.expressions.NewArray
-import com.sdc.ast.expressions.New
 import com.sdc.ast.expressions.nestedclasses.AnonymousClass
 import com.sdc.ast.expressions.ExprIncrement
 import com.sdc.ast.expressions.InstanceOf
@@ -25,6 +24,8 @@ import com.sdc.ast.controlflow.Return
 import com.sdc.ast.controlflow.Throw
 import com.sdc.ast.controlflow.InstanceInvocation
 import com.sdc.ast.controlflow.Increment
+import com.sdc.ast.controlflow.New
+import com.sdc.ast.controlflow.ExpressionWrapper
 
 import com.sdc.cfg.constructions.Construction
 import com.sdc.cfg.constructions.ElementaryBlock
@@ -91,7 +92,7 @@ abstract class AbstractPrinter {
                 funName + printInvocationArguments(expression.getArguments(), nestSize)
             }
 
-            is New -> printNewOperator() + printExpression(expression.getConstructor(), nestSize)
+            is com.sdc.ast.expressions.New -> printNewOperator() + printExpression(expression.getConstructor(), nestSize)
 
             is NewArray -> {
                 var newArray = group(text("new") + nest(nestSize, line() + text(expression.getType())))
@@ -155,13 +156,7 @@ abstract class AbstractPrinter {
 
     open fun printStatement(statement: Statement?, nestSize: Int): PrimeDoc =
         when (statement) {
-            is Invocation -> {
-                var funName : PrimeDoc = group(text(statement.getFunction()))
-                if (statement is InstanceInvocation) {
-                    funName = printInstance(statement.getInstance(), nestSize) + funName
-                }
-                funName + printInvocationArguments(statement.getArguments(), nestSize)
-            }
+            is ExpressionWrapper -> printExpression(statement.toExpression(), nestSize)
 
             is Assignment -> printExpression(statement.getLeft(), nestSize) + text(" = ") + printExpression(statement.getRight(), nestSize)
 
