@@ -10,7 +10,6 @@ import com.sdc.ast.expressions.TernaryExpression
 import com.sdc.ast.expressions.identifiers.Field
 import com.sdc.ast.expressions.identifiers.Variable
 import com.sdc.ast.expressions.NewArray
-import com.sdc.ast.expressions.New
 import com.sdc.ast.expressions.nestedclasses.AnonymousClass
 import com.sdc.ast.expressions.ExprIncrement
 import com.sdc.ast.expressions.InstanceOf
@@ -22,6 +21,9 @@ import com.sdc.ast.controlflow.Return
 import com.sdc.ast.controlflow.Throw
 import com.sdc.ast.controlflow.InstanceInvocation
 import com.sdc.ast.controlflow.Increment
+import com.sdc.ast.controlflow.New
+import com.sdc.ast.controlflow.ExpressionWrapper
+
 import com.sdc.cfg.constructions.Construction
 import com.sdc.cfg.constructions.ElementaryBlock
 import com.sdc.cfg.constructions.ConditionalBlock
@@ -45,12 +47,13 @@ abstract class AbstractPrinter {
             is Field -> printField(expression,nestSize)
             is Variable -> printVariable(expression,nestSize)
             is com.sdc.ast.expressions.Invocation -> printInvocationExpression(expression,nestSize)
-            is New -> printNew(expression, nestSize)
+            is com.sdc.ast.expressions.New -> printNew(expression, nestSize)
             is NewArray -> printNewArray(expression,nestSize)
             is InstanceOf -> printInstanceOf(expression, nestSize)
             is AnonymousClass -> printAnonymousClassExpression(expression, nestSize)
             is TernaryExpression -> printTernaryExpression(expression,nestSize)
             is ExprIncrement -> printExprIncrement(expression,nestSize)
+
             else -> throw IllegalArgumentException("Unknown Expression implementer!")
         }
 
@@ -66,7 +69,7 @@ abstract class AbstractPrinter {
 
     open fun printStatement(statement: Statement?, nestSize: Int): PrimeDoc =
         when (statement) {
-            is Invocation -> printInvocationStatement(statement, nestSize)
+            is ExpressionWrapper -> printExpression(statement.toExpression(), nestSize)
             is Assignment -> printAssignment(statement, nestSize)
             is Return -> printReturn(statement, nestSize)
             is Throw -> printThrow(statement, nestSize)
@@ -158,7 +161,7 @@ abstract class AbstractPrinter {
         return funName + printInvocationArguments(expression.getArguments(), nestSize)
     }
 
-    open fun printNew(expression : New, nestSize : Int): PrimeDoc =
+    open fun printNew(expression : com.sdc.ast.expressions.New, nestSize : Int): PrimeDoc =
             printNewOperator() + printExpression(expression.getConstructor(), nestSize)
 
     open fun printNewArray(expression : NewArray, nestSize : Int): PrimeDoc {
@@ -210,13 +213,6 @@ abstract class AbstractPrinter {
         }
     }
 
-    open fun printInvocationStatement(statement : Invocation, nestSize : Int): PrimeDoc {
-        var funName : PrimeDoc = group(text(statement.getFunction()))
-        if (statement is InstanceInvocation) {
-            funName = printInstance(statement.getInstance(), nestSize) + funName
-        }
-        return funName + printInvocationArguments(statement.getArguments(), nestSize)
-    }
 
     open fun printAssignment(statement : Assignment, nestSize : Int): PrimeDoc =
     printExpression(statement.getLeft(), nestSize) + text(" = ") + printExpression(statement.getRight(), nestSize)
