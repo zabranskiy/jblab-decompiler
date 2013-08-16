@@ -53,6 +53,7 @@ abstract class AbstractPrinter {
             is AnonymousClass -> printAnonymousClassExpression(expression, nestSize)
             is TernaryExpression -> printTernaryExpression(expression,nestSize)
             is ExprIncrement -> printExprIncrement(expression,nestSize)
+
             else -> throw IllegalArgumentException("Unknown Expression implementer!")
         }
 
@@ -137,7 +138,6 @@ abstract class AbstractPrinter {
         return text(expression.getOperation(getOperationPrinter())) + expr
     }
 
-
     open fun printField(expression : Field, nestSize : Int): PrimeDoc {
         val owner = expression.getOwner()
         val ownerName = if (owner != null) printInstance(owner, nestSize) else text(expression.getStaticOwnerName() + ".")
@@ -157,7 +157,7 @@ abstract class AbstractPrinter {
     open fun printInvocationExpression(expression : com.sdc.ast.expressions.Invocation, nestSize : Int): PrimeDoc {
         var funName : PrimeDoc = group(text(expression.getFunction()))
         if (expression is com.sdc.ast.expressions.InstanceInvocation) {
-            funName = printInstance(expression.getInstance(), nestSize) + funName
+            funName = printInstance(expression.getInstance(), nestSize, expression.isNotNullCheckedCall()) + funName
         }
         return funName + printInvocationArguments(expression.getArguments(), nestSize)
     }
@@ -308,29 +308,29 @@ abstract class AbstractPrinter {
 
         var keysCode : PrimeDoc = nil()
         for ((key, caseBody) in whenBlock.getCases()!!.entrySet()) {
-            keysCode = keysCode / printExpression(key, nestSize) + text(" -> ") + nest(nestSize, line() + printConstruction(caseBody, nestSize))
+            keysCode = keysCode / printExpression(key, nestSize) + text(" -> ") + nest(nestSize, printConstruction(caseBody, nestSize))
         }
 
         val defaultCaseCode = text("else -> ") +
-        if (whenBlock.hasEmptyDefaultCase())
-            text("{}")
-        else
-            nest(nestSize, line() + printConstruction(whenBlock.getDefaultCase(), nestSize))
+            if (whenBlock.hasEmptyDefaultCase())
+                text("{}")
+            else
+                nest(nestSize, printConstruction(whenBlock.getDefaultCase(), nestSize))
 
 
-        return whenCode + keysCode + defaultCaseCode / text("}")
+        return whenCode + nest(nestSize, keysCode / defaultCaseCode) / text("}")
     }
 
-    open fun printInstance(instance : Expression?, nestSize : Int): PrimeDoc {
+    open fun printInstance(instance : Expression?, nestSize : Int, isNotNullCheckedCall : Boolean = false): PrimeDoc {
         var instanceName : PrimeDoc = nil()
         if (instance is Variable) {
             var variableName = instance.getName()
             if (!variableName.equals("this")) {
                 variableName =  printVariableName(variableName)
-                instanceName = text(variableName) + text(".")
+                instanceName = text(variableName) + text(if (isNotNullCheckedCall) "!!." else ".")
             }
         } else {
-            instanceName = printExpression(instance, nestSize) + text(".")
+            instanceName = printExpression(instance, nestSize) + text(if (isNotNullCheckedCall) "!!." else ".")
         }
         return instanceName
     }

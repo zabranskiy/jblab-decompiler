@@ -7,7 +7,10 @@ import com.sdc.abstractLanguage.AbstractMethodVisitor;
 import com.sdc.ast.expressions.Expression;
 import com.sdc.ast.expressions.identifiers.Variable;
 import com.sdc.ast.expressions.nestedclasses.LambdaFunction;
+import com.sdc.cfg.nodes.Node;
+import com.sdc.util.ConstructionBuilder;
 import com.sdc.util.DeclarationWorker;
+import com.sdc.util.DominatorTreeGenerator;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.util.Printer;
@@ -121,6 +124,11 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
         }
 
         super.visitLocalVariable(name, desc, signature, start, end, index);
+    }
+
+    @Override
+    protected ConstructionBuilder createConstructionBuilder(final List<Node> myNodes, final DominatorTreeGenerator gen) {
+        return new KotlinConstructionBuilder(myNodes, gen);
     }
 
     @Override

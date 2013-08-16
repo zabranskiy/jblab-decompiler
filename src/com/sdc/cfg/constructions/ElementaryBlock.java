@@ -17,10 +17,16 @@ public class ElementaryBlock extends Construction {
     }
 
     public Statement getLastStatement() {
-        if (myStatements.isEmpty()) {
+        if (!myStatements.isEmpty()) {
             return myStatements.get(myStatements.size() - 1);
         }
         return null;
+    }
+
+    public void removeLastStatement() {
+        if (!myStatements.isEmpty()) {
+            myStatements.remove(myStatements.size() - 1);
+        }
     }
 
     public void addStatement(final Statement statement) {
