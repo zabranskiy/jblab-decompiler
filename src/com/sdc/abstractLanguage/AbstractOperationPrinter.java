@@ -4,13 +4,6 @@ import com.sdc.ast.OperationType;
 
 import static com.sdc.ast.OperationType.*;
 
-/**
- * Created with IntelliJ IDEA.
- * User: Dmitrii.Pozdin
- * Date: 8/8/13
- * Time: 1:49 PM
- * To change this template use File | Settings | File Templates.
- */
 public abstract class AbstractOperationPrinter {
     protected static AbstractOperationPrinter ourInstance;
 

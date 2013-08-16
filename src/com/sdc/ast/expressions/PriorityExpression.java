@@ -7,13 +7,6 @@ import static com.sdc.ast.OperationType.*;
 import static com.sdc.ast.OperationType.EQ;
 import static com.sdc.ast.OperationType.NE;
 
-/**
- * Created with IntelliJ IDEA.
- * User: Dmitrii.Pozdin
- * Date: 8/13/13
- * Time: 2:13 PM
- * To change this template use File | Settings | File Templates.
- */
 public abstract class PriorityExpression extends Expression {
     protected OperationType myType;
     public int getPriority(AbstractOperationPrinter operationPrinter){

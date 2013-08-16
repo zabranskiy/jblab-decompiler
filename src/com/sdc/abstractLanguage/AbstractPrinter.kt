@@ -216,7 +216,7 @@ abstract class AbstractPrinter {
 
 
     open fun printAssignment(statement : Assignment, nestSize : Int): PrimeDoc =
-    printExpression(statement.getLeft(), nestSize) + text(" = ") + printExpression(statement.getRight(), nestSize)
+            printExpression(statement.getLeft(), nestSize) + text(" = ") + printExpression(statement.getRight(), nestSize)
 
     open fun printReturn(statement : Return, nestSize : Int): PrimeDoc {
         var returnStatement : PrimeDoc = if (statement.needToPrintReturn()) text("return") else text("")

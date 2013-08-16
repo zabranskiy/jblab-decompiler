@@ -7,13 +7,6 @@ import com.sdc.ast.expressions.identifiers.Variable;
 
 import static com.sdc.ast.OperationType.*;
 
-/**
- * Created with IntelliJ IDEA.
- * User: Dmitrii.Pozdin
- * Date: 8/12/13
- * Time: 10:26 AM
- * To change this template use File | Settings | File Templates.
- */
 public class ExprIncrement extends PriorityExpression {
     private Variable myVariable;
     private Expression myIncrement;
