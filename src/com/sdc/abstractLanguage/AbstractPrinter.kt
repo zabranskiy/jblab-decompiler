@@ -15,15 +15,10 @@ import com.sdc.ast.expressions.ExprIncrement
 import com.sdc.ast.expressions.InstanceOf
 import com.sdc.ast.expressions.PriorityExpression
 import com.sdc.ast.controlflow.Statement
-import com.sdc.ast.controlflow.Invocation
 import com.sdc.ast.controlflow.Assignment
 import com.sdc.ast.controlflow.Return
 import com.sdc.ast.controlflow.Throw
-import com.sdc.ast.controlflow.InstanceInvocation
-import com.sdc.ast.controlflow.Increment
-import com.sdc.ast.controlflow.New
 import com.sdc.ast.controlflow.ExpressionWrapper
-
 import com.sdc.cfg.constructions.Construction
 import com.sdc.cfg.constructions.ElementaryBlock
 import com.sdc.cfg.constructions.ConditionalBlock
@@ -35,6 +30,7 @@ import com.sdc.cfg.constructions.TryCatch
 import com.sdc.cfg.constructions.When
 import com.sdc.cfg.constructions.Switch
 import com.sdc.cfg.constructions.SwitchCase
+import com.sdc.ast.expressions.ArrayLength
 
 abstract class AbstractPrinter {
     abstract fun getOperationPrinter(): AbstractOperationPrinter;
@@ -53,6 +49,7 @@ abstract class AbstractPrinter {
             is AnonymousClass -> printAnonymousClassExpression(expression, nestSize)
             is TernaryExpression -> printTernaryExpression(expression,nestSize)
             is ExprIncrement -> printExprIncrement(expression,nestSize)
+            is ArrayLength -> printArrayLength(expression,nestSize)
             else -> throw IllegalArgumentException("Unknown Expression implementer!")
         }
 
@@ -214,6 +211,12 @@ abstract class AbstractPrinter {
         }
     }
 
+    open fun printArrayLength(expression : ArrayLength, nestSize : Int): PrimeDoc {
+        val expr = expression.getOperand();
+        val priority=expression.getPriority(getOperationPrinter())
+        val printOperand = printExpressionCheckBrackets(expr,priority, nestSize)
+        return group(nest(nestSize, printOperand + text(expression.getOperation(getOperationPrinter()))))
+    }
 
     open fun printAssignment(statement : Assignment, nestSize : Int): PrimeDoc =
             printExpression(statement.getLeft(), nestSize) + text(" = ") + printExpression(statement.getRight(), nestSize)

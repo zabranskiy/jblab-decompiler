@@ -381,6 +381,9 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             myBodyStack.push(new UnaryExpression(CHAR_CAST, getTopOfBodyStack()));
         } else if ((opString.contains("I2S")) && !myBodyStack.isEmpty()) {
             myBodyStack.push(new UnaryExpression(SHORT_CAST, getTopOfBodyStack()));
+        } else if(opString.contains("ARRAYLENGTH")){
+            Expression e=getTopOfBodyStack();
+            myBodyStack.push(new ArrayLength(e));
         }
         // All opcodes :
         //  +NOP, +ACONST_NULL, +ICONST_M1, +CONST_0, +ICONST_1, +ICONST_2, +ICONST_3, +ICONST_4, +ICONST_5,
@@ -574,8 +577,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         boolean isStaticInvocation = false;
 
         if (opString.contains("INVOKEVIRTUAL") || opString.contains("INVOKEINTERFACE")
-                || (decompiledOwnerFullClassName.equals(myDecompiledOwnerFullClassName) && !name.equals("<init>")))
-        {
+                || (decompiledOwnerFullClassName.equals(myDecompiledOwnerFullClassName) && !name.equals("<init>"))) {
             appendInstanceInvocation(name, hasVoidReturnType ? "" : returnType, arguments, getTopOfBodyStack());
             return;
         }
