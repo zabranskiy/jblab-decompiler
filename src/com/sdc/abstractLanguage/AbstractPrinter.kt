@@ -53,19 +53,21 @@ abstract class AbstractPrinter {
             is AnonymousClass -> printAnonymousClassExpression(expression, nestSize)
             is TernaryExpression -> printTernaryExpression(expression,nestSize)
             is ExprIncrement -> printExprIncrement(expression,nestSize)
-
             else -> throw IllegalArgumentException("Unknown Expression implementer!")
         }
 
     open fun printExpressionCheckBrackets(expression: Expression?, nextOpPriority: Int, nestSize: Int): PrimeDoc =
-        when (expression) {
-            is PriorityExpression ->
-                if (nextOpPriority < expression.getPriority(getOperationPrinter()) )
-                    printExpressionWithBrackets(expression, nestSize)
-                else
-                    printExpression(expression, nestSize)
-            else -> printExpression(expression, nestSize)
+            printExpressionCheckBrackets(expression, nextOpPriority, false, nestSize)
+
+    open fun printExpressionCheckBrackets(expression: Expression?, nextOpPriority: Int, nextOpAssociative: Boolean, nestSize: Int): PrimeDoc {
+        if (expression is PriorityExpression) {
+            val priority = expression.getPriority(getOperationPrinter())
+            if (nextOpPriority < priority || (nextOpPriority == priority && !nextOpAssociative ) )
+                return printExpressionWithBrackets(expression, nestSize)
+
         }
+        return printExpression(expression, nestSize);
+    }
 
     open fun printStatement(statement: Statement?, nestSize: Int): PrimeDoc =
         when (statement) {
@@ -73,7 +75,6 @@ abstract class AbstractPrinter {
             is Assignment -> printAssignment(statement, nestSize)
             is Return -> printReturn(statement, nestSize)
             is Throw -> printThrow(statement, nestSize)
-            is Increment -> printIncrement(statement, nestSize)
             else -> throw IllegalArgumentException("Unknown Statement implementer!")
         }
 
@@ -125,7 +126,7 @@ abstract class AbstractPrinter {
         val r = expression.getRight()
         val opPriority = expression.getPriority(getOperationPrinter())
         val left = printExpressionCheckBrackets(l,opPriority,nestSize);
-        val right = printExpressionCheckBrackets(r,opPriority,nestSize);
+        val right = printExpressionCheckBrackets(r,opPriority,expression.isAssociative(),nestSize);
         return group(left / (text(expression.getOperation(getOperationPrinter())) + right))
     }
 
@@ -227,24 +228,6 @@ abstract class AbstractPrinter {
     open fun printThrow(statement : Throw, nestSize : Int): PrimeDoc =
             group(text("throw") + nest(nestSize, line()
             + printExpression(statement.getThrowObject(), nestSize)))
-
-    open fun printIncrement(statement : Increment, nestSize : Int): PrimeDoc {
-        var printVariable = printExpression(statement.getVariable(), nestSize)
-        var operation = statement.getOperation(getOperationPrinter());
-        val increment = statement.getIncrementExpression()
-        var operationPriority = statement.getPriority(getOperationPrinter());
-        val printIncrement =
-                if(increment is Constant || increment is Variable){
-                    printExpression(increment, nestSize)
-                } else{
-                    printExpressionCheckBrackets(increment,operationPriority, nestSize)
-                }
-        if (statement.IsIncrementSimple()){
-            return group(nest(nestSize, printVariable + text(operation)))
-        } else {
-            return group(nest(nestSize, printVariable / ( text(operation) + printIncrement)))
-        }
-    }
 
     open fun printElementaryBlock(elementaryBlock : ElementaryBlock, nestSize : Int): PrimeDoc =
         printStatements(elementaryBlock.getStatements(), nestSize)

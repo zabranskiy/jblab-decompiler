@@ -17,9 +17,9 @@ import static com.sdc.ast.OperationType.*;
 public class ExprIncrement extends PriorityExpression {
     private Variable myVariable;
     private Expression myIncrement;
-    private boolean myIsIncrementSimple=false;
+    private boolean myIsIncrementSimple = false;
 
-    public ExprIncrement(Increment increment){
+    public ExprIncrement(Increment increment) {
         this(increment.getVariable(), increment.getIncrementExpression(), increment.getOperationType());
     }
 
@@ -30,19 +30,19 @@ public class ExprIncrement extends PriorityExpression {
         switch (type) {
             case INC:
                 myType = INC;
-                myIsIncrementSimple=true;
+                myIsIncrementSimple = true;
                 break;
             case DEC:
                 myType = DEC;
-                myIsIncrementSimple=true;
+                myIsIncrementSimple = true;
                 break;
             case INC_REV:
                 myType = INC_REV;
-                myIsIncrementSimple=true;
+                myIsIncrementSimple = true;
                 break;
             case DEC_REV:
                 myType = DEC_REV;
-                myIsIncrementSimple=true;
+                myIsIncrementSimple = true;
                 break;
             case ADD:
                 if (increment instanceof IntConstant && ((IntConstant) increment).isOne()) {
@@ -82,14 +82,16 @@ public class ExprIncrement extends PriorityExpression {
 
     public ExprIncrement(final Variable variable, final int increment) {
         myVariable = variable;
-        myIncrement = new Constant(increment,false);
+        myIncrement = new Constant(increment, false);
         if (increment == 1) {
+            myIsIncrementSimple = true;
             myType = INC;
         } else if (increment == -1) {
+            myIsIncrementSimple = true;
             myType = DEC;
-        } else if (increment >=0) {
+        } else if (increment >= 0) {
             myType = ADD_INC;
-        } else if (increment <0) {
+        } else if (increment < 0) {
             myType = SUB_INC;
         }
     }
@@ -127,7 +129,7 @@ public class ExprIncrement extends PriorityExpression {
         return myIncrement;
     }
 
-    public boolean IsIncrementSimple(){
+    public boolean IsIncrementSimple() {
         return myIsIncrementSimple;
     }
 
@@ -137,5 +139,9 @@ public class ExprIncrement extends PriorityExpression {
                 "myVariable=" + myVariable +
                 ", myIncrement=" + myIncrement +
                 '}';
+    }
+
+    public String getVariableName() {
+        return myVariable.getName();
     }
 }
