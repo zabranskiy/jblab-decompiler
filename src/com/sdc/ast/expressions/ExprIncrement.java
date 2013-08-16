@@ -45,10 +45,26 @@ public class ExprIncrement extends PriorityExpression {
                 myIsIncrementSimple=true;
                 break;
             case ADD:
-                myType=ADD_INC;
+                if (increment instanceof IntConstant && ((IntConstant) increment).isOne()) {
+                    myType = INC;
+                    myIsIncrementSimple = true;
+                } else if (increment instanceof IntConstant && ((IntConstant) increment).isMinusOne()) {
+                    myType = DEC;
+                    myIsIncrementSimple = true;
+                } else {
+                    myType = ADD_INC;
+                }
                 break;
             case SUB:
-                myType=SUB_INC;
+                if (increment instanceof IntConstant && ((IntConstant) increment).isOne()) {
+                    myType = DEC;
+                    myIsIncrementSimple = true;
+                } else if (increment instanceof IntConstant && ((IntConstant) increment).isMinusOne()) {
+                    myType = INC;
+                    myIsIncrementSimple = true;
+                } else {
+                    myType = SUB_INC;
+                }
                 break;
             case MUL:
                 myType = MUL_INC;

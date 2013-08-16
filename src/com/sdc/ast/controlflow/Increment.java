@@ -77,9 +77,8 @@ public class Increment extends Statement {
                     myType = INC;
                     myIsIncrementSimple = true;
                 } else {
-                    myType = ADD_INC;
+                    myType = SUB_INC;
                 }
-                myType = SUB_INC;
                 return;
             case MUL:
                 myType = MUL_INC;
@@ -137,5 +136,9 @@ public class Increment extends Statement {
 
     public boolean IsIncrementSimple() {
         return myIsIncrementSimple;
+    }
+
+    public int getPriority(AbstractOperationPrinter operationPrinter){
+        return operationPrinter.getPriority(myType);
     }
 }

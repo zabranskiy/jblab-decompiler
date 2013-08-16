@@ -1,9 +1,7 @@
 package com.sdc.abstractLanguage
 
 import pretty.*
-
 import com.sdc.ast.OperationType
-
 import com.sdc.ast.expressions.Expression
 import com.sdc.ast.expressions.Constant
 import com.sdc.ast.expressions.BinaryExpression
@@ -17,7 +15,6 @@ import com.sdc.ast.expressions.nestedclasses.AnonymousClass
 import com.sdc.ast.expressions.ExprIncrement
 import com.sdc.ast.expressions.InstanceOf
 import com.sdc.ast.expressions.PriorityExpression
-
 import com.sdc.ast.controlflow.Statement
 import com.sdc.ast.controlflow.Invocation
 import com.sdc.ast.controlflow.Assignment
@@ -25,7 +22,6 @@ import com.sdc.ast.controlflow.Return
 import com.sdc.ast.controlflow.Throw
 import com.sdc.ast.controlflow.InstanceInvocation
 import com.sdc.ast.controlflow.Increment
-
 import com.sdc.cfg.constructions.Construction
 import com.sdc.cfg.constructions.ElementaryBlock
 import com.sdc.cfg.constructions.ConditionalBlock
@@ -38,108 +34,23 @@ import com.sdc.cfg.constructions.When
 import com.sdc.cfg.constructions.Switch
 import com.sdc.cfg.constructions.SwitchCase
 
-
 abstract class AbstractPrinter {
     abstract fun getOperationPrinter(): AbstractOperationPrinter;
 
     open fun printExpression(expression: Expression?, nestSize: Int): PrimeDoc =
         when (expression) {
-            is Constant ->
-                if (!expression.isStringValue())
-                    text(expression.getValue().toString())
-                else
-                    text("\"" + expression.getValue().toString() + "\"")
-
-            is BinaryExpression -> {
-                val l = expression.getLeft()
-                val r = expression.getRight()
-                val opPriority = expression.getPriority(getOperationPrinter())
-                val left = printExpressionCheckBrackets(l,opPriority,nestSize);
-                val right = printExpressionCheckBrackets(r,opPriority,nestSize);
-                group(left / (text(expression.getOperation(getOperationPrinter())) + right))
-             }
-
-            is UnaryExpression -> {
-                val opPriority = expression.getPriority(getOperationPrinter())
-                val operand = expression.getOperand()
-                val expr = printExpressionCheckBrackets(operand,opPriority,nestSize);
-                text(expression.getOperation(getOperationPrinter())) + expr
-            }
-
-            is Field -> {
-                val owner = expression.getOwner()
-                val ownerName = if (owner != null) printInstance(owner, nestSize) else text(expression.getStaticOwnerName() + ".")
-                ownerName + text(expression.getName())
-            }
-
-            is Variable -> {
-                if (expression.getArrayIndex() == null)
-                    text(printVariableName(expression.getName()))
-                else {
-                    group(
-                            printExpression(expression.getArrayVariable(), nestSize)
-                            + text("[") + printExpression(expression.getArrayIndex(), nestSize) + text("]")
-                    )
-                }
-            }
-
-            is com.sdc.ast.expressions.Invocation -> {
-                var funName : PrimeDoc = group(text(expression.getFunction()))
-                if (expression is com.sdc.ast.expressions.InstanceInvocation) {
-                    funName = printInstance(expression.getInstance(), nestSize) + funName
-                }
-                funName + printInvocationArguments(expression.getArguments(), nestSize)
-            }
-
-            is New -> printNewOperator() + printExpression(expression.getConstructor(), nestSize)
-
-            is NewArray -> {
-                var newArray = group(text("new") + nest(nestSize, line() + text(expression.getType())))
-                for (dimension in expression.getDimensions()!!.toList()) {
-                    newArray = group(newArray + text("[") + printExpression(dimension, nestSize) + text("]"))
-                }
-                newArray
-            }
-
-            is InstanceOf -> printExpression(expression.getArgument(), nestSize) + printInstanceOfOperator() + text(expression.getType())
-
-            is AnonymousClass -> printNewOperator() + printAnonymousClass(expression.getNestedClass(), expression.getConstructorArguments())
-
-            is TernaryExpression -> {
-                val l = expression.getLeft()
-                val r = expression.getRight()
-                var c=  expression.getCondition();
-                val opPriority = expression.getPriority(getOperationPrinter())
-                val condition = printExpressionCheckBrackets(c,opPriority,nestSize);
-                val left = printExpressionCheckBrackets(l,opPriority,nestSize);
-                val right = printExpressionCheckBrackets(r,opPriority,nestSize);
-                group(nest(nestSize, line() + text("(") + condition+text(") ? ") + left + text(" : ") + right))
-            }
-
-            is ExprIncrement -> {
-                val expr = expression.getVariable();
-                val printExpr = printExpression(expr, nestSize)
-                var myType = expression.getOperationType();
-                var operation = expression.getOperation(getOperationPrinter());
-                if(myType == OperationType.INC_REV || myType == OperationType.DEC_REV){
-                    group(nest(nestSize, text(operation) + printExpr))
-                }   else{
-                    val increment = expression.getIncrementExpression();
-                    val priority = expression.getPriority(getOperationPrinter())
-                    val printIncrement =
-                            if(increment is Constant){
-                                printExpression(increment, nestSize)
-                            } else{
-                                printExpressionCheckBrackets(increment, priority, nestSize)
-                            }
-                    if(expression.IsIncrementSimple()){
-                        group(nest(nestSize, printExpr + text(operation)))
-                    } else{
-                        group(nest(nestSize, printExpr / ( text(operation) + printIncrement)))
-                    }
-                }
-            }
-
+            is Constant -> printConstant(expression,nestSize)
+            is BinaryExpression -> printBinaryExpression(expression,nestSize)
+            is UnaryExpression -> printUnaryExpression(expression,nestSize)
+            is Field -> printField(expression,nestSize)
+            is Variable -> printVariable(expression,nestSize)
+            is com.sdc.ast.expressions.Invocation -> printInvocationExpression(expression,nestSize)
+            is New -> printNew(expression, nestSize)
+            is NewArray -> printNewArray(expression,nestSize)
+            is InstanceOf -> printInstanceOf(expression, nestSize)
+            is AnonymousClass -> printAnonymousClassExpression(expression, nestSize)
+            is TernaryExpression -> printTernaryExpression(expression,nestSize)
+            is ExprIncrement -> printExprIncrement(expression,nestSize)
             else -> throw IllegalArgumentException("Unknown Expression implementer!")
         }
 
@@ -155,45 +66,11 @@ abstract class AbstractPrinter {
 
     open fun printStatement(statement: Statement?, nestSize: Int): PrimeDoc =
         when (statement) {
-            is Invocation -> {
-                var funName : PrimeDoc = group(text(statement.getFunction()))
-                if (statement is InstanceInvocation) {
-                    funName = printInstance(statement.getInstance(), nestSize) + funName
-                }
-                funName + printInvocationArguments(statement.getArguments(), nestSize)
-            }
-
-            is Assignment -> printExpression(statement.getLeft(), nestSize) + text(" = ") + printExpression(statement.getRight(), nestSize)
-
-            is Return -> {
-                var returnStatement : PrimeDoc = if (statement.needToPrintReturn()) text("return") else text("")
-                if (statement.getReturnValue() != null)
-                    returnStatement = returnStatement + text(" ") + printExpression(statement.getReturnValue(), nestSize)
-                returnStatement
-            }
-
-            is Throw -> group(
-                    text("throw") + nest(nestSize, line()
-                    + printExpression(statement.getThrowObject(), nestSize))
-            )
-
-            is Increment ->{
-                var printVariable = printExpression(statement.getVariable(), nestSize)
-                var operation = statement.getOperation(getOperationPrinter());
-                val increment = statement.getIncrementExpression()
-                val printIncrement =
-                        if(increment is Constant || increment is Variable){
-                            printExpression(increment, nestSize)
-                        } else{
-                            printExpressionWithBrackets(increment, nestSize)
-                        }
-                if(statement.IsIncrementSimple()){
-                    group(nest(nestSize, printVariable + text(operation)))
-                } else{
-                    group(nest(nestSize, printVariable / ( text(operation) + printIncrement)))
-                }
-            }
-
+            is Invocation -> printInvocationStatement(statement, nestSize)
+            is Assignment -> printAssignment(statement, nestSize)
+            is Return -> printReturn(statement, nestSize)
+            is Throw -> printThrow(statement, nestSize)
+            is Increment -> printIncrement(statement, nestSize)
             else -> throw IllegalArgumentException("Unknown Statement implementer!")
         }
 
@@ -231,6 +108,145 @@ abstract class AbstractPrinter {
             val nextConstructionCode = if (construction.hasNextConstruction()) printConstruction(construction.getNextConstruction(), nestSize) else nil()
 
             return (if (construction !is ElementaryBlock && construction !is SwitchCase) line() else nil()) + mainCode + breakCode + continueCode + nextConstructionCode
+        }
+    }
+
+    open fun printConstant(expression : Constant, nestSize : Int): PrimeDoc =
+        if (!expression.isStringValue())
+            text(expression.getValue().toString())
+        else
+            text("\"" + expression.getValue().toString() + "\"")
+
+    open fun printBinaryExpression(expression : BinaryExpression, nestSize : Int): PrimeDoc  {
+        val l = expression.getLeft()
+        val r = expression.getRight()
+        val opPriority = expression.getPriority(getOperationPrinter())
+        val left = printExpressionCheckBrackets(l,opPriority,nestSize);
+        val right = printExpressionCheckBrackets(r,opPriority,nestSize);
+        return group(left / (text(expression.getOperation(getOperationPrinter())) + right))
+    }
+
+    open fun printUnaryExpression(expression : UnaryExpression, nestSize : Int): PrimeDoc {
+        val opPriority = expression.getPriority(getOperationPrinter())
+        val operand = expression.getOperand()
+        val expr = printExpressionCheckBrackets(operand,opPriority,nestSize);
+        return text(expression.getOperation(getOperationPrinter())) + expr
+    }
+
+
+    open fun printField(expression : Field, nestSize : Int): PrimeDoc {
+        val owner = expression.getOwner()
+        val ownerName = if (owner != null) printInstance(owner, nestSize) else text(expression.getStaticOwnerName() + ".")
+        return ownerName + text(expression.getName())
+    }
+
+    open fun printVariable(expression : Variable, nestSize : Int): PrimeDoc {
+        if (expression.getArrayIndex() == null)
+            return text(printVariableName(expression.getName()))
+        else {
+            return group(printExpression(expression.getArrayVariable(), nestSize)
+                    + text("[") + printExpression(expression.getArrayIndex(), nestSize) + text("]")
+            )
+        }
+    }
+
+    open fun printInvocationExpression(expression : com.sdc.ast.expressions.Invocation, nestSize : Int): PrimeDoc {
+        var funName : PrimeDoc = group(text(expression.getFunction()))
+        if (expression is com.sdc.ast.expressions.InstanceInvocation) {
+            funName = printInstance(expression.getInstance(), nestSize) + funName
+        }
+        return funName + printInvocationArguments(expression.getArguments(), nestSize)
+    }
+
+    open fun printNew(expression : New, nestSize : Int): PrimeDoc =
+            printNewOperator() + printExpression(expression.getConstructor(), nestSize)
+
+    open fun printNewArray(expression : NewArray, nestSize : Int): PrimeDoc {
+        var newArray = group(text("new") + nest(nestSize, line() + text(expression.getType())))
+        for (dimension in expression.getDimensions()!!.toList()) {
+            newArray = group(newArray + text("[") + printExpression(dimension, nestSize) + text("]"))
+        }
+        return newArray
+    }
+
+    open fun printInstanceOf(expression : InstanceOf, nestSize : Int): PrimeDoc =
+            printExpression(expression.getArgument(), nestSize) + printInstanceOfOperator() + text(expression.getType())
+
+    open fun printAnonymousClassExpression(expression : AnonymousClass, nestSize : Int): PrimeDoc =
+            printNewOperator() + printAnonymousClass(expression.getNestedClass(), expression.getConstructorArguments())
+
+    open fun printTernaryExpression(expression : TernaryExpression, nestSize : Int): PrimeDoc {
+        val l = expression.getLeft()
+        val r = expression.getRight()
+        var c=  expression.getCondition();
+        val opPriority = expression.getPriority(getOperationPrinter())
+        val condition = printExpressionCheckBrackets(c,opPriority,nestSize);
+        val left = printExpressionCheckBrackets(l,opPriority,nestSize);
+        val right = printExpressionCheckBrackets(r,opPriority,nestSize);
+        return group(nest(nestSize, line() + text("(") + condition+text(") ? ") + left + text(" : ") + right))
+    }
+
+    open fun printExprIncrement(expression : ExprIncrement, nestSize : Int): PrimeDoc {
+        val expr = expression.getVariable();
+        val printExpr = printExpression(expr, nestSize)
+        var myType = expression.getOperationType();
+        var operation = expression.getOperation(getOperationPrinter());
+        if(myType == OperationType.INC_REV || myType == OperationType.DEC_REV){
+            return group(nest(nestSize, text(operation) + printExpr))
+        }   else{
+            val increment = expression.getIncrementExpression();
+            val priority = expression.getPriority(getOperationPrinter())
+            val printIncrement =
+                    if(increment is Constant){
+                        printExpression(increment, nestSize)
+                    } else{
+                        printExpressionCheckBrackets(increment, priority, nestSize)
+                    }
+            if(expression.IsIncrementSimple()){
+                return group(nest(nestSize, printExpr + text(operation)))
+            } else{
+                return group(nest(nestSize, printExpr / ( text(operation) + printIncrement)))
+            }
+        }
+    }
+
+    open fun printInvocationStatement(statement : Invocation, nestSize : Int): PrimeDoc {
+        var funName : PrimeDoc = group(text(statement.getFunction()))
+        if (statement is InstanceInvocation) {
+            funName = printInstance(statement.getInstance(), nestSize) + funName
+        }
+        return funName + printInvocationArguments(statement.getArguments(), nestSize)
+    }
+
+    open fun printAssignment(statement : Assignment, nestSize : Int): PrimeDoc =
+    printExpression(statement.getLeft(), nestSize) + text(" = ") + printExpression(statement.getRight(), nestSize)
+
+    open fun printReturn(statement : Return, nestSize : Int): PrimeDoc {
+        var returnStatement : PrimeDoc = if (statement.needToPrintReturn()) text("return") else text("")
+        if (statement.getReturnValue() != null)
+            returnStatement = returnStatement + text(" ") + printExpression(statement.getReturnValue(), nestSize)
+        return returnStatement
+    }
+
+    open fun printThrow(statement : Throw, nestSize : Int): PrimeDoc =
+            group(text("throw") + nest(nestSize, line()
+            + printExpression(statement.getThrowObject(), nestSize)))
+
+    open fun printIncrement(statement : Increment, nestSize : Int): PrimeDoc {
+        var printVariable = printExpression(statement.getVariable(), nestSize)
+        var operation = statement.getOperation(getOperationPrinter());
+        val increment = statement.getIncrementExpression()
+        var operationPriority = statement.getPriority(getOperationPrinter());
+        val printIncrement =
+                if(increment is Constant || increment is Variable){
+                    printExpression(increment, nestSize)
+                } else{
+                    printExpressionCheckBrackets(increment,operationPriority, nestSize)
+                }
+        if (statement.IsIncrementSimple()){
+            return group(nest(nestSize, printVariable + text(operation)))
+        } else {
+            return group(nest(nestSize, printVariable / ( text(operation) + printIncrement)))
         }
     }
 
