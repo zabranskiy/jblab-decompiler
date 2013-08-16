@@ -17,7 +17,7 @@ public class ElementaryBlock extends Construction {
     }
 
     public Statement getLastStatement() {
-        if (myStatements.isEmpty()) {
+        if (!myStatements.isEmpty()) {
             return myStatements.get(myStatements.size() - 1);
         }
         return null;

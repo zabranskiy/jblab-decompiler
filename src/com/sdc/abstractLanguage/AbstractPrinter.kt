@@ -87,7 +87,7 @@ abstract class AbstractPrinter {
             is com.sdc.ast.expressions.Invocation -> {
                 var funName : PrimeDoc = group(text(expression.getFunction()))
                 if (expression is com.sdc.ast.expressions.InstanceInvocation) {
-                    funName = printInstance(expression.getInstance(), nestSize) + funName
+                    funName = printInstance(expression.getInstance(), nestSize, expression.isNotNullCheckedCall()) + funName
                 }
                 funName + printInvocationArguments(expression.getArguments(), nestSize)
             }
@@ -321,16 +321,16 @@ abstract class AbstractPrinter {
         return whenCode + keysCode + defaultCaseCode / text("}")
     }
 
-    open fun printInstance(instance : Expression?, nestSize : Int): PrimeDoc {
+    open fun printInstance(instance : Expression?, nestSize : Int, isNotNullCheckedCall : Boolean = false): PrimeDoc {
         var instanceName : PrimeDoc = nil()
         if (instance is Variable) {
             var variableName = instance.getName()
             if (!variableName.equals("this")) {
                 variableName =  printVariableName(variableName)
-                instanceName = text(variableName) + text(".")
+                instanceName = text(variableName) + text(if (isNotNullCheckedCall) "!!." else ".")
             }
         } else {
-            instanceName = printExpression(instance, nestSize) + text(".")
+            instanceName = printExpression(instance, nestSize) + text(if (isNotNullCheckedCall) "!!." else ".")
         }
         return instanceName
     }

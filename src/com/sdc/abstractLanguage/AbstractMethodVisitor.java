@@ -438,7 +438,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                     myBodyStack.push(new Variable(var, getCurrentFrame()));
                 }
             }
-        } else if (opString.contains("STORE") && !currentFrameHasStack) {
+        } else if (opString.contains("STORE")) {
             Identifier v = new Variable(var, getCurrentFrame());
             final Expression expr = getTopOfBodyStack();
             myStatements.add(new Assignment(v, expr));
@@ -532,7 +532,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
     @Override
     public void visitFieldInsn(final int opcode, final String owner, final String name, final String desc) {
         final String opString = Printer.OPCODES[opcode];
-        final String fieldName = myDecompiledMethod.getDecompiledClass().isLambdaFunctionClass() ? name.substring(1) : name;
+        final String fieldName = myDecompiledMethod.getDecompiledClass().isLambdaFunctionClass() && name.startsWith("$") ? name.substring(1) : name;
         Field field = new Field(fieldName, getDescriptor(desc, 0, myDecompiledMethod.getImports()));
 
         Expression e = null;
