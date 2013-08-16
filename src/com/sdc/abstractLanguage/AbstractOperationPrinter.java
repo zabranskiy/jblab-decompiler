@@ -4,13 +4,6 @@ import com.sdc.ast.OperationType;
 
 import static com.sdc.ast.OperationType.*;
 
-/**
- * Created with IntelliJ IDEA.
- * User: Dmitrii.Pozdin
- * Date: 8/8/13
- * Time: 1:49 PM
- * To change this template use File | Settings | File Templates.
- */
 public abstract class AbstractOperationPrinter {
     protected static AbstractOperationPrinter ourInstance;
 
@@ -174,15 +167,13 @@ public abstract class AbstractOperationPrinter {
     }
 
     public int getPriority(OperationType type) {
-        if (type == NOT || type == NEGATE || type == DEC || type == INC ||type == DEC_REV || type == INC_REV
+        if (type == NOT || type == NEGATE || type == DEC || type == INC || type == DEC_REV || type == INC_REV
                 || type == INT_CAST || type == DOUBLE_CAST || type == LONG_CAST || type == SHORT_CAST
                 || type == BYTE_CAST || type == CHAR_CAST || type == FLOAT_CAST || type == CHECK_CAST) {
-            return 1;
-        } else if (type == MUL || type == DIV || type == REM) {
             return 2;
-        } else if (type == SUB) {
+        } else if (type == MUL || type == DIV || type == REM) {
             return 3;
-        } else if (type == ADD) {
+        } else if (type == SUB || type == ADD) {
             return 4;
         } else if (type == SHL || type == SHR || type == USHR) {
             return 5;

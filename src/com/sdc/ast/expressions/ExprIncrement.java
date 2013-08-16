@@ -7,19 +7,12 @@ import com.sdc.ast.expressions.identifiers.Variable;
 
 import static com.sdc.ast.OperationType.*;
 
-/**
- * Created with IntelliJ IDEA.
- * User: Dmitrii.Pozdin
- * Date: 8/12/13
- * Time: 10:26 AM
- * To change this template use File | Settings | File Templates.
- */
 public class ExprIncrement extends PriorityExpression {
     private Variable myVariable;
     private Expression myIncrement;
-    private boolean myIsIncrementSimple=false;
+    private boolean myIsIncrementSimple = false;
 
-    public ExprIncrement(Increment increment){
+    public ExprIncrement(Increment increment) {
         this(increment.getVariable(), increment.getIncrementExpression(), increment.getOperationType());
     }
 
@@ -30,25 +23,41 @@ public class ExprIncrement extends PriorityExpression {
         switch (type) {
             case INC:
                 myType = INC;
-                myIsIncrementSimple=true;
+                myIsIncrementSimple = true;
                 break;
             case DEC:
                 myType = DEC;
-                myIsIncrementSimple=true;
+                myIsIncrementSimple = true;
                 break;
             case INC_REV:
                 myType = INC_REV;
-                myIsIncrementSimple=true;
+                myIsIncrementSimple = true;
                 break;
             case DEC_REV:
                 myType = DEC_REV;
-                myIsIncrementSimple=true;
+                myIsIncrementSimple = true;
                 break;
             case ADD:
-                myType=ADD_INC;
+                if (increment instanceof IntConstant && ((IntConstant) increment).isOne()) {
+                    myType = INC;
+                    myIsIncrementSimple = true;
+                } else if (increment instanceof IntConstant && ((IntConstant) increment).isMinusOne()) {
+                    myType = DEC;
+                    myIsIncrementSimple = true;
+                } else {
+                    myType = ADD_INC;
+                }
                 break;
             case SUB:
-                myType=SUB_INC;
+                if (increment instanceof IntConstant && ((IntConstant) increment).isOne()) {
+                    myType = DEC;
+                    myIsIncrementSimple = true;
+                } else if (increment instanceof IntConstant && ((IntConstant) increment).isMinusOne()) {
+                    myType = INC;
+                    myIsIncrementSimple = true;
+                } else {
+                    myType = SUB_INC;
+                }
                 break;
             case MUL:
                 myType = MUL_INC;
@@ -66,14 +75,16 @@ public class ExprIncrement extends PriorityExpression {
 
     public ExprIncrement(final Variable variable, final int increment) {
         myVariable = variable;
-        myIncrement = new Constant(increment,false);
+        myIncrement = new Constant(increment, false);
         if (increment == 1) {
+            myIsIncrementSimple = true;
             myType = INC;
         } else if (increment == -1) {
+            myIsIncrementSimple = true;
             myType = DEC;
-        } else if (increment >=0) {
+        } else if (increment >= 0) {
             myType = ADD_INC;
-        } else if (increment <0) {
+        } else if (increment < 0) {
             myType = SUB_INC;
         }
     }
@@ -111,7 +122,7 @@ public class ExprIncrement extends PriorityExpression {
         return myIncrement;
     }
 
-    public boolean IsIncrementSimple(){
+    public boolean IsIncrementSimple() {
         return myIsIncrementSimple;
     }
 
@@ -121,5 +132,9 @@ public class ExprIncrement extends PriorityExpression {
                 "myVariable=" + myVariable +
                 ", myIncrement=" + myIncrement +
                 '}';
+    }
+
+    public String getVariableName() {
+        return myVariable.getName();
     }
 }
