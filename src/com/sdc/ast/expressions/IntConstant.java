@@ -1,12 +1,5 @@
 package com.sdc.ast.expressions;
 
-/**
- * Created with IntelliJ IDEA.
- * User: Dmitrii.Pozdin
- * Date: 8/12/13
- * Time: 11:22 AM
- * To change this template use File | Settings | File Templates.
- */
 public class IntConstant extends Constant {
     private int myIntValue = 0;
 
