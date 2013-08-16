@@ -194,7 +194,7 @@ public class ConstructionBuilder {
         if (node.getCondition() != null) {
             for (Node ancestor : node.getAncestors()) {
                 if (node.getIndex() < ancestor.getIndex()) {
-                    if (domi[node.getIndex()] != domi[node.getListOfTails().get(1).getIndex()] && getRelativeIndex(node.getIndex()) < size && getRelativeIndex(node.getIndex()) > 0) {
+                    if (domi[node.getIndex()] != domi[node.getListOfTails().get(1).getIndex()] && getRelativeIndex(node.getIndex()) < size && getRelativeIndex(node.getIndex()) >= 0) {
                         node.setNextNode(node.getListOfTails().get(1));
                     }
                     com.sdc.cfg.constructions.While whileConstruction = new com.sdc.cfg.constructions.While(node.getCondition());
