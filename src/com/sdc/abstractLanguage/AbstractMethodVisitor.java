@@ -622,10 +622,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
                         dw.setStatements(new ArrayList<Statement>(node.getStatements().subList(0, index)));
                         dw.getInnerLabels().addAll(new ArrayList<Label>(node.getInnerLabels().subList(0, index)));
-                        Expression e1 = getTopOfBodyStack();
-                        Expression e2 = getTopOfBodyStack();
-                        Expression cond = new BinaryExpression(OperationType.valueOf(opString.substring(7)), e2, e1);
-                        dw.setCondition(cond);
+                        dw.setCondition(getConditionFromStack(opString));
                         dw.setEmpty(true);
 
                         node.setStatements(new ArrayList<Statement>(node.getStatements().subList(index, node.getStatements().size())));
@@ -639,10 +636,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 myMap2.put(myNodes.size(), label);
                 applyNode();
                 final int last = myNodes.size() - 1;
-                Expression e1 = getTopOfBodyStack();
-                Expression e2 = getTopOfBodyStack();
-                Expression cond = new BinaryExpression(OperationType.valueOf(opString.substring(7)), e2, e1);
-                myNodes.get(last).setCondition(cond);
+                myNodes.get(last).setCondition(getConditionFromStack(opString));
                 myNodes.get(last).setEmpty(true);
             }
         } else if (opString.contains("GOTO")) {
@@ -823,6 +817,23 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                     node.addAncestor(myNodes.get(index));
                     break;
                 }
+            }
+        }
+    }
+
+    private Expression getConditionFromStack(final String opString) {
+        if (opString.contains("IF_")) {
+            Expression e1 = getTopOfBodyStack();
+            Expression e2 = getTopOfBodyStack();
+            return new BinaryExpression(OperationType.valueOf(opString.substring(7)), e2, e1);
+        } else {
+            Expression e = getTopOfBodyStack();
+            if (opString.contains("NONNULL")) {
+                return new BinaryExpression(OperationType.NE, e, new Constant("null", false));
+            } else if (opString.contains("NULL")) {
+                return new BinaryExpression(OperationType.EQ, e, new Constant("null", false));
+            } else {
+                return new BinaryExpression(OperationType.valueOf(opString.substring(2)), e, new Constant(0, false));
             }
         }
     }
