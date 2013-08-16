@@ -25,6 +25,7 @@ import com.sdc.ast.controlflow.Throw
 import com.sdc.ast.controlflow.InstanceInvocation
 import com.sdc.ast.controlflow.Increment
 import com.sdc.ast.controlflow.New
+import com.sdc.ast.controlflow.ExpressionWrapper
 
 import com.sdc.cfg.constructions.Construction
 import com.sdc.cfg.constructions.ElementaryBlock
@@ -155,9 +156,7 @@ abstract class AbstractPrinter {
 
     open fun printStatement(statement: Statement?, nestSize: Int): PrimeDoc =
         when (statement) {
-            is Invocation -> printExpression(statement.toExpression(), nestSize)
-
-            is New -> printExpression(statement.toExpression(), nestSize)
+            is ExpressionWrapper -> printExpression(statement.toExpression(), nestSize)
 
             is Assignment -> printExpression(statement.getLeft(), nestSize) + text(" = ") + printExpression(statement.getRight(), nestSize)
 
