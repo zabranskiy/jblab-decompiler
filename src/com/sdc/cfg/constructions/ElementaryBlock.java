@@ -23,6 +23,12 @@ public class ElementaryBlock extends Construction {
         return null;
     }
 
+    public void removeLastStatement() {
+        if (!myStatements.isEmpty()) {
+            myStatements.remove(myStatements.size() - 1);
+        }
+    }
+
     public void addStatement(final Statement statement) {
         myStatements.add(statement);
     }

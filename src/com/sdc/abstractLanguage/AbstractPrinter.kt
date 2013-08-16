@@ -308,17 +308,17 @@ abstract class AbstractPrinter {
 
         var keysCode : PrimeDoc = nil()
         for ((key, caseBody) in whenBlock.getCases()!!.entrySet()) {
-            keysCode = keysCode / printExpression(key, nestSize) + text(" -> ") + nest(nestSize, line() + printConstruction(caseBody, nestSize))
+            keysCode = keysCode / printExpression(key, nestSize) + text(" -> ") + nest(nestSize, printConstruction(caseBody, nestSize))
         }
 
         val defaultCaseCode = text("else -> ") +
-        if (whenBlock.hasEmptyDefaultCase())
-            text("{}")
-        else
-            nest(nestSize, line() + printConstruction(whenBlock.getDefaultCase(), nestSize))
+            if (whenBlock.hasEmptyDefaultCase())
+                text("{}")
+            else
+                nest(nestSize, printConstruction(whenBlock.getDefaultCase(), nestSize))
 
 
-        return whenCode + keysCode + defaultCaseCode / text("}")
+        return whenCode + nest(nestSize, keysCode / defaultCaseCode) / text("}")
     }
 
     open fun printInstance(instance : Expression?, nestSize : Int, isNotNullCheckedCall : Boolean = false): PrimeDoc {
