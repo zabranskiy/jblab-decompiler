@@ -580,8 +580,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         boolean isStaticInvocation = false;
 
         if (opString.contains("INVOKEVIRTUAL") || opString.contains("INVOKEINTERFACE")
-                || (decompiledOwnerFullClassName.equals(myDecompiledOwnerFullClassName) && !name.equals("<init>")))
-        {
+                || (decompiledOwnerFullClassName.equals(myDecompiledOwnerFullClassName) && !name.equals("<init>"))) {
             appendInstanceInvocation(name, hasVoidReturnType ? "" : returnType, arguments, getTopOfBodyStack());
             return;
         }
@@ -633,10 +632,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                     }
                 }
                 if (myNodeInnerLabels.contains(label)) {
-
-
-                    int index = myNodeInnerLabels.indexOf(label);  // ???
-
+                    int index = myNodeInnerLabels.indexOf(label);
                     Node beforeNode = new Node(null, null, myNodes.size());
                     beforeNode.setStatements(new ArrayList<Statement>(myStatements.subList(0, index)));
                     beforeNode.setInnerLabels(new ArrayList<Label>(myNodeInnerLabels.subList(0, index)));
@@ -644,24 +640,15 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                     myNodes.add(beforeNode);
 
                     Node innerNode = new Node(null, null, myNodes.size());
-//                    innerNode.setStatements(new ArrayList<Statement>(myStatements.subList(0, index2)));
-//                    innerNode.setInnerLabels(new ArrayList<Label>(myNodeInnerLabels.subList(0, index)));
                     innerNode.setStatements(new ArrayList<Statement>(myStatements.subList(index, myStatements.size())));
                     innerNode.setInnerLabels(new ArrayList<Label>(myNodeInnerLabels.subList(index, myNodeInnerLabels.size())));
                     innerNode.setEmpty(true);
                     myNodes.add(innerNode);
 
-                    myMap2.put(myNodes.size(), label);  // !!!
+                    myMap2.put(myNodes.size(), label);
 
                     DoWhile dw = new DoWhile(new ArrayList<Statement>(), new ArrayList<Label>(), myNodes.size());
-//                    dw.setStatements(new ArrayList<Statement>(myStatements.subList(index2, myStatements.size())));
-//                    dw.setInnerLabels(new ArrayList<Label>(myNodeInnerLabels.subList(index, myNodeInnerLabels.size())));
-//                    dw.setStatements(new ArrayList<Statement>(myStatements.subList(0, index)));
-//                    dw.setInnerLabels(new ArrayList<Label>(myNodeInnerLabels.subList(0, index)));
-                    Expression e1 = getTopOfBodyStack();
-                    Expression e2 = getTopOfBodyStack();
-                    Expression cond = new BinaryExpression(OperationType.valueOf(opString.substring(7)), e2, e1);
-                    dw.setCondition(cond);
+                    dw.setCondition(getConditionFromStack(opString));
                     dw.setEmpty(true);
                     myNodes.add(dw);
 
