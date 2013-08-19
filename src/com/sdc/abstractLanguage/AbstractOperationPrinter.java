@@ -166,8 +166,16 @@ public abstract class AbstractOperationPrinter {
         return ("(" + myParam + ") ");
     }
 
+    public String getArrayLengthView() {
+        return ".length";
+    }
+
     public int getPriority(OperationType type) {
-        if (type == NOT || type == NEGATE || type == DEC || type == INC || type == DEC_REV || type == INC_REV
+        if (type == VARIABLE || type == FIELD || type == CONST) {
+            return 0;
+        }  else if (type == SQUARE_BRACKETS || type == ARRAYLENGTH || type == INVOCATION) {
+            return 1;
+        } else if (type == NOT || type == NEGATE || type == DEC || type == INC || type == DEC_REV || type == INC_REV
                 || type == INT_CAST || type == DOUBLE_CAST || type == LONG_CAST || type == SHORT_CAST
                 || type == BYTE_CAST || type == CHAR_CAST || type == FLOAT_CAST || type == CHECK_CAST) {
             return 2;
@@ -177,31 +185,28 @@ public abstract class AbstractOperationPrinter {
             return 4;
         } else if (type == SHL || type == SHR || type == USHR) {
             return 5;
-        } else if (type == GE || type == LE || type == LT || type == GT) {
+        } else if (type == GE || type == LE || type == LT || type == GT || type == INSTANCEOF) {
             return 6;
         } else if (type == EQ || type == NE) {
             return 7;
+        } else if (type == BITWISE_AND) {
+            return 8;
+        } else if (type == BITWISE_XOR) {
+            return 9;
+        } else if (type == BITWISE_OR) {
+            return 10;
+        } else if (type == AND) {
+            return 11;
+        } else if (type == OR) {
+            return 12;
+        } else if (type == TERNARY_IF) {
+            return 13;
         } else if (type == MUL_INC || type == DIV_INC || type == REM_INC || type == ADD_INC || type == SUB_INC) {
             return 14;
+        } else if (type == NEWARRAY || type == NEW) {
+            return 15;
         }
-
-        switch (type) {
-            case BITWISE_AND:
-                return 8;
-            case BITWISE_XOR:
-                return 9;
-            case BITWISE_OR:
-                return 10;
-            case AND:
-                return 11;
-            case OR:
-                return 12;
-            case TERNARY_IF:
-                return 13;
-            default:
-                return 100;
-        }
-
+        return 100;
     }
 
 

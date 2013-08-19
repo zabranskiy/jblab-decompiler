@@ -1,11 +1,14 @@
 package com.sdc.ast.expressions;
 
-public class New extends Expression {
+import com.sdc.ast.OperationType;
+
+public class New extends PriorityExpression {
     private final Invocation myConstructor;
 
     public New(final Invocation constructor) {
         this.myConstructor = constructor;
         setDoubleLength(false);
+        myType = OperationType.NEW;
     }
 
     public Invocation getConstructor() {

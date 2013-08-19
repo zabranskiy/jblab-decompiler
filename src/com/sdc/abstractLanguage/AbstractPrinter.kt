@@ -16,15 +16,10 @@ import com.sdc.ast.expressions.InstanceOf
 import com.sdc.ast.expressions.PriorityExpression
 
 import com.sdc.ast.controlflow.Statement
-import com.sdc.ast.controlflow.Invocation
 import com.sdc.ast.controlflow.Assignment
 import com.sdc.ast.controlflow.Return
 import com.sdc.ast.controlflow.Throw
-import com.sdc.ast.controlflow.InstanceInvocation
-import com.sdc.ast.controlflow.Increment
-import com.sdc.ast.controlflow.New
 import com.sdc.ast.controlflow.ExpressionWrapper
-
 import com.sdc.cfg.constructions.Construction
 import com.sdc.cfg.constructions.ElementaryBlock
 import com.sdc.cfg.constructions.ConditionalBlock
@@ -36,28 +31,32 @@ import com.sdc.cfg.constructions.TryCatch
 import com.sdc.cfg.constructions.When
 import com.sdc.cfg.constructions.Switch
 import com.sdc.cfg.constructions.SwitchCase
+import com.sdc.ast.expressions.ArrayLength
+import com.sdc.ast.expressions.SquareBrackets
 
 
 abstract class AbstractPrinter {
     abstract fun getOperationPrinter(): AbstractOperationPrinter;
 
     open fun printExpression(expression: Expression?, nestSize: Int): PrimeDoc =
-        when (expression) {
-            is Constant -> printConstant(expression,nestSize)
-            is BinaryExpression -> printBinaryExpression(expression,nestSize)
-            is UnaryExpression -> printUnaryExpression(expression,nestSize)
-            is Field -> printField(expression,nestSize)
-            is Variable -> printVariable(expression,nestSize)
-            is com.sdc.ast.expressions.Invocation -> printInvocationExpression(expression,nestSize)
-            is com.sdc.ast.expressions.New -> printNew(expression, nestSize)
-            is NewArray -> printNewArray(expression,nestSize)
-            is InstanceOf -> printInstanceOf(expression, nestSize)
-            is AnonymousClass -> printAnonymousClassExpression(expression, nestSize)
-            is TernaryExpression -> printTernaryExpression(expression,nestSize)
-            is ExprIncrement -> printExprIncrement(expression,nestSize)
+    when (expression) {
+        is Constant -> printConstant(expression, nestSize)
+        is BinaryExpression -> printBinaryExpression(expression, nestSize)
+        is UnaryExpression -> printUnaryExpression(expression, nestSize)
+        is Field -> printField(expression, nestSize)
+        is Variable -> printVariable(expression, nestSize)
+        is com.sdc.ast.expressions.Invocation -> printInvocationExpression(expression, nestSize)
+        is com.sdc.ast.expressions.New -> printNew(expression, nestSize)
+        is NewArray -> printNewArray(expression, nestSize)
+        is InstanceOf -> printInstanceOf(expression, nestSize)
+        is AnonymousClass -> printAnonymousClassExpression(expression, nestSize)
+        is TernaryExpression -> printTernaryExpression(expression, nestSize)
+        is ExprIncrement -> printExprIncrement(expression, nestSize)
+        is ArrayLength -> printArrayLength(expression, nestSize)
+        is SquareBrackets -> printSquareBrackets(expression,nestSize)
+        else -> throw IllegalArgumentException("Unknown Expression implementer!")
+    }
 
-            else -> throw IllegalArgumentException("Unknown Expression implementer!")
-        }
 
     open fun printExpressionCheckBrackets(expression: Expression?, nextOpPriority: Int, nestSize: Int): PrimeDoc =
             printExpressionCheckBrackets(expression, nextOpPriority, false, nestSize)
@@ -73,15 +72,15 @@ abstract class AbstractPrinter {
     }
 
     open fun printStatement(statement: Statement?, nestSize: Int): PrimeDoc =
-        when (statement) {
-            is ExpressionWrapper -> printExpression(statement.toExpression(), nestSize)
-            is Assignment -> printAssignment(statement, nestSize)
-            is Return -> printReturn(statement, nestSize)
-            is Throw -> printThrow(statement, nestSize)
-            else -> throw IllegalArgumentException("Unknown Statement implementer!")
-        }
+            when (statement) {
+                is ExpressionWrapper -> printExpression(statement.toExpression(), nestSize)
+                is Assignment -> printAssignment(statement, nestSize)
+                is Return -> printReturn(statement, nestSize)
+                is Throw -> printThrow(statement, nestSize)
+                else -> throw IllegalArgumentException("Unknown Statement implementer!")
+            }
 
-    open fun printConstruction(construction : Construction?, nestSize : Int): PrimeDoc {
+    open fun printConstruction(construction: Construction?, nestSize: Int): PrimeDoc {
         if (construction == null)
             return nil()
         else {
@@ -98,19 +97,19 @@ abstract class AbstractPrinter {
                         nil()
 
             val mainCode =
-                when (construction) {
-                    is ElementaryBlock -> printElementaryBlock(construction, nestSize)
-                    is ConditionalBlock -> printConditionalBlock(construction, nestSize)
-                    is While -> printWhile(construction, nestSize)
-                    is DoWhile -> printDoWhile(construction, nestSize)
-                    is For -> printFor(construction, nestSize)
-                    is ForEach -> printForEach(construction, nestSize)
-                    is TryCatch -> printTryCatch(construction, nestSize)
-                    is SwitchCase -> printSwitchCase(construction, nestSize)
-                    is Switch -> printSwitch(construction, nestSize)
-                    is When -> printWhen(construction, nestSize)
-                    else -> throw IllegalArgumentException("Unknown Construction implementer!")
-                }
+                    when (construction) {
+                        is ElementaryBlock -> printElementaryBlock(construction, nestSize)
+                        is ConditionalBlock -> printConditionalBlock(construction, nestSize)
+                        is While -> printWhile(construction, nestSize)
+                        is DoWhile -> printDoWhile(construction, nestSize)
+                        is For -> printFor(construction, nestSize)
+                        is ForEach -> printForEach(construction, nestSize)
+                        is TryCatch -> printTryCatch(construction, nestSize)
+                        is SwitchCase -> printSwitchCase(construction, nestSize)
+                        is Switch -> printSwitch(construction, nestSize)
+                        is When -> printWhen(construction, nestSize)
+                        else -> throw IllegalArgumentException("Unknown Construction implementer!")
+                    }
 
             val nextConstructionCode = if (construction.hasNextConstruction()) printConstruction(construction.getNextConstruction(), nestSize) else nil()
 
@@ -118,62 +117,65 @@ abstract class AbstractPrinter {
         }
     }
 
-    open fun printConstant(expression : Constant, nestSize : Int): PrimeDoc =
-        if (!expression.isStringValue())
-            text(expression.getValue().toString())
-        else
-            text("\"" + expression.getValue().toString() + "\"")
+    open fun printConstant(expression: Constant, nestSize: Int): PrimeDoc =
+            if (!expression.isStringValue())
+                text(expression.getValue().toString())
+            else
+                text("\"" + expression.getValue().toString() + "\"")
 
-    open fun printBinaryExpression(expression : BinaryExpression, nestSize : Int): PrimeDoc  {
+    open fun printBinaryExpression(expression: BinaryExpression, nestSize: Int): PrimeDoc {
         val l = expression.getLeft()
         val r = expression.getRight()
         val opPriority = expression.getPriority(getOperationPrinter())
-        val left = printExpressionCheckBrackets(l,opPriority,nestSize);
-        val right = printExpressionCheckBrackets(r,opPriority,expression.isAssociative(),nestSize);
+        val left = printExpressionCheckBrackets(l, opPriority, nestSize);
+        val right = printExpressionCheckBrackets(r, opPriority, expression.isAssociative(), nestSize);
         return group(left / (text(expression.getOperation(getOperationPrinter())) + right))
     }
 
-    open fun printUnaryExpression(expression : UnaryExpression, nestSize : Int): PrimeDoc {
+    open fun printUnaryExpression(expression: UnaryExpression, nestSize: Int): PrimeDoc {
         val opPriority = expression.getPriority(getOperationPrinter())
         val operand = expression.getOperand()
-        val expr = printExpressionCheckBrackets(operand,opPriority,nestSize);
+        val expr = printExpressionCheckBrackets(operand, opPriority, nestSize);
         return text(expression.getOperation(getOperationPrinter())) + expr
     }
 
-    open fun printField(expression : Field, nestSize : Int): PrimeDoc {
+    open fun printField(expression: Field, nestSize: Int): PrimeDoc {
+
         val owner = expression.getOwner()
         val ownerName = if (owner != null) printInstance(owner, nestSize) else text(expression.getStaticOwnerName() + ".")
-        return ownerName + text(expression.getName())
+        return ownerName + printExpression(expression.getName(),nestSize)
     }
 
-    open fun printVariable(expression : Variable, nestSize : Int): PrimeDoc {
-        if (expression.getArrayIndex() == null)
-            return text(printVariableName(expression.getName()))
+    open fun printVariable(expression: Variable, nestSize: Int): PrimeDoc {
+        return printExpression(expression.getName(),nestSize)
+        /*if (expression.getArrayIndex() == null)
+            return printExpression(expression.getName(),nestSize)
         else {
             return group(printExpression(expression.getArrayVariable(), nestSize)
-                    + text("[") + printExpression(expression.getArrayIndex(), nestSize) + text("]")
+            + text("[") + printExpression(expression.getArrayIndex(), nestSize) + text("]")
             )
-        }
+        }*/
     }
 
-    open fun printInvocationExpression(expression : com.sdc.ast.expressions.Invocation, nestSize : Int): PrimeDoc {
-        var funName : PrimeDoc = group(text(expression.getFunction()))
+    open fun printInvocationExpression(expression: com.sdc.ast.expressions.Invocation, nestSize: Int): PrimeDoc {
+        var funName: PrimeDoc = group(text(expression.getFunction()))
         if (expression is com.sdc.ast.expressions.InstanceInvocation) {
             funName = printInstance(expression.getInstance(), nestSize, expression.isNotNullCheckedCall()) + funName
         }
         return funName + printInvocationArguments(expression.getArguments(), nestSize)
     }
 
-    open fun printNew(expression : com.sdc.ast.expressions.New, nestSize : Int): PrimeDoc =
+    open fun printNew(expression: com.sdc.ast.expressions.New, nestSize: Int): PrimeDoc =
             printNewOperator() + printExpression(expression.getConstructor(), nestSize)
 
-    open fun printNewArray(expression : NewArray, nestSize : Int): PrimeDoc {
+    open fun printNewArray(expression: NewArray, nestSize: Int): PrimeDoc {
         var newArray = group(text("new") + nest(nestSize, line() + text(expression.getType())))
         for (dimension in expression.getDimensions()!!.toList()) {
             newArray = group(newArray + text("[") + printExpression(dimension, nestSize) + text("]"))
         }
         return newArray
     }
+
 
     open fun printInstanceOf(expression : InstanceOf, nestSize : Int): PrimeDoc {
         if (!expression.isInverted()) {
@@ -195,21 +197,22 @@ abstract class AbstractPrinter {
     open fun printInvertedInstanceOf(expression : InstanceOf, nestSize : Int): PrimeDoc =
         printExpression(UnaryExpression(OperationType.NOT, expression.invert()), nestSize)
 
-    open fun printAnonymousClassExpression(expression : AnonymousClass, nestSize : Int): PrimeDoc =
+
+    open fun printAnonymousClassExpression(expression: AnonymousClass, nestSize: Int): PrimeDoc =
             printNewOperator() + printAnonymousClass(expression.getNestedClass(), expression.getConstructorArguments())
 
-    open fun printTernaryExpression(expression : TernaryExpression, nestSize : Int): PrimeDoc {
+    open fun printTernaryExpression(expression: TernaryExpression, nestSize: Int): PrimeDoc {
         val l = expression.getLeft()
         val r = expression.getRight()
-        var c=  expression.getCondition();
+        var c = expression.getCondition();
         val opPriority = expression.getPriority(getOperationPrinter())
-        val condition = printExpressionCheckBrackets(c,opPriority,nestSize);
-        val left = printExpressionCheckBrackets(l,opPriority,nestSize);
-        val right = printExpressionCheckBrackets(r,opPriority,nestSize);
-        return group(nest(nestSize, line() + text("(") + condition+text(") ? ") + left + text(" : ") + right))
+        val condition = printExpressionCheckBrackets(c, opPriority, nestSize);
+        val left = printExpressionCheckBrackets(l, opPriority, nestSize);
+        val right = printExpressionCheckBrackets(r, opPriority, nestSize);
+        return group(nest(nestSize, line() + text("(") + condition + text(") ? ") + left + text(" : ") + right))
     }
 
-    open fun printExprIncrement(expression : ExprIncrement, nestSize : Int): PrimeDoc {
+    open fun printExprIncrement(expression: ExprIncrement, nestSize: Int): PrimeDoc {
         val expr = expression.getVariable();
         val printExpr = printExpression(expr, nestSize)
         var myType = expression.getOperationType();
@@ -233,28 +236,44 @@ abstract class AbstractPrinter {
         }
     }
 
+    open fun printArrayLength(expression: ArrayLength, nestSize: Int): PrimeDoc {
+        val expr = expression.getOperand();
+        val priority = expression.getPriority(getOperationPrinter())
+        val printOperand = printExpressionCheckBrackets(expr, priority, nestSize)
+        return group(nest(nestSize, printOperand + text(expression.getOperation(getOperationPrinter()))))
+    }
 
-    open fun printAssignment(statement : Assignment, nestSize : Int): PrimeDoc =
+    open fun printSquareBrackets(expression: SquareBrackets, nestSize: Int): PrimeDoc {
+        val operand = expression.getOperand()
+        val index = expression.getIndex()
+        val priority = expression.getPriority(getOperationPrinter())
+        val isAssociative = expression.isAssociative();
+        val printOperand = printExpressionCheckBrackets(operand, priority,isAssociative, nestSize)
+        val printIndex = printExpression(index, nestSize)
+        return group(nest(nestSize, printOperand + text("[") + printIndex + text("]")))
+    }
+
+    open fun printAssignment(statement: Assignment, nestSize: Int): PrimeDoc =
             printExpression(statement.getLeft(), nestSize) + text(" = ") + printExpression(statement.getRight(), nestSize)
 
-    open fun printReturn(statement : Return, nestSize : Int): PrimeDoc {
-        var returnStatement : PrimeDoc = if (statement.needToPrintReturn()) text("return") else text("")
+    open fun printReturn(statement: Return, nestSize: Int): PrimeDoc {
+        var returnStatement: PrimeDoc = if (statement.needToPrintReturn()) text("return") else text("")
         if (statement.getReturnValue() != null)
             returnStatement = returnStatement + text(" ") + printExpression(statement.getReturnValue(), nestSize)
         return returnStatement
     }
 
-    open fun printThrow(statement : Throw, nestSize : Int): PrimeDoc =
+    open fun printThrow(statement: Throw, nestSize: Int): PrimeDoc =
             group(text("throw") + nest(nestSize, line()
             + printExpression(statement.getThrowObject(), nestSize)))
 
-    open fun printElementaryBlock(elementaryBlock : ElementaryBlock, nestSize : Int): PrimeDoc =
-        printStatements(elementaryBlock.getStatements(), nestSize)
+    open fun printElementaryBlock(elementaryBlock: ElementaryBlock, nestSize: Int): PrimeDoc =
+            printStatements(elementaryBlock.getStatements(), nestSize)
 
-    open fun printConditionalBlock(conditionalBlock : ConditionalBlock, nestSize : Int): PrimeDoc {
+    open fun printConditionalBlock(conditionalBlock: ConditionalBlock, nestSize: Int): PrimeDoc {
         val thenPart = printConstruction(conditionalBlock.getThenBlock(), nestSize)
 
-        var elsePart : PrimeDoc = nil()
+        var elsePart: PrimeDoc = nil()
         if (conditionalBlock.hasElseBlock()) {
             elsePart = text(" else {") + nest(nestSize, printConstruction(conditionalBlock.getElseBlock(), nestSize)) / text("}")
         }
@@ -262,32 +281,32 @@ abstract class AbstractPrinter {
         return text("if (") + printExpression(conditionalBlock.getCondition()?.invert(), nestSize) + text(") {") + nest(nestSize, thenPart) / text("}") + elsePart
     }
 
-    open fun printWhile(whileBlock : While, nestSize : Int): PrimeDoc {
+    open fun printWhile(whileBlock: While, nestSize: Int): PrimeDoc {
         val body = printConstruction(whileBlock.getBody(), nestSize)
         return text("while (") + printExpression(whileBlock.getCondition()?.invert(), nestSize) + text(") {") + nest(nestSize, body) / text("}")
     }
 
-    open fun printDoWhile(doWhileBlock : DoWhile, nestSize : Int): PrimeDoc {
+    open fun printDoWhile(doWhileBlock: DoWhile, nestSize: Int): PrimeDoc {
         val body = text("do {") + nest(nestSize, printConstruction(doWhileBlock.getBody(), nestSize)) / text("}")
         return body + text(" while (") + printExpression(doWhileBlock.getCondition(), nestSize) + text(")")
     }
 
-    open fun printFor(forBlock : For, nestSize : Int): PrimeDoc {
+    open fun printFor(forBlock: For, nestSize: Int): PrimeDoc {
         val body = printConstruction(forBlock.getBody(), nestSize)
         val initialization = printStatement(forBlock.getVariableInitialization(), nestSize)
         val afterThought = printStatement(forBlock.getAfterThought(), nestSize)
         return text("for (") + initialization + text(", ") + printExpression(forBlock.getCondition()?.invert(), nestSize) + text(", ") + afterThought + text(") {") + nest(nestSize, body) / text("}")
     }
 
-    open fun printForEach(forEachBlock : ForEach, nestSize : Int): PrimeDoc {
+    open fun printForEach(forEachBlock: ForEach, nestSize: Int): PrimeDoc {
         val body = printConstruction(forEachBlock.getBody(), nestSize)
         return text("for (") + printExpression(forEachBlock.getVariable(), nestSize) + text(" : ") + printExpression(forEachBlock.getContainer(), nestSize) + text(") {") + nest(nestSize, body) / text("}")
     }
 
-    open fun printTryCatch(tryCatchBlock : TryCatch, nestSize : Int): PrimeDoc {
+    open fun printTryCatch(tryCatchBlock: TryCatch, nestSize: Int): PrimeDoc {
         val body = printConstruction(tryCatchBlock.getTryBody(), nestSize)
 
-        var catchBlockCode : PrimeDoc = nil()
+        var catchBlockCode: PrimeDoc = nil()
         for ((variable, catchBody) in tryCatchBlock.getCatches()!!.entrySet()) {
             catchBlockCode = catchBlockCode / text("catch (") + printExpression(variable, nestSize) + text(") {") + nest(nestSize, printConstruction(catchBody, nestSize)) + text("}")
         }
@@ -301,8 +320,8 @@ abstract class AbstractPrinter {
         return text("try {") + nest(nestSize, body) / text("}") + catchBlockCode / finallyCode
     }
 
-    open fun printSwitchCase(switchCaseBlock : SwitchCase, nestSize : Int): PrimeDoc {
-        var caseKeysCode : PrimeDoc = nil()
+    open fun printSwitchCase(switchCaseBlock: SwitchCase, nestSize: Int): PrimeDoc {
+        var caseKeysCode: PrimeDoc = nil()
         for (key in switchCaseBlock.getKeys()!!.toArray()) {
             caseKeysCode = caseKeysCode / text((if (key == null) "default" else "case " + key) + ":")
         }
@@ -311,10 +330,10 @@ abstract class AbstractPrinter {
     }
 
 
-    open fun printSwitch(switchBlock : Switch, nestSize : Int): PrimeDoc {
-        var switchCode : PrimeDoc =  text("switch (") + printExpression(switchBlock.getCondition(), nestSize) + text(") {")
+    open fun printSwitch(switchBlock: Switch, nestSize: Int): PrimeDoc {
+        var switchCode: PrimeDoc = text("switch (") + printExpression(switchBlock.getCondition(), nestSize) + text(") {")
 
-        var casesCode : PrimeDoc = nil()
+        var casesCode: PrimeDoc = nil()
         for (switchCase in switchBlock.getCases()!!.toList()) {
             casesCode = casesCode + nest(nestSize, printConstruction(switchCase, nestSize))
         }
@@ -322,10 +341,10 @@ abstract class AbstractPrinter {
         return switchCode + casesCode / text("}")
     }
 
-    open fun printWhen(whenBlock : When, nestSize : Int): PrimeDoc {
-        var whenCode : PrimeDoc = text("when (") + printExpression(whenBlock.getCondition(), nestSize) + text(") {")
+    open fun printWhen(whenBlock: When, nestSize: Int): PrimeDoc {
+        var whenCode: PrimeDoc = text("when (") + printExpression(whenBlock.getCondition(), nestSize) + text(") {")
 
-        var keysCode : PrimeDoc = nil()
+        var keysCode: PrimeDoc = nil()
         for ((key, caseBody) in whenBlock.getCases()!!.entrySet()) {
             keysCode = keysCode / printExpression(key, nestSize) + text(" -> ") + nest(nestSize, printConstruction(caseBody, nestSize))
         }
@@ -340,13 +359,13 @@ abstract class AbstractPrinter {
         return whenCode + nest(nestSize, keysCode / defaultCaseCode) / text("}")
     }
 
-    open fun printInstance(instance : Expression?, nestSize : Int, isNotNullCheckedCall : Boolean = false): PrimeDoc {
-        var instanceName : PrimeDoc = nil()
-        if (instance is Variable) {
+    open fun printInstance(instance: Expression?, nestSize: Int, isNotNullCheckedCall : Boolean = false): PrimeDoc {
+        var instanceName: PrimeDoc = nil()
+        if (instance is Variable ) {
             var variableName = instance.getName()
-            if (!variableName.equals("this")) {
-                variableName =  printVariableName(variableName)
-                instanceName = text(variableName) + text(if (isNotNullCheckedCall) "!!." else ".")
+            if (!instance.isThis()) {
+                instanceName = printExpression(variableName, nestSize) + text(if (isNotNullCheckedCall) "!!." else ".")
+
             }
         } else {
             instanceName = printExpression(instance, nestSize) + text(if (isNotNullCheckedCall) "!!." else ".")
@@ -354,7 +373,7 @@ abstract class AbstractPrinter {
         return instanceName
     }
 
-    open fun printVariableName(variableName : String?): String? = variableName
+    open fun printVariableName(variableName: String?): String? = variableName
 
     open fun printStatementsDelimiter(): PrimeDoc = text(";")
 
@@ -363,7 +382,7 @@ abstract class AbstractPrinter {
     open fun printNewOperator(): PrimeDoc = text("new ")
 
     open fun printStatements(statements: List<Statement>?, nestSize: Int): PrimeDoc {
-        var body : PrimeDoc = nil()
+        var body: PrimeDoc = nil()
         if (statements != null && statements.size != 0)
             for (statement in statements)
                 body = body / printStatement(statement, nestSize) + printStatementsDelimiter()
@@ -396,7 +415,7 @@ abstract class AbstractPrinter {
     }
 
     open fun printExpressionWithBrackets(expression: Expression?, nestSize: Int): PrimeDoc =
-        text("(") + printExpression(expression, nestSize) + text(")")
+            text("(") + printExpression(expression, nestSize) + text(")")
 
     open fun printMethodParameters(method: AbstractMethod?): PrimeDoc {
         var arguments: PrimeDoc = nil()
@@ -423,19 +442,19 @@ abstract class AbstractPrinter {
         return arguments
     }
 
-    open fun printInvocationArguments(arguments : List<Expression>?, nestSize : Int): PrimeDoc =
-        if (arguments!!.isEmpty())
-            text("()")
-        else {
-            var argsDocs = arguments.take(arguments.size - 1)
-                    .map { arg -> printExpression(arg, nestSize) + text(", ") }
-            var argumentsCode : PrimeDoc = nest(2 * nestSize, fill(argsDocs + printExpression(arguments.last, nestSize)))
+    open fun printInvocationArguments(arguments: List<Expression>?, nestSize: Int): PrimeDoc =
+            if (arguments!!.isEmpty())
+                text("()")
+            else {
+                var argsDocs = arguments.take(arguments.size - 1)
+                        .map { arg -> printExpression(arg, nestSize) + text(", ") }
+                var argumentsCode: PrimeDoc = nest(2 * nestSize, fill(argsDocs + printExpression(arguments.last, nestSize)))
 
-            text("(") + argumentsCode + text(")")
-        }
+                text("(") + argumentsCode + text(")")
+            }
 
-    open fun printGenerics(genericsDeclaration : List<String>?): PrimeDoc {
-        var generics : PrimeDoc = nil()
+    open fun printGenerics(genericsDeclaration: List<String>?): PrimeDoc {
+        var generics: PrimeDoc = nil()
         if (!genericsDeclaration!!.isEmpty()) {
             generics = group(generics + text("<"))
             var oneType = true
@@ -450,54 +469,54 @@ abstract class AbstractPrinter {
         return generics
     }
 
-    open fun printClasses(decompiledClasses : List<AbstractClass>?): PrimeDoc {
-        var innerClassesCode : PrimeDoc = nil()
+    open fun printClasses(decompiledClasses: List<AbstractClass>?): PrimeDoc {
+        var innerClassesCode: PrimeDoc = nil()
         for (innerClass in decompiledClasses!!.toList()) {
             innerClassesCode = innerClassesCode / printClass(innerClass)
         }
         return innerClassesCode
     }
 
-    open fun printClassBodyInnerClasses(decompiledClass : AbstractClass): PrimeDoc {
+    open fun printClassBodyInnerClasses(decompiledClass: AbstractClass): PrimeDoc {
         val errorClasses = decompiledClass.getInnerClassesErrors()
-        var errorClassesCode : PrimeDoc = nil()
+        var errorClassesCode: PrimeDoc = nil()
         for ((className, error) in errorClasses)
             errorClassesCode = errorClassesCode / text("// Error occurred while decompiling class " + className + ": " + error.getMessage())
 
         return errorClassesCode + printClasses(decompiledClass.getClassBodyInnerClasses())
     }
 
-    open fun printMethodInnerClasses(decompiledClass : AbstractClass?, methodName : String?, descriptor : String?): PrimeDoc {
+    open fun printMethodInnerClasses(decompiledClass: AbstractClass?, methodName: String?, descriptor: String?): PrimeDoc {
         return printClasses(decompiledClass!!.getMethodInnerClasses(methodName, descriptor))
     }
 
-    open fun printPackageAndImports(decompiledClass : AbstractClass?): PrimeDoc =
-        if (!decompiledClass!!.isNestedClass()) {
-            val packageCode = text("package " + decompiledClass.getPackage() + ";") + line()
-            var imports = group(nil())
-            for (importName in decompiledClass.getImports()!!.toArray())
-                imports = group(imports + text("import " + importName + ";") + line())
-            packageCode + imports
-        } else {
-            nil()
-        }
+    open fun printPackageAndImports(decompiledClass: AbstractClass?): PrimeDoc =
+            if (!decompiledClass!!.isNestedClass()) {
+                val packageCode = text("package " + decompiledClass.getPackage() + ";") + line()
+                var imports = group(nil())
+                for (importName in decompiledClass.getImports()!!.toArray())
+                    imports = group(imports + text("import " + importName + ";") + line())
+                packageCode + imports
+            } else {
+                nil()
+            }
 
-    open fun printAnonymousClass(anonymousClass : AbstractClass?, arguments : List<Expression>?): PrimeDoc {
+    open fun printAnonymousClass(anonymousClass: AbstractClass?, arguments: List<Expression>?): PrimeDoc {
         val superClassName = anonymousClass!!.getSuperClass()
         val declaration =
                 if (superClassName!!.isEmpty()) {
                     val implementedInterfaces = anonymousClass.getImplementedInterfaces()
                     val declaration =
-                        if (implementedInterfaces!!.isEmpty())
-                            printBaseClass()
-                        else
-                            text(implementedInterfaces.get(0))
+                            if (implementedInterfaces!!.isEmpty())
+                                printBaseClass()
+                            else
+                                text(implementedInterfaces.get(0))
                     declaration + text("() {")
                 } else {
                     text(superClassName) + printInvocationArguments(arguments, anonymousClass.getNestSize())
                 }
 
-        var anonClassCode : PrimeDoc = declaration + nest(anonymousClass.getNestSize(), printClassBodyInnerClasses(anonymousClass))
+        var anonClassCode: PrimeDoc = declaration + nest(anonymousClass.getNestSize(), printClassBodyInnerClasses(anonymousClass))
 
         for (classField in anonymousClass.getFields()!!.toList())
             anonClassCode = anonClassCode + nest(anonymousClass.getNestSize(), line() + printField(classField))
@@ -508,7 +527,7 @@ abstract class AbstractPrinter {
         return anonClassCode / text("}")
     }
 
-    open fun printMethodError(decompiledMethod : AbstractMethod?): PrimeDoc {
+    open fun printMethodError(decompiledMethod: AbstractMethod?): PrimeDoc {
         val error = decompiledMethod!!.getError()
         return if (error != null) line() + text("// " + error.getErrorLocation() + ": " + error.getException()!!.getMessage()) else nil()
     }
