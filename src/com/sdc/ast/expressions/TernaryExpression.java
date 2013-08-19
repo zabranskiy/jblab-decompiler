@@ -19,7 +19,7 @@ public class TernaryExpression extends PriorityExpression {
         this.myLeft = myLeft;
         this.myRight = myRight;
         setDoubleLength(myLeft.hasDoubleLength() || myRight.hasDoubleLength());
-        myType= OperationType.TERNARY_IF;
+        myType = OperationType.TERNARY_IF;
     }
 
     public Expression getLeft() {

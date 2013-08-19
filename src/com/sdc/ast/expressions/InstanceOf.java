@@ -1,16 +1,19 @@
 package com.sdc.ast.expressions;
 
-public class InstanceOf extends Expression {
-    private final String myType;
+import com.sdc.ast.OperationType;
+
+public class InstanceOf extends PriorityExpression {
+    private final String myInstanceOfType;
     private final Expression myArgument;
 
     public InstanceOf(final String type, final Expression argument) {
-        this.myType = type;
+        this.myInstanceOfType = type;
         this.myArgument = argument;
+        myType = OperationType.INSTANCEOF;
     }
 
     public String getType() {
-        return myType;
+        return myInstanceOfType;
     }
 
     public Expression getArgument() {

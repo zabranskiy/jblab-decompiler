@@ -14,7 +14,7 @@ public class NewArray extends PriorityExpression {
         this.myArrayType = type;
         this.myDimensions = dimensions;
         setDoubleLength(false);
-        myType= OperationType.NEWARRAY;
+        myType = OperationType.NEWARRAY;
     }
 
     public List<Expression> getDimensions() {
@@ -26,7 +26,7 @@ public class NewArray extends PriorityExpression {
     }
 
     public String getFullType() {
-        StringBuilder result= new StringBuilder(myArrayType);
+        StringBuilder result = new StringBuilder(myArrayType);
         for (int i = 0; i < myDimensionsCount; i++) {
             result.append("[]");
         }

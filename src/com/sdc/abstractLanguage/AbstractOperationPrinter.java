@@ -171,7 +171,9 @@ public abstract class AbstractOperationPrinter {
     }
 
     public int getPriority(OperationType type) {
-        if (type == ARRAYLENGTH) {
+        if (type == VARIABLE || type == FIELD || type == CONST) {
+            return 0;
+        }  else if (type == SQUARE_BRACKETS || type == ARRAYLENGTH || type == INVOCATION) {
             return 1;
         } else if (type == NOT || type == NEGATE || type == DEC || type == INC || type == DEC_REV || type == INC_REV
                 || type == INT_CAST || type == DOUBLE_CAST || type == LONG_CAST || type == SHORT_CAST
@@ -183,11 +185,11 @@ public abstract class AbstractOperationPrinter {
             return 4;
         } else if (type == SHL || type == SHR || type == USHR) {
             return 5;
-        } else if (type == GE || type == LE || type == LT || type == GT) {
+        } else if (type == GE || type == LE || type == LT || type == GT || type == INSTANCEOF) {
             return 6;
         } else if (type == EQ || type == NE) {
             return 7;
-        }  else if (type == BITWISE_AND) {
+        } else if (type == BITWISE_AND) {
             return 8;
         } else if (type == BITWISE_XOR) {
             return 9;
@@ -201,7 +203,7 @@ public abstract class AbstractOperationPrinter {
             return 13;
         } else if (type == MUL_INC || type == DIV_INC || type == REM_INC || type == ADD_INC || type == SUB_INC) {
             return 14;
-        } if (type == NEWARRAY) {
+        } else if (type == NEWARRAY || type == NEW) {
             return 15;
         }
         return 100;

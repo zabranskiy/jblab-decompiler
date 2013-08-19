@@ -105,8 +105,8 @@ public class BinaryExpression extends PriorityExpression {
     }
 
     private void invertOperands() {
-        myLeft=myLeft.invert();
-        myRight=myRight.invert();
+        myLeft = myLeft.invert();
+        myRight = myRight.invert();
     }
 
     @Override
@@ -121,7 +121,8 @@ public class BinaryExpression extends PriorityExpression {
     public boolean isArithmeticType() {
         return myType == ADD || myType == SUB || myType == MUL || myType == DIV || myType == REM;
     }
+
     public boolean isLogicType() {
-        return myType == EQ || myType == NE || myType == GE || myType == LE || myType == LT || myType == GT || myType==AND || myType==OR;
+        return myType == EQ || myType == NE || myType == GE || myType == LE || myType == LT || myType == GT || myType == AND || myType == OR;
     }
 }

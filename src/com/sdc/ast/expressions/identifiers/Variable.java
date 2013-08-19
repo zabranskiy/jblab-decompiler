@@ -1,58 +1,31 @@
 package com.sdc.ast.expressions.identifiers;
 
+import com.sdc.ast.OperationType;
+import com.sdc.ast.expressions.Constant;
 import com.sdc.ast.expressions.Expression;
 import com.sdc.abstractLanguage.AbstractFrame;
 
 public class Variable extends Identifier {
     private final int myIndex;
     private final AbstractFrame myAbstractFrame;
-
-    private final Expression myArrayIndex;
-    private final Identifier myArrayVariable;
+    private Expression name;
 
     public Variable(final int index, final AbstractFrame abstractFrame) {
         this.myIndex = index;
         this.myAbstractFrame = abstractFrame;
-        this.myArrayIndex = null;
-        this.myArrayVariable = null;
-    }
+        myType = OperationType.VARIABLE;
 
-    public Variable(final Expression arrayIndex, final Identifier arrayVariable) {
-        this.myIndex = -1;
-        this.myAbstractFrame = null;
-        this.myArrayIndex = arrayIndex;
-        this.myArrayVariable = arrayVariable;
     }
 
     @Override
-    public String getName() {
-        if (myIndex != -1) {
-            return myAbstractFrame.getLocalVariableName(myIndex);
-        } else {
-            return myArrayVariable.getName();
-        }
+    public Expression getName() {
+        if(name == null) name = new Constant(myAbstractFrame.getLocalVariableName(myIndex), false);
+        return name;
     }
 
     @Override
     public String getType() {
-        if (myIndex != -1) {
-            return myAbstractFrame.getLocalVariableType(myIndex);
-        } else {
-            String result = myArrayVariable.getType();
-            if (result.endsWith("[] ")) {
-                result = result.substring(0, result.length() - 3);
-            }
-
-            return result + " ";
-        }
-    }
-
-    public Expression getArrayIndex() {
-        return myArrayIndex;
-    }
-
-    public Identifier getArrayVariable() {
-        return myArrayVariable;
+        return myAbstractFrame.getLocalVariableType(myIndex);
     }
 
     public int getIndex() {
@@ -65,7 +38,7 @@ public class Variable extends Identifier {
 
     @Override
     public String toString() {
-        String name;
+        Expression name;
         try {
             name = getName();
         } catch (NullPointerException e) {
@@ -74,5 +47,9 @@ public class Variable extends Identifier {
         return "Variable{" +
                 "myIndex=" + myIndex +
                 ", name=" + (name != null ? name : " no name yet") + "}";
+    }
+
+    public boolean isThis(){
+        return getName() instanceof Constant && ((Constant) getName()).isThis();
     }
 }
