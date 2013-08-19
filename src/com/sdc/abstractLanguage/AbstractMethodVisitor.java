@@ -123,7 +123,13 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
     public void visitFrame(final int type, final int nLocal, final Object[] local, final int nStack, final Object[] stack) {
         if (type == 2) {
             // F_CHOP
-            myDecompiledMethod.setCurrentFrame(getCurrentFrame().getParent());
+            AbstractFrame newAbstractFrame = myLanguagePartFactory.createFrame();
+
+            getCurrentFrame().getParent().addChild(newAbstractFrame);
+            getCurrentFrame().getParent().setChopFrame(newAbstractFrame);
+            newAbstractFrame.setChopFrame(getCurrentFrame().getParent());
+
+            myDecompiledMethod.setCurrentFrame(newAbstractFrame);
         } else if (type == 3) {
             // F_SAME
             AbstractFrame newAbstractFrame = myLanguagePartFactory.createFrame();
@@ -441,7 +447,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                     myBodyStack.push(new Variable(var, getCurrentFrame()));
                 }
             }
-        } else if (opString.contains("STORE") && !currentFrameHasStack) {
+        } else if (opString.contains("STORE")) {
             Identifier v = new Variable(var, getCurrentFrame());
             final Expression expr = getTopOfBodyStack();
             myStatements.add(new Assignment(v, expr));
@@ -535,7 +541,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
     @Override
     public void visitFieldInsn(final int opcode, final String owner, final String name, final String desc) {
         final String opString = Printer.OPCODES[opcode];
-        final String fieldName = myDecompiledMethod.getDecompiledClass().isLambdaFunctionClass() ? name.substring(1) : name;
+        final String fieldName = myDecompiledMethod.getDecompiledClass().isLambdaFunctionClass() && name.startsWith("$") ? name.substring(1) : name;
         Field field = new Field(fieldName, getDescriptor(desc, 0, myDecompiledMethod.getImports()));
 
         Expression e = null;
@@ -611,40 +617,53 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         if (opString.contains("IF")) {
             final Label myLastIFLabel = label;
             if (myNodes.isEmpty() || !myNodeInnerLabels.isEmpty() || (myNodes.get(getLeftEmptyNodeIndex() - 1).getCondition() == null)) {
-
-
                 for (Node node : myNodes) {
-                    if (node.getInnerLabels().contains(label)) {
+                    if (!(node instanceof DoWhile) && node.getInnerLabels().contains(label)) {
                         myMap2.put(myNodes.size(), label);
                         int index = node.getInnerLabels().indexOf(label);
-                        DoWhile dw = new DoWhile(new ArrayList<Statement>(myStatements), new ArrayList<Label>(myNodeInnerLabels), myNodes.size());
-                        myNodes.add(dw);
-                        myNodeInnerLabels.clear();
-                        myStatements.clear();
-
+                        DoWhile dw = new DoWhile(null, new ArrayList<Label>(myNodeInnerLabels), myNodes.size());
                         dw.setStatements(new ArrayList<Statement>(node.getStatements().subList(0, index)));
                         dw.getInnerLabels().addAll(new ArrayList<Label>(node.getInnerLabels().subList(0, index)));
-                        Expression e1 = getTopOfBodyStack();
-                        Expression e2 = getTopOfBodyStack();
-                        Expression cond = new BinaryExpression(OperationType.valueOf(opString.substring(7)), e2, e1);
-                        dw.setCondition(cond);
+                        dw.setCondition(getConditionFromStack(opString));
                         dw.setEmpty(true);
+                        myNodes.add(dw);
 
                         node.setStatements(new ArrayList<Statement>(node.getStatements().subList(index, node.getStatements().size())));
                         node.setInnerLabels(new ArrayList<Label>(node.getInnerLabels().subList(index, node.getInnerLabels().size())));
+                        myNodeInnerLabels.clear();
                         return;
                     }
                 }
+                if (myNodeInnerLabels.contains(label)) {
+                    int index = myNodeInnerLabels.indexOf(label);
+                    Node beforeNode = new Node(null, null, myNodes.size());
+                    beforeNode.setStatements(new ArrayList<Statement>(myStatements.subList(0, index)));
+                    beforeNode.setInnerLabels(new ArrayList<Label>(myNodeInnerLabels.subList(0, index)));
+                    beforeNode.setEmpty(true);
+                    myNodes.add(beforeNode);
 
+                    Node innerNode = new Node(null, null, myNodes.size());
+                    innerNode.setStatements(new ArrayList<Statement>(myStatements.subList(index, myStatements.size())));
+                    innerNode.setInnerLabels(new ArrayList<Label>(myNodeInnerLabels.subList(index, myNodeInnerLabels.size())));
+                    innerNode.setEmpty(true);
+                    myNodes.add(innerNode);
 
+                    myMap2.put(myNodes.size(), label);
+
+                    DoWhile dw = new DoWhile(new ArrayList<Statement>(), new ArrayList<Label>(), myNodes.size());
+                    dw.setCondition(getConditionFromStack(opString));
+                    dw.setEmpty(true);
+                    myNodes.add(dw);
+
+                    myStatements.clear();
+                    myNodeInnerLabels.clear();
+                    return;
+                }
                 myLabels.add(myLastIFLabel);
                 myMap2.put(myNodes.size(), label);
                 applyNode();
                 final int last = myNodes.size() - 1;
-                Expression e1 = getTopOfBodyStack();
-                Expression e2 = getTopOfBodyStack();
-                Expression cond = new BinaryExpression(OperationType.valueOf(opString.substring(7)), e2, e1);
-                myNodes.get(last).setCondition(cond);
+                myNodes.get(last).setCondition(getConditionFromStack(opString));
                 myNodes.get(last).setEmpty(true);
             }
         } else if (opString.contains("GOTO")) {
@@ -777,12 +796,24 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         applyNode();
 
         placeEdges();
+//        printDebugInfo();
 
         DominatorTreeGenerator gen = new DominatorTreeGenerator(myNodes);
-        ConstructionBuilder cb = new ConstructionBuilder(myNodes, gen);
+        ConstructionBuilder cb = createConstructionBuilder(myNodes, gen);
 
         myDecompiledMethod.setBegin(cb.build());
     }
+
+    private void printDebugInfo() {
+        for (Node node : myNodes) {
+            System.out.print(node.getIndex() + ": ");
+            for (Node tail : node.getListOfTails()) {
+                System.out.print(tail.getIndex() + " ");
+            }
+            System.out.println();
+        }
+    }
+
 
     private void placeEdges() {
         // GOTO
@@ -829,6 +860,23 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         }
     }
 
+    private Expression getConditionFromStack(final String opString) {
+        if (opString.contains("IF_")) {
+            Expression e1 = getTopOfBodyStack();
+            Expression e2 = getTopOfBodyStack();
+            return new BinaryExpression(OperationType.valueOf(opString.substring(7)), e2, e1);
+        } else {
+            Expression e = getTopOfBodyStack();
+            if (opString.contains("NONNULL")) {
+                return new BinaryExpression(OperationType.NE, e, new Constant("null", false));
+            } else if (opString.contains("NULL")) {
+                return new BinaryExpression(OperationType.EQ, e, new Constant("null", false));
+            } else {
+                return new BinaryExpression(OperationType.valueOf(opString.substring(2)), e, new Constant(0, false));
+            }
+        }
+    }
+
     protected Integer getLeftEmptyNodeIndex() {
         for (Node node : myNodes) {
             if (node.statementsIsEmpty() && !node.isEmpty()) {
@@ -855,6 +903,10 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         }
         myNodeInnerLabels.clear();
         myStatements.clear();
+    }
+
+    protected ConstructionBuilder createConstructionBuilder(final List<Node> myNodes, final DominatorTreeGenerator gen) {
+        return new ConstructionBuilder(myNodes, gen);
     }
 
     protected Expression getTopOfBodyStack() {

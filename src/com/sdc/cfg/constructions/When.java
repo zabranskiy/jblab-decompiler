@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class When extends Construction {
-    private final Expression myCondition;
+    private Expression myCondition;
     private Map<Expression, Construction> myCases = new HashMap<Expression, Construction>();
     private Construction myDefaultCase;
 
@@ -40,5 +40,9 @@ public class When extends Construction {
 
     public boolean hasEmptyDefaultCase() {
         return myDefaultCase == null;
+    }
+
+    public void setCondition(final Expression condition) {
+        this.myCondition = condition;
     }
 }
