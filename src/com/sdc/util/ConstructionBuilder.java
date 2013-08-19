@@ -212,7 +212,7 @@ public class ConstructionBuilder {
                     }
                     com.sdc.cfg.constructions.While whileConstruction = new com.sdc.cfg.constructions.While(node.getCondition());
                     whileConstruction.setBody(createConstructionBuilder(myNodes.subList(getRelativeIndex(node.getListOfTails().get(0)), getRelativeIndex(gen.getRightIndexForLoop(node.getIndex()))), gen).build());
-                    if (node.getNextNode() != null && getRelativeIndex(node.getNextNode()) < size) {
+                    if (node.getNextNode() != null && checkForIndexOutOfBound(node.getNextNode())) {
                         extractNextConstruction(whileConstruction, node);
                     }
                     return whileConstruction;
@@ -241,9 +241,9 @@ public class ConstructionBuilder {
                 if (node.getNextNode() == null) {
                     if (hasElse(rightNode)) {
                         if (rightNode.getIndex() <= myNodes.get(size - 1).getIndex()) {
-                            node.setNextNode(rightNode);
+                            node.setNextNode(checkForIndexOutOfBound(rightNode) ? rightNode : null);
                         }
-                        conditionalBlock.setThenBlock(createConstructionBuilder(myNodes.subList(getRelativeIndex(leftNode), rightIndex > size ? size : rightIndex), gen).build());
+                        conditionalBlock.setThenBlock(createConstructionBuilder(myNodes.subList(getRelativeIndex(leftNode), checkForIndexOutOfBound(rightNode) ? rightIndex : size), gen).build());
                     } else {
                         conditionalBlock.setThenBlock(createConstructionBuilder(myNodes.subList(getRelativeIndex(leftNode), rightIndex), gen).build());
                         conditionalBlock.setElseBlock(createConstructionBuilder(myNodes.subList(getRelativeIndex(rightNode), size), gen).build());
@@ -272,7 +272,7 @@ public class ConstructionBuilder {
             }
         }
 
-        return count > 1;
+        return count <= 1;
     }
 
     private int getRelativeIndex(Node node) {

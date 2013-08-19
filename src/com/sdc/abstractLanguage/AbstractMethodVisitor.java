@@ -615,7 +615,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             final Label myLastIFLabel = label;
             if (myNodes.isEmpty() || !myNodeInnerLabels.isEmpty() || (myNodes.get(getLeftEmptyNodeIndex() - 1).getCondition() == null)) {
                 for (Node node : myNodes) {
-                    if (!(node instanceof DoWhile) && node.getInnerLabels().contains(label)) {
+                    if (!(node instanceof DoWhile) && node.getInnerLabels().contains(label) && myNodes.get(myNodes.size() - 1).getCondition() == null) {
                         myMap2.put(myNodes.size(), label);
                         int index = node.getInnerLabels().indexOf(label);
                         DoWhile dw = new DoWhile(null, new ArrayList<Label>(myNodeInnerLabels), myNodes.size());
