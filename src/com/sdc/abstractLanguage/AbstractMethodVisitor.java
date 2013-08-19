@@ -123,7 +123,13 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
     public void visitFrame(final int type, final int nLocal, final Object[] local, final int nStack, final Object[] stack) {
         if (type == 2) {
             // F_CHOP
-            myDecompiledMethod.setCurrentFrame(getCurrentFrame().getParent());
+            AbstractFrame newAbstractFrame = myLanguagePartFactory.createFrame();
+
+            getCurrentFrame().getParent().addChild(newAbstractFrame);
+            getCurrentFrame().getParent().setChopFrame(newAbstractFrame);
+            newAbstractFrame.setChopFrame(getCurrentFrame().getParent());
+
+            myDecompiledMethod.setCurrentFrame(newAbstractFrame);
         } else if (type == 3) {
             // F_SAME
             AbstractFrame newAbstractFrame = myLanguagePartFactory.createFrame();
