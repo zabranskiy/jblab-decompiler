@@ -134,7 +134,7 @@ public class ExprIncrement extends PriorityExpression {
                 '}';
     }
 
-    public String getVariableName() {
+    public Expression getVariableName() {
         return myVariable.getName();
     }
 }

@@ -175,7 +175,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 || opString.contains("MUL") || opString.contains("DIV") || opString.contains("REM")
                 || opString.contains("USHR") || opString.contains("SHL")
                 || opString.contains("XOR") || opString.contains("SHR")
-                || opString.contains("OR") || opString.contains("AND")) {
+                || opString.contains("IOR") || opString.contains("LOR") || opString.contains("AND")) {
             Expression e1 = getTopOfBodyStack();
             Expression e2 = getTopOfBodyStack();
             String type = opString.substring(1);
@@ -364,13 +364,13 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             }
         } else if (opString.contains("ALOAD")) {
             final Expression arrayIndex = getTopOfBodyStack();
-            myBodyStack.push(new Variable(arrayIndex, (Identifier) getTopOfBodyStack()));
+            Expression ref = getTopOfBodyStack();
+            myBodyStack.push(new SquareBrackets(ref ,arrayIndex));
         } else if (opString.contains("ASTORE")) {
             final Expression expr = getTopOfBodyStack();
             final Expression arrayIndex = getTopOfBodyStack();
-            final Identifier v = new Variable(arrayIndex, (Identifier) getTopOfBodyStack());
-
-            myStatements.add(new Assignment(v, expr));
+            Expression ref = getTopOfBodyStack();
+            myStatements.add(new Assignment(new SquareBrackets(ref, arrayIndex), expr));
         } else if (opString.equals("NOP")) {
             //do nothing
         } else if ((opString.contains("I2L") || opString.contains("F2L") || opString.contains("D2L")) && !myBodyStack.empty()) {
@@ -387,6 +387,9 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             myBodyStack.push(new UnaryExpression(CHAR_CAST, getTopOfBodyStack()));
         } else if ((opString.contains("I2S")) && !myBodyStack.isEmpty()) {
             myBodyStack.push(new UnaryExpression(SHORT_CAST, getTopOfBodyStack()));
+        } else if (opString.contains("ARRAYLENGTH")) {
+            Expression e = getTopOfBodyStack();
+            myBodyStack.push(new ArrayLength(e));
         }
         // All opcodes :
         //  +NOP, +ACONST_NULL, +ICONST_M1, +CONST_0, +ICONST_1, +ICONST_2, +ICONST_3, +ICONST_4, +ICONST_5,
@@ -942,7 +945,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
     protected boolean isThisVariableOnTopOfStack() {
         return myDecompiledMethod.isNormalClassMethod() && !myBodyStack.isEmpty()
-                && myBodyStack.peek() instanceof Variable && ((Variable) myBodyStack.peek()).getName().equals("this");
+                && myBodyStack.peek() instanceof Variable && ((Variable) myBodyStack.peek()).isThis();
     }
 
     protected void replaceInvocationsFromExpressionsToStatements() {

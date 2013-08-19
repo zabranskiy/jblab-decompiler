@@ -7,7 +7,7 @@ import static com.sdc.ast.OperationType.*;
 
 public class UnaryExpression extends PriorityExpression {
     protected Expression myOperand;
-    private String myParam="";     // for CHECK_CAST
+    private String myParam = "";     // for CHECK_CAST
 
     public UnaryExpression(final OperationType type, final Expression operand) {
         this.myType = type;
@@ -20,7 +20,7 @@ public class UnaryExpression extends PriorityExpression {
     }
 
     public UnaryExpression(final OperationType type, final Expression operand, String myParam) {
-        this(type,operand);
+        this(type, operand);
         this.myParam = myParam;
     }
 
@@ -61,9 +61,9 @@ public class UnaryExpression extends PriorityExpression {
 
     @Override
     public Expression invert() {
-        switch (myType){
+        switch (myType) {
             case NOT:
-                myOperand =  myOperand.invert();
+                myOperand = myOperand.invert();
                 break;
             default:
                 return super.invert();
@@ -75,7 +75,7 @@ public class UnaryExpression extends PriorityExpression {
     @Override
     public String toString() {
         return "UnaryExpression{" +
-                "myType="+myType+
+                "myType=" + myType +
                 ", myOperand=" + myOperand +
                 '}';
     }

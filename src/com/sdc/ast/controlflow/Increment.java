@@ -26,7 +26,7 @@ public class Increment extends Statement implements ExpressionWrapper {
     }
 
 
-    public String getName() {
+    public Expression getName() {
         return myExprIncrement.getVariableName();
     }
 

@@ -1,16 +1,19 @@
 package com.sdc.ast.expressions.identifiers;
 
+import com.sdc.ast.OperationType;
+import com.sdc.ast.expressions.Constant;
 import com.sdc.ast.expressions.Expression;
 
 public class Field extends Identifier {
     private final String myName;
-    private final String myType;
+    private final String myIdentifierType;
     private String myStaticOwnerName;
     private Expression myOwner;
 
     public Field(final String name, final String type) {
         this.myName = name;
-        this.myType = type;
+        this.myIdentifierType = type;
+        myType = OperationType.FIELD;
     }
 
     public void setStaticOwnerName(final String staticOwnerName) {
@@ -30,12 +33,12 @@ public class Field extends Identifier {
     }
 
     @Override
-    public String getName() {
-        return myName;
+    public Expression getName() {
+        return new Constant(myName, false);
     }
 
     @Override
     public String getType() {
-        return myType;
+        return myIdentifierType;
     }
 }

@@ -15,7 +15,7 @@ public abstract class Expression {
         this.hasDoubleLength = hasDoubleLength;
     }
 
-    public Expression invert(){
-        return new UnaryExpression(NOT,this);
+    public Expression invert() {
+        return new UnaryExpression(NOT, this);
     }
 }
