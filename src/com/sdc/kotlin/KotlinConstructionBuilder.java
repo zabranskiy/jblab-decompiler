@@ -1,16 +1,18 @@
 package com.sdc.kotlin;
 
+import com.sdc.ast.OperationType;
 import com.sdc.ast.controlflow.Assignment;
 import com.sdc.ast.controlflow.InstanceInvocation;
 import com.sdc.ast.controlflow.Invocation;
 import com.sdc.ast.controlflow.Statement;
-import com.sdc.ast.expressions.BinaryExpression;
-import com.sdc.ast.expressions.Expression;
-import com.sdc.ast.expressions.identifiers.Variable;
 import com.sdc.cfg.constructions.ConditionalBlock;
 import com.sdc.cfg.constructions.Construction;
 import com.sdc.cfg.constructions.ElementaryBlock;
 import com.sdc.cfg.constructions.When;
+import com.sdc.ast.expressions.BinaryExpression;
+import com.sdc.ast.expressions.Expression;
+import com.sdc.ast.expressions.InstanceOf;
+import com.sdc.ast.expressions.identifiers.Variable;
 import com.sdc.cfg.nodes.Node;
 import com.sdc.util.ConstructionBuilder;
 import com.sdc.util.DominatorTreeGenerator;
@@ -32,7 +34,7 @@ public class KotlinConstructionBuilder extends ConstructionBuilder {
         Construction generalConstruction = super.build();
 
         extractNullSafeFunctionCall(generalConstruction);
-//        extractWhen(generalConstruction);
+        extractWhen(generalConstruction);
 
         return generalConstruction;
     }
@@ -130,6 +132,30 @@ public class KotlinConstructionBuilder extends ConstructionBuilder {
                         result = new When(null);
                         result.addCase(conditionAsBinaryExpression.getRight(), whenCondition.getThenBlock());
                         result.setDefaultCase(whenCondition.getElseBlock());
+                    }
+                }
+            } else if (conditionAsBinaryExpression.getLeft() instanceof InstanceOf) {
+                final InstanceOf instanceOfCondition = (InstanceOf) conditionAsBinaryExpression.getLeft();
+
+                if (instanceOfCondition.getArgument() instanceof Variable) {
+                    final Variable conditionVariable = (Variable) instanceOfCondition.getArgument();
+
+                    if (conditionVariable.getIndex() == variableIndex && whenCondition.getElseBlock() instanceof ElementaryBlock) {
+                        result = extractWhen(whenCondition.getElseBlock().getNextConstruction(), variableIndex);
+
+                        final Expression caseCondition = new InstanceOf(instanceOfCondition.getType());
+
+                        if (conditionAsBinaryExpression.getOperationType() == OperationType.NE) {
+                            caseCondition.invert();
+                        }
+
+                        if (result != null) {
+                            result.addCase(caseCondition, whenCondition.getThenBlock());
+                        } else {
+                            result = new When(null);
+                            result.addCase(caseCondition, whenCondition.getThenBlock());
+                            result.setDefaultCase(whenCondition.getElseBlock());
+                        }
                     }
                 }
             }
