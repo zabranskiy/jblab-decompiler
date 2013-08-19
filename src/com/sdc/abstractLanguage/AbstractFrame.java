@@ -17,6 +17,7 @@ public abstract class AbstractFrame {
     protected AbstractFrame myParent = null;
     protected List<AbstractFrame> myChildren = new ArrayList<AbstractFrame>();
     protected AbstractFrame mySameAbstractFrame = null;
+    protected AbstractFrame myChopAbstractFrame = null;
 
     protected abstract String getVariableNameForDeclaration(final int index);
 
@@ -46,6 +47,10 @@ public abstract class AbstractFrame {
 
     public void setSameFrame(final AbstractFrame sameAbstractFrame) {
         this.mySameAbstractFrame = sameAbstractFrame;
+    }
+
+    public void setChopFrame(final AbstractFrame chopAbstractFrame) {
+        this.myChopAbstractFrame = chopAbstractFrame;
     }
 
     public boolean checkStack() {
@@ -102,7 +107,11 @@ public abstract class AbstractFrame {
             }
         } else {
             if (mySameAbstractFrame == null) {
-                return myParent.getLocalVariableName(index);
+                if (myChopAbstractFrame == null) {
+                    return myParent.getLocalVariableName(index);
+                } else {
+                    return myChopAbstractFrame.getLocalVariableName(index);
+                }
             } else {
                 return mySameAbstractFrame.getLocalVariableName(index);
             }
@@ -114,7 +123,11 @@ public abstract class AbstractFrame {
             return myLocalVariableTypes.get(index);
         } else {
             if (mySameAbstractFrame == null) {
-                return myParent.getLocalVariableType(index);
+                if (myChopAbstractFrame == null) {
+                    return myParent.getLocalVariableType(index);
+                } else {
+                    return myChopAbstractFrame.getLocalVariableType(index);
+                }
             } else {
                 return mySameAbstractFrame.getLocalVariableType(index);
             }
