@@ -14,6 +14,7 @@ import com.sdc.ast.expressions.nestedclasses.AnonymousClass
 import com.sdc.ast.expressions.ExprIncrement
 import com.sdc.ast.expressions.InstanceOf
 import com.sdc.ast.expressions.PriorityExpression
+
 import com.sdc.ast.controlflow.Statement
 import com.sdc.ast.controlflow.Invocation
 import com.sdc.ast.controlflow.Assignment
@@ -35,6 +36,7 @@ import com.sdc.cfg.constructions.TryCatch
 import com.sdc.cfg.constructions.When
 import com.sdc.cfg.constructions.Switch
 import com.sdc.cfg.constructions.SwitchCase
+
 
 abstract class AbstractPrinter {
     abstract fun getOperationPrinter(): AbstractOperationPrinter;
@@ -173,8 +175,25 @@ abstract class AbstractPrinter {
         return newArray
     }
 
-    open fun printInstanceOf(expression : InstanceOf, nestSize : Int): PrimeDoc =
-            printExpression(expression.getArgument(), nestSize) + printInstanceOfOperator() + text(expression.getType())
+    open fun printInstanceOf(expression : InstanceOf, nestSize : Int): PrimeDoc {
+        if (!expression.isInverted()) {
+            return printInstanceOfArgument(expression, nestSize) + printInstanceOfOperator() + text(expression.getType())
+        } else {
+            return printInvertedInstanceOf(expression, nestSize)
+        }
+    }
+
+    open fun printInstanceOfArgument(expression : InstanceOf, nestSize : Int): PrimeDoc {
+        val hasArgument = expression.getArgument() != null
+        var argument : PrimeDoc = nil()
+        if (hasArgument) {
+            argument = printExpression(expression.getArgument(), nestSize) + text(" ")
+        }
+        return argument
+    }
+
+    open fun printInvertedInstanceOf(expression : InstanceOf, nestSize : Int): PrimeDoc =
+        printExpression(UnaryExpression(OperationType.NOT, expression.invert()), nestSize)
 
     open fun printAnonymousClassExpression(expression : AnonymousClass, nestSize : Int): PrimeDoc =
             printNewOperator() + printAnonymousClass(expression.getNestedClass(), expression.getConstructorArguments())
@@ -339,7 +358,7 @@ abstract class AbstractPrinter {
 
     open fun printStatementsDelimiter(): PrimeDoc = text(";")
 
-    open fun printInstanceOfOperator(): PrimeDoc = text(" instanceof ")
+    open fun printInstanceOfOperator(): PrimeDoc = text("instanceof ")
 
     open fun printNewOperator(): PrimeDoc = text("new ")
 

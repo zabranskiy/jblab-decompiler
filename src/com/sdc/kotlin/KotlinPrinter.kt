@@ -1,21 +1,24 @@
 package KotlinPrinter
 
 import pretty.*
+
 import com.sdc.ast.expressions.Expression
 import com.sdc.ast.expressions.NewArray
 import com.sdc.ast.expressions.nestedclasses.LambdaFunction
 import com.sdc.ast.expressions.nestedclasses.AnonymousClass
-import com.sdc.kotlin.KotlinClass
-import com.sdc.kotlin.KotlinMethod
-import com.sdc.kotlin.KotlinClassField
+import com.sdc.ast.expressions.InstanceOf
+
 import com.sdc.abstractLanguage.AbstractClass
 import com.sdc.abstractLanguage.AbstractMethod
 import com.sdc.abstractLanguage.AbstractClassField
 import com.sdc.abstractLanguage.AbstractPrinter
 import com.sdc.abstractLanguage.AbstractOperationPrinter
+
+import com.sdc.kotlin.KotlinClass
+import com.sdc.kotlin.KotlinMethod
+import com.sdc.kotlin.KotlinClassField
 import com.sdc.kotlin.KotlinOperationPrinter
-import com.sdc.cfg.nodes.Node
-import com.sdc.cfg.nodes.Switch
+
 
 class KotlinPrinter: AbstractPrinter() {
     override fun getOperationPrinter(): AbstractOperationPrinter{
@@ -27,7 +30,7 @@ class KotlinPrinter: AbstractPrinter() {
 
     override fun printAnnotationIdentifier(): PrimeDoc = text("")
 
-    override fun printInstanceOfOperator(): PrimeDoc = text(" is ")
+    override fun printInstanceOfOperator(): PrimeDoc = text("is ")
 
     override fun printNewOperator(): PrimeDoc = text("")
 
@@ -71,6 +74,9 @@ class KotlinPrinter: AbstractPrinter() {
 
             else -> super<AbstractPrinter>.printExpression(expression, nestSize)
         }
+
+    override fun printInvertedInstanceOf(expression : InstanceOf, nestSize : Int): PrimeDoc =
+        printInstanceOfArgument(expression, nestSize) + text("!") + printInstanceOfOperator() + text(expression.getType())
 
     override fun printClass(decompiledClass: AbstractClass): PrimeDoc {
         val kotlinClass: KotlinClass = decompiledClass as KotlinClass

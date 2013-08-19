@@ -271,7 +271,9 @@ public class ConstructionBuilder {
     }
 
     private void extractNextConstruction(Construction construction, final Node currentNode) {
-        construction.setNextConstruction(build(currentNode.getNextNode()));
+        final int leftBound = getRelativeIndex(currentNode.getNextNode());
+
+        construction.setNextConstruction(createConstructionBuilder(myNodes.subList(leftBound, size), gen).build());
     }
 
     private void addBreakToAncestors(final Node child) {
