@@ -93,13 +93,15 @@ public class KotlinConstructionBuilder extends ConstructionBuilder {
                         final int whenVariableIndex = ((Variable) variableAssignmentForWhen.getLeft()).getIndex();
 
                         When extractedWhen = extractWhen(whenStartConstruction, whenVariableIndex);
-                        extractedWhen.setCondition(variableAssignmentForWhen.getRight());
+                        if (extractedWhen != null) {
+                            extractedWhen.setCondition(variableAssignmentForWhen.getRight());
 
-                        blockBeforeWhenConstruction.removeLastStatement();
-                        blockBeforeWhenConstruction.setNextConstruction(extractedWhen);
-                        extractedWhen.setNextConstruction(whenStartConstruction.getNextConstruction());
+                            blockBeforeWhenConstruction.removeLastStatement();
+                            blockBeforeWhenConstruction.setNextConstruction(extractedWhen);
+                            extractedWhen.setNextConstruction(whenStartConstruction.getNextConstruction());
 
-                        return true;
+                            return true;
+                        }
                     }
                 }
             }
@@ -120,7 +122,7 @@ public class KotlinConstructionBuilder extends ConstructionBuilder {
         if (condition instanceof BinaryExpression) {
             final BinaryExpression conditionAsBinaryExpression = (BinaryExpression) condition;
 
-            if (conditionAsBinaryExpression.getLeft() instanceof Variable) {
+            if (conditionAsBinaryExpression.getLeft() instanceof Variable && conditionAsBinaryExpression.getOperationType() == OperationType.EQ) {
                 final Variable conditionVariable = (Variable) conditionAsBinaryExpression.getLeft();
 
                 if (conditionVariable.getIndex() == variableIndex && whenCondition.getElseBlock() instanceof ElementaryBlock) {

@@ -71,7 +71,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
             type = "class ";
         }
 
-        final String className = DeclarationWorker.getClassName(name);
+        final String className = DeclarationWorker.decompileSimpleClassName(name);
         myVisitedClasses.add(className);
 
         StringBuilder packageName = new StringBuilder("");
@@ -86,8 +86,8 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
         String superClass = "";
         String superClassImport = "";
         if (superName != null && !getDefaultExtendedClass().equals(superName)) {
-            superClass = DeclarationWorker.getClassName(superName);
-            superClassImport = DeclarationWorker.getDecompiledFullClassName(superName);
+            superClass = DeclarationWorker.decompileClassNameWithOuterClasses(superName);
+            superClassImport = DeclarationWorker.decompileClassNameForImport(superName);
         }
 
         List<String> implementedInterfaces = new ArrayList<String>();
@@ -95,8 +95,8 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
         if (interfaces != null && interfaces.length > 0) {
             for (final String implInterface : interfaces) {
                 if (!implInterface.equals(getDefaultImplementedInterface())) {
-                    implementedInterfaces.add(DeclarationWorker.getClassName(implInterface));
-                    implementedInterfacesImports.add(DeclarationWorker.getDecompiledFullClassName(implInterface));
+                    implementedInterfaces.add(DeclarationWorker.decompileClassNameWithOuterClasses(implInterface));
+                    implementedInterfacesImports.add(DeclarationWorker.decompileClassNameForImport(implInterface));
                 }
             }
         }
@@ -108,8 +108,9 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
 
         myDecompiledClass = myLanguagePartFactory.createClass(modifier, type, className, packageName.toString(), implementedInterfaces
                 , superClass, genericTypesList, genericIdentifiersList, myTextWidth, myNestSize);
+
         myDecompiledClass.setIsLambdaFunctionClass(myIsLambdaFunction);
-        myDecompiledClass.setFullClassName(DeclarationWorker.getDecompiledFullClassName(name));
+        myDecompiledClass.setFullClassName(DeclarationWorker.decompileFullClassName(name));
 
         if (!superClassImport.isEmpty()) {
             myDecompiledClass.appendImport(superClassImport);
@@ -125,7 +126,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
 
     @Override
     public void visitOuterClass(final String owner, final String name, final String desc) {
-        myDecompiledClass.setInnerClassIdentifier(getClassName(owner), name, desc);
+        myDecompiledClass.setInnerClassIdentifier(decompileClassNameWithOuterClasses(owner), name, desc);
     }
 
     @Override
@@ -152,8 +153,8 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
 
     @Override
     public void visitInnerClass(final String name, final String outerName, final String innerName, final int access) {
-        final String innerClassName = getClassName(name);
-        final String outerClassName = outerName == null ? null : getClassName(outerName);
+        final String innerClassName = DeclarationWorker.decompileSimpleClassName(name);
+        final String outerClassName = outerName == null ? null : DeclarationWorker.decompileSimpleClassName(outerName);
 
         if (!myVisitedClasses.contains(innerClassName)) {
             try {
@@ -205,7 +206,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
         List<String> throwedExceptions = new ArrayList<String>();
         if (exceptions != null) {
             for (final String exception : exceptions) {
-                throwedExceptions.add(getClassName(exception));
+                throwedExceptions.add(decompileClassNameWithOuterClasses(exception));
             }
         }
 
@@ -260,8 +261,8 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
         }
     }
 
-    protected String getClassName(final String fullClassName) {
-        return myDecompiledClass.getClassName(fullClassName);
+    protected String decompileClassNameWithOuterClasses(final String fullClassName) {
+        return myDecompiledClass.decompileClassNameWithOuterClasses(fullClassName);
     }
 
     protected String getDescriptor(final String descriptor, final int pos, List<String> imports) {

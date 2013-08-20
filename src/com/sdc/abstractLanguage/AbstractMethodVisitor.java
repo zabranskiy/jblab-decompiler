@@ -158,8 +158,8 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                     stackedVariableType = DeclarationWorker.getDescriptorByInt((Integer) stack[0], myLanguage);
                 } else {
                     final String className = (String) stack[0];
-                    myDecompiledMethod.addImport(DeclarationWorker.getDecompiledFullClassName(className));
-                    stackedVariableType = getClassName(className) + " ";
+                    myDecompiledMethod.addImport(DeclarationWorker.decompileFullClassName(className));
+                    stackedVariableType = decompileClassNameWithOuterClasses(className) + " ";
                 }
 
                 getCurrentFrame().setStackedVariableType(stackedVariableType);
@@ -527,12 +527,14 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         if (opString.contains("NEWARRAY")) {
             List<Expression> dimensions = new ArrayList<Expression>();
             dimensions.add(getTopOfBodyStack());
-            myBodyStack.push(new NewArray(1, getClassName(type), dimensions));
+            myBodyStack.push(new NewArray(1, decompileClassNameWithOuterClasses(type), dimensions));
         } else if (opString.contains("INSTANCEOF")) {
-            myBodyStack.push(new InstanceOf(getClassName(type), getTopOfBodyStack()));
+            myBodyStack.push(new InstanceOf(decompileClassNameWithOuterClasses(type), getTopOfBodyStack()));
         } else if (opString.contains("CHECKCAST") && !myBodyStack.empty()) {
-            //type is for name of class
-            myBodyStack.push(new UnaryExpression(CHECK_CAST, myBodyStack.pop(), type));
+            final boolean needToGetDescriptor = type.contains("[") || type.contains(";");
+            final String castClassName = needToGetDescriptor ? getDescriptor(type, 0, myDecompiledMethod.getImports()) : decompileClassNameWithOuterClasses(type);
+
+            myBodyStack.push(new UnaryExpression(CHECK_CAST, myBodyStack.pop(), castClassName));
         } else if (opString.equals("NEW")) {
             myBodyStack.push(new New(null));
         }
@@ -553,7 +555,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             final Expression fieldOwner = getTopOfBodyStack();
             field.setOwner(fieldOwner);
         } else {
-            final String fieldOwner = getClassName(owner);
+            final String fieldOwner = decompileClassNameWithOuterClasses(owner);
             field.setStaticOwnerName(fieldOwner);
         }
 
@@ -572,8 +574,8 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
     public void visitMethodInsn(final int opcode, final String owner, final String name, final String desc) {
         final String opString = Printer.OPCODES[opcode];
 
-        final String decompiledOwnerFullClassName = DeclarationWorker.getDecompiledFullClassName(owner);
-        final String ownerClassName = getClassName(owner);
+        final String decompiledOwnerFullClassName = DeclarationWorker.decompileFullClassName(owner);
+        final String ownerClassName = decompileClassNameWithOuterClasses(owner);
 
         List<Expression> arguments = getInvocationArguments(desc);
         String returnType = getInvocationReturnType(desc);
@@ -1050,11 +1052,17 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         }
     }
 
-    protected String getClassName(final String fullClassName) {
-        return myDecompiledMethod.getDecompiledClass().getClassName(fullClassName);
+    protected String decompileClassNameWithOuterClasses(final String fullClassName) {
+        if (fullClassName.contains(myDecompiledMethod.getName())) {
+            return DeclarationWorker.decompileSimpleClassName(fullClassName);
+        }
+
+        return myDecompiledMethod.getDecompiledClass().decompileClassNameWithOuterClasses(fullClassName);
     }
 
     protected String getDescriptor(final String descriptor, final int pos, List<String> imports) {
-        return myDecompiledMethod.getDecompiledClass().getDescriptor(descriptor, pos, imports, myLanguage);
+        final String decompiledDescriptor = myDecompiledMethod.getDecompiledClass().getDescriptor(descriptor, pos, imports, myLanguage);
+
+        return decompiledDescriptor.contains(myDecompiledMethod.getName()) ? DeclarationWorker.decompileSimpleClassName(decompiledDescriptor) : decompiledDescriptor;
     }
 }
