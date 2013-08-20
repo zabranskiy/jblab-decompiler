@@ -31,7 +31,7 @@ public abstract class Construction {
         return myContinue;
     }
 
-    public void setContinues(final String continueLabel) {
+    public void setContinue(final String continueLabel) {
         this.myContinue = continueLabel;
     }
 

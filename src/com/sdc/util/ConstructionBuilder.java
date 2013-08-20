@@ -278,10 +278,20 @@ public class ConstructionBuilder {
                         node.setNextNode(node.getListOfTails().get(1));
                     }
                     com.sdc.cfg.constructions.While whileConstruction = new com.sdc.cfg.constructions.While(node.getCondition());
-                    whileConstruction.setBody(createConstructionBuilder(myNodes.subList(getRelativeIndex(node.getListOfTails().get(0)), getRelativeIndex(gen.getRightIndexForLoop(node.getIndex()))), gen).build());
+
+
+                    int relativeIndexOfLeftTail = getRelativeIndex(node.getListOfTails().get(0));
+                    int relativeIndexOfLoop = getRelativeIndex(gen.getRightIndexForLoop(node.getIndex()));
+                    List<Node> whileBody = myNodes.subList(relativeIndexOfLeftTail, relativeIndexOfLeftTail > relativeIndexOfLoop ? getRelativeIndex(node.getListOfTails().get(1)) : relativeIndexOfLoop);
+
+                    whileConstruction.setBody(createConstructionBuilder(whileBody, gen).build());
                     if (node.getNextNode() != null && checkForIndexOutOfBound(node.getNextNode())) {
                         extractNextConstruction(whileConstruction, node);
                     }
+
+                    placeBreakAndContinue(node, whileBody);
+                    removeBreakAndContinueFromLastConstruction(whileConstruction.getBody());
+
                     return whileConstruction;
                 }
             }
@@ -327,6 +337,45 @@ public class ConstructionBuilder {
             return conditionalBlock;
         }
         return null;
+    }
+
+    private void placeBreakAndContinue(final Node begin, final List<Node> nodes) {
+        final int leftBound = nodes.get(0).getIndex();
+        final int rightBound = nodes.get(nodes.size() - 1).getIndex();
+        final int beginIndex = begin.getIndex();
+
+        for (final Node node : nodes) {
+            for (final Node tail : node.getListOfTails()) {
+                final int tailIndex = tail.getIndex();
+
+                if (tailIndex != beginIndex && (tailIndex < leftBound || tailIndex > rightBound)) {
+                    node.getConstruction().setBreak("");
+                    if (node.getConstruction().hasContinue()) {
+                        node.getConstruction().setContinue(null);
+                    }
+                }
+
+                if (tailIndex == beginIndex) {
+                    node.getConstruction().setContinue("");
+                }
+            }
+        }
+    }
+
+    private void removeBreakAndContinueFromLastConstruction(Construction start) {
+        while (start.getNextConstruction() != null) {
+            start = start.getNextConstruction();
+        }
+
+        start.setBreak(null);
+        start.setContinue(null);
+
+        if (start instanceof ConditionalBlock) {
+            ConditionalBlock conditionalBlock = (ConditionalBlock) start;
+            if (conditionalBlock.getElseBlock() != null) {
+                removeBreakAndContinueFromLastConstruction(conditionalBlock.getElseBlock());
+            }
+        }
     }
 
     private boolean hasNotElse(final Node node) {
