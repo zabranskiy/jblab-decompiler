@@ -288,14 +288,14 @@ abstract class AbstractPrinter {
 
     open fun printDoWhile(doWhileBlock: DoWhile, nestSize: Int): PrimeDoc {
         val body = text("do {") + nest(nestSize, printConstruction(doWhileBlock.getBody(), nestSize)) / text("}")
-        return body + text(" while (") + printExpression(doWhileBlock.getCondition(), nestSize) + text(")")
+        return body + text(" while (") + printExpression(doWhileBlock.getCondition(), nestSize) + text(");")
     }
 
     open fun printFor(forBlock: For, nestSize: Int): PrimeDoc {
         val body = printConstruction(forBlock.getBody(), nestSize)
         val initialization = printStatement(forBlock.getVariableInitialization(), nestSize)
         val afterThought = printStatement(forBlock.getAfterThought(), nestSize)
-        return text("for (") + initialization + text(", ") + printExpression(forBlock.getCondition()?.invert(), nestSize) + text(", ") + afterThought + text(") {") + nest(nestSize, body) / text("}")
+        return text("for (") + initialization + text("; ") + printExpression(forBlock.getCondition()?.invert(), nestSize) + text("; ") + afterThought + text(") {") + nest(nestSize, body) / text("}")
     }
 
     open fun printForEach(forEachBlock: ForEach, nestSize: Int): PrimeDoc {

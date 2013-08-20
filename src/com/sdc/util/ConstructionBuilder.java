@@ -1,8 +1,10 @@
 package com.sdc.util;
 
-import com.sdc.cfg.constructions.ConditionalBlock;
-import com.sdc.cfg.constructions.Construction;
-import com.sdc.cfg.constructions.ElementaryBlock;
+import com.sdc.ast.controlflow.Assignment;
+import com.sdc.ast.controlflow.Increment;
+import com.sdc.ast.controlflow.Statement;
+import com.sdc.ast.expressions.identifiers.Variable;
+import com.sdc.cfg.constructions.*;
 import com.sdc.cfg.nodes.DoWhile;
 import com.sdc.cfg.nodes.Node;
 import com.sdc.cfg.nodes.Switch;
@@ -28,7 +30,72 @@ public class ConstructionBuilder {
     }
 
     public Construction build() {
-        return build(myNodes.get(0));
+        return extractFor(build(myNodes.get(0)));
+    }
+
+    private Construction extractFor(Construction baseConstruction) {
+
+        final Construction whileStartConstruction = baseConstruction.getNextConstruction();
+
+        if (baseConstruction instanceof ElementaryBlock && whileStartConstruction != null && whileStartConstruction instanceof While) {
+            final ElementaryBlock blockBeforeWhileConstruction = (ElementaryBlock) baseConstruction;
+
+            if (!blockBeforeWhileConstruction.getStatements().isEmpty()) {
+                final Statement variableDeclarationForWhen = blockBeforeWhileConstruction.getLastStatement();
+
+                if (variableDeclarationForWhen instanceof Assignment) {
+                    final Assignment variableAssignmentForWhen = (Assignment) variableDeclarationForWhen;
+
+                    if (variableAssignmentForWhen.getLeft() instanceof Variable) {
+                        final int forVariableIndex = ((Variable) variableAssignmentForWhen.getLeft()).getIndex();
+                        Construction currentConstruction = ((While) whileStartConstruction).getBody();
+
+                        while (currentConstruction.getNextConstruction() != null) {
+                            currentConstruction = currentConstruction.getNextConstruction();
+                        }
+                        if (currentConstruction instanceof ElementaryBlock) {
+                            ElementaryBlock forAfterThoughtBlock = (ElementaryBlock) currentConstruction;
+                            final Statement forAfterThought = forAfterThoughtBlock.getLastStatement();
+
+                            if (forAfterThought instanceof Assignment) {
+                                final Assignment afterThoughtAssignment = (Assignment) forAfterThought;
+                                if (afterThoughtAssignment.getLeft() instanceof Variable) {
+                                    final int afterThoughtVariableIndex = ((Variable) afterThoughtAssignment.getLeft()).getIndex();
+                                    if (afterThoughtVariableIndex == forVariableIndex) {
+                                        For forConstruction = new For(variableAssignmentForWhen, ((While) whileStartConstruction).getCondition(), afterThoughtAssignment);
+                                        forConstruction.setBody(((While) whileStartConstruction).getBody());
+
+                                        blockBeforeWhileConstruction.removeLastStatement();
+                                        blockBeforeWhileConstruction.setNextConstruction(forConstruction);
+                                        forConstruction.setNextConstruction(whileStartConstruction.getNextConstruction());
+                                        forAfterThoughtBlock.removeLastStatement();
+
+                                        return blockBeforeWhileConstruction;
+                                    }
+                                }
+                            } else if (forAfterThought instanceof Increment) {
+                                final Increment afterThoughtIncrement = (Increment) forAfterThought;
+                                final int afterThoughtVariableIndex = afterThoughtIncrement.getVariable().getIndex();
+
+                                if (afterThoughtVariableIndex == forVariableIndex) {
+                                    For forConstruction = new For(variableAssignmentForWhen, ((While) whileStartConstruction).getCondition(), afterThoughtIncrement);
+                                    forConstruction.setBody(((While) whileStartConstruction).getBody());
+
+                                    blockBeforeWhileConstruction.removeLastStatement();
+                                    blockBeforeWhileConstruction.setNextConstruction(forConstruction);
+                                    forConstruction.setNextConstruction(whileStartConstruction.getNextConstruction());
+                                    forAfterThoughtBlock.removeLastStatement();
+
+                                    return blockBeforeWhileConstruction;
+                                }
+                            }
+                        }
+                    }
+                }
+
+            }
+        }
+        return baseConstruction;
     }
 
     private Construction build(Node node) {
