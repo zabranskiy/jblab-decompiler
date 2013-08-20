@@ -531,8 +531,10 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         } else if (opString.contains("INSTANCEOF")) {
             myBodyStack.push(new InstanceOf(decompileClassNameWithOuterClasses(type), getTopOfBodyStack()));
         } else if (opString.contains("CHECKCAST") && !myBodyStack.empty()) {
-            //type is for name of class
-            myBodyStack.push(new UnaryExpression(CHECK_CAST, myBodyStack.pop(), type));
+            final boolean needToGetDescriptor = type.contains("[") || type.contains(";");
+            final String castClassName = needToGetDescriptor ? getDescriptor(type, 0, myDecompiledMethod.getImports()) : decompileClassNameWithOuterClasses(type);
+
+            myBodyStack.push(new UnaryExpression(CHECK_CAST, myBodyStack.pop(), castClassName));
         } else if (opString.equals("NEW")) {
             myBodyStack.push(new New(null));
         }
