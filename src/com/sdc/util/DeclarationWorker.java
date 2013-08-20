@@ -308,25 +308,8 @@ public class DeclarationWorker {
         abstractMethod.setLastLocalVariableIndex(count);
     }
 
-    public static String getClassName(final String fullClassName) {
-        final String[] classPackageParts = fullClassName.contains("/") ? fullClassName.split("/") : new String[] { fullClassName };
-        final String actualClassName = classPackageParts[classPackageParts.length - 1];
-
-        final String[] classParts = actualClassName.contains("$") ? actualClassName.split("\\$") : new String[] { actualClassName };
-        return replaceInnerClassName(classParts[classParts.length - 1]);
-    }
-
-    public static String replaceInnerClassName(final String className) {
-        final String result = convertInnerClassesToAcceptableName(className.trim());
-        return className.contains(" ") ? result + " " : result;
-    }
-
-    public static String getDecompiledFullClassName(final String fullClassName) {
-        return fullClassName.replace("/", ".");
-    }
-
     public static void parseGenericDeclaration(final String signature, List<String> genericTypesList,
-                                         List<String> genericIdentifiersList, List<String> genericTypesImports, final SupportedLanguage language)
+                                               List<String> genericIdentifiersList, List<String> genericTypesImports, final SupportedLanguage language)
     {
         if (signature != null && signature.indexOf('<') == 0) {
             int endPos = 1;
@@ -361,7 +344,44 @@ public class DeclarationWorker {
         return primitiveTypes.contains(type);
     }
 
-    public static String convertInnerClassesToAcceptableName(final String initialClassName) {
+    public static String decompileClassNameWithOuterClasses(final String byteCodeFullClassName) {
+        final String[] classPackageParts = byteCodeFullClassName.contains("/") ? byteCodeFullClassName.split("/") : new String[] { byteCodeFullClassName };
+        final String actualClassName = classPackageParts[classPackageParts.length - 1];
+
+        return replaceInnerClassName(actualClassName.replace("$", "."));
+    }
+
+    public static String decompileSimpleClassName(final String byteCodeFullClassName) {
+        final String className = decompileClassNameWithOuterClasses(byteCodeFullClassName);
+        final String[] innerClassesParts = className.contains(".") ? className.split("\\.") : new String[] { className };
+
+        return innerClassesParts[innerClassesParts.length - 1];
+    }
+
+    public static String decompileFullClassName(final String byteCodeFullClassName) {
+        return replaceInnerClassName(byteCodeFullClassName.replace("/", ".").replace("$", "."));
+    }
+
+    public static String decompileClassNameForImport(final String byteCodeFullClassName) {
+        final String className = byteCodeFullClassName.replace("/", ".");
+        final int innerClassStartIndex = className.indexOf("$");
+
+        return replaceInnerClassName(innerClassStartIndex == -1 ? className : className.substring(0, innerClassStartIndex));
+    }
+
+    private static String getSimpleClassName(final String descriptor, final int pos, List<String> imports) {
+        final String className = descriptor.substring(pos + 1, descriptor.indexOf(";", pos));
+        imports.add(decompileFullClassName(className));
+
+        return decompileClassNameWithOuterClasses(className);
+    }
+
+    private static String replaceInnerClassName(final String className) {
+        final String result = convertInnerClassesToAcceptableName(className.trim());
+        return className.contains(" ") ? result + " " : result;
+    }
+
+    private static String convertInnerClassesToAcceptableName(final String initialClassName) {
         final String[] classParts = initialClassName.contains(".") ? initialClassName.split("\\.") : new String[] { initialClassName };
         StringBuilder result = new StringBuilder("");
 
@@ -496,17 +516,11 @@ public class DeclarationWorker {
         }
     }
 
-    private static String getSimpleClassName(final String descriptor, final int pos, List<String> imports) {
-        final String className = descriptor.substring(pos + 1, descriptor.indexOf(";", pos));
-        imports.add(getDecompiledFullClassName(className));
-        return getClassName(className);
-    }
-
     private static String getClassNameWithGenerics(final String descriptor, final int pos, List<String> imports, final SupportedLanguage language) {
         final String className = descriptor.substring(pos + 1, descriptor.indexOf("<", pos));
-        imports.add(getDecompiledFullClassName(className));
+        imports.add(decompileFullClassName(className));
 
-        StringBuilder result = new StringBuilder(getClassName(className));
+        StringBuilder result = new StringBuilder(decompileClassNameWithOuterClasses(className));
         result = result.append("<");
 
         final int lastClassNamePos = skipGenericTypePart(descriptor, descriptor.indexOf("<", pos));
