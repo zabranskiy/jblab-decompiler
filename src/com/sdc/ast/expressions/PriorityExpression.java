@@ -23,7 +23,8 @@ public abstract class PriorityExpression extends Expression {
     }
 
     public boolean isAssociative() {
-        if (myType == ADD || myType == MUL || myType == AND || myType == OR || myType == SQUARE_BRACKETS ||
+        if (myType == ADD || myType == MUL || myType == AND || myType == OR
+                || myType == SQUARE_BRACKETS || myType == ARRAYLENGTH ||
                 myType == BITWISE_AND || myType == BITWISE_OR || myType == BITWISE_XOR || myType == EQ || myType == NE) {
             return true;
         }
