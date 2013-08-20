@@ -39,7 +39,7 @@ public class KotlinClassVisitor extends AbstractClassVisitor {
     {
         super.visit(version, access, name, signature, superName, interfaces);
 
-        if (name.contains("$src$") || name.endsWith("Package")) {
+        if (name.contains(".src.") || name.endsWith("Package")) {
             myDecompiledClass.setIsNormalClass(false);
         }
     }

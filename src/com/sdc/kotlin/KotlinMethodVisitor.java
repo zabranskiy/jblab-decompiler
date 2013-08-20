@@ -54,8 +54,8 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
     public void visitMethodInsn(final int opcode, final String owner, final String name, final String desc) {
         final String opString = Printer.OPCODES[opcode];
 
-        final String decompiledOwnerFullClassName = DeclarationWorker.getDecompiledFullClassName(owner);
-        final String ownerClassName = getClassName(owner);
+        final String decompiledOwnerFullClassName = DeclarationWorker.decompileFullClassName(owner);
+        final String ownerClassName = decompileClassNameWithOuterClasses(owner);
 
         List<Expression> arguments = getInvocationArguments(desc);
         String returnType = getInvocationReturnType(desc);
@@ -137,7 +137,7 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
     }
 
     private Expression tryVisitLambdaFunction(final String owner) {
-        final String decompiledOwnerName = DeclarationWorker.getDecompiledFullClassName(owner);
+        final String decompiledOwnerName = DeclarationWorker.decompileFullClassName(owner);
         final int srcIndex = myDecompiledOwnerFullClassName.indexOf("$src$");
         final String methodOwner = srcIndex == -1 ? myDecompiledOwnerFullClassName : myDecompiledOwnerFullClassName.substring(0, srcIndex);
         if (!decompiledOwnerName.equals(methodOwner) && decompiledOwnerName.contains(methodOwner) && decompiledOwnerName.contains(myDecompiledMethod.getName())) {

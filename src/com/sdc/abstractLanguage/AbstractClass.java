@@ -177,7 +177,7 @@ public abstract class AbstractClass {
     }
 
     public void appendImport(final String importName) {
-        if (!hasImport(importName) && !checkImportNameForBeingInPackages(importName, myDefaultPackages)) {
+        if (!hasImport(importName) && !checkImportNameForBeingInPackages(importName, myDefaultPackages) && !importName.contains("." + myName + ".")) {
             myImports.add(importName);
         }
     }
@@ -309,13 +309,36 @@ public abstract class AbstractClass {
         return myImports.contains(importName);
     }
 
-    public String getClassName(final String fullClassName) {
-        return DeclarationWorker.getClassName(fullClassName);
+    public String decompileClassNameWithOuterClasses(final String fullClassName) {
+        final String className = DeclarationWorker.decompileClassNameWithOuterClasses(fullClassName);
+
+        return removeClassPrefix(className);
     }
 
     public String getDescriptor(final String descriptor, final int pos, List<String> imports
             , final DeclarationWorker.SupportedLanguage language)
     {
-        return DeclarationWorker.getDescriptor(descriptor, pos, imports, language);
+        final String decompiledDescriptor = DeclarationWorker.getDescriptor(descriptor, pos, imports, language);
+
+        return removeClassPrefix(decompiledDescriptor);
+    }
+
+    private String removeClassPrefix(final String className) {
+        final String pattern1 = myName + ".";
+        final String pattern2 = "." + pattern1;
+
+        int startIndex = 0;
+        if (className.startsWith(pattern1)) {
+            startIndex = pattern1.length();
+        } else if (className.contains(pattern2)) {
+            startIndex = className.indexOf(pattern2) + pattern2.length();
+        }
+
+        final int anonymousClassIndex = className.indexOf("AnonymousClass__");
+        if (anonymousClassIndex > -1) {
+            return className.substring(anonymousClassIndex);
+        }
+
+        return className.substring(startIndex);
     }
 }
