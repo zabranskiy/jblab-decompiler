@@ -44,11 +44,24 @@ public class ConstructionBuilder {
                 node.setConstruction(currentConstruction);
             }
 
+            if (currentConstruction == null && !node.getListOfTails().isEmpty()) {
+                Node myNextNode = node.getListOfTails().get(0);
+                if (checkForIndexOutOfBound(myNextNode)) {
+                    node.setNextNode(myNextNode);
+                    extractNextConstruction(elementaryBlock, node);
+                    return elementaryBlock;
+                }
+            }
+
             elementaryBlock.setNextConstruction(currentConstruction);
             return elementaryBlock;
         } else {
             return extractDoWhile(node, doWhileNode);
         }
+    }
+
+    private boolean checkForIndexOutOfBound(Node node) {
+        return getRelativeIndex(node.getIndex()) < size && getRelativeIndex(node.getIndex()) >= 0;
     }
 
     private Construction extractConstruction(Node node) {
@@ -70,7 +83,7 @@ public class ConstructionBuilder {
     private Node checkForDoWhileLoop(final Node node) {
         for (int i = node.getAncestors().size() - 1; i >= 0; i--) {
             Node ancestor = node.getAncestors().get(i);
-            if (ancestor instanceof DoWhile && node.getIndex() < ancestor.getIndex() && ancestor.getIndex() >= myNodes.get(0).getIndex() && ancestor.getIndex() <= myNodes.get(size - 1).getIndex()) {
+            if (ancestor instanceof DoWhile && node.getIndex() < ancestor.getIndex() && checkForIndexOutOfBound(ancestor)) {
                 return ancestor;
             }
         }
@@ -143,7 +156,7 @@ public class ConstructionBuilder {
                 addBreakToAncestors(nextNode);
             }
 
-            if (nextNode != null && getRelativeIndex(nextNode.getIndex()) < myNodes.size()) {
+            if (nextNode != null && checkForIndexOutOfBound(nextNode)) {
                 switchNode.setNextNode(nextNode);
                 extractNextConstruction(switchConstruction, switchNode);
             }
@@ -194,12 +207,12 @@ public class ConstructionBuilder {
         if (node.getCondition() != null) {
             for (Node ancestor : node.getAncestors()) {
                 if (node.getIndex() < ancestor.getIndex()) {
-                    if (domi[node.getIndex()] != domi[node.getListOfTails().get(1).getIndex()] && getRelativeIndex(node.getIndex()) < size && getRelativeIndex(node.getIndex()) >= 0) {
+                    if (domi[node.getIndex()] != domi[node.getListOfTails().get(1).getIndex()] && checkForIndexOutOfBound(node)) {
                         node.setNextNode(node.getListOfTails().get(1));
                     }
                     com.sdc.cfg.constructions.While whileConstruction = new com.sdc.cfg.constructions.While(node.getCondition());
                     whileConstruction.setBody(createConstructionBuilder(myNodes.subList(getRelativeIndex(node.getListOfTails().get(0)), getRelativeIndex(gen.getRightIndexForLoop(node.getIndex()))), gen).build());
-                    if (node.getNextNode() != null && getRelativeIndex(node.getNextNode()) < size) {
+                    if (node.getNextNode() != null && checkForIndexOutOfBound(node.getNextNode())) {
                         extractNextConstruction(whileConstruction, node);
                     }
                     return whileConstruction;
@@ -228,9 +241,9 @@ public class ConstructionBuilder {
                 if (node.getNextNode() == null) {
                     if (hasElse(rightNode)) {
                         if (rightNode.getIndex() <= myNodes.get(size - 1).getIndex()) {
-                            node.setNextNode(rightNode);
+                            node.setNextNode(checkForIndexOutOfBound(rightNode) ? rightNode : null);
                         }
-                        conditionalBlock.setThenBlock(createConstructionBuilder(myNodes.subList(getRelativeIndex(leftNode), rightIndex > size ? size : rightIndex), gen).build());
+                        conditionalBlock.setThenBlock(createConstructionBuilder(myNodes.subList(getRelativeIndex(leftNode), checkForIndexOutOfBound(rightNode) ? rightIndex : size), gen).build());
                     } else {
                         conditionalBlock.setThenBlock(createConstructionBuilder(myNodes.subList(getRelativeIndex(leftNode), rightIndex), gen).build());
                         conditionalBlock.setElseBlock(createConstructionBuilder(myNodes.subList(getRelativeIndex(rightNode), size), gen).build());
@@ -241,7 +254,7 @@ public class ConstructionBuilder {
                 }
             }
             // TODO: test second condition for switch with if in a case
-            if (node.getNextNode() != null && getRelativeIndex(node.getNextNode()) < size) {
+            if (node.getNextNode() != null && checkForIndexOutOfBound(node.getNextNode())) {
                 extractNextConstruction(conditionalBlock, node);
             }
             return conditionalBlock;
@@ -259,7 +272,7 @@ public class ConstructionBuilder {
             }
         }
 
-        return count > 1;
+        return count <= 1;
     }
 
     private int getRelativeIndex(Node node) {

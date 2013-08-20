@@ -175,7 +175,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 || opString.contains("MUL") || opString.contains("DIV") || opString.contains("REM")
                 || opString.contains("USHR") || opString.contains("SHL")
                 || opString.contains("XOR") || opString.contains("SHR")
-                || opString.contains("OR") || opString.contains("AND")) {
+                || opString.contains("IOR") || opString.contains("LOR") || opString.contains("AND")) {
             Expression e1 = getTopOfBodyStack();
             Expression e2 = getTopOfBodyStack();
             String type = opString.substring(1);
@@ -364,13 +364,13 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             }
         } else if (opString.contains("ALOAD")) {
             final Expression arrayIndex = getTopOfBodyStack();
-            myBodyStack.push(new Variable(arrayIndex, (Identifier) getTopOfBodyStack()));
+            Expression ref = getTopOfBodyStack();
+            myBodyStack.push(new SquareBrackets(ref ,arrayIndex));
         } else if (opString.contains("ASTORE")) {
             final Expression expr = getTopOfBodyStack();
             final Expression arrayIndex = getTopOfBodyStack();
-            final Identifier v = new Variable(arrayIndex, (Identifier) getTopOfBodyStack());
-
-            myStatements.add(new Assignment(v, expr));
+            Expression ref = getTopOfBodyStack();
+            myStatements.add(new Assignment(new SquareBrackets(ref, arrayIndex), expr));
         } else if (opString.equals("NOP")) {
             //do nothing
         } else if ((opString.contains("I2L") || opString.contains("F2L") || opString.contains("D2L")) && !myBodyStack.empty()) {
@@ -387,6 +387,9 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             myBodyStack.push(new UnaryExpression(CHAR_CAST, getTopOfBodyStack()));
         } else if ((opString.contains("I2S")) && !myBodyStack.isEmpty()) {
             myBodyStack.push(new UnaryExpression(SHORT_CAST, getTopOfBodyStack()));
+        } else if (opString.contains("ARRAYLENGTH")) {
+            Expression e = getTopOfBodyStack();
+            myBodyStack.push(new ArrayLength(e));
         }
         // All opcodes :
         //  +NOP, +ACONST_NULL, +ICONST_M1, +CONST_0, +ICONST_1, +ICONST_2, +ICONST_3, +ICONST_4, +ICONST_5,
@@ -580,8 +583,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         boolean isStaticInvocation = false;
 
         if (opString.contains("INVOKEVIRTUAL") || opString.contains("INVOKEINTERFACE")
-                || (decompiledOwnerFullClassName.equals(myDecompiledOwnerFullClassName) && !name.equals("<init>")))
-        {
+                || (decompiledOwnerFullClassName.equals(myDecompiledOwnerFullClassName) && !name.equals("<init>"))) {
             appendInstanceInvocation(name, hasVoidReturnType ? "" : returnType, arguments, getTopOfBodyStack());
             return;
         }
@@ -615,29 +617,48 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         if (opString.contains("IF")) {
             final Label myLastIFLabel = label;
             if (myNodes.isEmpty() || !myNodeInnerLabels.isEmpty() || (myNodes.get(getLeftEmptyNodeIndex() - 1).getCondition() == null)) {
-
-
                 for (Node node : myNodes) {
-                    if (node.getInnerLabels().contains(label)) {
+                    if (!(node instanceof DoWhile) && node.getInnerLabels().contains(label) && myNodes.get(myNodes.size() - 1).getCondition() == null) {
                         myMap2.put(myNodes.size(), label);
                         int index = node.getInnerLabels().indexOf(label);
-                        DoWhile dw = new DoWhile(new ArrayList<Statement>(myStatements), new ArrayList<Label>(myNodeInnerLabels), myNodes.size());
-                        myNodes.add(dw);
-                        myNodeInnerLabels.clear();
-                        myStatements.clear();
-
+                        DoWhile dw = new DoWhile(null, new ArrayList<Label>(myNodeInnerLabels), myNodes.size());
                         dw.setStatements(new ArrayList<Statement>(node.getStatements().subList(0, index)));
                         dw.getInnerLabels().addAll(new ArrayList<Label>(node.getInnerLabels().subList(0, index)));
                         dw.setCondition(getConditionFromStack(opString));
                         dw.setEmpty(true);
+                        myNodes.add(dw);
 
                         node.setStatements(new ArrayList<Statement>(node.getStatements().subList(index, node.getStatements().size())));
                         node.setInnerLabels(new ArrayList<Label>(node.getInnerLabels().subList(index, node.getInnerLabels().size())));
+                        myNodeInnerLabels.clear();
                         return;
                     }
                 }
+                if (myNodeInnerLabels.contains(label)) {
+                    int index = myNodeInnerLabels.indexOf(label);
+                    Node beforeNode = new Node(null, null, myNodes.size());
+                    beforeNode.setStatements(new ArrayList<Statement>(myStatements.subList(0, index)));
+                    beforeNode.setInnerLabels(new ArrayList<Label>(myNodeInnerLabels.subList(0, index)));
+                    beforeNode.setEmpty(true);
+                    myNodes.add(beforeNode);
 
+                    Node innerNode = new Node(null, null, myNodes.size());
+                    innerNode.setStatements(new ArrayList<Statement>(myStatements.subList(index, myStatements.size())));
+                    innerNode.setInnerLabels(new ArrayList<Label>(myNodeInnerLabels.subList(index, myNodeInnerLabels.size())));
+                    innerNode.setEmpty(true);
+                    myNodes.add(innerNode);
 
+                    myMap2.put(myNodes.size(), label);
+
+                    DoWhile dw = new DoWhile(new ArrayList<Statement>(), new ArrayList<Label>(), myNodes.size());
+                    dw.setCondition(getConditionFromStack(opString));
+                    dw.setEmpty(true);
+                    myNodes.add(dw);
+
+                    myStatements.clear();
+                    myNodeInnerLabels.clear();
+                    return;
+                }
                 myLabels.add(myLastIFLabel);
                 myMap2.put(myNodes.size(), label);
                 applyNode();
@@ -775,12 +796,24 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         applyNode();
 
         placeEdges();
+//        printDebugInfo();
 
         DominatorTreeGenerator gen = new DominatorTreeGenerator(myNodes);
         ConstructionBuilder cb = createConstructionBuilder(myNodes, gen);
 
         myDecompiledMethod.setBegin(cb.build());
     }
+
+    private void printDebugInfo() {
+        for (Node node : myNodes) {
+            System.out.print(node.getIndex() + ": ");
+            for (Node tail : node.getListOfTails()) {
+                System.out.print(tail.getIndex() + " ");
+            }
+            System.out.println();
+        }
+    }
+
 
     private void placeEdges() {
         // GOTO
@@ -912,7 +945,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
     protected boolean isThisVariableOnTopOfStack() {
         return myDecompiledMethod.isNormalClassMethod() && !myBodyStack.isEmpty()
-                && myBodyStack.peek() instanceof Variable && ((Variable) myBodyStack.peek()).getName().equals("this");
+                && myBodyStack.peek() instanceof Variable && ((Variable) myBodyStack.peek()).isThis();
     }
 
     protected void replaceInvocationsFromExpressionsToStatements() {
