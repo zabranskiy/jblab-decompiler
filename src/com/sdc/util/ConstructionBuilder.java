@@ -239,7 +239,7 @@ public class ConstructionBuilder {
                 int rightIndex = getRelativeIndex(rightNode);
 
                 if (node.getNextNode() == null) {
-                    if (hasElse(rightNode)) {
+                    if (hasNotElse(rightNode) || checkRightTail(node)) {
                         if (rightNode.getIndex() <= myNodes.get(size - 1).getIndex()) {
                             node.setNextNode(checkForIndexOutOfBound(rightNode) ? rightNode : null);
                         }
@@ -258,21 +258,24 @@ public class ConstructionBuilder {
                 extractNextConstruction(conditionalBlock, node);
             }
             return conditionalBlock;
-//            }
         }
         return null;
     }
 
-    private boolean hasElse(final Node node) {
+    private boolean hasNotElse(final Node node) {
         int count = 0;
-
+        // ????
         for (final Node ancestor : node.getAncestors()) {
             if (node.getIndex() > ancestor.getIndex()) {
                 count++;
             }
         }
 
-        return count <= 1;
+        return count > 1;
+    }
+
+    private boolean checkRightTail(final Node node) {
+        return node.getListOfTails().get(1).getIndex() < node.getIndex();
     }
 
     private int getRelativeIndex(Node node) {
