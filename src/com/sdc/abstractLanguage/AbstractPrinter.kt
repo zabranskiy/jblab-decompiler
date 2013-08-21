@@ -134,8 +134,9 @@ abstract class AbstractPrinter {
 
     open fun printUnaryExpression(expression: UnaryExpression, nestSize: Int): PrimeDoc {
         val opPriority = expression.getPriority(getOperationPrinter())
+        val isAssociative = expression.isAssociative();
         val operand = expression.getOperand()
-        val expr = printExpressionCheckBrackets(operand, opPriority, nestSize);
+        val expr = printExpressionCheckBrackets(operand, opPriority,isAssociative, nestSize);
         return text(expression.getOperation(getOperationPrinter())) + expr
     }
 
@@ -159,8 +160,10 @@ abstract class AbstractPrinter {
 
     open fun printInvocationExpression(expression: com.sdc.ast.expressions.Invocation, nestSize: Int): PrimeDoc {
         var funName: PrimeDoc = group(text(expression.getFunction()))
+        val opPriority = expression.getPriority(getOperationPrinter());
+        val isAssociative = expression.isAssociative();
         if (expression is com.sdc.ast.expressions.InstanceInvocation) {
-            funName = printInstance(expression.getInstance(), nestSize, expression.isNotNullCheckedCall()) + funName
+            funName = printInstance(expression.getInstance(),opPriority,isAssociative, nestSize, expression.isNotNullCheckedCall()) + funName
         }
         return funName + printInvocationArguments(expression.getArguments(), nestSize)
     }
@@ -222,11 +225,12 @@ abstract class AbstractPrinter {
         }   else{
             val increment = expression.getIncrementExpression();
             val priority = expression.getPriority(getOperationPrinter())
+            val isAssociative = expression.isAssociative();
             val printIncrement =
                     if(increment is Constant){
                         printExpression(increment, nestSize)
                     } else{
-                        printExpressionCheckBrackets(increment, priority, nestSize)
+                        printExpressionCheckBrackets(increment, priority, isAssociative, nestSize)
                     }
             if(expression.IsIncrementSimple()){
                 return group(nest(nestSize, printExpr + text(operation)))
@@ -239,7 +243,8 @@ abstract class AbstractPrinter {
     open fun printArrayLength(expression: ArrayLength, nestSize: Int): PrimeDoc {
         val expr = expression.getOperand();
         val priority = expression.getPriority(getOperationPrinter())
-        val printOperand = printExpressionCheckBrackets(expr, priority, nestSize)
+        val isAssociative = expression.isAssociative();
+        val printOperand = printExpressionCheckBrackets(expr, priority,isAssociative, nestSize)
         return group(nest(nestSize, printOperand + text(expression.getOperation(getOperationPrinter()))))
     }
 
@@ -369,6 +374,20 @@ abstract class AbstractPrinter {
             }
         } else {
             instanceName = printExpression(instance, nestSize) + text(if (isNotNullCheckedCall) "!!." else ".")
+        }
+        return instanceName
+    }
+
+    open fun printInstance(instance: Expression?, opPriority: Int, isAssociative: Boolean, nestSize: Int, isNotNullCheckedCall : Boolean = false): PrimeDoc {
+        var instanceName: PrimeDoc = nil()
+        if (instance is Variable ) {
+            var variableName = instance.getName()
+            if (!instance.isThis()) {
+                instanceName = printExpressionCheckBrackets(variableName, opPriority, isAssociative, nestSize) + text(if (isNotNullCheckedCall) "!!." else ".")
+
+            }
+        } else {
+            instanceName = printExpressionCheckBrackets(instance, opPriority, isAssociative, nestSize) + text(if (isNotNullCheckedCall) "!!." else ".")
         }
         return instanceName
     }

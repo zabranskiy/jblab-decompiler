@@ -68,6 +68,24 @@ public class ExprIncrement extends PriorityExpression {
             case REM:
                 myType = REM_INC;
                 break;
+            case SHL:
+                myType = SHL_INC;
+                break;
+            case SHR:
+                myType = SHR_INC;
+                break;
+            case USHR:
+                myType = USHR_INC;
+                break;
+            case BITWISE_AND:
+                myType = BITWISE_AND_INC;
+                break;
+            case BITWISE_OR:
+                myType = BITWISE_OR_INC;
+                break;
+            case BITWISE_XOR:
+                myType = BITWISE_XOR_INC;
+                break;
             default:
                 break;
         }
@@ -109,6 +127,18 @@ public class ExprIncrement extends PriorityExpression {
                 return operationPrinter.getDivIncView();
             case REM_INC:
                 return operationPrinter.getRemIncView();
+            case USHR_INC:
+                return operationPrinter.getUSHRIncView();
+            case SHR_INC:
+                return operationPrinter.getSHRIncView();
+            case SHL_INC:
+                return operationPrinter.getSHLIncView();
+            case BITWISE_AND_INC:
+                return operationPrinter.getBitwiseAndIncView();
+            case BITWISE_OR_INC:
+                return operationPrinter.getBitwiseOrIncView();
+            case BITWISE_XOR_INC:
+                return operationPrinter.getBitwiseXorIncView();
             default:
                 return "";
         }
@@ -129,7 +159,8 @@ public class ExprIncrement extends PriorityExpression {
     @Override
     public String toString() {
         return "ExprIncrement{" +
-                "myVariable=" + myVariable +
+                "myType="+myType+
+                ", myVariable=" + myVariable +
                 ", myIncrement=" + myIncrement +
                 '}';
     }

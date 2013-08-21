@@ -465,7 +465,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
             int lastIndex = myStatements.size() - 1;
             Expression expr2 = (myBodyStack.empty() ? null : myBodyStack.peek());
-            if (expr instanceof BinaryExpression && ((BinaryExpression) expr).isArithmeticType()) {
+            if (expr instanceof BinaryExpression && ((BinaryExpression) expr).isIncrementCastableType()) {
                 BinaryExpression binaryExpression = (BinaryExpression) expr;
                 Expression left = binaryExpression.getLeft();
                 Expression right = binaryExpression.getRight();
@@ -479,7 +479,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                         myStatements.add(new Increment((Variable) left, right, type));
                     }
                 } else if (right instanceof Variable && ((Variable) right).getIndex() == var
-                        && (type == ADD || type == MUL)) {
+                        && binaryExpression.isAssociative()) {
                     myStatements.remove(lastIndex);
                     if (expr.equals(expr2)) {
                         myBodyStack.pop();
@@ -490,12 +490,22 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 } else if (left instanceof ExprIncrement && ((ExprIncrement) left).getVariable().getIndex() == var) {
                     myStatements.remove(lastIndex);
                     myStatements.add(new Increment((ExprIncrement) left));
-                    myStatements.add(new Increment(((ExprIncrement) left).getVariable(), right, type));
+                    if (expr.equals(expr2)) {
+                        myBodyStack.pop();
+                        myBodyStack.add(new ExprIncrement(((ExprIncrement) left).getVariable(), right, type));
+                    } else {
+                        myStatements.add(new Increment(((ExprIncrement) left).getVariable(), right, type));
+                    }
                 } else if (right instanceof ExprIncrement && ((ExprIncrement) right).getVariable().getIndex() == var
-                        && (type == ADD || type == MUL)) {
+                        && binaryExpression.isAssociative()) {
                     myStatements.remove(lastIndex);
                     myStatements.add(new Increment((ExprIncrement) right));
-                    myStatements.add(new Increment(((ExprIncrement) right).getVariable(), left, type));
+                    if (expr.equals(expr2)) {
+                        myBodyStack.pop();
+                        myBodyStack.add(new ExprIncrement(((ExprIncrement) right).getVariable(), left, type));
+                    } else {
+                        myStatements.add(new Increment(((ExprIncrement) right).getVariable(), left, type));
+                    }
                 }
             }
         }
