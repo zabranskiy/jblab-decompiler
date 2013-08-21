@@ -26,7 +26,7 @@ public abstract class PriorityExpression extends Expression {
         if (myType == ADD || myType == MUL || myType == AND || myType == OR
                 || myType == SQUARE_BRACKETS || myType == ARRAYLENGTH ||
                 myType == BITWISE_AND || myType == BITWISE_OR || myType == BITWISE_XOR || myType == EQ || myType == NE ||
-                isComplexIncrement()
+                isComplexIncrement() || myType == INVOCATION
                 ) {
             return true;
         }

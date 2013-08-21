@@ -63,13 +63,10 @@ public class UnaryExpression extends PriorityExpression {
     public Expression invert() {
         switch (myType) {
             case NOT:
-                myOperand = myOperand.invert();
-                break;
+                return myOperand;
             default:
                 return super.invert();
         }
-
-        return this;
     }
 
     @Override
@@ -78,5 +75,10 @@ public class UnaryExpression extends PriorityExpression {
                 "myType=" + myType +
                 ", myOperand=" + myOperand +
                 '}';
+    }
+
+    @Override
+    public boolean isBoolean() {
+        return myType == NOT;
     }
 }

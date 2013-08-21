@@ -18,4 +18,6 @@ public abstract class Expression {
     public Expression invert() {
         return new UnaryExpression(NOT, this);
     }
+
+    public abstract boolean isBoolean();
 }
