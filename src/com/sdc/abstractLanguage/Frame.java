@@ -101,7 +101,7 @@ public class Frame {
     public Variable createAndInsertVariable(final int index, final String type, final String name) {
         if (!containsVariable(index)) {
             final Variable variable = new Variable(index, type, name);
-            variable.setIsMethodParameter(myLastMethodParameterIndex < index);
+            variable.setIsMethodParameter(index > 0 && index <= myLastMethodParameterIndex);
 
             myVariableIndexToArrayPosition.put(index, myVariables.size());
             myVariables.add(variable);
@@ -144,7 +144,12 @@ public class Frame {
     }
 
     protected List<Variable> getVariablesSubList(final int rightBound) {
-        return myVariables.subList(0, rightBound);
+        List<Variable> result = new ArrayList<Variable>();
+        for (final Variable variable : myVariables.subList(0, rightBound)) {
+            result.add(variable);
+        }
+
+        return result;
     }
 
     protected boolean containsVariable(final int index) {

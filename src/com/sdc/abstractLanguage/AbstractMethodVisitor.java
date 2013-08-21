@@ -126,14 +126,13 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
         if (type == 0) {
             // F_FULL
-            newFrame = currentFrame.createNextFrameWithAbsoluteBound(local.length);
-            myDecompiledMethod.addNewFrame(newFrame);
+            newFrame = currentFrame.createNextFrameWithAbsoluteBound(nLocal);
         } else if (type == 1) {
             // F_APPEND
-            newFrame = currentFrame.createNextFrameWithRelativeBound(local.length);
+            newFrame = currentFrame.createNextFrameWithRelativeBound(nLocal);
         } else if (type == 2) {
             // F_CHOP
-            newFrame = currentFrame.createNextFrameWithRelativeBound(-local.length);
+            newFrame = currentFrame.createNextFrameWithRelativeBound(-nLocal);
         } else if (type == 3 || type == 4) {
             // F_SAME F_SAME1
             newFrame = currentFrame.createNextFrameWithRelativeBound(0);
@@ -943,9 +942,8 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
     }
 
     protected boolean isThisVariableOnTopOfStack() {
-        boolean aThis = ((Variable) myBodyStack.peek()).isThis();
-        return myDecompiledMethod.isNormalClassMethod() && !myBodyStack.isEmpty()
-                && myBodyStack.peek() instanceof Variable && aThis;
+        final boolean isThis = ((Variable) myBodyStack.peek()).isThis();
+        return myDecompiledMethod.isNormalClassMethod() && !myBodyStack.isEmpty() && myBodyStack.peek() instanceof Variable && isThis;
     }
 
     protected void replaceInvocationsFromExpressionsToStatements() {
