@@ -123,13 +123,13 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
     public void visitFrame(final int type, final int nLocal, final Object[] local, final int nStack, final Object[] stack) {
         if (type == 2) {
             // F_CHOP
-            AbstractFrame newAbstractFrame = myLanguagePartFactory.createFrame();
+//            AbstractFrame newAbstractFrame = myLanguagePartFactory.createFrame();
 
-            getCurrentFrame().getParent().addChild(newAbstractFrame);
-            getCurrentFrame().getParent().setChopFrame(newAbstractFrame);
-            newAbstractFrame.setChopFrame(getCurrentFrame().getParent());
+//            getCurrentFrame().getParent().addChild(newAbstractFrame);
+//            getCurrentFrame().getParent().setChopFrame(newAbstractFrame);
+//            newAbstractFrame.setChopFrame(getCurrentFrame().getParent());
 
-            myDecompiledMethod.setCurrentFrame(newAbstractFrame);
+            myDecompiledMethod.setCurrentFrame(getCurrentFrame().getParent());
         } else if (type == 3) {
             // F_SAME
             AbstractFrame newAbstractFrame = myLanguagePartFactory.createFrame();
@@ -365,7 +365,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         } else if (opString.contains("ALOAD")) {
             final Expression arrayIndex = getTopOfBodyStack();
             Expression ref = getTopOfBodyStack();
-            myBodyStack.push(new SquareBrackets(ref ,arrayIndex));
+            myBodyStack.push(new SquareBrackets(ref, arrayIndex));
         } else if (opString.contains("ASTORE")) {
             final Expression expr = getTopOfBodyStack();
             final Expression arrayIndex = getTopOfBodyStack();
@@ -846,7 +846,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                         }
                     }
                 }
-            } else if (node.getListOfTails().isEmpty() && !node.isLastStatementReturn()) {
+            } else if (node.getListOfTails().isEmpty() && !node.isLastStatementReturn() && node.getIndex() != myNodes.size() - 1) {
                 node.addTail(myNodes.get(i + 1));
                 myNodes.get(i + 1).addAncestor(node);
             }

@@ -1,8 +1,10 @@
 package com.sdc.util;
 
-import com.sdc.cfg.constructions.ConditionalBlock;
-import com.sdc.cfg.constructions.Construction;
-import com.sdc.cfg.constructions.ElementaryBlock;
+import com.sdc.ast.controlflow.Assignment;
+import com.sdc.ast.controlflow.Increment;
+import com.sdc.ast.controlflow.Statement;
+import com.sdc.ast.expressions.identifiers.Variable;
+import com.sdc.cfg.constructions.*;
 import com.sdc.cfg.nodes.DoWhile;
 import com.sdc.cfg.nodes.Node;
 import com.sdc.cfg.nodes.Switch;
@@ -28,7 +30,72 @@ public class ConstructionBuilder {
     }
 
     public Construction build() {
-        return build(myNodes.get(0));
+        return extractFor(build(myNodes.get(0)));
+    }
+
+    private Construction extractFor(Construction baseConstruction) {
+
+        final Construction whileStartConstruction = baseConstruction.getNextConstruction();
+
+        if (baseConstruction instanceof ElementaryBlock && whileStartConstruction != null && whileStartConstruction instanceof While) {
+            final ElementaryBlock blockBeforeWhileConstruction = (ElementaryBlock) baseConstruction;
+
+            if (!blockBeforeWhileConstruction.getStatements().isEmpty()) {
+                final Statement variableDeclarationForWhen = blockBeforeWhileConstruction.getLastStatement();
+
+                if (variableDeclarationForWhen instanceof Assignment) {
+                    final Assignment variableAssignmentForWhen = (Assignment) variableDeclarationForWhen;
+
+                    if (variableAssignmentForWhen.getLeft() instanceof Variable) {
+                        final int forVariableIndex = ((Variable) variableAssignmentForWhen.getLeft()).getIndex();
+                        Construction currentConstruction = ((While) whileStartConstruction).getBody();
+
+                        while (currentConstruction.getNextConstruction() != null) {
+                            currentConstruction = currentConstruction.getNextConstruction();
+                        }
+                        if (currentConstruction instanceof ElementaryBlock) {
+                            ElementaryBlock forAfterThoughtBlock = (ElementaryBlock) currentConstruction;
+                            final Statement forAfterThought = forAfterThoughtBlock.getLastStatement();
+
+                            if (forAfterThought instanceof Assignment) {
+                                final Assignment afterThoughtAssignment = (Assignment) forAfterThought;
+                                if (afterThoughtAssignment.getLeft() instanceof Variable) {
+                                    final int afterThoughtVariableIndex = ((Variable) afterThoughtAssignment.getLeft()).getIndex();
+                                    if (afterThoughtVariableIndex == forVariableIndex) {
+                                        For forConstruction = new For(variableAssignmentForWhen, ((While) whileStartConstruction).getCondition(), afterThoughtAssignment);
+                                        forConstruction.setBody(((While) whileStartConstruction).getBody());
+
+                                        blockBeforeWhileConstruction.removeLastStatement();
+                                        blockBeforeWhileConstruction.setNextConstruction(forConstruction);
+                                        forConstruction.setNextConstruction(whileStartConstruction.getNextConstruction());
+                                        forAfterThoughtBlock.removeLastStatement();
+
+                                        return blockBeforeWhileConstruction;
+                                    }
+                                }
+                            } else if (forAfterThought instanceof Increment) {
+                                final Increment afterThoughtIncrement = (Increment) forAfterThought;
+                                final int afterThoughtVariableIndex = afterThoughtIncrement.getVariable().getIndex();
+
+                                if (afterThoughtVariableIndex == forVariableIndex) {
+                                    For forConstruction = new For(variableAssignmentForWhen, ((While) whileStartConstruction).getCondition(), afterThoughtIncrement);
+                                    forConstruction.setBody(((While) whileStartConstruction).getBody());
+
+                                    blockBeforeWhileConstruction.removeLastStatement();
+                                    blockBeforeWhileConstruction.setNextConstruction(forConstruction);
+                                    forConstruction.setNextConstruction(whileStartConstruction.getNextConstruction());
+                                    forAfterThoughtBlock.removeLastStatement();
+
+                                    return blockBeforeWhileConstruction;
+                                }
+                            }
+                        }
+                    }
+                }
+
+            }
+        }
+        return baseConstruction;
     }
 
     private Construction build(Node node) {
@@ -211,10 +278,20 @@ public class ConstructionBuilder {
                         node.setNextNode(node.getListOfTails().get(1));
                     }
                     com.sdc.cfg.constructions.While whileConstruction = new com.sdc.cfg.constructions.While(node.getCondition());
-                    whileConstruction.setBody(createConstructionBuilder(myNodes.subList(getRelativeIndex(node.getListOfTails().get(0)), getRelativeIndex(gen.getRightIndexForLoop(node.getIndex()))), gen).build());
+
+
+                    int relativeIndexOfLeftTail = getRelativeIndex(node.getListOfTails().get(0));
+                    int relativeIndexOfLoop = getRelativeIndex(gen.getRightIndexForLoop(node.getIndex()));
+                    List<Node> whileBody = myNodes.subList(relativeIndexOfLeftTail, relativeIndexOfLeftTail > relativeIndexOfLoop ? getRelativeIndex(node.getListOfTails().get(1)) : relativeIndexOfLoop);
+
+                    whileConstruction.setBody(createConstructionBuilder(whileBody, gen).build());
                     if (node.getNextNode() != null && checkForIndexOutOfBound(node.getNextNode())) {
                         extractNextConstruction(whileConstruction, node);
                     }
+
+                    placeBreakAndContinue(node, whileBody);
+                    removeBreakAndContinueFromLastConstruction(whileConstruction.getBody());
+
                     return whileConstruction;
                 }
             }
@@ -239,7 +316,7 @@ public class ConstructionBuilder {
                 int rightIndex = getRelativeIndex(rightNode);
 
                 if (node.getNextNode() == null) {
-                    if (hasElse(rightNode)) {
+                    if (hasNotElse(rightNode) || checkRightTail(node)) {
                         if (rightNode.getIndex() <= myNodes.get(size - 1).getIndex()) {
                             node.setNextNode(checkForIndexOutOfBound(rightNode) ? rightNode : null);
                         }
@@ -258,21 +335,63 @@ public class ConstructionBuilder {
                 extractNextConstruction(conditionalBlock, node);
             }
             return conditionalBlock;
-//            }
         }
         return null;
     }
 
-    private boolean hasElse(final Node node) {
-        int count = 0;
+    private void placeBreakAndContinue(final Node begin, final List<Node> nodes) {
+        final int leftBound = nodes.get(0).getIndex();
+        final int rightBound = nodes.get(nodes.size() - 1).getIndex();
+        final int beginIndex = begin.getIndex();
 
+        for (final Node node : nodes) {
+            for (final Node tail : node.getListOfTails()) {
+                final int tailIndex = tail.getIndex();
+
+                if (tailIndex != beginIndex && (tailIndex < leftBound || tailIndex > rightBound)) {
+                    node.getConstruction().setBreak("");
+                    if (node.getConstruction().hasContinue()) {
+                        node.getConstruction().setContinue(null);
+                    }
+                }
+
+                if (tailIndex == beginIndex) {
+                    node.getConstruction().setContinue("");
+                }
+            }
+        }
+    }
+
+    private void removeBreakAndContinueFromLastConstruction(Construction start) {
+        while (start.getNextConstruction() != null) {
+            start = start.getNextConstruction();
+        }
+
+        start.setBreak(null);
+        start.setContinue(null);
+
+        if (start instanceof ConditionalBlock) {
+            ConditionalBlock conditionalBlock = (ConditionalBlock) start;
+            if (conditionalBlock.getElseBlock() != null) {
+                removeBreakAndContinueFromLastConstruction(conditionalBlock.getElseBlock());
+            }
+        }
+    }
+
+    private boolean hasNotElse(final Node node) {
+        int count = 0;
+        // ????
         for (final Node ancestor : node.getAncestors()) {
             if (node.getIndex() > ancestor.getIndex()) {
                 count++;
             }
         }
 
-        return count <= 1;
+        return count > 1;
+    }
+
+    private boolean checkRightTail(final Node node) {
+        return node.getListOfTails().get(1).getIndex() < node.getIndex();
     }
 
     private int getRelativeIndex(Node node) {
