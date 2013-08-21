@@ -3,6 +3,7 @@ package com.sdc.abstractLanguage;
 import com.sdc.ast.expressions.Expression;
 import com.sdc.ast.expressions.identifiers.Variable;
 import com.sdc.cfg.constructions.Construction;
+import org.objectweb.asm.Label;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -140,6 +141,15 @@ public abstract class AbstractMethod {
 
     public void updateVariableInformation(final int index, final String type, final String name) {
         getCurrentFrame().updateVariableInformation(index, type, name);
+    }
+
+    public void updateVariableInformationFromDebugInfo(final int index, final String type, final String name, final Label start) {
+        for (final Frame frame : myFrames) {
+            if (frame.hasLabel(start)) {
+                frame.updateVariableInformation(index, type, name);
+                return;
+            }
+        }
     }
 
     public void declareThisVariable() {

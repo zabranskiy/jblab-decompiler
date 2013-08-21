@@ -13,8 +13,7 @@ public class Frame {
     protected Map<Integer, Integer> myVariableIndexToArrayPosition = new HashMap<Integer, Integer>();
     protected List<Variable> myVariables = new ArrayList<Variable>();
 
-    protected Label myStart;
-    protected Label myEnd;
+    protected List<Label> myLabels = new ArrayList<Label>();
 
     protected int myLastMethodParameterIndex = -1;
 
@@ -42,20 +41,12 @@ public class Frame {
         this.myVariables = variables;
     }
 
-    public Label getStart() {
-        return myStart;
+    public void addLabel(final Label label) {
+        myLabels.add(label);
     }
 
-    public void setStart(final Label start) {
-        this.myStart = start;
-    }
-
-    public Label getEnd() {
-        return myEnd;
-    }
-
-    public void setEnd(final Label end) {
-        this.myEnd = end;
+    public boolean hasLabel(final Label label) {
+        return myLabels.contains(label);
     }
 
     public int getLastMethodParameterIndex() {

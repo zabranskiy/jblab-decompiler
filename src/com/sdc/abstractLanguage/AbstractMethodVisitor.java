@@ -121,7 +121,8 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
     @Override
     public void visitFrame(final int type, final int nLocal, final Object[] local, final int nStack, final Object[] stack) {
-        final Frame currentFrame = getCurrentFrame();
+        Frame currentFrame = getCurrentFrame();
+
         Frame newFrame = null;
 
         if (type == 0) {
@@ -137,6 +138,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             // F_SAME F_SAME1
             newFrame = currentFrame.createNextFrameWithRelativeBound(0);
         }
+
         myDecompiledMethod.addNewFrame(newFrame);
 
         if (nStack > 0) {
@@ -680,6 +682,8 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
     @Override
     public void visitLabel(final Label label) {
+        getCurrentFrame().addLabel(label);
+
         if (myLabels.contains(label)) {
             applyNode();
             myLabels.remove(label);
@@ -778,7 +782,8 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         }
 
         final String description = signature != null ? signature : desc;
-        getCurrentFrame().updateVariableInformation(index, getDescriptor(description, 0, myDecompiledMethod.getImports()), name);
+
+        myDecompiledMethod.updateVariableInformationFromDebugInfo(index, getDescriptor(description, 0, myDecompiledMethod.getImports()), name, start);
     }
 
     @Override
