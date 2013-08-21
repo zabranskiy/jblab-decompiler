@@ -37,6 +37,14 @@ public class Variable extends Identifier {
         myIsDeclared = true;
     }
 
+    public void setName(final String name) {
+        this.myName = new Constant(name, false);
+    }
+
+    public void setVariableType(final String variableType) {
+        this.myVariableType = variableType;
+    }
+
     @Override
     public Expression getName() {
         return myName;

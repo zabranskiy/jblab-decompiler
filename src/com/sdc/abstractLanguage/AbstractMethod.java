@@ -1,6 +1,7 @@
 package com.sdc.abstractLanguage;
 
 import com.sdc.ast.expressions.Expression;
+import com.sdc.ast.expressions.identifiers.Variable;
 import com.sdc.cfg.constructions.Construction;
 
 import java.util.ArrayList;
@@ -24,10 +25,9 @@ public abstract class AbstractMethod {
     protected List<AbstractAnnotation> myAnnotations = new ArrayList<AbstractAnnotation>();
     protected Map<Integer, List<AbstractAnnotation>> myParameterAnnotations = new HashMap<Integer, List<AbstractAnnotation>>();
 
-    protected int myLastLocalVariableIndex;
+    protected List<Frame> myFrames = new ArrayList<Frame>();
 
-    protected AbstractFrame myRootAbstractFrame;
-    protected AbstractFrame myCurrentAbstractFrame;
+    protected int myLastLocalVariableIndex;
 
     protected MethodVisitorStub.DecompilerException myError = null;
 
@@ -107,14 +107,6 @@ public abstract class AbstractMethod {
         this.myLastLocalVariableIndex = lastLocalVariableIndex;
     }
 
-    public AbstractFrame getCurrentFrame() {
-        return myCurrentAbstractFrame;
-    }
-
-    public void setCurrentFrame(final AbstractFrame currentAbstractFrame) {
-        this.myCurrentAbstractFrame = currentAbstractFrame;
-    }
-
     public AbstractClass getDecompiledClass() {
         return myAbstractClass;
     }
@@ -127,29 +119,27 @@ public abstract class AbstractMethod {
         myImports.add(importClassName);
     }
 
-    public void addLocalVariableName(final int index, final String name) {
-        myCurrentAbstractFrame.addLocalVariableName(index, name);
-    }
-
-    public void addLocalVariableType(final int index, final String type) {
-        myCurrentAbstractFrame.addLocalVariableType(index, type);
-    }
-
-    public void addLocalVariableFromDebugInfo(final int index, final String name, final String type) {
-        myRootAbstractFrame.setLastLocalVariableIndex(myLastLocalVariableIndex);
-        myRootAbstractFrame.addLocalVariableFromDebugInfo(index, name, type);
-    }
-
-    public List<String> getParameters() {
-        List<String> parameters = new ArrayList<String>();
-        final int startIndex = getParametersStartIndex();
-
-        for (int variableIndex = startIndex; variableIndex <= myLastLocalVariableIndex; variableIndex++) {
-            if (myRootAbstractFrame.containsIndex(variableIndex)) {
-                parameters.add(myRootAbstractFrame.getLocalVariableName(variableIndex));
-            }
+    public Frame getCurrentFrame() {
+        if (!myFrames.isEmpty()) {
+            return myFrames.get(myFrames.size() - 1);
         }
-        return parameters;
+        return null;
+    }
+
+    public void addNewFrame(final Frame frame) {
+        myFrames.add(frame);
+    }
+
+    public void addVariable(final int index, final String name, final String type) {
+        getCurrentFrame().insertVariable(index, name, type);
+    }
+
+    public void updateVariableInformation(final int index, final String name, final String type) {
+        getCurrentFrame().updateVariableInformation(index, name, type);
+    }
+
+    public List<Variable> getParameters() {
+        return getCurrentFrame().getMethodParameters();
     }
 
     public boolean isGenericType(final String className) {
@@ -206,10 +196,6 @@ public abstract class AbstractMethod {
 
     public boolean hasFieldInitializer(final String fieldName) {
         return myAbstractClass.hasFieldInitializer(fieldName);
-    }
-
-    public void declareThisVariable() {
-        myRootAbstractFrame.getLocalVariableName(0);
     }
 
     public void setBegin(Construction myBegin) {

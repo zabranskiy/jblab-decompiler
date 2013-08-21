@@ -82,14 +82,20 @@ public class Frame {
         return false;
     }
 
-    public void insertVariable(final int index, final String type) {
+    public void insertVariable(final int index, final String type, final String name) {
         if (!containsVariable(index)) {
-            final Variable variable = new Variable(index, type);
+            final Variable variable = new Variable(index, type, name);
             variable.setIsMethodParameter(myLastMethodParameterIndex < index);
 
             myVariables.add(variable);
             myVariableIndexToArrayPosition.put(index, myVariables.size());
         }
+    }
+
+    public void updateVariableInformation(final int index, final String type, final String name) {
+        Variable variable = getVariable(index);
+        variable.setVariableType(type);
+        variable.setName(name);
     }
 
     public Variable getVariable(final int variableIndex) {
@@ -104,6 +110,10 @@ public class Frame {
         newFrame.setLastMethodParameterIndex(myLastMethodParameterIndex);
 
         return newFrame;
+    }
+
+    public List<Variable> getMethodParameters() {
+        return getVariablesSubList(myVariableIndexToArrayPosition.get(myLastMethodParameterIndex) + 1);
     }
 
     protected List<Variable> getVariablesSubList(final int rightBound) {
