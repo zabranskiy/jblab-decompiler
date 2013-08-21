@@ -55,6 +55,9 @@ public class Frame {
 
     public void setLastMethodParameterIndex(final int lastMethodParameterIndex) {
         this.myLastMethodParameterIndex = lastMethodParameterIndex;
+        if (myLastCommonVariableIndexInList == -1) {
+            myLastCommonVariableIndexInList = lastMethodParameterIndex;
+        }
     }
 
     public int getLastCommonVariableIndexInList() {
@@ -116,6 +119,10 @@ public class Frame {
         }
     }
 
+    public int getVariableListLength() {
+        return myVariables.size();
+    }
+
     public Frame createNextFrameWithAbsoluteBound(final int rightBound) {
         Frame newFrame = createFrame();
 
@@ -136,7 +143,9 @@ public class Frame {
 
     protected List<Variable> getVariablesSubList(final int rightBound) {
         List<Variable> result = new ArrayList<Variable>();
-        for (final Variable variable : myVariables.subList(0, rightBound)) {
+        final int actualRightBound = rightBound > myVariables.size() ? myVariables.size() : rightBound;
+
+        for (final Variable variable : myVariables.subList(0, actualRightBound)) {
             result.add(variable);
         }
 

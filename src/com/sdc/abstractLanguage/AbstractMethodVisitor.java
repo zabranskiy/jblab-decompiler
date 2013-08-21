@@ -136,7 +136,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             newFrame = currentFrame.createNextFrameWithRelativeBound(-nLocal);
         } else if (type == 3 || type == 4) {
             // F_SAME F_SAME1
-            newFrame = currentFrame.createNextFrameWithRelativeBound(0);
+            newFrame = currentFrame.createNextFrameWithAbsoluteBound(currentFrame.getVariableListLength());
         }
 
         myDecompiledMethod.addNewFrame(newFrame);
