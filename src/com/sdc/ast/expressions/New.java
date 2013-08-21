@@ -18,4 +18,9 @@ public class New extends PriorityExpression {
     public String getReturnType() {
         return myConstructor.getReturnType();
     }
+
+    @Override
+    public boolean isBoolean() {
+        return false;
+    }
 }

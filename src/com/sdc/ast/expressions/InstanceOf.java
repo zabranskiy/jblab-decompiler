@@ -34,4 +34,9 @@ public class InstanceOf extends PriorityExpression {
     public boolean isInverted() {
         return myIsInverted;
     }
+
+    @Override
+    public boolean isBoolean() {
+        return true;
+    }
 }

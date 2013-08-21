@@ -884,7 +884,14 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             } else if (opString.contains("NULL")) {
                 return new BinaryExpression(OperationType.EQ, e, new Constant("null", false));
             } else {
-                return new BinaryExpression(OperationType.valueOf(opString.substring(2)), e, new Constant(0, false));
+                if(e.isBoolean()){
+                    if(opString.contains("EQ")){
+                        return e.invert();
+                    }
+                    return e;
+                } else{
+                    return new BinaryExpression(OperationType.valueOf(opString.substring(2)), e, new Constant(0, false));
+                }
             }
         }
     }

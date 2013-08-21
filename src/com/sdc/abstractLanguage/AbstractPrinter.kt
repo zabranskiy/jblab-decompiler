@@ -126,9 +126,10 @@ abstract class AbstractPrinter {
     open fun printBinaryExpression(expression: BinaryExpression, nestSize: Int): PrimeDoc {
         val l = expression.getLeft()
         val r = expression.getRight()
+        val isAssociative = expression.isAssociative();
         val opPriority = expression.getPriority(getOperationPrinter())
-        val left = printExpressionCheckBrackets(l, opPriority, nestSize);
-        val right = printExpressionCheckBrackets(r, opPriority, expression.isAssociative(), nestSize);
+        val left = printExpressionCheckBrackets(l, opPriority, isAssociative, nestSize);
+        val right = printExpressionCheckBrackets(r, opPriority, isAssociative, nestSize);
         return group(left / (text(expression.getOperation(getOperationPrinter())) + right))
     }
 
