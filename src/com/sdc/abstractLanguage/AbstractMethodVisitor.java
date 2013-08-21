@@ -417,7 +417,6 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
     @Override
     public void visitVarInsn(final int opcode, final int var) {
-        //todo more inc's
         final String opString = Printer.OPCODES[opcode];
 
         final boolean currentFrameHasStack = getCurrentFrame().checkStack();
@@ -491,12 +490,22 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 } else if (left instanceof ExprIncrement && ((ExprIncrement) left).getVariable().getIndex() == var) {
                     myStatements.remove(lastIndex);
                     myStatements.add(new Increment((ExprIncrement) left));
-                    myStatements.add(new Increment(((ExprIncrement) left).getVariable(), right, type));
+                    if (expr.equals(expr2)) {
+                        myBodyStack.pop();
+                        myBodyStack.add(new ExprIncrement(((ExprIncrement) left).getVariable(), right, type));
+                    } else {
+                        myStatements.add(new Increment(((ExprIncrement) left).getVariable(), right, type));
+                    }
                 } else if (right instanceof ExprIncrement && ((ExprIncrement) right).getVariable().getIndex() == var
                         && binaryExpression.isAssociative()) {
                     myStatements.remove(lastIndex);
                     myStatements.add(new Increment((ExprIncrement) right));
-                    myStatements.add(new Increment(((ExprIncrement) right).getVariable(), left, type));
+                    if (expr.equals(expr2)) {
+                        myBodyStack.pop();
+                        myBodyStack.add(new ExprIncrement(((ExprIncrement) right).getVariable(), left, type));
+                    } else {
+                        myStatements.add(new Increment(((ExprIncrement) right).getVariable(), left, type));
+                    }
                 }
             }
         }

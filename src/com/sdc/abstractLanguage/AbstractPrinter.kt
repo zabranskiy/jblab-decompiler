@@ -225,11 +225,12 @@ abstract class AbstractPrinter {
         }   else{
             val increment = expression.getIncrementExpression();
             val priority = expression.getPriority(getOperationPrinter())
+            val isAssociative = expression.isAssociative();
             val printIncrement =
                     if(increment is Constant){
                         printExpression(increment, nestSize)
                     } else{
-                        printExpressionCheckBrackets(increment, priority, nestSize)
+                        printExpressionCheckBrackets(increment, priority, isAssociative, nestSize)
                     }
             if(expression.IsIncrementSimple()){
                 return group(nest(nestSize, printExpr + text(operation)))
