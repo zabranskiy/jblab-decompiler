@@ -100,11 +100,11 @@ public class Decompiler {
         }
         cv.setClassFilesJarPath(classFilesJarPath);
 
-//        try {
+        try {
             cr.accept(cv, 0);
             return cv.getDecompiledCode();
-//        } catch (RuntimeException e) {
-//            return "General class decompiling error occurred: " + e.getMessage();
-//        }
+        } catch (RuntimeException e) {
+            return "General class decompiling error occurred: " + e.getMessage();
+        }
     }
 }
