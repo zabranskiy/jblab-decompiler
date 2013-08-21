@@ -3,37 +3,52 @@ package com.sdc.ast.expressions.identifiers;
 import com.sdc.ast.OperationType;
 import com.sdc.ast.expressions.Constant;
 import com.sdc.ast.expressions.Expression;
-import com.sdc.abstractLanguage.AbstractFrame;
 
 public class Variable extends Identifier {
     private final int myIndex;
-    private final AbstractFrame myAbstractFrame;
-    private Expression name;
 
-    public Variable(final int index, final AbstractFrame abstractFrame) {
+    private Expression myName;
+    private String myVariableType;
+
+    private boolean myIsMethodParameter = false;
+    private boolean myIsDeclared = false;
+
+    public Variable(final int index, final String variableType, final String name) {
         this.myIndex = index;
-        this.myAbstractFrame = abstractFrame;
-        myType = OperationType.VARIABLE;
+        this.myName = new Constant(name, false);
+        this.myVariableType = variableType;
 
+        myType = OperationType.VARIABLE;
+    }
+
+    public void setIsMethodParameter(final boolean isMethodParameter) {
+        this.myIsMethodParameter = isMethodParameter;
+    }
+
+    public boolean isMethodParameter() {
+        return myIsMethodParameter;
+    }
+
+    public boolean isDeclared() {
+        return myIsDeclared;
+    }
+
+    public void declare() {
+        myIsDeclared = true;
     }
 
     @Override
     public Expression getName() {
-        if(name == null) name = new Constant(myAbstractFrame.getLocalVariableName(myIndex), false);
-        return name;
+        return myName;
     }
 
     @Override
     public String getType() {
-        return myAbstractFrame.getLocalVariableType(myIndex);
+        return myVariableType;
     }
 
     public int getIndex() {
         return myIndex;
-    }
-
-    public AbstractFrame getAbstractFrame() {
-        return myAbstractFrame;
     }
 
     @Override
@@ -46,10 +61,10 @@ public class Variable extends Identifier {
         }
         return "Variable{" +
                 "myIndex=" + myIndex +
-                ", name=" + (name != null ? name : " no name yet") + "}";
+                ", myName=" + (name != null ? name : " no myName yet") + "}";
     }
 
-    public boolean isThis(){
+    public boolean isThis() {
         return getName() instanceof Constant && ((Constant) getName()).isThis();
     }
 }
