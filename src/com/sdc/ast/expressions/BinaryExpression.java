@@ -64,7 +64,7 @@ public class BinaryExpression extends PriorityExpression {
             case USHR:
                 return operationPrinter.getUSHRView();
             case BITWISE_XOR:
-                return operationPrinter.getXorView();
+                return operationPrinter.getBitwiseXorView();
             default:
                 return "";
         }
@@ -118,8 +118,10 @@ public class BinaryExpression extends PriorityExpression {
                 '}';
     }
 
-    public boolean isArithmeticType() {
-        return myType == ADD || myType == SUB || myType == MUL || myType == DIV || myType == REM;
+    public boolean isIncrementCastableType() {
+        return myType == ADD || myType == SUB || myType == MUL || myType == DIV || myType == REM ||
+                myType == USHR || myType == SHR || myType == SHL ||
+                myType == BITWISE_AND || myType == BITWISE_OR || myType == BITWISE_XOR;
     }
 
     public boolean isLogicType() {

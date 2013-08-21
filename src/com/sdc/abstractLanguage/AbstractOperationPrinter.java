@@ -70,24 +70,48 @@ public abstract class AbstractOperationPrinter {
         return "<< ";
     }
 
+    public String getSHLIncView() {
+        return "<<= ";
+    }
+
     public String getSHRView() {
         return ">> ";
     }
 
-    public String getXorView() {
+    public String getSHRIncView() {
+        return ">>= ";
+    }
+
+    public String getBitwiseXorView() {
         return "^ ";
+    }
+
+    public String getBitwiseXorIncView() {
+        return "^= ";
     }
 
     public String getBitwiseOrView() {
         return "| ";
     }
 
+    public String getBitwiseOrIncView() {
+        return "|= ";
+    }
+
     public String getBitwiseAndView() {
         return "& ";
     }
 
+    public String getBitwiseAndIncView() {
+        return "&= ";
+    }
+
     public String getUSHRView() {
         return ">>> ";
+    }
+
+    public String getUSHRIncView() {
+        return ">>>= ";
     }
 
     public String getAddIncView() {
@@ -201,7 +225,9 @@ public abstract class AbstractOperationPrinter {
             return 12;
         } else if (type == TERNARY_IF) {
             return 13;
-        } else if (type == MUL_INC || type == DIV_INC || type == REM_INC || type == ADD_INC || type == SUB_INC) {
+        } else if (type == MUL_INC || type == DIV_INC || type == REM_INC || type == ADD_INC || type == SUB_INC ||
+                type == BITWISE_OR_INC || type == BITWISE_AND_INC || type == BITWISE_XOR_INC ||
+                type == SHL_INC  || type == SHR_INC  || type == USHR_INC  ) {
             return 14;
         } else if (type == NEWARRAY || type == NEW) {
             return 15;
