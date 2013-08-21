@@ -52,4 +52,9 @@ public class Variable extends Identifier {
     public boolean isThis(){
         return getName() instanceof Constant && ((Constant) getName()).isThis();
     }
+
+    @Override
+    public boolean isBoolean() {
+        return getType().contains("boolean");
+    }
 }

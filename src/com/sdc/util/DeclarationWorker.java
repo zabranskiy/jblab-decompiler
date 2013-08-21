@@ -117,7 +117,8 @@ public class DeclarationWorker {
         return result;
     }
 
-    public static String getJavaDescriptor(final String descriptor, final int pos, List<String> imports) {
+    public static String
+    getJavaDescriptor(final String descriptor, final int pos, List<String> imports) {
         switch (descriptor.charAt(pos)) {
             case 'V':
                 return "void";
@@ -138,6 +139,9 @@ public class DeclarationWorker {
             case 'D':
                 return "double";
             case 'L':
+                if (!descriptor.contains(";")) {
+                    return "long";
+                }
                 if (descriptor.indexOf("<", pos) == -1 || descriptor.indexOf("<", pos) > descriptor.indexOf(";", pos)) {
                     return getSimpleClassName(descriptor, pos, imports);
                 } else {
@@ -179,6 +183,9 @@ public class DeclarationWorker {
             case 'D':
                 return "Double";
             case 'L':
+                if (!descriptor.contains(";")) {
+                    return "long";
+                }
                 if (descriptor.indexOf("<", pos) == -1 || descriptor.indexOf("<", pos) > descriptor.indexOf(";", pos)) {
                     final String actualClassName = getSimpleClassName(descriptor, pos, imports);
                     if (isPrimitiveClass(actualClassName)) {

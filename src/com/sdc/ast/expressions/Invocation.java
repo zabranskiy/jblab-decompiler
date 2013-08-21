@@ -29,4 +29,9 @@ public class Invocation extends PriorityExpression {
     public List<Expression> getArguments() {
         return myArguments;
     }
+
+    @Override
+    public boolean isBoolean() {
+        return myReturnType.contains("boolean");
+    }
 }

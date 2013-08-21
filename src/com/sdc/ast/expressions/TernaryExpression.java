@@ -42,4 +42,9 @@ public class TernaryExpression extends PriorityExpression {
                 ", myRight=" + myRight +
                 '}';
     }
+
+    @Override
+    public boolean isBoolean() {
+        return false;
+    }
 }

@@ -41,4 +41,9 @@ public class Field extends Identifier {
     public String getType() {
         return myIdentifierType;
     }
+
+    @Override
+    public boolean isBoolean() {
+        return myIdentifierType.contains("boolean");
+    }
 }

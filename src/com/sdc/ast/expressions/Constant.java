@@ -37,4 +37,8 @@ public class Constant extends PriorityExpression {
         return myValue.equals("this") && !myIsStringValue;
     }
 
+    @Override
+    public boolean isBoolean() {
+        return false;
+    }
 }
