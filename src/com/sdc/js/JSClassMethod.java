@@ -15,8 +15,6 @@ public class JSClassMethod extends AbstractMethod {
                       final int textWidth, final int nestSize)
     {
         super(modifier, returnType, name, signature, exceptions, abstractClass, genericTypes, genericIdentifiers, textWidth, nestSize);
-        this.myRootAbstractFrame = new JSFrame();
-        this.myCurrentAbstractFrame = myRootAbstractFrame;
     }
 
     @Override

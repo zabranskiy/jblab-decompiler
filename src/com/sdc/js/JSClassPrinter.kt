@@ -48,7 +48,7 @@ class JSPrinter : AbstractPrinter() {
         if (classMethod.getLastLocalVariableIndex() != 0) {
             var variables = classMethod.getParameters()
             var variablesDocs = variables!!.take(variables!!.size - 1)
-                    .map { variable -> text(variable) + text(", ") }
+                    .map { variable -> printExpression(variable, decompiledMethod.getNestSize()) + text(", ") }
 
             arguments = nest(2 * classMethod.getNestSize(), fill(variablesDocs + text(variables!!.last as String)))
         }

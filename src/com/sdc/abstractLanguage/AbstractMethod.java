@@ -119,6 +119,10 @@ public abstract class AbstractMethod {
         myImports.add(importClassName);
     }
 
+    public Frame createFrame() {
+        return new Frame();
+    }
+
     public Frame getCurrentFrame() {
         if (!myFrames.isEmpty()) {
             return myFrames.get(myFrames.size() - 1);
@@ -130,12 +134,16 @@ public abstract class AbstractMethod {
         myFrames.add(frame);
     }
 
-    public void addVariable(final int index, final String name, final String type) {
-        getCurrentFrame().insertVariable(index, name, type);
+    public void addVariable(final int index, final String type, final String name) {
+        getCurrentFrame().createAndInsertVariable(index, type, name);
     }
 
-    public void updateVariableInformation(final int index, final String name, final String type) {
-        getCurrentFrame().updateVariableInformation(index, name, type);
+    public void updateVariableInformation(final int index, final String type, final String name) {
+        getCurrentFrame().updateVariableInformation(index, type, name);
+    }
+
+    public void declareThisVariable() {
+        getCurrentFrame().getVariable(0).declare();
     }
 
     public List<Variable> getParameters() {

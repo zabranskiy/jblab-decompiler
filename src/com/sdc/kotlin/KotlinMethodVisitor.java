@@ -105,7 +105,7 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
 
             isStaticInvocation = true;
             if (name.equals("checkParameterIsNotNull")) {
-                ((KotlinFrame) getCurrentFrame()).addNotNullVariable(((Variable) arguments.get(0)).getIndex());
+//                ((KotlinFrame) getCurrentFrame()).addNotNullVariable(((Variable) arguments.get(0)).getIndex());
                 return;
             }
         }
@@ -118,10 +118,10 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
                                    final String signature, final Label start, final Label end,
                                    final int index)
     {
-        if (index == 0 && name.equals("$receiver")) {
-            myDecompiledMethod.addLocalVariableName(index, name);
-            return;
-        }
+//        if (index == 0 && name.equals("$receiver")) {
+//            myDecompiledMethod.addLocalVariableName(index, name);
+//            return;
+//        }
 
         super.visitLocalVariable(name, desc, signature, start, end, index);
     }

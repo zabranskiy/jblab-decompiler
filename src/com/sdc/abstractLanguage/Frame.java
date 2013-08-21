@@ -8,6 +8,7 @@ import java.util.*;
 public class Frame {
     protected boolean myStackChecked = false;
     protected boolean myHasStack = false;
+    protected String myStackedVariableType;
 
     protected Map<Integer, Integer> myVariableIndexToArrayPosition = new HashMap<Integer, Integer>();
     protected List<Variable> myVariables = new ArrayList<Variable>();
@@ -16,6 +17,7 @@ public class Frame {
     protected Label myEnd;
 
     protected int myLastMethodParameterIndex = -1;
+
     protected int myLastCommonVariableIndexInList = -1;
 
     public boolean isMyStackChecked() {
@@ -31,6 +33,12 @@ public class Frame {
     }
 
     public void setVariables(final List<Variable> variables) {
+        int pos = 0;
+        for (final Variable variable : variables) {
+            myVariableIndexToArrayPosition.put(variable.getIndex(), pos);
+            pos++;
+        }
+
         this.myVariables = variables;
     }
 
@@ -74,22 +82,33 @@ public class Frame {
         this.myHasStack = hasStack;
     }
 
+    public String getStackedVariableType() {
+        return myStackedVariableType;
+    }
+
+    public void setStackedVariableType(final String stackedVariableType) {
+        this.myStackedVariableType = stackedVariableType;
+    }
+
     public boolean checkStack() {
-        if (!myStackChecked && !myHasStack) {
+        if (!myStackChecked && myHasStack) {
             myStackChecked = true;
             return true;
         }
         return false;
     }
 
-    public void insertVariable(final int index, final String type, final String name) {
+    public Variable createAndInsertVariable(final int index, final String type, final String name) {
         if (!containsVariable(index)) {
             final Variable variable = new Variable(index, type, name);
             variable.setIsMethodParameter(myLastMethodParameterIndex < index);
 
-            myVariables.add(variable);
             myVariableIndexToArrayPosition.put(index, myVariables.size());
+            myVariables.add(variable);
+
+            return variable;
         }
+        return null;
     }
 
     public void updateVariableInformation(final int index, final String type, final String name) {
@@ -99,10 +118,14 @@ public class Frame {
     }
 
     public Variable getVariable(final int variableIndex) {
-        return myVariables.get(myVariableIndexToArrayPosition.get(variableIndex));
+        if (containsVariable(variableIndex)) {
+            return myVariables.get(myVariableIndexToArrayPosition.get(variableIndex));
+        } else {
+            return createAndInsertVariable(variableIndex, null, null);
+        }
     }
 
-    public Frame createNextFrame(final int rightBound) {
+    public Frame createNextFrameWithAbsoluteBound(final int rightBound) {
         Frame newFrame = createFrame();
 
         newFrame.setVariables(getVariablesSubList(rightBound));
@@ -110,6 +133,10 @@ public class Frame {
         newFrame.setLastMethodParameterIndex(myLastMethodParameterIndex);
 
         return newFrame;
+    }
+
+    public Frame createNextFrameWithRelativeBound(final int count) {
+        return createNextFrameWithAbsoluteBound(myLastCommonVariableIndexInList + count + 1);
     }
 
     public List<Variable> getMethodParameters() {

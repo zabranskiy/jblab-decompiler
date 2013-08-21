@@ -442,16 +442,19 @@ abstract class AbstractPrinter {
             var variables = method.getParameters()!!.toList()
             var index = 0
             for (variable in variables) {
+                val variableName = printExpression(variable, method.getNestSize())
+
                 if (method.checkParameterForAnnotation(index))
                     arguments = nest(
                             2 * method.getNestSize()
-                            , arguments + printAnnotations(method.getParameterAnnotations(index)!!.toList()) + text(variable)
+                            , arguments + printAnnotations(method.getParameterAnnotations(index)!!.toList()) + variableName
                     )
                 else
                     arguments = nest(
                             2 * method.getNestSize()
-                            , arguments + text(variable)
+                            , arguments + variableName
                     )
+
                 if (index + 1 < variables.size)
                     arguments = group(arguments + text(",") + line())
 
