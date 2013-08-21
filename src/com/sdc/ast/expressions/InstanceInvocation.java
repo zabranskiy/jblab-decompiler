@@ -22,4 +22,6 @@ public class InstanceInvocation extends Invocation {
     public void setIsNotNullCheckedCall(final boolean isNotNullCheckedCall) {
         this.myIsNotNullCheckedCall = isNotNullCheckedCall;
     }
+
+
 }

@@ -32,4 +32,9 @@ public class NewArray extends PriorityExpression {
         }
         return result.append(" ").toString();
     }
+
+    @Override
+    public boolean isBoolean() {
+        return false;
+    }
 }
