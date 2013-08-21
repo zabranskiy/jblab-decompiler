@@ -116,8 +116,24 @@ public class DominatorTreeGenerator {
                 myMarkEdge.get(node.getIndex()).add(false);
             }
         }
-
+        Arrays.fill(id, -1);
         dfs(isPostDominatorTree ? size - 1 : 0);
+        if (isPostDominatorTree) {
+            boolean fl = true;
+            while (fl) {
+                int k = 0;
+                for (int i = size - 1; i >= 0; i--) {
+                    if (id[i] == -1) {
+                        dfs(i);
+                    } else {
+                        k++;
+                    }
+                }
+                if (k == size) {
+                    fl = false;
+                }
+            }
+        }
         FindSemi();
         FindDomi();
     }
@@ -173,7 +189,9 @@ public class DominatorTreeGenerator {
         }
 
         for (int i = 0; i < post.length - 1; i++) {
-            postTree.get(post[i]).add(i);
+            if (post[i] != -1) {
+                postTree.get(post[i]).add(i);
+            }
         }
 
         return postTree;

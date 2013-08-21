@@ -323,7 +323,17 @@ public class ConstructionBuilder {
                         conditionalBlock.setThenBlock(createConstructionBuilder(myNodes.subList(getRelativeIndex(leftNode), checkForIndexOutOfBound(rightNode) ? rightIndex : size), gen).build());
                     } else {
                         conditionalBlock.setThenBlock(createConstructionBuilder(myNodes.subList(getRelativeIndex(leftNode), rightIndex), gen).build());
-                        conditionalBlock.setElseBlock(createConstructionBuilder(myNodes.subList(getRelativeIndex(rightNode), size), gen).build());
+                        if (rightIndex < size) {
+                            List<Node> elseBody = myNodes.subList(rightIndex, size);
+                            if (elseBody.size() > 1 || !elseBody.get(0).getStatements().isEmpty()) {
+                                conditionalBlock.setElseBlock(createConstructionBuilder(myNodes.subList(rightIndex, size), gen).build());
+                            }
+                        } else {
+                            ElementaryBlock block = new ElementaryBlock();
+                            block.setBreak("");
+                            conditionalBlock.setElseBlock(block);
+                            node.getAncestors().get(0).setNextNode(node.getListOfTails().get(1));
+                        }
                     }
                 } else {
                     conditionalBlock.setThenBlock(createConstructionBuilder(myNodes.subList(getRelativeIndex(leftNode), rightIndex), gen).build());
@@ -372,7 +382,7 @@ public class ConstructionBuilder {
 
         if (start instanceof ConditionalBlock) {
             ConditionalBlock conditionalBlock = (ConditionalBlock) start;
-            if (conditionalBlock.getElseBlock() != null) {
+            if (conditionalBlock.getElseBlock() != null && conditionalBlock.getThenBlock().hasBreak()) {
                 removeBreakAndContinueFromLastConstruction(conditionalBlock.getElseBlock());
             }
         }

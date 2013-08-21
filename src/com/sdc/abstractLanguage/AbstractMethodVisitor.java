@@ -860,6 +860,11 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 }
             }
         }
+        // Remove last return
+        List<Statement> lastNodeStatements = myNodes.get(myNodes.size() - 1).getStatements();
+        if (lastNodeStatements.size() != 0) {
+            lastNodeStatements.remove(lastNodeStatements.size() - 1);
+        }
     }
 
     private Expression getConditionFromStack(final String opString) {
