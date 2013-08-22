@@ -14,6 +14,7 @@ public class Node {
     protected Expression myCondition;
     protected List<Label> myInnerLabels;
     protected Node myNextNode;
+    protected Expression myRemainExpression;
     protected int index;
     protected Construction construction;
     protected List<Node> myNodeTails = new ArrayList<Node>();
@@ -117,6 +118,14 @@ public class Node {
 
     public void removeAncestor(final Node ancestor) {
         myAncestors.remove(ancestor);
+    }
+
+    public Expression getRemainExpression() {
+        return myRemainExpression;
+    }
+
+    public void setRemainExpression(Expression myRemainExpression) {
+        this.myRemainExpression = myRemainExpression;
     }
 
     public boolean isCaseEndNode() {
