@@ -136,7 +136,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             newFrame = currentFrame.createNextFrameWithRelativeBound(-nLocal);
         } else if (type == 3 || type == 4) {
             // F_SAME F_SAME1
-            newFrame = currentFrame.createNextFrameWithAbsoluteBound(currentFrame.getVariableListLength());
+            newFrame = currentFrame.createNextFrameWithRelativeBound(0);
         }
 
         myDecompiledMethod.addNewFrame(newFrame);
@@ -438,7 +438,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                     myBodyStack.push(currentFrame.getVariable(var));
                 }
             }
-        } else if (opString.contains("STORE")) {
+        } else if (opString.contains("STORE") && !currentFrameHasStack) {
             Identifier v = currentFrame.getVariable(var);
             final Expression expr = getTopOfBodyStack();
             myStatements.add(new Assignment(v, expr));
@@ -783,7 +783,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
         final String description = signature != null ? signature : desc;
 
-        myDecompiledMethod.updateVariableInformationFromDebugInfo(index, getDescriptor(description, 0, myDecompiledMethod.getImports()), name, start);
+        myDecompiledMethod.updateVariableInformationFromDebugInfo(index, getDescriptor(description, 0, myDecompiledMethod.getImports()), name, start, end);
     }
 
     @Override
@@ -947,8 +947,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
     }
 
     protected boolean isThisVariableOnTopOfStack() {
-        final boolean isThis = ((Variable) myBodyStack.peek()).isThis();
-        return myDecompiledMethod.isNormalClassMethod() && !myBodyStack.isEmpty() && myBodyStack.peek() instanceof Variable && isThis;
+        return myDecompiledMethod.isNormalClassMethod() && !myBodyStack.isEmpty() && myBodyStack.peek() instanceof Variable && ((Variable) myBodyStack.peek()).isThis();
     }
 
     protected void replaceInvocationsFromExpressionsToStatements() {

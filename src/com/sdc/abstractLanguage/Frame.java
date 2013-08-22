@@ -82,6 +82,7 @@ public class Frame {
 
     public void setStackedVariableType(final String stackedVariableType) {
         this.myStackedVariableType = stackedVariableType;
+        this.myHasStack = true;
     }
 
     public boolean checkStack() {
@@ -138,7 +139,7 @@ public class Frame {
     }
 
     public List<Variable> getMethodParameters() {
-        return getVariablesSubList(myVariableIndexToArrayPosition.get(myLastMethodParameterIndex) + 1);
+        return myVariables.subList(0, myVariableIndexToArrayPosition.get(myLastMethodParameterIndex) + 1);
     }
 
     protected List<Variable> getVariablesSubList(final int rightBound) {
@@ -146,7 +147,7 @@ public class Frame {
         final int actualRightBound = rightBound > myVariables.size() ? myVariables.size() : rightBound;
 
         for (final Variable variable : myVariables.subList(0, actualRightBound)) {
-            result.add(variable);
+            result.add(variable.createCopy());
         }
 
         return result;

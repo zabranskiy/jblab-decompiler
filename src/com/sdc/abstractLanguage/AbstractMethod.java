@@ -131,6 +131,13 @@ public abstract class AbstractMethod {
         return null;
     }
 
+    public Frame getRootFrame() {
+        if (!myFrames.isEmpty()) {
+            return myFrames.get(0);
+        }
+        return null;
+    }
+
     public void addNewFrame(final Frame frame) {
         myFrames.add(frame);
     }
@@ -143,11 +150,20 @@ public abstract class AbstractMethod {
         getCurrentFrame().updateVariableInformation(index, type, name);
     }
 
-    public void updateVariableInformationFromDebugInfo(final int index, final String type, final String name, final Label start) {
+    public void updateVariableInformationFromDebugInfo(final int index, final String type, final String name, final Label start, final Label end) {
+        boolean started = false;
+
         for (final Frame frame : myFrames) {
-            if (frame.hasLabel(start)) {
+            if (started || frame.hasLabel(start)) {
+                if (!started) {
+                    frame.getVariable(index).cutParent();
+                }
                 frame.updateVariableInformation(index, type, name);
-                return;
+
+                started = true;
+                if (frame.hasLabel(end)) {
+                    return;
+                }
             }
         }
     }
@@ -157,7 +173,7 @@ public abstract class AbstractMethod {
     }
 
     public List<Variable> getParameters() {
-        return getCurrentFrame().getMethodParameters();
+        return getRootFrame().getMethodParameters();
     }
 
     public boolean isGenericType(final String className) {

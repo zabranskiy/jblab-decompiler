@@ -13,6 +13,9 @@ public class Variable extends Identifier {
     private boolean myIsMethodParameter = false;
     private boolean myIsDeclared = false;
 
+    private Variable myParentCopy;
+    private Variable myChildCopy;
+
     public Variable(final int index, final String variableType, final String name) {
         this.myIndex = index;
         this.myName = new Constant(name, false);
@@ -35,6 +38,17 @@ public class Variable extends Identifier {
 
     public void declare() {
         myIsDeclared = true;
+        if (myChildCopy != null) {
+            myChildCopy.declare();
+        }
+    }
+
+    public void cutParent() {
+        if (myParentCopy != null) {
+            myParentCopy.cutChildCopy(this);
+        }
+
+        myParentCopy = null;
     }
 
     public void setName(final String name) {
@@ -43,6 +57,14 @@ public class Variable extends Identifier {
 
     public void setVariableType(final String variableType) {
         this.myVariableType = variableType;
+    }
+
+    public Variable createCopy() {
+        Variable copy = new Variable(myIndex, myVariableType,((Constant) myName).getValue().toString());
+        myChildCopy = copy;
+        copy.setParentCopy(this);
+
+        return copy;
     }
 
     @Override
@@ -74,5 +96,13 @@ public class Variable extends Identifier {
 
     public boolean isThis() {
         return getName() instanceof Constant && ((Constant) getName()).isThis();
+    }
+
+    protected void setParentCopy(final Variable parent) {
+        this.myParentCopy = parent;
+    }
+
+    protected void cutChildCopy(final Variable child) {
+        myChildCopy = null;
     }
 }
