@@ -1,25 +1,82 @@
 package com.sdc.abstractLanguage;
 
+import com.sdc.ast.expressions.identifiers.Variable;
+import org.objectweb.asm.Label;
+
 import java.util.*;
 
 public abstract class AbstractFrame {
-    protected String myStackedVariableType = "";
-    protected int myStackedVariableIndex = 0;
     protected boolean myStackChecked = false;
+    protected boolean myHasStack = false;
+    protected String myStackedVariableType;
 
-    protected Map<Integer, String> myLocalVariableNames = new HashMap<Integer, String>();
-    protected Map<Integer, String> myLocalVariableTypes = new HashMap<Integer, String>();
-    protected List<Integer> myDeclaredVariables = new ArrayList<Integer>();
-    protected Set<Integer> myLocalVariablesFromDebugInfo = new HashSet<Integer>();
+    protected Map<Integer, Integer> myVariableIndexToArrayPosition = new HashMap<Integer, Integer>();
+    protected List<Variable> myVariables = new ArrayList<Variable>();
 
-    protected int myLastLocalVariableIndex = -1;
+    protected List<Label> myLabels = new ArrayList<Label>();
 
-    protected AbstractFrame myParent = null;
-    protected List<AbstractFrame> myChildren = new ArrayList<AbstractFrame>();
-    protected AbstractFrame mySameAbstractFrame = null;
-    protected AbstractFrame myChopAbstractFrame = null;
+    protected int myLastMethodParameterIndex = -1;
 
-    protected abstract String getVariableNameForDeclaration(final int index);
+    protected int myLastCommonVariableIndexInList = -1;
+
+    protected abstract AbstractFrame createFrame();
+
+    public boolean isMyStackChecked() {
+        return myStackChecked;
+    }
+
+    public void setStackChecked(final boolean stackChecked) {
+        this.myStackChecked = stackChecked;
+    }
+
+    public List<Variable> getVariables() {
+        return myVariables;
+    }
+
+    public void setVariables(final List<Variable> variables) {
+        int pos = 0;
+        for (final Variable variable : variables) {
+            myVariableIndexToArrayPosition.put(variable.getIndex(), pos);
+            pos++;
+        }
+
+        this.myVariables = variables;
+    }
+
+    public void addLabel(final Label label) {
+        myLabels.add(label);
+    }
+
+    public boolean hasLabel(final Label label) {
+        return myLabels.contains(label);
+    }
+
+    public int getLastMethodParameterIndex() {
+        return myLastMethodParameterIndex;
+    }
+
+    public void setLastMethodParameterIndex(final int lastMethodParameterIndex) {
+        this.myLastMethodParameterIndex = lastMethodParameterIndex;
+        if (myLastCommonVariableIndexInList == -1) {
+            myLastCommonVariableIndexInList = lastMethodParameterIndex;
+        }
+    }
+
+    public int getLastCommonVariableIndexInList() {
+        return myLastCommonVariableIndexInList;
+    }
+
+    public void setLastCommonVariableIndexInList(int lastCommonVariableIndexInList) {
+        this.myLastCommonVariableIndexInList = lastCommonVariableIndexInList;
+    }
+
+    public boolean hasStack() {
+        return myHasStack;
+    }
+
+    public void setHasStack(final boolean hasStack) {
+        this.myHasStack = hasStack;
+    }
 
     public String getStackedVariableType() {
         return myStackedVariableType;
@@ -27,129 +84,78 @@ public abstract class AbstractFrame {
 
     public void setStackedVariableType(final String stackedVariableType) {
         this.myStackedVariableType = stackedVariableType;
-    }
-
-    public void setStackedVariableIndex(final int stackedVariableIndex) {
-        this.myStackedVariableIndex = stackedVariableIndex;
-    }
-
-    public int getStackedVariableIndex() {
-        return myStackedVariableIndex;
-    }
-
-    public AbstractFrame getParent() {
-        return myParent;
-    }
-
-    public void setParent(final AbstractFrame parent) {
-        this.myParent = parent;
-    }
-
-    public void setSameFrame(final AbstractFrame sameAbstractFrame) {
-        this.mySameAbstractFrame = sameAbstractFrame;
-    }
-
-    public void setChopFrame(final AbstractFrame chopAbstractFrame) {
-        this.myChopAbstractFrame = chopAbstractFrame;
+        this.myHasStack = true;
     }
 
     public boolean checkStack() {
-        if (!myStackChecked && !myStackedVariableType.isEmpty()) {
+        if (!myStackChecked && myHasStack) {
             myStackChecked = true;
             return true;
         }
         return false;
     }
 
-    public boolean hasStack() {
-        return !myStackedVariableType.isEmpty();
-    }
+    public Variable createAndInsertVariable(final int index, final String type, final String name) {
+        if (!containsVariable(index)) {
+            final Variable variable = new Variable(index, type, name);
+            variable.setIsMethodParameter(index > 0 && index <= myLastMethodParameterIndex);
 
-    public void addChild(final AbstractFrame child) {
-        myChildren.add(child);
-    }
+            myVariableIndexToArrayPosition.put(index, myVariables.size());
+            myVariables.add(variable);
 
-    public void addLocalVariableName(final int index, final String name) {
-        myLocalVariableNames.put(index, name);
-    }
-
-    public void addLocalVariableType(final int index, final String type) {
-        if (myParent == null  || !myParent.recursiveContainsIndex(index)) {
-            myLocalVariableTypes.put(index, type);
+            return variable;
         }
+        return null;
     }
 
-    public boolean addLocalVariableFromDebugInfo(final int index, final String name, final String type) {
-        if (!containsIndex(index) || myLocalVariablesFromDebugInfo.contains(index)) {
-            for (final AbstractFrame abstractFrame : myChildren) {
-                if (abstractFrame.addLocalVariableFromDebugInfo(index, name, type)) {
-                    return true;
-                }
-            }
-            return false;
+    public void updateVariableInformation(final int index, final String type, final String name) {
+        Variable variable = getVariable(index);
+        variable.setVariableType(type);
+        variable.setName(name);
+    }
+
+    public Variable getVariable(final int variableIndex) {
+        if (containsVariable(variableIndex)) {
+            return myVariables.get(myVariableIndexToArrayPosition.get(variableIndex));
         } else {
-            myLocalVariablesFromDebugInfo.add(index);
-            addLocalVariableName(index, name);
-            if ((!type.equals("Object") || type.startsWith("Any") && type.length() < 5) && index > getLastLocalVariableIndex()) {
-                addLocalVariableType(index, type);
-            }
-            return true;
+            return createAndInsertVariable(variableIndex, null, null);
         }
     }
 
-    public String getLocalVariableName(final int index) {
-        if (containsIndex(index)) {
-            if (myDeclaredVariables.contains(index)) {
-                return myLocalVariableNames.get(index);
-            } else {
-                myDeclaredVariables.add(index);
-                return getVariableNameForDeclaration(index);
-            }
-        } else {
-            if (mySameAbstractFrame == null) {
-                if (myChopAbstractFrame == null) {
-                    return myParent.getLocalVariableName(index);
-                } else {
-                    return myChopAbstractFrame.getLocalVariableName(index);
-                }
-            } else {
-                return mySameAbstractFrame.getLocalVariableName(index);
-            }
+    public int getVariableListLength() {
+        return myVariables.size();
+    }
+
+    public AbstractFrame createNextFrameWithAbsoluteBound(final int rightBound) {
+        AbstractFrame newFrame = createFrame();
+
+        newFrame.setVariables(getVariablesSubList(rightBound));
+        newFrame.setLastCommonVariableIndexInList(rightBound - 1);
+        newFrame.setLastMethodParameterIndex(myLastMethodParameterIndex);
+
+        return newFrame;
+    }
+
+    public AbstractFrame createNextFrameWithRelativeBound(final int count) {
+        return createNextFrameWithAbsoluteBound(myLastCommonVariableIndexInList + count + 1);
+    }
+
+    public List<Variable> getMethodParameters() {
+        return myVariables.subList(0, myVariableIndexToArrayPosition.get(myLastMethodParameterIndex) + 1);
+    }
+
+    protected List<Variable> getVariablesSubList(final int rightBound) {
+        List<Variable> result = new ArrayList<Variable>();
+        final int actualRightBound = rightBound > myVariables.size() ? myVariables.size() : rightBound;
+
+        for (final Variable variable : myVariables.subList(0, actualRightBound)) {
+            result.add(variable.createCopy());
         }
+
+        return result;
     }
 
-    public String getLocalVariableType(final int index) {
-        if (containsIndex(index)) {
-            return myLocalVariableTypes.get(index);
-        } else {
-            if (mySameAbstractFrame == null) {
-                if (myChopAbstractFrame == null) {
-                    return myParent.getLocalVariableType(index);
-                } else {
-                    return myChopAbstractFrame.getLocalVariableType(index);
-                }
-            } else {
-                return mySameAbstractFrame.getLocalVariableType(index);
-            }
-        }
-    }
-
-    public boolean containsIndex(final int index) {
-        return myLocalVariableTypes.containsKey(index);
-    }
-
-    public boolean recursiveContainsIndex(final int index) {
-        return containsIndex(index) || myParent != null && myParent.recursiveContainsIndex(index);
-    }
-
-    public void setLastLocalVariableIndex(final int lastLocalVariableIndex) {
-        this.myLastLocalVariableIndex = lastLocalVariableIndex;
-    }
-
-    public int getLastLocalVariableIndex() {
-        if (myLastLocalVariableIndex == -1 && myParent != null) {
-            myLastLocalVariableIndex = myParent.getLastLocalVariableIndex();
-        }
-        return myLastLocalVariableIndex;
+    protected boolean containsVariable(final int index) {
+        return myVariableIndexToArrayPosition.keySet().contains(index);
     }
 }

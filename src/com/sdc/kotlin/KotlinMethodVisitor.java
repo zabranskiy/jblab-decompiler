@@ -105,7 +105,7 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
 
             isStaticInvocation = true;
             if (name.equals("checkParameterIsNotNull")) {
-//                ((KotlinFrame) getCurrentFrame()).addNotNullVariable(((Variable) arguments.get(0)).getIndex());
+//                ((OldKotlinFrame) getCurrentFrame()).addNotNullVariable(((Variable) arguments.get(0)).getIndex());
                 return;
             }
         }

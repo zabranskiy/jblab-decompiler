@@ -1,7 +1,7 @@
 package com.sdc.util;
 
+import com.sdc.abstractLanguage.AbstractFrame;
 import com.sdc.abstractLanguage.AbstractMethod;
-import com.sdc.abstractLanguage.Frame;
 import org.objectweb.asm.Opcodes;
 
 import java.util.*;
@@ -272,7 +272,7 @@ public class DeclarationWorker {
         int count = startIndex - 1;
         int pos = 0;
 
-        Frame rootFrame = abstractMethod.createFrame();
+        AbstractFrame rootFrame = abstractMethod.createFrame();
 
         while (pos < descriptor.length()) {
             final int backupPos = pos;

@@ -1,6 +1,7 @@
 package com.sdc.kotlin;
 
 import KotlinPrinter.KotlinPrinter;
+import com.sdc.abstractLanguage.AbstractFrame;
 import com.sdc.ast.controlflow.Statement;
 import com.sdc.cfg.constructions.ElementaryBlock;
 import pretty.PrettyPackage;
@@ -30,6 +31,11 @@ public class KotlinMethod extends AbstractMethod {
     @Override
     protected int getParametersStartIndex() {
         return isNormalClassMethod() || hasReceiverParameter ? 1 : 0;
+    }
+
+    @Override
+    public AbstractFrame createFrame() {
+        return new KotlinFrame();
     }
 
     public void addLocalVariableName(final int index, final String name) {

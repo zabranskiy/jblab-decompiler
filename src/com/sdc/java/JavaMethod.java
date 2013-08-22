@@ -1,6 +1,7 @@
 package com.sdc.java;
 
 import JavaPrinter.JavaPrinter;
+import com.sdc.abstractLanguage.AbstractFrame;
 import pretty.PrettyPackage;
 
 import com.sdc.abstractLanguage.AbstractClass;
@@ -25,6 +26,11 @@ public class JavaMethod extends AbstractMethod {
     @Override
     protected int getParametersStartIndex() {
         return 1;
+    }
+
+    @Override
+    public AbstractFrame createFrame() {
+        return new JavaFrame();
     }
 
     @Override
