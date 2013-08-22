@@ -238,12 +238,12 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
         final String parameters = description.substring(description.indexOf('(') + 1, description.indexOf(')'));
         final int startIndex = myDecompiledClass.isNormalClass() ? 1 : 0;
 
-        DeclarationWorker.addInformationAboutParameters(parameters, abstractMethod, startIndex, myLanguage);
-
         if (myDecompiledClass.isNormalClass()) {
-            abstractMethod.addVariable(0, myDecompiledClass.getName(), "this");
+            abstractMethod.addThisVariable(myDecompiledClass.getName());
             abstractMethod.declareThisVariable();
         }
+
+        DeclarationWorker.addInformationAboutParameters(parameters, abstractMethod, startIndex, myLanguage);
 
         myDecompiledClass.appendMethod(abstractMethod);
 

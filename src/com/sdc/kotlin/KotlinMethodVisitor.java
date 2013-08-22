@@ -124,6 +124,10 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
             return;
         }
         if (index <= myDecompiledMethod.getLastLocalVariableIndex()) {
+            if (!myHasDebugInformation) {
+                myHasDebugInformation = true;
+            }
+            myDecompiledMethod.updateVariableNameFromDebugInfo(index, name, start, end);
             return;
         }
 

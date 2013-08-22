@@ -50,6 +50,8 @@ public abstract class AbstractMethod {
         this.myGenericIdentifiers = genericIdentifiers;
         this.myTextWidth = textWidth;
         this.myNestSize = nestSize;
+
+        this.myFrames.add(createFrame());
     }
 
     protected abstract String getInheritanceIdentifier();
@@ -140,8 +142,8 @@ public abstract class AbstractMethod {
         myFrames.add(frame);
     }
 
-    public void addVariable(final int index, final String type, final String name) {
-        getCurrentFrame().createAndInsertVariable(index, type, name);
+    public void addThisVariable(final String type) {
+        getCurrentFrame().createAndInsertVariable(0, type, "this");
     }
 
     public void updateVariableInformation(final int index, final String type, final String name) {
@@ -162,6 +164,15 @@ public abstract class AbstractMethod {
                 if (frame.hasLabel(end)) {
                     return;
                 }
+            }
+        }
+    }
+
+    public void updateVariableNameFromDebugInfo(final int index, final String name, final Label start, final Label end) {
+        for (final AbstractFrame frame : myFrames) {
+            if (frame.hasLabel(start)) {
+                Variable variable = frame.getVariable(index);
+                updateVariableInformationFromDebugInfo(index, variable.getType(), name, start, end);
             }
         }
     }

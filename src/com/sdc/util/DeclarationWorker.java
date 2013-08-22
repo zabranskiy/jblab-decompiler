@@ -272,7 +272,7 @@ public class DeclarationWorker {
         int count = startIndex - 1;
         int pos = 0;
 
-        AbstractFrame rootFrame = abstractMethod.createFrame();
+        AbstractFrame rootFrame = abstractMethod.getCurrentFrame();
 
         while (pos < descriptor.length()) {
             final int backupPos = pos;
@@ -318,7 +318,6 @@ public class DeclarationWorker {
         }
 
         rootFrame.setLastMethodParameterIndex(count);
-        abstractMethod.addNewFrame(rootFrame);
 
         abstractMethod.setLastLocalVariableIndex(count);
     }
