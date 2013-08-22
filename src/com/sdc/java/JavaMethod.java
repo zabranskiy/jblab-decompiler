@@ -15,8 +15,6 @@ public class JavaMethod extends AbstractMethod {
                       final int textWidth, final int nestSize)
     {
         super(modifier, returnType, name, signature, exceptions, abstractClass, genericTypes, genericIdentifiers, textWidth, nestSize);
-        this.myRootAbstractFrame = new JavaFrame();
-        this.myCurrentAbstractFrame = myRootAbstractFrame;
     }
 
     @Override

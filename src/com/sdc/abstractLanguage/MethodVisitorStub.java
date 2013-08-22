@@ -1,5 +1,6 @@
 package com.sdc.abstractLanguage;
 
+import com.decompiler.Decompiler;
 import org.objectweb.asm.*;
 
 public class MethodVisitorStub extends AbstractMethodVisitor {
@@ -16,8 +17,8 @@ public class MethodVisitorStub extends AbstractMethodVisitor {
             return myErrorLocation;
         }
 
-        public Exception getException() {
-            return myException;
+        public String getException() {
+            return Decompiler.printExceptionToString(myException);
         }
     }
 

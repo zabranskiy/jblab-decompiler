@@ -20,8 +20,6 @@ public class KotlinMethod extends AbstractMethod {
                       final int textWidth, final int nestSize)
     {
         super(modifier, returnType, name, signature, exceptions, abstractClass, genericTypes, genericIdentifiers, textWidth, nestSize);
-        this.myRootAbstractFrame = new KotlinFrame();
-        this.myCurrentAbstractFrame = myRootAbstractFrame;
     }
 
     @Override
@@ -34,16 +32,7 @@ public class KotlinMethod extends AbstractMethod {
         return isNormalClassMethod() || hasReceiverParameter ? 1 : 0;
     }
 
-    @Override
-    public void setLastLocalVariableIndex(int lastLocalVariableIndex) {
-        super.setLastLocalVariableIndex(lastLocalVariableIndex);
-        myRootAbstractFrame.setLastLocalVariableIndex(lastLocalVariableIndex);
-    }
-
-    @Override
     public void addLocalVariableName(final int index, final String name) {
-        super.addLocalVariableName(index, name);
-
         if (index == 0 && name.equals("$receiver")) {
             hasReceiverParameter = true;
             dragReceiverFromMethodParameters();
@@ -66,7 +55,7 @@ public class KotlinMethod extends AbstractMethod {
         if (hasReceiverParameter) {
             addLocalVariableName(0, "this$");
             declareThisVariable();
-            myName = getCurrentFrame().getLocalVariableType(0) + "." + myName;
+//            myName = getCurrentFrame().getLocalVariableType(0) + "." + myName;
         }
     }
 

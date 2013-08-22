@@ -3,37 +3,82 @@ package com.sdc.ast.expressions.identifiers;
 import com.sdc.ast.OperationType;
 import com.sdc.ast.expressions.Constant;
 import com.sdc.ast.expressions.Expression;
-import com.sdc.abstractLanguage.AbstractFrame;
 
 public class Variable extends Identifier {
     private final int myIndex;
-    private final AbstractFrame myAbstractFrame;
-    private Expression name;
 
-    public Variable(final int index, final AbstractFrame abstractFrame) {
+    private Expression myName;
+    private String myVariableType;
+
+    private boolean myIsMethodParameter = false;
+    private boolean myIsDeclared = false;
+
+    private Variable myParentCopy;
+    private Variable myChildCopy;
+
+    public Variable(final int index, final String variableType, final String name) {
         this.myIndex = index;
-        this.myAbstractFrame = abstractFrame;
-        myType = OperationType.VARIABLE;
+        this.myName = new Constant(name, false);
+        this.myVariableType = variableType;
 
+        myType = OperationType.VARIABLE;
+    }
+
+    public void setIsMethodParameter(final boolean isMethodParameter) {
+        this.myIsMethodParameter = isMethodParameter;
+    }
+
+    public boolean isMethodParameter() {
+        return myIsMethodParameter;
+    }
+
+    public boolean isDeclared() {
+        return myIsDeclared;
+    }
+
+    public void declare() {
+        myIsDeclared = true;
+        if (myChildCopy != null) {
+            myChildCopy.declare();
+        }
+    }
+
+    public void cutParent() {
+        if (myParentCopy != null) {
+            myParentCopy.cutChildCopy();
+        }
+
+        myParentCopy = null;
+    }
+
+    public void setName(final String name) {
+        this.myName = new Constant(name, false);
+    }
+
+    public void setVariableType(final String variableType) {
+        this.myVariableType = variableType;
+    }
+
+    public Variable createCopy() {
+        Variable copy = new Variable(myIndex, myVariableType,((Constant) myName).getValue().toString());
+        myChildCopy = copy;
+        copy.setParentCopy(this);
+
+        return copy;
     }
 
     @Override
     public Expression getName() {
-        if(name == null) name = new Constant(myAbstractFrame.getLocalVariableName(myIndex), false);
-        return name;
+        return myName;
     }
 
     @Override
     public String getType() {
-        return myAbstractFrame.getLocalVariableType(myIndex);
+        return myVariableType;
     }
 
     public int getIndex() {
         return myIndex;
-    }
-
-    public AbstractFrame getAbstractFrame() {
-        return myAbstractFrame;
     }
 
     @Override
@@ -46,15 +91,23 @@ public class Variable extends Identifier {
         }
         return "Variable{" +
                 "myIndex=" + myIndex +
-                ", name=" + (name != null ? name : " no name yet") + "}";
-    }
-
-    public boolean isThis(){
-        return getName() instanceof Constant && ((Constant) getName()).isThis();
+                ", myName=" + (name != null ? name : " no myName yet") + "}";
     }
 
     @Override
     public boolean isBoolean() {
         return getType().contains("boolean");
+    }
+
+    public boolean isThis() {
+        return getName() instanceof Constant && ((Constant) getName()).isThis();
+    }
+
+    protected void setParentCopy(final Variable parent) {
+        this.myParentCopy = parent;
+    }
+
+    protected void cutChildCopy() {
+        myChildCopy = null;
     }
 }

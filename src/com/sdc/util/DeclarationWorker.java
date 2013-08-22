@@ -1,6 +1,7 @@
 package com.sdc.util;
 
 import com.sdc.abstractLanguage.AbstractMethod;
+import com.sdc.abstractLanguage.Frame;
 import org.objectweb.asm.Opcodes;
 
 import java.util.*;
@@ -271,6 +272,8 @@ public class DeclarationWorker {
         int count = startIndex - 1;
         int pos = 0;
 
+        Frame rootFrame = abstractMethod.createFrame();
+
         while (pos < descriptor.length()) {
             final int backupPos = pos;
             final int backupCount = count;
@@ -304,13 +307,18 @@ public class DeclarationWorker {
             pos = getNextTypePosition(descriptor, pos);
             final int index = (count - backupCount) == 1 ? count : count - 1;
 
-            abstractMethod.addLocalVariableName(index, "x" + index);
+            final String name = "x" + index;
+
+            String variableType = type;
             if (language == SupportedLanguage.KOTLIN) {
-                abstractMethod.addLocalVariableType(index, isPrimitiveClass ? convertJavaPrimitiveClassToKotlin(type) + "?" : type);
-            } else {
-                abstractMethod.addLocalVariableType(index, type);
+                variableType = isPrimitiveClass ? convertJavaPrimitiveClassToKotlin(type) + "?" : type;
             }
+
+            rootFrame.createAndInsertVariable(index, variableType, name);
         }
+
+        rootFrame.setLastMethodParameterIndex(count);
+        abstractMethod.addNewFrame(rootFrame);
 
         abstractMethod.setLastLocalVariableIndex(count);
     }
