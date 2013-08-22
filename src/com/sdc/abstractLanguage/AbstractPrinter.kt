@@ -441,9 +441,14 @@ abstract class AbstractPrinter {
         if (method!!.getLastLocalVariableIndex() != 0 || (!method.isNormalClassMethod() && method.getLastLocalVariableIndex() >= 0)) {
             var variables = method.getParameters()!!.toList()
             var index = 0
-            for (variable in variables) {
-                val variableName = printExpression(variable, method.getNestSize())
-
+            for (i in variables.indices) {
+                val variableName =
+                if(i == (variables.size()-1)){
+                    // for "..." in parameters in Java code
+                     printLastMethodParameter(variables[i], method.getNestSize());
+                } else{
+                    printExpression(variables[i], method.getNestSize())
+                }
                 if (method.checkParameterForAnnotation(index))
                     arguments = nest(
                             2 * method.getNestSize()
@@ -463,6 +468,9 @@ abstract class AbstractPrinter {
         }
         return arguments
     }
+
+    open fun printLastMethodParameter(variable: Variable, nestSize: Int): PrimeDoc =
+        printExpression(variable, nestSize)
 
     open fun printInvocationArguments(arguments: List<Expression>?, nestSize: Int): PrimeDoc =
             if (arguments!!.isEmpty())

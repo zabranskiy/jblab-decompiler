@@ -10,6 +10,7 @@ import com.sdc.abstractLanguage.AbstractClassField
 import com.sdc.abstractLanguage.AbstractPrinter
 import com.sdc.abstractLanguage.AbstractOperationPrinter
 import com.sdc.java.JavaOperationPrinter
+import com.sdc.ast.expressions.identifiers.Variable
 
 class JavaPrinter: AbstractPrinter() {
     override fun getOperationPrinter():AbstractOperationPrinter{
@@ -99,5 +100,13 @@ class JavaPrinter: AbstractPrinter() {
         if (classField.hasInitializer())
             fieldCode = fieldCode + text(" = ") + printExpression(classField.getInitializer(), classField.getNestSize())
         return fieldCode + text(";")
+    }
+
+    override fun printLastMethodParameter(variable: Variable, nestSize: Int): PrimeDoc {
+        val myType = variable.getType()
+        if(!myType!!.endsWith("[] ")){
+            return printExpression(variable, nestSize)
+        }
+        return text(myType.substring(0, myType.size - 3) + "... ") + printExpression(variable.getName(), nestSize)
     }
 }
