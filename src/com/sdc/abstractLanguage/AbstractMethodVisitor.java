@@ -864,7 +864,10 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         // Remove last return
         List<Statement> lastNodeStatements = myNodes.get(myNodes.size() - 1).getStatements();
         if (lastNodeStatements.size() != 0) {
-            lastNodeStatements.remove(lastNodeStatements.size() - 1);
+            final Statement lastStatement = lastNodeStatements.get(lastNodeStatements.size() - 1);
+            if (lastStatement instanceof Return && ((Return) lastStatement).getReturnValue() == null) {
+                lastNodeStatements.remove(lastNodeStatements.size() - 1);
+            }
         }
     }
 

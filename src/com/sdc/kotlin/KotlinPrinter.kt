@@ -19,6 +19,7 @@ import com.sdc.kotlin.KotlinMethod
 import com.sdc.kotlin.KotlinClassField
 import com.sdc.kotlin.KotlinOperationPrinter
 import com.sdc.ast.expressions.identifiers.Variable
+import com.sdc.ast.expressions.Constant
 
 
 class KotlinPrinter: AbstractPrinter() {
@@ -75,6 +76,12 @@ class KotlinPrinter: AbstractPrinter() {
 
             else -> super<AbstractPrinter>.printExpression(expression, nestSize)
         }
+
+    override fun printVariable(expression: Variable, nestSize: Int): PrimeDoc =
+        if (expression.getName() is Constant && (expression.getName() as Constant).getValue().toString().equals("this$"))
+            text("this")
+        else
+            super.printVariable(expression, nestSize)
 
     override fun printUndeclaredVariable(expression: Variable, nestSize: Int): PrimeDoc =
         printExpression(expression.getName(), nestSize) + text(" : ") + text(expression.getType())

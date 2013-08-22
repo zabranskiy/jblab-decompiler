@@ -123,6 +123,9 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
             super.visitLocalVariable("this$", desc, signature, start, end, index);
             return;
         }
+        if (index <= myDecompiledMethod.getLastLocalVariableIndex()) {
+            return;
+        }
 
         super.visitLocalVariable(name, desc, signature, start, end, index);
     }
