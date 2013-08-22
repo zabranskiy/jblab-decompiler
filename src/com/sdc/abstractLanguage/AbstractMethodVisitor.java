@@ -201,11 +201,11 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         } else if (opString.contains("CMP")) {
             Expression b = getTopOfBodyStack();
             Expression a = getTopOfBodyStack();
-            myBodyStack.push(new TernaryExpression(
+           /* myBodyStack.push(new TernaryExpression(
                     new BinaryExpression(EQ, a, b),
                     ZERO,
                     new TernaryExpression(new BinaryExpression(LT, a, b), M_ONE, ONE)
-            ));
+            ));*/
         } else if (opString.contains("ATHROW")) {
             myStatements.add(new Throw(getTopOfBodyStack()));
         } else if (opString.equals("SWAP")) {
@@ -952,8 +952,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
             }
         } catch (ArrayIndexOutOfBoundsException e) {
-            Special expr = new Special();
-            return expr;
+            return new Special();
         }
         // ternary expression under construction
         /*
