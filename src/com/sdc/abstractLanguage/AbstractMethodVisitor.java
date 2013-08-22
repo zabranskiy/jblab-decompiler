@@ -58,7 +58,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
     protected abstract boolean checkForAutomaticallyGeneratedAnnotation(final String annotationName);
 
-    protected AbstractFrame getCurrentFrame() {
+    protected Frame getCurrentFrame() {
         return myDecompiledMethod.getCurrentFrame();
     }
 
@@ -121,49 +121,38 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
     @Override
     public void visitFrame(final int type, final int nLocal, final Object[] local, final int nStack, final Object[] stack) {
-        if (type == 2) {
+        Frame currentFrame = getCurrentFrame();
+
+        Frame newFrame = null;
+
+        if (type == 0) {
+            // F_FULL
+            newFrame = currentFrame.createNextFrameWithAbsoluteBound(nLocal);
+        } else if (type == 1) {
+            // F_APPEND
+            newFrame = currentFrame.createNextFrameWithRelativeBound(nLocal);
+        } else if (type == 2) {
             // F_CHOP
-//            AbstractFrame newAbstractFrame = myLanguagePartFactory.createFrame();
+            newFrame = currentFrame.createNextFrameWithRelativeBound(-nLocal);
+        } else if (type == 3 || type == 4) {
+            // F_SAME F_SAME1
+            newFrame = currentFrame.createNextFrameWithRelativeBound(0);
+        }
 
-//            getCurrentFrame().getParent().addChild(newAbstractFrame);
-//            getCurrentFrame().getParent().setChopFrame(newAbstractFrame);
-//            newAbstractFrame.setChopFrame(getCurrentFrame().getParent());
+        myDecompiledMethod.addNewFrame(newFrame);
 
-            myDecompiledMethod.setCurrentFrame(getCurrentFrame().getParent());
-        } else if (type == 3) {
-            // F_SAME
-            AbstractFrame newAbstractFrame = myLanguagePartFactory.createFrame();
-            newAbstractFrame.setSameFrame(getCurrentFrame());
-            if (getCurrentFrame().getParent() != null) {
-                getCurrentFrame().getParent().addChild(newAbstractFrame);
-                newAbstractFrame.setParent(getCurrentFrame().getParent());
+        if (nStack > 0) {
+            String stackedVariableType;
+
+            if (stack[0] instanceof Integer) {
+                stackedVariableType = DeclarationWorker.getDescriptorByInt((Integer) stack[0], myLanguage);
             } else {
-                getCurrentFrame().addChild(newAbstractFrame);
-                newAbstractFrame.setParent(getCurrentFrame());
+                final String className = (String) stack[0];
+                myDecompiledMethod.addImport(DeclarationWorker.decompileFullClassName(className));
+                stackedVariableType = decompileClassNameWithOuterClasses(className) + " ";
             }
 
-            myDecompiledMethod.setCurrentFrame(newAbstractFrame);
-        } else {
-            AbstractFrame newAbstractFrame = myLanguagePartFactory.createFrame();
-
-            newAbstractFrame.setParent(getCurrentFrame());
-            getCurrentFrame().addChild(newAbstractFrame);
-
-            myDecompiledMethod.setCurrentFrame(newAbstractFrame);
-
-            if (nStack > 0) {
-                String stackedVariableType;
-
-                if (stack[0] instanceof Integer) {
-                    stackedVariableType = DeclarationWorker.getDescriptorByInt((Integer) stack[0], myLanguage);
-                } else {
-                    final String className = (String) stack[0];
-                    myDecompiledMethod.addImport(DeclarationWorker.decompileFullClassName(className));
-                    stackedVariableType = decompileClassNameWithOuterClasses(className) + " ";
-                }
-
-                getCurrentFrame().setStackedVariableType(stackedVariableType);
-            }
+            getCurrentFrame().setStackedVariableType(stackedVariableType);
         }
     }
 
@@ -419,12 +408,14 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
     public void visitVarInsn(final int opcode, final int var) {
         final String opString = Printer.OPCODES[opcode];
 
-        final boolean currentFrameHasStack = getCurrentFrame().checkStack();
+        final Frame currentFrame = getCurrentFrame();
+        final boolean currentFrameHasStack = currentFrame.checkStack();
+
         String variableType = null;
 
         if (opString.contains("LOAD")) {
             if (myStatements.isEmpty()) {
-                myBodyStack.push(new Variable(var, getCurrentFrame()));
+                myBodyStack.push(currentFrame.getVariable(var));
             } else {
                 int lastStatementIndex = myStatements.size() - 1;
                 Statement lastStatement = myStatements.get(lastStatementIndex);
@@ -444,11 +435,11 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                     }
                     myBodyStack.push(new ExprIncrement(increment.getVariable(), increment.getIncrementExpression(), type));
                 } else {
-                    myBodyStack.push(new Variable(var, getCurrentFrame()));
+                    myBodyStack.push(currentFrame.getVariable(var));
                 }
             }
-        } else if (opString.contains("STORE")) {
-            Identifier v = new Variable(var, getCurrentFrame());
+        } else if (opString.contains("STORE") && !currentFrameHasStack) {
+            Identifier v = currentFrame.getVariable(var);
             final Expression expr = getTopOfBodyStack();
             myStatements.add(new Assignment(v, expr));
             if (expr instanceof Invocation) {
@@ -512,12 +503,10 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
         if (!opString.contains("LOAD") && var > myDecompiledMethod.getLastLocalVariableIndex()) {
             final String name = "y" + var;
-            myDecompiledMethod.addLocalVariableName(var, name);
 
             String descriptorType;
             if (currentFrameHasStack) {
-                descriptorType = getCurrentFrame().getStackedVariableType();
-                getCurrentFrame().setStackedVariableIndex(var);
+                descriptorType = currentFrame.getStackedVariableType();
             } else {
                 descriptorType = getDescriptor(opString, 0, myDecompiledMethod.getImports());
             }
@@ -526,7 +515,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 variableType = descriptorType;
             }
 
-            myDecompiledMethod.addLocalVariableType(var, variableType);
+            currentFrame.updateVariableInformation(var, variableType, name);
         }
     }
 
@@ -693,6 +682,8 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
     @Override
     public void visitLabel(final Label label) {
+        getCurrentFrame().addLabel(label);
+
         if (myLabels.contains(label)) {
             applyNode();
             myLabels.remove(label);
@@ -716,7 +707,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 return;
             }
         }
-        myStatements.add(new Increment(new Variable(var, getCurrentFrame()), increment));
+        myStatements.add(new Increment(getCurrentFrame().getVariable(var), increment));
     }
 
     @Override
@@ -790,9 +781,9 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             myHasDebugInformation = true;
         }
 
-        myDecompiledMethod.addLocalVariableName(index, name);
         final String description = signature != null ? signature : desc;
-        myDecompiledMethod.addLocalVariableFromDebugInfo(index, name, getDescriptor(description, 0, myDecompiledMethod.getImports()));
+
+        myDecompiledMethod.updateVariableInformationFromDebugInfo(index, getDescriptor(description, 0, myDecompiledMethod.getImports()), name, start, end);
     }
 
     @Override
@@ -968,8 +959,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
     }
 
     protected boolean isThisVariableOnTopOfStack() {
-        return myDecompiledMethod.isNormalClassMethod() && !myBodyStack.isEmpty()
-                && myBodyStack.peek() instanceof Variable && ((Variable) myBodyStack.peek()).isThis();
+        return myDecompiledMethod.isNormalClassMethod() && !myBodyStack.isEmpty() && myBodyStack.peek() instanceof Variable && ((Variable) myBodyStack.peek()).isThis();
     }
 
     protected void replaceInvocationsFromExpressionsToStatements() {

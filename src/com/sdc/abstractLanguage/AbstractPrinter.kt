@@ -142,22 +142,21 @@ abstract class AbstractPrinter {
     }
 
     open fun printField(expression: Field, nestSize: Int): PrimeDoc {
-
         val owner = expression.getOwner()
         val ownerName = if (owner != null) printInstance(owner, nestSize) else text(expression.getStaticOwnerName() + ".")
         return ownerName + printExpression(expression.getName(),nestSize)
     }
 
-    open fun printVariable(expression: Variable, nestSize: Int): PrimeDoc {
-        return printExpression(expression.getName(),nestSize)
-        /*if (expression.getArrayIndex() == null)
-            return printExpression(expression.getName(),nestSize)
+    open fun printVariable(expression: Variable, nestSize: Int): PrimeDoc =
+        if (expression.isDeclared())
+            printExpression(expression.getName(), nestSize)
         else {
-            return group(printExpression(expression.getArrayVariable(), nestSize)
-            + text("[") + printExpression(expression.getArrayIndex(), nestSize) + text("]")
-            )
-        }*/
-    }
+            expression.declare()
+            printUndeclaredVariable(expression, nestSize)
+        }
+
+    open fun printUndeclaredVariable(expression: Variable, nestSize: Int): PrimeDoc =
+        text(expression.getType()) + printExpression(expression.getName(), nestSize)
 
     open fun printInvocationExpression(expression: com.sdc.ast.expressions.Invocation, nestSize: Int): PrimeDoc {
         var funName: PrimeDoc = group(text(expression.getFunction()))
@@ -298,8 +297,8 @@ abstract class AbstractPrinter {
     }
 
     open fun printFor(forBlock: For, nestSize: Int): PrimeDoc {
-        val body = printConstruction(forBlock.getBody(), nestSize)
         val initialization = printStatement(forBlock.getVariableInitialization(), nestSize)
+        val body = printConstruction(forBlock.getBody(), nestSize)
         val afterThought = printStatement(forBlock.getAfterThought(), nestSize)
         return text("for (") + initialization + text("; ") + printExpression(forBlock.getCondition()?.invert(), nestSize) + text("; ") + afterThought + text(") {") + nest(nestSize, body) / text("}")
     }
@@ -443,16 +442,19 @@ abstract class AbstractPrinter {
             var variables = method.getParameters()!!.toList()
             var index = 0
             for (variable in variables) {
+                val variableName = printExpression(variable, method.getNestSize())
+
                 if (method.checkParameterForAnnotation(index))
                     arguments = nest(
                             2 * method.getNestSize()
-                            , arguments + printAnnotations(method.getParameterAnnotations(index)!!.toList()) + text(variable)
+                            , arguments + printAnnotations(method.getParameterAnnotations(index)!!.toList()) + variableName
                     )
                 else
                     arguments = nest(
                             2 * method.getNestSize()
-                            , arguments + text(variable)
+                            , arguments + variableName
                     )
+
                 if (index + 1 < variables.size)
                     arguments = group(arguments + text(",") + line())
 
@@ -549,7 +551,7 @@ abstract class AbstractPrinter {
 
     open fun printMethodError(decompiledMethod: AbstractMethod?): PrimeDoc {
         val error = decompiledMethod!!.getError()
-        return if (error != null) line() + text("// " + error.getErrorLocation() + ": " + error.getException()!!.getMessage()) else nil()
+        return if (error != null) line() + text("// " + error.getErrorLocation() + ":") + text(error.getException()) else nil()
     }
 
     abstract fun printBaseClass(): PrimeDoc;
