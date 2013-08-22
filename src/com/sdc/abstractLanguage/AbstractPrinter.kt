@@ -79,6 +79,10 @@ abstract class AbstractPrinter {
             }
 
     open fun printConstruction(construction: Construction?, nestSize: Int): PrimeDoc {
+        return (if (construction !is ElementaryBlock && construction !is SwitchCase) line() else nil()) + printConstructionOnThisLine(construction, nestSize)
+    }
+
+    open fun printConstructionOnThisLine(construction: Construction?, nestSize: Int): PrimeDoc {
         if (construction == null)
             return nil()
         else {
@@ -111,7 +115,7 @@ abstract class AbstractPrinter {
 
             val nextConstructionCode = if (construction.hasNextConstruction()) printConstruction(construction.getNextConstruction(), nestSize) else nil()
 
-            return (if (construction !is ElementaryBlock && construction !is SwitchCase) line() else nil()) + mainCode + breakCode + continueCode + nextConstructionCode
+            return mainCode + breakCode + continueCode + nextConstructionCode
         }
     }
 
@@ -289,7 +293,13 @@ abstract class AbstractPrinter {
 
         var elsePart: PrimeDoc = nil()
         if (conditionalBlock.hasElseBlock()) {
-            elsePart = text(" else {") + nest(nestSize, printConstruction(conditionalBlock.getElseBlock(), nestSize)) / text("}")
+            elsePart = text(" else ")
+            val construction = conditionalBlock.getElseBlock()
+            if(construction is ElementaryBlock && construction.getStatements()!!.isEmpty() && construction.getNextConstruction() is ConditionalBlock){
+                elsePart = elsePart + printConstructionOnThisLine(construction.getNextConstruction(),nestSize)
+            } else{
+                elsePart = elsePart + text("{") +nest(nestSize, printConstruction(construction, nestSize)) / text("}")
+            }
         }
 
         return text("if (") + printExpression(conditionalBlock.getCondition()?.invert(), nestSize) + text(") {") + nest(nestSize, thenPart) / text("}") + elsePart
