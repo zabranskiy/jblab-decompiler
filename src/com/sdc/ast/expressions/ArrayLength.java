@@ -23,4 +23,9 @@ public class ArrayLength extends PriorityExpression {
                 return "";
         }
     }
+
+    @Override
+    public boolean isBoolean() {
+        return false;
+    }
 }

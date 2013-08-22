@@ -94,6 +94,11 @@ public class Variable extends Identifier {
                 ", myName=" + (name != null ? name : " no myName yet") + "}";
     }
 
+    @Override
+    public boolean isBoolean() {
+        return getType().contains("boolean");
+    }
+
     public boolean isThis() {
         return getName() instanceof Constant && ((Constant) getName()).isThis();
     }

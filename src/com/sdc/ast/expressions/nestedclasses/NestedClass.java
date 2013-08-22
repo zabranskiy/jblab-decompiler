@@ -13,4 +13,9 @@ public class NestedClass extends Expression {
     public AbstractClass getNestedClass() {
         return myNestedClass;
     }
+
+    @Override
+    public boolean isBoolean() {
+        return false;
+    }
 }

@@ -127,4 +127,9 @@ public class BinaryExpression extends PriorityExpression {
     public boolean isLogicType() {
         return myType == EQ || myType == NE || myType == GE || myType == LE || myType == LT || myType == GT || myType == AND || myType == OR;
     }
+
+    @Override
+    public boolean isBoolean() {
+        return isLogicType();
+    }
 }

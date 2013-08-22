@@ -36,6 +36,13 @@ public class SquareBrackets extends Identifier {
 
     @Override
     public String getType() {
+        if(myOperand instanceof Identifier) return ((Identifier) myOperand).getType();
+        if(myOperand instanceof Invocation) return ((Invocation) myOperand).getReturnType();
         return null; // not need, I think
+    }
+
+    @Override
+    public boolean isBoolean() {
+        return getType().contains("boolean");
     }
 }

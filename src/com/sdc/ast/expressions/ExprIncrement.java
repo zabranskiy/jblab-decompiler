@@ -168,4 +168,9 @@ public class ExprIncrement extends PriorityExpression {
     public Expression getVariableName() {
         return myVariable.getName();
     }
+
+    @Override
+    public boolean isBoolean() {
+        return false;
+    }
 }
