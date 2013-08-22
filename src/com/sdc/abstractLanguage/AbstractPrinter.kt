@@ -14,7 +14,6 @@ import com.sdc.ast.expressions.nestedclasses.AnonymousClass
 import com.sdc.ast.expressions.ExprIncrement
 import com.sdc.ast.expressions.InstanceOf
 import com.sdc.ast.expressions.PriorityExpression
-
 import com.sdc.ast.controlflow.Statement
 import com.sdc.ast.controlflow.Assignment
 import com.sdc.ast.controlflow.Return
@@ -33,7 +32,6 @@ import com.sdc.cfg.constructions.Switch
 import com.sdc.cfg.constructions.SwitchCase
 import com.sdc.ast.expressions.ArrayLength
 import com.sdc.ast.expressions.SquareBrackets
-
 
 abstract class AbstractPrinter {
     abstract fun getOperationPrinter(): AbstractOperationPrinter;
@@ -172,9 +170,20 @@ abstract class AbstractPrinter {
             printNewOperator() + printExpression(expression.getConstructor(), nestSize)
 
     open fun printNewArray(expression: NewArray, nestSize: Int): PrimeDoc {
-        var newArray = group(text("new") + nest(nestSize, line() + text(expression.getType())))
-        for (dimension in expression.getDimensions()!!.toList()) {
-            newArray = group(newArray + text("[") + printExpression(dimension, nestSize) + text("]"))
+        var newArray = group(nil());
+        if(expression.hasInitialization()){
+            newArray = group(newArray+text("{"))
+            val values = expression.getInitializationValues()
+            val lastValue = values!!.remove(values.size()-1)
+            for(value in values){
+               newArray = group(newArray + printExpression(value,nestSize) + text(", "))
+            }
+            newArray = group(newArray + printExpression(lastValue,nestSize) + text("}"))
+        } else {
+            newArray = group(text("new") + nest(nestSize, line() + text(expression.getType())))
+            for (dimension in expression.getDimensions()!!.toList()) {
+                newArray = group(newArray + text("[") + printExpression(dimension, nestSize) + text("]"))
+            }
         }
         return newArray
     }
