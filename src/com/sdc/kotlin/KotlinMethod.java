@@ -1,6 +1,7 @@
 package com.sdc.kotlin;
 
 import KotlinPrinter.KotlinPrinter;
+import com.sdc.abstractLanguage.AbstractFrame;
 import com.sdc.ast.controlflow.Statement;
 import com.sdc.cfg.constructions.ElementaryBlock;
 import pretty.PrettyPackage;
@@ -32,11 +33,15 @@ public class KotlinMethod extends AbstractMethod {
         return isNormalClassMethod() || hasReceiverParameter ? 1 : 0;
     }
 
-    public void addLocalVariableName(final int index, final String name) {
-        if (index == 0 && name.equals("$receiver")) {
-            hasReceiverParameter = true;
-            dragReceiverFromMethodParameters();
-        }
+    @Override
+    public AbstractFrame createFrame() {
+        return new KotlinFrame();
+    }
+
+    public void dragReceiverFromMethodParameters() {
+        hasReceiverParameter = true;
+        declareThisVariable();
+        myName = getCurrentFrame().getVariable(0).getType() + "." + myName;
     }
 
     public boolean isNormalClassMethod() {
@@ -49,14 +54,6 @@ public class KotlinMethod extends AbstractMethod {
             return statements.isEmpty() || statements.size() == 1 && statements.get(0) instanceof Return && ((Return) statements.get(0)).getReturnValue() == null;
         }
         return false;
-    }
-
-    public void dragReceiverFromMethodParameters() {
-        if (hasReceiverParameter) {
-            addLocalVariableName(0, "this$");
-            declareThisVariable();
-//            myName = getCurrentFrame().getLocalVariableType(0) + "." + myName;
-        }
     }
 
     @Override

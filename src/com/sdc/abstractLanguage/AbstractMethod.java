@@ -26,7 +26,7 @@ public abstract class AbstractMethod {
     protected List<AbstractAnnotation> myAnnotations = new ArrayList<AbstractAnnotation>();
     protected Map<Integer, List<AbstractAnnotation>> myParameterAnnotations = new HashMap<Integer, List<AbstractAnnotation>>();
 
-    protected List<Frame> myFrames = new ArrayList<Frame>();
+    protected List<AbstractFrame> myFrames = new ArrayList<AbstractFrame>();
 
     protected int myLastLocalVariableIndex;
 
@@ -50,11 +50,15 @@ public abstract class AbstractMethod {
         this.myGenericIdentifiers = genericIdentifiers;
         this.myTextWidth = textWidth;
         this.myNestSize = nestSize;
+
+        this.myFrames.add(createFrame());
     }
 
     protected abstract String getInheritanceIdentifier();
 
     protected abstract int getParametersStartIndex();
+
+    public abstract AbstractFrame createFrame();
 
     public String getModifier() {
         return myModifier;
@@ -120,30 +124,26 @@ public abstract class AbstractMethod {
         myImports.add(importClassName);
     }
 
-    public Frame createFrame() {
-        return new Frame();
-    }
-
-    public Frame getCurrentFrame() {
+    public AbstractFrame getCurrentFrame() {
         if (!myFrames.isEmpty()) {
             return myFrames.get(myFrames.size() - 1);
         }
         return null;
     }
 
-    public Frame getRootFrame() {
+    public AbstractFrame getRootFrame() {
         if (!myFrames.isEmpty()) {
             return myFrames.get(0);
         }
         return null;
     }
 
-    public void addNewFrame(final Frame frame) {
+    public void addNewFrame(final AbstractFrame frame) {
         myFrames.add(frame);
     }
 
-    public void addVariable(final int index, final String type, final String name) {
-        getCurrentFrame().createAndInsertVariable(index, type, name);
+    public void addThisVariable(final String type) {
+        getCurrentFrame().createAndInsertVariable(0, type, "this");
     }
 
     public void updateVariableInformation(final int index, final String type, final String name) {
@@ -153,7 +153,7 @@ public abstract class AbstractMethod {
     public void updateVariableInformationFromDebugInfo(final int index, final String type, final String name, final Label start, final Label end) {
         boolean started = false;
 
-        for (final Frame frame : myFrames) {
+        for (final AbstractFrame frame : myFrames) {
             if (started || frame.hasLabel(start)) {
                 if (!started) {
                     frame.getVariable(index).cutParent();
@@ -168,12 +168,21 @@ public abstract class AbstractMethod {
         }
     }
 
+    public void updateVariableNameFromDebugInfo(final int index, final String name, final Label start, final Label end) {
+        for (final AbstractFrame frame : myFrames) {
+            if (frame.hasLabel(start)) {
+                Variable variable = frame.getVariable(index);
+                updateVariableInformationFromDebugInfo(index, variable.getType(), name, start, end);
+            }
+        }
+    }
+
     public void declareThisVariable() {
         getCurrentFrame().getVariable(0).declare();
     }
 
     public List<Variable> getParameters() {
-        return getRootFrame().getMethodParameters();
+        return getRootFrame().getMethodParameters(getParametersStartIndex());
     }
 
     public boolean isGenericType(final String className) {

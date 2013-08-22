@@ -1,6 +1,7 @@
 package com.sdc.js;
 
 import JSPrinter.JSPrinter;
+import com.sdc.abstractLanguage.AbstractFrame;
 import pretty.PrettyPackage;
 
 import com.sdc.abstractLanguage.AbstractClass;
@@ -25,6 +26,11 @@ public class JSClassMethod extends AbstractMethod {
     @Override
     protected int getParametersStartIndex() {
         return 1;
+    }
+
+    @Override
+    public AbstractFrame createFrame() {
+        return new JSFrame();
     }
 
     @Override

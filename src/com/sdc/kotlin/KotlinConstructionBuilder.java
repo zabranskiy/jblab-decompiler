@@ -116,13 +116,13 @@ public class KotlinConstructionBuilder extends ConstructionBuilder {
         }
 
         When result = null;
-        final ConditionalBlock whenCondition = (ConditionalBlock) (construction);
+        final ConditionalBlock whenCondition = (ConditionalBlock) construction;
         final Expression condition = whenCondition.getCondition();
 
         if (condition instanceof BinaryExpression) {
             final BinaryExpression conditionAsBinaryExpression = (BinaryExpression) condition;
 
-            if (conditionAsBinaryExpression.getLeft() instanceof Variable && conditionAsBinaryExpression.getOperationType() == OperationType.EQ) {
+            if (conditionAsBinaryExpression.getLeft() instanceof Variable && conditionAsBinaryExpression.getOperationType() == OperationType.NE) {
                 final Variable conditionVariable = (Variable) conditionAsBinaryExpression.getLeft();
 
                 if (conditionVariable.getIndex() == variableIndex && whenCondition.getElseBlock() instanceof ElementaryBlock) {
@@ -136,28 +136,28 @@ public class KotlinConstructionBuilder extends ConstructionBuilder {
                         result.setDefaultCase(whenCondition.getElseBlock());
                     }
                 }
-            } else if (conditionAsBinaryExpression.getLeft() instanceof InstanceOf) {
-                final InstanceOf instanceOfCondition = (InstanceOf) conditionAsBinaryExpression.getLeft();
+            }
+        } else if (condition instanceof InstanceOf) {
+            final InstanceOf instanceOfCondition = (InstanceOf) condition;
 
-                if (instanceOfCondition.getArgument() instanceof Variable) {
-                    final Variable conditionVariable = (Variable) instanceOfCondition.getArgument();
+            if (instanceOfCondition.getArgument() instanceof Variable) {
+                final Variable conditionVariable = (Variable) instanceOfCondition.getArgument();
 
-                    if (conditionVariable.getIndex() == variableIndex && whenCondition.getElseBlock() instanceof ElementaryBlock) {
-                        result = extractWhen(whenCondition.getElseBlock().getNextConstruction(), variableIndex);
+                if (conditionVariable.getIndex() == variableIndex && whenCondition.getElseBlock() instanceof ElementaryBlock) {
+                    result = extractWhen(whenCondition.getElseBlock().getNextConstruction(), variableIndex);
 
-                        final Expression caseCondition = new InstanceOf(instanceOfCondition.getType());
+                    final Expression caseCondition = new InstanceOf(instanceOfCondition.getType());
 
-                        if (conditionAsBinaryExpression.getOperationType() == OperationType.NE) {
-                            caseCondition.invert();
-                        }
+                    if (!instanceOfCondition.isInverted()) {
+                        caseCondition.invert();
+                    }
 
-                        if (result != null) {
-                            result.addCase(caseCondition, whenCondition.getThenBlock());
-                        } else {
-                            result = new When(null);
-                            result.addCase(caseCondition, whenCondition.getThenBlock());
-                            result.setDefaultCase(whenCondition.getElseBlock());
-                        }
+                    if (result != null) {
+                        result.addCase(caseCondition, whenCondition.getThenBlock());
+                    } else {
+                        result = new When(null);
+                        result.addCase(caseCondition, whenCondition.getThenBlock());
+                        result.setDefaultCase(whenCondition.getElseBlock());
                     }
                 }
             }
