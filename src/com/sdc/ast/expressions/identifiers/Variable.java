@@ -45,7 +45,7 @@ public class Variable extends Identifier {
 
     public void cutParent() {
         if (myParentCopy != null) {
-            myParentCopy.cutChildCopy(this);
+            myParentCopy.cutChildCopy();
         }
 
         myParentCopy = null;
@@ -102,7 +102,7 @@ public class Variable extends Identifier {
         this.myParentCopy = parent;
     }
 
-    protected void cutChildCopy(final Variable child) {
+    protected void cutChildCopy() {
         myChildCopy = null;
     }
 }

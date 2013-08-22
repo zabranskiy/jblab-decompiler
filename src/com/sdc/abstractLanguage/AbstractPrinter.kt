@@ -550,7 +550,7 @@ abstract class AbstractPrinter {
 
     open fun printMethodError(decompiledMethod: AbstractMethod?): PrimeDoc {
         val error = decompiledMethod!!.getError()
-        return if (error != null) line() + text("// " + error.getErrorLocation() + ": " + error.getException()!!.getMessage()) else nil()
+        return if (error != null) line() + text("// " + error.getErrorLocation() + ":") + text(error.getException()) else nil()
     }
 
     abstract fun printBaseClass(): PrimeDoc;

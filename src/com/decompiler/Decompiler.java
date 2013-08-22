@@ -11,14 +11,8 @@ import com.sdc.kotlin.KotlinClassVisitor;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.ClassReader;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.ByteBuffer;
-
-//import org.objectweb.asm.ClassVisitor;
-//import org.objectweb.asm.util.TraceClassVisitor;
-//import java.io.PrintWriter;
 
 
 public class Decompiler {
@@ -83,6 +77,17 @@ public class Decompiler {
         return decompiledFile;
     }
 
+    public static String printExceptionToString(final Exception exception) {
+        StringBuilder sb = new StringBuilder("\n//\t");
+
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        exception.printStackTrace(pw);
+        sb.append(sw.toString().replace("\n\t", "\n//\t"));
+
+        return sb.toString();
+    }
+
     private static String getDecompiledCode(final String languageName, final InputStream is, final String classFilesJarPath, final Integer textWidth, final Integer tabSize) throws IOException {
         return getDecompiledCode(languageName, new ClassReader(is), classFilesJarPath, textWidth, tabSize);
     }
@@ -104,7 +109,7 @@ public class Decompiler {
             cr.accept(cv, 0);
             return cv.getDecompiledCode();
         } catch (RuntimeException e) {
-            return "General class decompiling error occurred: " + e.getMessage();
+            return "General class decompiling error occurred:" + printExceptionToString(e);
         }
     }
 }
