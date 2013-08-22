@@ -8,4 +8,8 @@ public class KotlinOperationPrinter extends AbstractOperationPrinter {
     public static AbstractOperationPrinter getInstance(){
         return ourInstance;
     }
+
+    public String getCheckCast(final String myParam) {
+        return " as " + myParam;
+    }
 }

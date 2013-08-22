@@ -18,6 +18,10 @@ import com.sdc.kotlin.KotlinClass
 import com.sdc.kotlin.KotlinMethod
 import com.sdc.kotlin.KotlinClassField
 import com.sdc.kotlin.KotlinOperationPrinter
+import com.sdc.ast.expressions.identifiers.Variable
+import com.sdc.ast.expressions.Constant
+import com.sdc.ast.expressions.UnaryExpression
+import com.sdc.ast.OperationType
 
 
 class KotlinPrinter: AbstractPrinter() {
@@ -75,8 +79,29 @@ class KotlinPrinter: AbstractPrinter() {
             else -> super<AbstractPrinter>.printExpression(expression, nestSize)
         }
 
+    override fun printVariable(expression: Variable, nestSize: Int): PrimeDoc =
+        if (expression.getName() is Constant && (expression.getName() as Constant).getValue().toString().equals("this$"))
+            text("this")
+        else
+            super.printVariable(expression, nestSize)
+
+    override fun printUndeclaredVariable(expression: Variable, nestSize: Int): PrimeDoc =
+        printExpression(expression.getName(), nestSize) + text(" : ") + text(expression.getType())
+
     override fun printInvertedInstanceOf(expression : InstanceOf, nestSize : Int): PrimeDoc =
         printInstanceOfArgument(expression, nestSize) + text("!") + printInstanceOfOperator() + text(expression.getType())
+
+    override fun printUnaryExpression(expression: UnaryExpression, nestSize: Int): PrimeDoc {
+        val opPriority = expression.getPriority(getOperationPrinter())
+        val isAssociative = expression.isAssociative();
+        val operand = expression.getOperand()
+        val expr = printExpressionCheckBrackets(operand, opPriority, isAssociative, nestSize);
+
+        if (expression.getOperationType() == OperationType.CHECK_CAST)
+            return expr + text(expression.getOperation(getOperationPrinter()))
+        else
+            return text(expression.getOperation(getOperationPrinter())) + expr
+    }
 
     override fun printClass(decompiledClass: AbstractClass): PrimeDoc {
         val kotlinClass: KotlinClass = decompiledClass as KotlinClass

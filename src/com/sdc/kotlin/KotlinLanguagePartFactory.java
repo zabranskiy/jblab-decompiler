@@ -33,9 +33,4 @@ public class KotlinLanguagePartFactory extends AbstractLanguagePartFactory {
     {
         return new KotlinClassField(modifier, type, name, textWidth, nestSize);
     }
-
-    @Override
-    public AbstractFrame createFrame() {
-        return new KotlinFrame();
-    }
 }
