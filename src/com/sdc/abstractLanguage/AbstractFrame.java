@@ -144,8 +144,8 @@ public abstract class AbstractFrame {
         return createNextFrameWithAbsoluteBound(myLastCommonVariableIndexInList + count + 1);
     }
 
-    public List<Variable> getMethodParameters() {
-        return myVariables.subList(0, myVariableIndexToArrayPosition.get(myLastMethodParameterIndex) + 1);
+    public List<Variable> getMethodParameters(final int startIndex) {
+        return myVariables.subList(startIndex, myVariableIndexToArrayPosition.get(myLastMethodParameterIndex) + 1);
     }
 
     protected List<Variable> getVariablesSubList(final int rightBound) {

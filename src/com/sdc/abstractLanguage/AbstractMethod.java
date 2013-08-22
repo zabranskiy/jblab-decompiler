@@ -171,7 +171,7 @@ public abstract class AbstractMethod {
     }
 
     public List<Variable> getParameters() {
-        return getRootFrame().getMethodParameters();
+        return getRootFrame().getMethodParameters(getParametersStartIndex());
     }
 
     public boolean isGenericType(final String className) {

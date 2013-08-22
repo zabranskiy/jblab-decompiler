@@ -93,7 +93,7 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
         if (opString.contains("INVOKESTATIC")) {
             myDecompiledMethod.addImport(decompiledOwnerFullClassName);
             if (!ownerClassName.equals("KotlinPackage")) {
-                if (!decompiledOwnerFullClassName.contains("$src$")) {
+                if (!decompiledOwnerFullClassName.contains(".src.")) {
                     invocationName = ownerClassName + "." + name;
                 } else {
                     invocationName = name;
@@ -118,10 +118,11 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
                                    final String signature, final Label start, final Label end,
                                    final int index)
     {
-//        if (index == 0 && name.equals("$receiver")) {
-//            myDecompiledMethod.addLocalVariableName(index, name);
-//            return;
-//        }
+        if (index == 0 && name.equals("$receiver")) {
+            ((KotlinMethod) myDecompiledMethod).dragReceiverFromMethodParameters();
+            super.visitLocalVariable("this$", desc, signature, start, end, index);
+            return;
+        }
 
         super.visitLocalVariable(name, desc, signature, start, end, index);
     }
@@ -138,7 +139,7 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
 
     private Expression tryVisitLambdaFunction(final String owner) {
         final String decompiledOwnerName = DeclarationWorker.decompileFullClassName(owner);
-        final int srcIndex = myDecompiledOwnerFullClassName.indexOf("$src$");
+        final int srcIndex = myDecompiledOwnerFullClassName.indexOf(".src.");
         final String methodOwner = srcIndex == -1 ? myDecompiledOwnerFullClassName : myDecompiledOwnerFullClassName.substring(0, srcIndex);
         if (!decompiledOwnerName.equals(methodOwner) && decompiledOwnerName.contains(methodOwner) && decompiledOwnerName.contains(myDecompiledMethod.getName())) {
             try {
