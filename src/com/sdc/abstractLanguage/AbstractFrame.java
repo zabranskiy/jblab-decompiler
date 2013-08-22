@@ -60,6 +60,10 @@ public abstract class AbstractFrame {
         if (myLastCommonVariableIndexInList == -1) {
             myLastCommonVariableIndexInList = lastMethodParameterIndex;
         }
+
+        for (final Variable variable : myVariables) {
+            variable.setIsMethodParameter(variable.getIndex() >= 0 && variable.getIndex() <= myLastMethodParameterIndex);
+        }
     }
 
     public int getLastCommonVariableIndexInList() {
@@ -97,7 +101,7 @@ public abstract class AbstractFrame {
 
     public Variable createAndInsertVariable(final int index, final String type, final String name) {
         if (!containsVariable(index)) {
-            final Variable variable = new Variable(index, type, name);
+            final Variable variable = createVariable(index, type, name);
             variable.setIsMethodParameter(index > 0 && index <= myLastMethodParameterIndex);
 
             myVariableIndexToArrayPosition.put(index, myVariables.size());
@@ -157,5 +161,9 @@ public abstract class AbstractFrame {
 
     protected boolean containsVariable(final int index) {
         return myVariableIndexToArrayPosition.keySet().contains(index);
+    }
+
+    protected Variable createVariable(final int index, final String type, final String name) {
+        return new Variable(index, type, name);
     }
 }

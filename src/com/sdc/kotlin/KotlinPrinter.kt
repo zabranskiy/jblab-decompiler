@@ -18,6 +18,7 @@ import com.sdc.kotlin.KotlinClass
 import com.sdc.kotlin.KotlinMethod
 import com.sdc.kotlin.KotlinClassField
 import com.sdc.kotlin.KotlinOperationPrinter
+import com.sdc.ast.expressions.identifiers.Variable
 
 
 class KotlinPrinter: AbstractPrinter() {
@@ -74,6 +75,9 @@ class KotlinPrinter: AbstractPrinter() {
 
             else -> super<AbstractPrinter>.printExpression(expression, nestSize)
         }
+
+    override fun printUndeclaredVariable(expression: Variable, nestSize: Int): PrimeDoc =
+        printExpression(expression.getName(), nestSize) + text(" : ") + text(expression.getType())
 
     override fun printInvertedInstanceOf(expression : InstanceOf, nestSize : Int): PrimeDoc =
         printInstanceOfArgument(expression, nestSize) + text("!") + printInstanceOfOperator() + text(expression.getType())

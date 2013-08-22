@@ -151,8 +151,9 @@ abstract class AbstractPrinter {
         if (expression.isDeclared())
             printExpression(expression.getName(), nestSize)
         else {
+            val result = printUndeclaredVariable(expression, nestSize)
             expression.declare()
-            printUndeclaredVariable(expression, nestSize)
+            result
         }
 
     open fun printUndeclaredVariable(expression: Variable, nestSize: Int): PrimeDoc =
