@@ -34,9 +34,4 @@ public class JSLanguagePartFactory extends AbstractLanguagePartFactory {
     {
         return new JSClassField(modifier, type, name, textWidth, nestSize);
     }
-
-    @Override
-    public AbstractFrame createFrame() {
-        return new JSFrame();
-    }
 }

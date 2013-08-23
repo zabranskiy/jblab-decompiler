@@ -33,9 +33,4 @@ public class JavaLanguagePartFactory extends AbstractLanguagePartFactory {
     {
         return new JavaClassField(modifier, type, name, textWidth, nestSize);
     }
-
-    @Override
-    public AbstractFrame createFrame() {
-        return new JavaFrame();
-    }
 }

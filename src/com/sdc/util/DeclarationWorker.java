@@ -1,7 +1,7 @@
 package com.sdc.util;
 
+import com.sdc.abstractLanguage.AbstractFrame;
 import com.sdc.abstractLanguage.AbstractMethod;
-import com.sdc.abstractLanguage.Frame;
 import org.objectweb.asm.Opcodes;
 
 import java.util.*;
@@ -272,7 +272,7 @@ public class DeclarationWorker {
         int count = startIndex - 1;
         int pos = 0;
 
-        Frame rootFrame = abstractMethod.createFrame();
+        AbstractFrame rootFrame = abstractMethod.getCurrentFrame();
 
         while (pos < descriptor.length()) {
             final int backupPos = pos;
@@ -318,7 +318,6 @@ public class DeclarationWorker {
         }
 
         rootFrame.setLastMethodParameterIndex(count);
-        abstractMethod.addNewFrame(rootFrame);
 
         abstractMethod.setLastLocalVariableIndex(count);
     }
@@ -357,6 +356,17 @@ public class DeclarationWorker {
     public static boolean isPrimitiveClass(final String type) {
         Set<String> primitiveTypes = new HashSet<String>(Arrays.asList("Byte", "Long", "Boolean", "Integer", "Int", "Short", "Character", "Float", "Double", "Object"));
         return primitiveTypes.contains(type);
+    }
+
+    public static String convertJavaPrimitiveClassToKotlin(final String javaClass) {
+        if (javaClass.equals("Integer")) {
+            return "Int";
+        } else if (javaClass.equals("Character")) {
+            return "Char";
+        } else if (javaClass.equals("Object")) {
+            return "Any";
+        }
+        return javaClass;
     }
 
     public static String decompileClassNameWithOuterClasses(final String byteCodeFullClassName) {
@@ -414,17 +424,6 @@ public class DeclarationWorker {
         }
 
         return result.deleteCharAt(0).toString();
-    }
-
-    private static String convertJavaPrimitiveClassToKotlin(final String javaClass) {
-        if (javaClass.equals("Integer")) {
-            return "Int";
-        } else if (javaClass.equals("Character")) {
-            return "Char";
-        } else if (javaClass.equals("Object")) {
-            return "Any";
-        }
-        return javaClass;
     }
 
     private static int getNextTypePosition(final String descriptor, final int startPos) {

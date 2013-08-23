@@ -58,7 +58,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
     protected abstract boolean checkForAutomaticallyGeneratedAnnotation(final String annotationName);
 
-    protected Frame getCurrentFrame() {
+    protected AbstractFrame getCurrentFrame() {
         return myDecompiledMethod.getCurrentFrame();
     }
 
@@ -121,9 +121,9 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
     @Override
     public void visitFrame(final int type, final int nLocal, final Object[] local, final int nStack, final Object[] stack) {
-        Frame currentFrame = getCurrentFrame();
+        AbstractFrame currentFrame = getCurrentFrame();
 
-        Frame newFrame = null;
+        AbstractFrame newFrame = null;
 
         if (type == 0) {
             // F_FULL
@@ -412,7 +412,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
     public void visitVarInsn(final int opcode, final int var) {
         final String opString = Printer.OPCODES[opcode];
 
-        final Frame currentFrame = getCurrentFrame();
+        final AbstractFrame currentFrame = getCurrentFrame();
         final boolean currentFrameHasStack = currentFrame.checkStack();
 
         String variableType = null;
@@ -868,7 +868,10 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         // Remove last return
         List<Statement> lastNodeStatements = myNodes.get(myNodes.size() - 1).getStatements();
         if (lastNodeStatements.size() != 0) {
-            lastNodeStatements.remove(lastNodeStatements.size() - 1);
+            final Statement lastStatement = lastNodeStatements.get(lastNodeStatements.size() - 1);
+            if (lastStatement instanceof Return && ((Return) lastStatement).getReturnValue() == null) {
+                lastNodeStatements.remove(lastNodeStatements.size() - 1);
+            }
         }
     }
 

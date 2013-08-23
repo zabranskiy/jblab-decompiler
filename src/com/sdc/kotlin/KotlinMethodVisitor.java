@@ -4,8 +4,10 @@ import com.sdc.abstractLanguage.AbstractClass;
 import com.sdc.abstractLanguage.AbstractClassVisitor;
 import com.sdc.abstractLanguage.AbstractMethod;
 import com.sdc.abstractLanguage.AbstractMethodVisitor;
+import com.sdc.ast.controlflow.Assignment;
+import com.sdc.ast.controlflow.Statement;
 import com.sdc.ast.expressions.Expression;
-import com.sdc.ast.expressions.identifiers.Variable;
+import com.sdc.ast.expressions.New;
 import com.sdc.ast.expressions.nestedclasses.LambdaFunction;
 import com.sdc.cfg.nodes.Node;
 import com.sdc.util.ConstructionBuilder;
@@ -51,6 +53,21 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
     }
 
     @Override
+    public void visitVarInsn(final int opcode, final int var) {
+        super.visitVarInsn(opcode, var);
+
+        if (!myStatements.isEmpty()) {
+            final Statement lastStatement = myStatements.get(myStatements.size() - 1);
+            if (lastStatement instanceof Assignment
+                    && ((Assignment) lastStatement).getRight() instanceof New
+                    && KotlinVariable.isSharedVar(((New) ((Assignment) lastStatement).getRight()).getReturnType()))
+            {
+                myStatements.remove(myStatements.size() - 1);
+            }
+        }
+    }
+
+    @Override
     public void visitMethodInsn(final int opcode, final String owner, final String name, final String desc) {
         final String opString = Printer.OPCODES[opcode];
 
@@ -92,9 +109,15 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
 
         if (opString.contains("INVOKESTATIC")) {
             myDecompiledMethod.addImport(decompiledOwnerFullClassName);
-            if (!ownerClassName.equals("KotlinPackage")) {
-                if (!decompiledOwnerFullClassName.contains("$src$")) {
-                    invocationName = ownerClassName + "." + name;
+            if (!ownerClassName.equals("KotlinPackage") && !ownerClassName.equals(myDecompiledMethod.getDecompiledClass().getName())) {
+                if (!decompiledOwnerFullClassName.contains(".src.")) {
+                    if (ownerClassName.contains("..")) {
+                        invocationName = "super<" + ownerClassName.substring(0, ownerClassName.indexOf("..")) + ">."  + name;
+                        appendInstanceInvocation(invocationName, hasVoidReturnType ? "" : returnType, arguments, arguments.remove(0));
+                        return;
+                    } else {
+                        invocationName = ownerClassName + "." + name;
+                    }
                 } else {
                     invocationName = name;
                 }
@@ -105,7 +128,7 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
 
             isStaticInvocation = true;
             if (name.equals("checkParameterIsNotNull")) {
-//                ((KotlinFrame) getCurrentFrame()).addNotNullVariable(((Variable) arguments.get(0)).getIndex());
+                ((KotlinVariable) arguments.get(0)).setIsNotNull(true);
                 return;
             }
         }
@@ -118,10 +141,18 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
                                    final String signature, final Label start, final Label end,
                                    final int index)
     {
-//        if (index == 0 && name.equals("$receiver")) {
-//            myDecompiledMethod.addLocalVariableName(index, name);
-//            return;
-//        }
+        if (index == 0 && name.equals("$receiver")) {
+            ((KotlinMethod) myDecompiledMethod).dragReceiverFromMethodParameters();
+            super.visitLocalVariable("this$", desc, signature, start, end, index);
+            return;
+        }
+        if (index <= myDecompiledMethod.getLastLocalVariableIndex()) {
+            if (!myHasDebugInformation) {
+                myHasDebugInformation = true;
+            }
+            myDecompiledMethod.updateVariableNameFromDebugInfo(index, name, start, end);
+            return;
+        }
 
         super.visitLocalVariable(name, desc, signature, start, end, index);
     }
@@ -138,7 +169,7 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
 
     private Expression tryVisitLambdaFunction(final String owner) {
         final String decompiledOwnerName = DeclarationWorker.decompileFullClassName(owner);
-        final int srcIndex = myDecompiledOwnerFullClassName.indexOf("$src$");
+        final int srcIndex = myDecompiledOwnerFullClassName.indexOf(".src.");
         final String methodOwner = srcIndex == -1 ? myDecompiledOwnerFullClassName : myDecompiledOwnerFullClassName.substring(0, srcIndex);
         if (!decompiledOwnerName.equals(methodOwner) && decompiledOwnerName.contains(methodOwner) && decompiledOwnerName.contains(myDecompiledMethod.getName())) {
             try {

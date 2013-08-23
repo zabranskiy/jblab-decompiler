@@ -5,16 +5,16 @@ import com.sdc.ast.expressions.Constant;
 import com.sdc.ast.expressions.Expression;
 
 public class Variable extends Identifier {
-    private final int myIndex;
+    protected final int myIndex;
 
-    private Expression myName;
-    private String myVariableType;
+    protected Expression myName;
+    protected String myVariableType;
 
-    private boolean myIsMethodParameter = false;
-    private boolean myIsDeclared = false;
+    protected boolean myIsMethodParameter = false;
+    protected boolean myIsDeclared = false;
 
-    private Variable myParentCopy;
-    private Variable myChildCopy;
+    protected Variable myParentCopy;
+    protected Variable myChildCopy;
 
     public Variable(final int index, final String variableType, final String name) {
         this.myIndex = index;
@@ -60,7 +60,7 @@ public class Variable extends Identifier {
     }
 
     public Variable createCopy() {
-        Variable copy = new Variable(myIndex, myVariableType,((Constant) myName).getValue().toString());
+        Variable copy = createVariable(myIndex, myVariableType,((Constant) myName).getValue().toString());
         myChildCopy = copy;
         copy.setParentCopy(this);
 
@@ -109,5 +109,9 @@ public class Variable extends Identifier {
 
     protected void cutChildCopy() {
         myChildCopy = null;
+    }
+
+    protected Variable createVariable(final int index, final String variableType, final String name) {
+        return new Variable(index, variableType, name);
     }
 }
