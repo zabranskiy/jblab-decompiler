@@ -31,6 +31,10 @@ public class BinaryExpression extends PriorityExpression {
 
     public String getOperation(AbstractOperationPrinter operationPrinter) {
         switch (myType) {
+            case AND:
+                return operationPrinter.getAndView();
+            case OR:
+                return operationPrinter.getOrView();
             case ADD:
                 return operationPrinter.getAddView();
             case SUB:

@@ -50,7 +50,7 @@ abstract class AbstractPrinter {
         is NewArray -> printNewArray(expression, nestSize)
         is InstanceOf -> printInstanceOf(expression, nestSize)
         is AnonymousClass -> printAnonymousClassExpression(expression, nestSize)
-        is TernaryExpression -> printTernaryExpression(expression, nestSize)
+//        is TernaryExpression -> printTernaryExpression(expression, nestSize)
         is ExprIncrement -> printExprIncrement(expression, nestSize)
         is ArrayLength -> printArrayLength(expression, nestSize)
         is SquareBrackets -> printSquareBrackets(expression,nestSize)
@@ -204,7 +204,7 @@ abstract class AbstractPrinter {
     open fun printAnonymousClassExpression(expression: AnonymousClass, nestSize: Int): PrimeDoc =
             printNewOperator() + printAnonymousClass(expression.getNestedClass(), expression.getConstructorArguments())
 
-    open fun printTernaryExpression(expression: TernaryExpression, nestSize: Int): PrimeDoc {
+/*    open fun printTernaryExpression(expression: TernaryExpression, nestSize: Int): PrimeDoc {
         val l = expression.getLeft()
         val r = expression.getRight()
         var c = expression.getCondition();
@@ -213,7 +213,7 @@ abstract class AbstractPrinter {
         val left = printExpressionCheckBrackets(l, opPriority, nestSize);
         val right = printExpressionCheckBrackets(r, opPriority, nestSize);
         return group(nest(nestSize, line() + text("(") + condition + text(") ? ") + left + text(" : ") + right))
-    }
+    }*/
 
     open fun printExprIncrement(expression: ExprIncrement, nestSize: Int): PrimeDoc {
         val expr = expression.getVariable();
@@ -283,7 +283,7 @@ abstract class AbstractPrinter {
             elsePart = text(" else {") + nest(nestSize, printConstruction(conditionalBlock.getElseBlock(), nestSize)) / text("}")
         }
 
-        return text("if (") + printExpression(conditionalBlock.getCondition()?.invert(), nestSize) + text(") {") + nest(nestSize, thenPart) / text("}") + elsePart
+        return text("if (") + printExpression(conditionalBlock.getCondition(), nestSize) + text(") {") + nest(nestSize, thenPart) / text("}") + elsePart
     }
 
     open fun printWhile(whileBlock: While, nestSize: Int): PrimeDoc {

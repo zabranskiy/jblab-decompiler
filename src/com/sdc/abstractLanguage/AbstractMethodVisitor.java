@@ -16,6 +16,7 @@ import com.sdc.cfg.nodes.Switch;
 import com.sdc.util.ConstructionBuilder;
 import com.sdc.util.DeclarationWorker;
 import com.sdc.util.DominatorTreeGenerator;
+import com.sdc.util.GraphBuilder;
 import org.objectweb.asm.*;
 import org.objectweb.asm.util.Printer;
 
@@ -687,7 +688,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
     public void visitLabel(final Label label) {
         getCurrentFrame().addLabel(label);
 
-        if (myLabels.contains(label)) {
+        if (myLabels.contains(label) && !myNodeInnerLabels.isEmpty()) {
             applyNode();
             myLabels.remove(label);
         }
@@ -803,6 +804,10 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
         placeEdges();
         printDebugInfo();
+
+        GraphBuilder gb = new GraphBuilder(myNodes);
+        gb.rebuild();
+
 
         DominatorTreeGenerator gen = new DominatorTreeGenerator(myNodes);
         ConstructionBuilder cb = createConstructionBuilder(myNodes, gen);
