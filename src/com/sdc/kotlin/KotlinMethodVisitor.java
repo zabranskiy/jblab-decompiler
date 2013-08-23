@@ -92,9 +92,15 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
 
         if (opString.contains("INVOKESTATIC")) {
             myDecompiledMethod.addImport(decompiledOwnerFullClassName);
-            if (!ownerClassName.equals("KotlinPackage")) {
+            if (!ownerClassName.equals("KotlinPackage") && !ownerClassName.equals(myDecompiledMethod.getDecompiledClass().getName())) {
                 if (!decompiledOwnerFullClassName.contains(".src.")) {
-                    invocationName = ownerClassName + "." + name;
+                    if (ownerClassName.contains("..")) {
+                        invocationName = "super<" + ownerClassName.substring(0, ownerClassName.indexOf("..")) + ">."  + name;
+                        appendInstanceInvocation(invocationName, hasVoidReturnType ? "" : returnType, arguments, arguments.remove(0));
+                        return;
+                    } else {
+                        invocationName = ownerClassName + "." + name;
+                    }
                 } else {
                     invocationName = name;
                 }
