@@ -1,8 +1,11 @@
 package com.sdc.abstractLanguage;
 
+import com.sdc.ast.controlflow.Return;
+import com.sdc.ast.controlflow.Statement;
 import com.sdc.ast.expressions.Expression;
 import com.sdc.ast.expressions.identifiers.Variable;
 import com.sdc.cfg.constructions.Construction;
+import com.sdc.cfg.constructions.ElementaryBlock;
 import org.objectweb.asm.Label;
 
 import java.util.ArrayList;
@@ -247,6 +250,14 @@ public abstract class AbstractMethod {
 
     public Construction getBegin() {
         return myBegin;
+    }
+
+    public boolean hasEmptyBody() {
+        if (myBegin instanceof ElementaryBlock) {
+            final List<Statement> statements = ((ElementaryBlock) myBegin).getStatements();
+            return statements.isEmpty() || statements.size() == 1 && statements.get(0) instanceof Return && ((Return) statements.get(0)).getReturnValue() == null;
+        }
+        return false;
     }
 
 /*

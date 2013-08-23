@@ -5,13 +5,8 @@ import com.sdc.ast.controlflow.Assignment;
 import com.sdc.ast.controlflow.InstanceInvocation;
 import com.sdc.ast.controlflow.Invocation;
 import com.sdc.ast.controlflow.Statement;
-import com.sdc.cfg.constructions.ConditionalBlock;
-import com.sdc.cfg.constructions.Construction;
-import com.sdc.cfg.constructions.ElementaryBlock;
-import com.sdc.cfg.constructions.When;
-import com.sdc.ast.expressions.BinaryExpression;
-import com.sdc.ast.expressions.Expression;
-import com.sdc.ast.expressions.InstanceOf;
+import com.sdc.ast.expressions.*;
+import com.sdc.cfg.constructions.*;
 import com.sdc.ast.expressions.identifiers.Variable;
 import com.sdc.cfg.nodes.Node;
 import com.sdc.util.ConstructionBuilder;
@@ -35,6 +30,7 @@ public class KotlinConstructionBuilder extends ConstructionBuilder {
 
         extractNullSafeFunctionCall(generalConstruction);
         extractWhen(generalConstruction);
+        extractNewArrayInitialization(generalConstruction);
 
         return generalConstruction;
     }
@@ -76,6 +72,43 @@ public class KotlinConstructionBuilder extends ConstructionBuilder {
 
         return false;
     }
+
+    private boolean extractNewArrayInitialization(Construction baseConstruction) {
+        final Construction newArrayInitialization = baseConstruction.getNextConstruction();
+
+        if (baseConstruction instanceof ElementaryBlock && newArrayInitialization != null && newArrayInitialization instanceof While) {
+            final Construction initializationBody = ((While) newArrayInitialization).getBody();
+
+            if (initializationBody instanceof ElementaryBlock) {
+                final ElementaryBlock initializationBlock = (ElementaryBlock) initializationBody;
+
+                if (initializationBlock.getStatements().size() == 1) {
+                    final Statement initializationStatement = initializationBlock.getStatements().get(0);
+
+                    if (initializationStatement instanceof Assignment
+                            && ((Assignment) initializationStatement).getLeft() instanceof SquareBrackets
+                            && ((Assignment) initializationStatement).getLeft().getName() instanceof NewArray)
+                    {
+                        final Expression lambdaFunction = ((com.sdc.ast.expressions.InstanceInvocation)((Assignment) initializationStatement).getRight()).getInstance();
+
+                        ((ElementaryBlock) baseConstruction).removeLastStatement();
+                        ((ElementaryBlock) baseConstruction).removeLastStatement();
+
+                        KotlinNewArray newArray = new KotlinNewArray(1, ((NewArray) ((Assignment) initializationStatement).getLeft().getName()).getType(), ((NewArray) ((Assignment) initializationStatement).getLeft().getName()).getDimensions());
+                        newArray.setInitializer(lambdaFunction);
+                        ((Assignment)((ElementaryBlock) newArrayInitialization.getNextConstruction()).getStatements().get(0)).setRight(newArray);
+
+                        baseConstruction.setNextConstruction(newArrayInitialization.getNextConstruction());
+
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
 
     private boolean extractWhen(Construction baseConstruction) {
         final Construction whenStartConstruction = baseConstruction.getNextConstruction();

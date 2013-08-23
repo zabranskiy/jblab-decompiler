@@ -4,8 +4,8 @@ import com.sdc.ast.expressions.Expression;
 import com.sdc.ast.expressions.identifiers.Identifier;
 
 public class Assignment extends Statement {
-    private final Identifier myLeft;
-    private final Expression myRight;
+    private Identifier myLeft;
+    private Expression myRight;
 
     public Assignment(final Identifier left, final Expression right) {
         this.myLeft = left;
@@ -18,5 +18,13 @@ public class Assignment extends Statement {
 
     public Expression getRight() {
         return myRight;
+    }
+
+    public void setLeft(final Identifier left) {
+        this.myLeft = left;
+    }
+
+    public void setRight(final Expression right) {
+        this.myRight = right;
     }
 }
