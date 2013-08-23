@@ -11,6 +11,7 @@ import com.sdc.abstractLanguage.AbstractPrinter
 import com.sdc.abstractLanguage.AbstractOperationPrinter
 import com.sdc.java.JavaOperationPrinter
 import com.sdc.ast.expressions.identifiers.Variable
+import com.sdc.abstractLanguage.AbstractClass.ClassType.*
 
 class JavaPrinter: AbstractPrinter() {
     override fun getOperationPrinter():AbstractOperationPrinter{
@@ -22,12 +23,21 @@ class JavaPrinter: AbstractPrinter() {
 
     override fun printBaseClass(): PrimeDoc = text("Object")
 
-    override fun printClass(decompiledClass: AbstractClass): PrimeDoc {
+    override fun printClass(decompiledClass: AbstractClass): PrimeDoc =
+        when(decompiledClass.getType()){
+            SIMPLE_CLASS -> printSimpleClass(decompiledClass)
+            INTERFACE -> printInterface(decompiledClass)
+            ENUM -> printEnum(decompiledClass)
+            ANNOTATION -> printSimpleClass(decompiledClass) //todo create printer for annotation
+            else -> printSimpleClass(decompiledClass)
+        }
+
+    open fun printSimpleClass(decompiledClass: AbstractClass): PrimeDoc {
         val javaClass: JavaClass = decompiledClass as JavaClass
 
         var headerCode : PrimeDoc = printPackageAndImports(decompiledClass)
 
-        var declaration : PrimeDoc = group(printAnnotations(javaClass.getAnnotations()!!.toList()) + text(javaClass.getModifier() + javaClass.getType() + javaClass.getName()))
+        var declaration : PrimeDoc = group(printAnnotations(javaClass.getAnnotations()!!.toList()) + text(javaClass.getModifier() + javaClass.getTypeToString() + javaClass.getName()))
 
         val genericsCode = printGenerics(javaClass.getGenericDeclaration())
         declaration = declaration + genericsCode
@@ -57,6 +67,63 @@ class JavaPrinter: AbstractPrinter() {
         for (classMethod in javaClass.getMethods()!!.toList())
             javaClassCode = javaClassCode + nest(javaClass.getNestSize(), line() + printMethod(classMethod))
 
+
+        return javaClassCode / text("}")
+    }
+
+    open fun printEnum(decompiledClass: AbstractClass): PrimeDoc {
+        val javaClass: JavaClass = decompiledClass as JavaClass
+
+        var declaration : PrimeDoc = group(printAnnotations(javaClass.getAnnotations()!!.toList()) + text( javaClass.getModifier()+  javaClass.getTypeToString() + javaClass.getName()))
+
+        val nestSize = javaClass.getNestSize()
+        //var javaClassCode : PrimeDoc = nest(nestSize, nil())
+
+
+        var fieldList = javaClass.getFields()!!.toList()
+        val lastIndex = fieldList.size() - 1
+/*        if (!fieldList.isEmpty())
+            javaClassCode = group(
+                    javaClassCode
+                    + nest(2 * nestSize, line() + text(fieldList.get(0).getName()))
+            )
+        val lastIndex = fieldList.size() - 1
+        for (field in fieldList.subList(1,lastIndex-1)) {
+            javaClassCode = group(
+                    (javaClassCode + text(","))
+                    + nest(2 * nestSize,line() + text(field.getName()))
+            )
+        }*/
+/*        if(!fieldList.empty){
+            val lastField = fieldList.get(fieldList.size-2)
+            fieldList = fieldList.take(fieldList.size-2)
+            for (classField in fieldList)
+                javaClassCode = nest(javaClass.getNestSize(),javaClassCode + nest(javaClass.getNestSize(), text(classField.getName()+", ")))
+            javaClassCode = javaClassCode + text(lastField.getName())
+        }*/
+        var argsDocs = fieldList.take(fieldList.size - 2)
+                .map { arg -> text(arg.getName() + ", ") }
+        var argumentsCode: PrimeDoc = fill(argsDocs)
+
+        //var res = group( declaration + text(" {")) + nest(nestSize, line() + argumentsCode
+        //res = res + fieldList.get(lastIndex-1).getName()
+        //res = res / text("}")
+        //return res
+        return group( declaration + text(" {") + nest(nestSize, line() + argumentsCode) + text(/*fieldList.get(lastIndex-1).getName()*/"  lhl")) / text("}")
+    }
+
+    open fun printInterface(decompiledClass: AbstractClass): PrimeDoc {
+        val javaClass: JavaClass = decompiledClass as JavaClass
+
+        var headerCode : PrimeDoc = printPackageAndImports(decompiledClass)
+
+        var declaration : PrimeDoc = group(printAnnotations(javaClass.getAnnotations()!!.toList()) +text( javaClass.getModifier()+  javaClass.getType() + javaClass.getName()))
+
+        val genericsCode = printGenerics(javaClass.getGenericDeclaration())
+
+        declaration = declaration + genericsCode
+
+        var javaClassCode : PrimeDoc = group( declaration + text(" {")) + nest(javaClass.getNestSize(), printClassBodyInnerClasses(javaClass))
 
         return javaClassCode / text("}")
     }
