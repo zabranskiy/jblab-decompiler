@@ -214,7 +214,10 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
     public MethodVisitor visitMethod(final int access, final String name, final String desc
             , final String signature, final String[] exceptions) {
         final String description = signature != null ? signature : desc;
-        final String modifier = DeclarationWorker.getAccess(access, myLanguage);
+        String modifier = DeclarationWorker.getAccess(access, myLanguage);
+        if(myDecompiledClass.getType()==INTERFACE){
+            modifier = modifier.replace("abstract ","");
+        }
 
         List<String> throwedExceptions = new ArrayList<String>();
         if (exceptions != null) {
