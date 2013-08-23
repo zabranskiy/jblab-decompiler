@@ -86,8 +86,9 @@ class JavaPrinter: AbstractPrinter() {
     }
 
     override fun printMethod(decompiledMethod: AbstractMethod): PrimeDoc {
-        if(decompiledMethod.getName().equals(decompiledMethod.getDecompiledClass()?.getName())
-            || decompiledMethod.getParameters()?.isEmpty() as Boolean){
+        if (decompiledMethod.getName().equals(decompiledMethod.getDecompiledClass()?.getName())
+            && decompiledMethod.getParameters()?.isEmpty() as Boolean && decompiledMethod.hasEmptyBody())
+        {
             return nil()
         }
 
