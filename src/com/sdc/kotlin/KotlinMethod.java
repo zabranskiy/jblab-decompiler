@@ -2,13 +2,10 @@ package com.sdc.kotlin;
 
 import KotlinPrinter.KotlinPrinter;
 import com.sdc.abstractLanguage.AbstractFrame;
-import com.sdc.ast.controlflow.Statement;
-import com.sdc.cfg.constructions.ElementaryBlock;
 import pretty.PrettyPackage;
 
 import com.sdc.abstractLanguage.AbstractClass;
 import com.sdc.abstractLanguage.AbstractMethod;
-import com.sdc.ast.controlflow.Return;
 
 import java.util.List;
 
@@ -46,14 +43,6 @@ public class KotlinMethod extends AbstractMethod {
 
     public boolean isNormalClassMethod() {
         return myAbstractClass.isNormalClass();
-    }
-
-    public boolean hasEmptyBody() {
-        if (myBegin instanceof ElementaryBlock) {
-            final List<Statement> statements = ((ElementaryBlock) myBegin).getStatements();
-            return statements.isEmpty() || statements.size() == 1 && statements.get(0) instanceof Return && ((Return) statements.get(0)).getReturnValue() == null;
-        }
-        return false;
     }
 
     @Override
