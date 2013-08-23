@@ -13,6 +13,7 @@ import static com.sdc.abstractLanguage.AbstractClass.ClassType.*;
 import static org.objectweb.asm.Opcodes.ASM4;
 
 public abstract class AbstractClassVisitor extends ClassVisitor {
+    protected AbstractClass myOuterClass;
     protected AbstractClass myDecompiledClass;
     protected final int myTextWidth;
     protected final int myNestSize;
@@ -58,6 +59,10 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
 
     public void setClassFilesJarPath(final String classFilesJarPath) {
         this.myClassFilesJarPath = classFilesJarPath;
+    }
+
+    public void setOuterClass(final AbstractClass outerClass) {
+        this.myOuterClass = outerClass;
     }
 
     @Override
@@ -124,6 +129,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
 
         myDecompiledClass.setIsLambdaFunctionClass(myIsLambdaFunction);
         myDecompiledClass.setFullClassName(DeclarationWorker.decompileFullClassName(name));
+        myDecompiledClass.setOuterClass(myOuterClass);
 
         if (!superClassImport.isEmpty()) {
             myDecompiledClass.appendImport(superClassImport);
@@ -174,6 +180,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
                 AbstractClassVisitor cv = myVisitorFactory.createClassVisitor(myDecompiledClass.getTextWidth(), myDecompiledClass.getNestSize());
                 cv.setVisitedClasses(myVisitedClasses);
                 cv.setClassFilesJarPath(myClassFilesJarPath);
+                cv.setOuterClass(myDecompiledClass);
 
                 ClassReader cr = getInnerClassClassReader(myClassFilesJarPath, name);
                 cr.accept(cv, 0);
