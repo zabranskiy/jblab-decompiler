@@ -9,6 +9,7 @@ import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+import static com.sdc.abstractLanguage.AbstractClass.ClassType.*;
 import static org.objectweb.asm.Opcodes.ASM4;
 
 public abstract class AbstractClassVisitor extends ClassVisitor {
@@ -62,13 +63,25 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
     @Override
     public void visit(final int version, final int access, final String name
             , final String signature, final String superName, final String[] interfaces) {
-        final String modifier = DeclarationWorker.getAccess(access & ~Opcodes.ACC_SUPER, myLanguage);
-        String type = "";
+        String modifier = DeclarationWorker.getAccess(access & ~Opcodes.ACC_SUPER, myLanguage);
+        AbstractClass.ClassType type = SIMPLE_CLASS;
 
         if ((access & Opcodes.ACC_ENUM) == 0
                 && (access & Opcodes.ACC_INTERFACE) == 0
                 && (access & Opcodes.ACC_ANNOTATION) == 0) {
-            type = "class ";
+            type = SIMPLE_CLASS;
+        } else if ((access & Opcodes.ACC_ENUM)!= 0){
+            modifier = modifier.replace("final","");
+            modifier = modifier.replace("enum","");
+            modifier = modifier.trim() + " ";
+            type = ENUM;
+        }  else if((access & Opcodes.ACC_INTERFACE) != 0){
+            modifier = modifier.replace("abstract ","");
+            type = INTERFACE;
+        }  else if((access & Opcodes.ACC_ANNOTATION) != 0){
+            type = ANNOTATION;
+        } else if((access & Opcodes.ACC_ABSTRACT) !=0){
+            type = ABSTRACT_CLASS;
         }
 
         final String className = DeclarationWorker.decompileSimpleClassName(name);
