@@ -60,7 +60,7 @@ public class Variable extends Identifier {
     }
 
     public Variable createCopy() {
-        Variable copy = new Variable(myIndex, myVariableType,((Constant) myName).getValue().toString());
+        Variable copy = createVariable(myIndex, myVariableType,((Constant) myName).getValue().toString());
         myChildCopy = copy;
         copy.setParentCopy(this);
 
@@ -109,5 +109,9 @@ public class Variable extends Identifier {
 
     protected void cutChildCopy() {
         myChildCopy = null;
+    }
+
+    protected Variable createVariable(final int index, final String variableType, final String name) {
+        return new Variable(index, variableType, name);
     }
 }

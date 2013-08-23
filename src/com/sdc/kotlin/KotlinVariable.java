@@ -6,7 +6,13 @@ import com.sdc.ast.expressions.identifiers.Variable;
 import com.sdc.util.DeclarationWorker;
 
 public class KotlinVariable extends Variable {
+    public static final String SHARED_VAR_IDENTIFIER = "SharedVar.";
+
     private boolean myIsNotNull = false;
+
+    public static boolean isSharedVar(final String type) {
+        return type.startsWith(SHARED_VAR_IDENTIFIER);
+    }
 
     public KotlinVariable(final int index, final String variableType, final String name) {
         super(index, variableType, name);
@@ -30,9 +36,27 @@ public class KotlinVariable extends Variable {
 
     @Override
     public String getType() {
-        final boolean notNeedNullableMark = myIsNotNull || DeclarationWorker.isPrimitiveClass(myVariableType) || myVariableType.endsWith("?");
+        String actualType = super.getType();
+        boolean notNeedNullableMark = myIsNotNull || DeclarationWorker.isPrimitiveClass(myVariableType) || myVariableType.endsWith("?");
+
+        if (isSharedVar(myVariableType)) {
+            actualType = DeclarationWorker.convertJavaPrimitiveClassToKotlin(actualType.substring(SHARED_VAR_IDENTIFIER.length()));
+            if (!actualType.equals("Any")) {
+                notNeedNullableMark = true;
+            }
+        }
+
         final String nullableMark = notNeedNullableMark ? "" : "?";
 
-        return super.getType() + nullableMark;
+        return actualType + nullableMark;
+    }
+
+    public String getActualType() {
+        return super.getType();
+    }
+
+    @Override
+    protected Variable createVariable(final int index, final String variableType, final String name) {
+        return new KotlinVariable(index, variableType, name);
     }
 }

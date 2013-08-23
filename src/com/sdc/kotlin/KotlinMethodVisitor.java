@@ -4,8 +4,10 @@ import com.sdc.abstractLanguage.AbstractClass;
 import com.sdc.abstractLanguage.AbstractClassVisitor;
 import com.sdc.abstractLanguage.AbstractMethod;
 import com.sdc.abstractLanguage.AbstractMethodVisitor;
+import com.sdc.ast.controlflow.Assignment;
+import com.sdc.ast.controlflow.Statement;
 import com.sdc.ast.expressions.Expression;
-import com.sdc.ast.expressions.identifiers.Variable;
+import com.sdc.ast.expressions.New;
 import com.sdc.ast.expressions.nestedclasses.LambdaFunction;
 import com.sdc.cfg.nodes.Node;
 import com.sdc.util.ConstructionBuilder;
@@ -51,6 +53,21 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
     }
 
     @Override
+    public void visitVarInsn(final int opcode, final int var) {
+        super.visitVarInsn(opcode, var);
+
+        if (!myStatements.isEmpty()) {
+            final Statement lastStatement = myStatements.get(myStatements.size() - 1);
+            if (lastStatement instanceof Assignment
+                    && ((Assignment) lastStatement).getRight() instanceof New
+                    && KotlinVariable.isSharedVar(((New) ((Assignment) lastStatement).getRight()).getReturnType()))
+            {
+                myStatements.remove(myStatements.size() - 1);
+            }
+        }
+    }
+
+    @Override
     public void visitMethodInsn(final int opcode, final String owner, final String name, final String desc) {
         final String opString = Printer.OPCODES[opcode];
 
@@ -92,9 +109,15 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
 
         if (opString.contains("INVOKESTATIC")) {
             myDecompiledMethod.addImport(decompiledOwnerFullClassName);
-            if (!ownerClassName.equals("KotlinPackage")) {
+            if (!ownerClassName.equals("KotlinPackage") && !ownerClassName.equals(myDecompiledMethod.getDecompiledClass().getName())) {
                 if (!decompiledOwnerFullClassName.contains(".src.")) {
-                    invocationName = ownerClassName + "." + name;
+                    if (ownerClassName.contains("..")) {
+                        invocationName = "super<" + ownerClassName.substring(0, ownerClassName.indexOf("..")) + ">."  + name;
+                        appendInstanceInvocation(invocationName, hasVoidReturnType ? "" : returnType, arguments, arguments.remove(0));
+                        return;
+                    } else {
+                        invocationName = ownerClassName + "." + name;
+                    }
                 } else {
                     invocationName = name;
                 }

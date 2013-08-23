@@ -22,6 +22,10 @@ import com.sdc.ast.expressions.identifiers.Variable
 import com.sdc.ast.expressions.Constant
 import com.sdc.ast.expressions.UnaryExpression
 import com.sdc.ast.OperationType
+import com.sdc.ast.expressions.identifiers.Field
+import com.sdc.kotlin.KotlinVariable
+import com.sdc.ast.expressions.identifiers.Identifier
+import com.sdc.ast.controlflow.Assignment
 
 
 class KotlinPrinter: AbstractPrinter() {
@@ -102,6 +106,26 @@ class KotlinPrinter: AbstractPrinter() {
         else
             return text(expression.getOperation(getOperationPrinter())) + expr
     }
+
+    override fun printField(expression: Field, nestSize: Int): PrimeDoc {
+        val owner = expression.getOwner()
+        if (owner != null && checkForSharedVar(owner)) {
+            return printExpression(owner, nestSize)
+        } else {
+            return super.printField(expression, nestSize)
+        }
+    }
+
+    override fun printAssignment(statement: Assignment, nestSize: Int): PrimeDoc {
+        if (checkForSharedVar(statement.getLeft()) && statement.getRight() is Constant && (statement.getRight() as Constant).getValue().toString().equals("null"))
+            return nil()
+        else {
+            return super.printAssignment(statement, nestSize)
+        }
+    }
+
+    fun checkForSharedVar(expression : Expression?): Boolean =
+            expression is Field && KotlinVariable.isSharedVar(expression.getType()) || expression is KotlinVariable && KotlinVariable.isSharedVar(expression.getActualType())
 
     override fun printClass(decompiledClass: AbstractClass): PrimeDoc {
         val kotlinClass: KotlinClass = decompiledClass as KotlinClass
