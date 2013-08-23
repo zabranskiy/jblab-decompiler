@@ -9,6 +9,10 @@ import java.util.List;
 import java.util.Map;
 
 public abstract class AbstractClass {
+    public enum ClassType {
+        INTERFACE, ANNOTATION, ENUM, SIMPLE_CLASS, ABSTRACT_CLASS
+    }
+
     public class InnerClassIdentifier {
         private final String myOwner;
         private final String myName;
@@ -34,7 +38,7 @@ public abstract class AbstractClass {
     }
 
     protected final String myModifier;
-    protected final String myType;
+    protected final ClassType myType;
     protected final String myName;
     protected String myFullClassName;
     protected final String myPackage;
@@ -57,6 +61,10 @@ public abstract class AbstractClass {
     protected boolean myIsNormalClass = true;
     protected boolean myIsLambdaFunctionClass = false;
     protected boolean myIsNestedClass = false;
+    protected boolean myIsEnum = false;
+    protected boolean myIsInterface = false;
+    protected boolean myIsAbstractClass = false;
+    protected boolean myIsAnnotation = false;
 
     protected Map<String, AbstractClass> myAnonymousClasses = new HashMap<String, AbstractClass>();
     protected Map<String, AbstractClass> myInnerClasses = new HashMap<String, AbstractClass>();
@@ -67,11 +75,10 @@ public abstract class AbstractClass {
     protected final int myTextWidth;
     protected final int myNestSize;
 
-    public AbstractClass(final String modifier, final String type, final String name, final String packageName,
-            final List<String> implementedInterfaces, final String superClass,
-            final List<String> genericTypes, final List<String> genericIdentifiers,
-            final int textWidth, final int nestSize)
-    {
+    public AbstractClass(final String modifier, final ClassType type, final String name, final String packageName,
+                         final List<String> implementedInterfaces, final String superClass,
+                         final List<String> genericTypes, final List<String> genericIdentifiers,
+                         final int textWidth, final int nestSize) {
         this.myModifier = modifier;
         this.myType = type;
         this.myName = name;
@@ -90,7 +97,20 @@ public abstract class AbstractClass {
         return myModifier;
     }
 
-    public String getType() {
+    public String getTypeToString() {
+        switch (myType) {
+            case ENUM:
+                return "enum ";
+            case INTERFACE:
+                return "interface ";
+            case ANNOTATION:
+                return "annotation ";
+            default:
+                return "class ";
+        }
+    }
+
+    public ClassType getType() {
         return myType;
     }
 
@@ -316,8 +336,7 @@ public abstract class AbstractClass {
     }
 
     public String getDescriptor(final String descriptor, final int pos, List<String> imports
-            , final DeclarationWorker.SupportedLanguage language)
-    {
+            , final DeclarationWorker.SupportedLanguage language) {
         final String decompiledDescriptor = DeclarationWorker.getDescriptor(descriptor, pos, imports, language);
 
         return removeClassPrefix(decompiledDescriptor);

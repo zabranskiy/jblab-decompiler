@@ -11,7 +11,7 @@ import java.util.List;
 public class JSClass extends AbstractClass {
     public final static String INHERITANCE_IDENTIFIER = "extends";
 
-    public JSClass(final String modifier, final String type, final String name, final String packageName,
+    public JSClass(final String modifier, final ClassType type, final String name, final String packageName,
                      final List<String> implementedInterfaces, final String superClass,
                      final List<String> genericTypes, final List<String> genericIdentifiers,
                      final int textWidth, final int nestSize)
