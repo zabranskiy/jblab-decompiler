@@ -169,7 +169,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
                 decompiledClass.setIsNestedClass(true);
 
                 if (innerName != null) {
-                    myDecompiledClass.addInnerClass(innerClassName, decompiledClass);
+                    myDecompiledClass.getOuterClass(outerClassName).addInnerClass(innerClassName, decompiledClass);
                     if (outerClassName != null) {
                         decompiledClass.setInnerClassIdentifier(outerClassName, null, null);
                     }
