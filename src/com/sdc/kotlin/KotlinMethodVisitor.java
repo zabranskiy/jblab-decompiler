@@ -4,8 +4,10 @@ import com.sdc.abstractLanguage.AbstractClass;
 import com.sdc.abstractLanguage.AbstractClassVisitor;
 import com.sdc.abstractLanguage.AbstractMethod;
 import com.sdc.abstractLanguage.AbstractMethodVisitor;
+import com.sdc.ast.controlflow.Assignment;
+import com.sdc.ast.controlflow.Statement;
 import com.sdc.ast.expressions.Expression;
-import com.sdc.ast.expressions.identifiers.Variable;
+import com.sdc.ast.expressions.New;
 import com.sdc.ast.expressions.nestedclasses.LambdaFunction;
 import com.sdc.cfg.nodes.Node;
 import com.sdc.util.ConstructionBuilder;
@@ -48,6 +50,21 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
         }
 
         super.visitFieldInsn(opcode, owner, name, desc);
+    }
+
+    @Override
+    public void visitVarInsn(final int opcode, final int var) {
+        super.visitVarInsn(opcode, var);
+
+        if (!myStatements.isEmpty()) {
+            final Statement lastStatement = myStatements.get(myStatements.size() - 1);
+            if (lastStatement instanceof Assignment
+                    && ((Assignment) lastStatement).getRight() instanceof New
+                    && KotlinVariable.isSharedVar(((New) ((Assignment) lastStatement).getRight()).getReturnType()))
+            {
+                myStatements.remove(myStatements.size() - 1);
+            }
+        }
     }
 
     @Override
