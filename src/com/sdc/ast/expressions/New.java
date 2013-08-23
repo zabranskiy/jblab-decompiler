@@ -16,7 +16,7 @@ public class New extends PriorityExpression {
     }
 
     public String getReturnType() {
-        return myConstructor.getReturnType();
+        return myConstructor.getFunction();
     }
 
     @Override

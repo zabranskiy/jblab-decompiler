@@ -358,6 +358,17 @@ public class DeclarationWorker {
         return primitiveTypes.contains(type);
     }
 
+    public static String convertJavaPrimitiveClassToKotlin(final String javaClass) {
+        if (javaClass.equals("Integer")) {
+            return "Int";
+        } else if (javaClass.equals("Character")) {
+            return "Char";
+        } else if (javaClass.equals("Object")) {
+            return "Any";
+        }
+        return javaClass;
+    }
+
     public static String decompileClassNameWithOuterClasses(final String byteCodeFullClassName) {
         final String[] classPackageParts = byteCodeFullClassName.contains("/") ? byteCodeFullClassName.split("/") : new String[] { byteCodeFullClassName };
         final String actualClassName = classPackageParts[classPackageParts.length - 1];
@@ -413,17 +424,6 @@ public class DeclarationWorker {
         }
 
         return result.deleteCharAt(0).toString();
-    }
-
-    private static String convertJavaPrimitiveClassToKotlin(final String javaClass) {
-        if (javaClass.equals("Integer")) {
-            return "Int";
-        } else if (javaClass.equals("Character")) {
-            return "Char";
-        } else if (javaClass.equals("Object")) {
-            return "Any";
-        }
-        return javaClass;
     }
 
     private static int getNextTypePosition(final String descriptor, final int startPos) {
