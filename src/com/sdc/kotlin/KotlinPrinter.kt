@@ -26,6 +26,7 @@ import com.sdc.ast.expressions.identifiers.Field
 import com.sdc.kotlin.KotlinVariable
 import com.sdc.ast.expressions.identifiers.Identifier
 import com.sdc.ast.controlflow.Assignment
+import com.sdc.kotlin.KotlinNewArray
 
 
 class KotlinPrinter: AbstractPrinter() {
@@ -46,24 +47,9 @@ class KotlinPrinter: AbstractPrinter() {
 
     override fun printExpression(expression: Expression?, nestSize: Int): PrimeDoc =
         when (expression) {
-            is NewArray -> {
+            is KotlinNewArray -> {
                 var newArray : PrimeDoc = text("Array<" + expression.getType() + ">(")
-
-                var counter = 0
-                for (dimension in expression.getDimensions()!!.toList()) {
-                    counter++
-                    newArray = newArray + printExpression(dimension, nestSize) + text(", ")
-                    if (counter < expression.getDimensions()!!.size())
-                        newArray = newArray + text("{ i -> Array<" + expression.getType() + ">(")
-                    else
-                        newArray = newArray + text("{ i -> null")
-                }
-
-                while (counter > 0) {
-                    newArray = newArray + text(" })")
-                    counter--
-                }
-
+                newArray = newArray + printExpression(expression.getDimensions()!!.get(0), nestSize) + text(", ") + printExpression(expression.getInitializer(), nestSize) + text(")")
                 newArray
             }
 

@@ -8,6 +8,7 @@ import com.sdc.ast.controlflow.Assignment;
 import com.sdc.ast.controlflow.Statement;
 import com.sdc.ast.expressions.Expression;
 import com.sdc.ast.expressions.New;
+import com.sdc.ast.expressions.NewArray;
 import com.sdc.ast.expressions.nestedclasses.LambdaFunction;
 import com.sdc.cfg.nodes.Node;
 import com.sdc.util.ConstructionBuilder;
@@ -32,6 +33,11 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
     @Override
     protected boolean checkForAutomaticallyGeneratedAnnotation(String annotationName) {
         return annotationName.startsWith("Jet");
+    }
+
+    @Override
+    protected NewArray createNewArray(final int dimensionsCount, final String type, final List<Expression> dimensions) {
+        return new KotlinNewArray(dimensionsCount, DeclarationWorker.convertJavaPrimitiveClassToKotlin(type), dimensions);
     }
 
     @Override
