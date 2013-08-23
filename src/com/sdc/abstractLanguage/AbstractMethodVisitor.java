@@ -148,8 +148,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 stackedVariableType = DeclarationWorker.getDescriptorByInt((Integer) stack[0], myLanguage);
             } else {
                 final String className = (String) stack[0];
-                myDecompiledMethod.addImport(DeclarationWorker.decompileFullClassName(className));
-                stackedVariableType = decompileClassNameWithOuterClasses(className) + " ";
+                stackedVariableType = getDescriptor(className, 0, myDecompiledMethod.getImports()) + " ";
             }
 
             getCurrentFrame().setStackedVariableType(stackedVariableType);
