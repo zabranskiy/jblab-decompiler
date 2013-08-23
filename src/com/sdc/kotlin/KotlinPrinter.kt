@@ -119,7 +119,7 @@ class KotlinPrinter: AbstractPrinter() {
         var headerCode : PrimeDoc = printPackageAndImports(decompiledClass)
 
         if (kotlinClass.isNormalClass()) {
-            var declaration : PrimeDoc = printAnnotations(kotlinClass.getAnnotations()!!.toList()) + text(kotlinClass.getModifier() + kotlinClass.getType() + kotlinClass.getName())
+            var declaration : PrimeDoc = printAnnotations(kotlinClass.getAnnotations()!!.toList()) + text(kotlinClass.getModifier() + kotlinClass.getTypeToString() + kotlinClass.getName())
 
             val genericsCode = printGenerics(kotlinClass.getGenericDeclaration())
             declaration = declaration + genericsCode

@@ -14,7 +14,6 @@ import com.sdc.ast.expressions.nestedclasses.AnonymousClass
 import com.sdc.ast.expressions.ExprIncrement
 import com.sdc.ast.expressions.InstanceOf
 import com.sdc.ast.expressions.PriorityExpression
-
 import com.sdc.ast.controlflow.Statement
 import com.sdc.ast.controlflow.Assignment
 import com.sdc.ast.controlflow.Return
@@ -33,7 +32,6 @@ import com.sdc.cfg.constructions.Switch
 import com.sdc.cfg.constructions.SwitchCase
 import com.sdc.ast.expressions.ArrayLength
 import com.sdc.ast.expressions.SquareBrackets
-
 
 abstract class AbstractPrinter {
     abstract fun getOperationPrinter(): AbstractOperationPrinter;
@@ -81,6 +79,10 @@ abstract class AbstractPrinter {
             }
 
     open fun printConstruction(construction: Construction?, nestSize: Int): PrimeDoc {
+        return (if (construction !is ElementaryBlock && construction !is SwitchCase) line() else nil()) + printConstructionOnThisLine(construction, nestSize)
+    }
+
+    open fun printConstructionOnThisLine(construction: Construction?, nestSize: Int): PrimeDoc {
         if (construction == null)
             return nil()
         else {
@@ -113,7 +115,7 @@ abstract class AbstractPrinter {
 
             val nextConstructionCode = if (construction.hasNextConstruction()) printConstruction(construction.getNextConstruction(), nestSize) else nil()
 
-            return (if (construction !is ElementaryBlock && construction !is SwitchCase) line() else nil()) + mainCode + breakCode + continueCode + nextConstructionCode
+            return mainCode + breakCode + continueCode + nextConstructionCode
         }
     }
 
@@ -173,9 +175,20 @@ abstract class AbstractPrinter {
             printNewOperator() + printExpression(expression.getConstructor(), nestSize)
 
     open fun printNewArray(expression: NewArray, nestSize: Int): PrimeDoc {
-        var newArray = group(text("new") + nest(nestSize, line() + text(expression.getType())))
-        for (dimension in expression.getDimensions()!!.toList()) {
-            newArray = group(newArray + text("[") + printExpression(dimension, nestSize) + text("]"))
+        var newArray = group(nil());
+        if(expression.hasInitialization()){
+            newArray = group(newArray+text("{"))
+            val values = expression.getInitializationValues()
+            val lastValue = values!!.remove(values.size()-1)
+            for(value in values){
+               newArray = group(newArray + printExpression(value,nestSize) + text(", "))
+            }
+            newArray = group(newArray + printExpression(lastValue,nestSize) + text("}"))
+        } else {
+            newArray = group(text("new") + nest(nestSize, line() + text(expression.getType())))
+            for (dimension in expression.getDimensions()!!.toList()) {
+                newArray = group(newArray + text("[") + printExpression(dimension, nestSize) + text("]"))
+            }
         }
         return newArray
     }
@@ -281,7 +294,13 @@ abstract class AbstractPrinter {
 
         var elsePart: PrimeDoc = nil()
         if (conditionalBlock.hasElseBlock()) {
-            elsePart = text(" else {") + nest(nestSize, printConstruction(conditionalBlock.getElseBlock(), nestSize)) / text("}")
+            elsePart = text(" else ")
+            val construction = conditionalBlock.getElseBlock()
+            if(construction is ElementaryBlock && construction.getStatements()!!.isEmpty() && construction.getNextConstruction() is ConditionalBlock){
+                elsePart = elsePart + printConstructionOnThisLine(construction.getNextConstruction(),nestSize)
+            } else{
+                elsePart = elsePart + text("{") +nest(nestSize, printConstruction(construction, nestSize)) / text("}")
+            }
         }
 
         return text("if (") + printExpression(conditionalBlock.getCondition()?.invert(), nestSize) + text(") {") + nest(nestSize, thenPart) / text("}") + elsePart
@@ -442,9 +461,14 @@ abstract class AbstractPrinter {
         if (method!!.getLastLocalVariableIndex() != 0 || (!method.isNormalClassMethod() && method.getLastLocalVariableIndex() >= 0)) {
             var variables = method.getParameters()!!.toList()
             var index = 0
-            for (variable in variables) {
-                val variableName = printExpression(variable, method.getNestSize())
-
+            for (i in variables.indices) {
+                val variableName =
+                if(i == (variables.size()-1)){
+                    // for "..." in parameters in Java code
+                     printLastMethodParameter(variables[i], method.getNestSize());
+                } else{
+                    printExpression(variables[i], method.getNestSize())
+                }
                 if (method.checkParameterForAnnotation(index))
                     arguments = nest(
                             2 * method.getNestSize()
@@ -464,6 +488,9 @@ abstract class AbstractPrinter {
         }
         return arguments
     }
+
+    open fun printLastMethodParameter(variable: Variable, nestSize: Int): PrimeDoc =
+        printExpression(variable, nestSize)
 
     open fun printInvocationArguments(arguments: List<Expression>?, nestSize: Int): PrimeDoc =
             if (arguments!!.isEmpty())

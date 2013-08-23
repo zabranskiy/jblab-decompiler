@@ -16,7 +16,7 @@ public class KotlinClass extends AbstractClass {
     private AbstractMethod myConstructor;
     private Expression mySuperClassConstructor;
 
-    public KotlinClass(final String modifier, final String type, final String name, final String packageName,
+    public KotlinClass(final String modifier, final ClassType type, final String name, final String packageName,
                        final List<String> traits, final String superClass,
                        final List<String> genericTypes, final List<String> genericIdentifiers,
                        final int textWidth, final int nestSize)

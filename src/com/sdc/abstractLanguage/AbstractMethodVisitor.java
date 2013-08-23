@@ -358,7 +358,11 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             final Expression expr = getTopOfBodyStack();
             final Expression arrayIndex = getTopOfBodyStack();
             Expression ref = getTopOfBodyStack();
-            myStatements.add(new Assignment(new SquareBrackets(ref, arrayIndex), expr));
+            if(ref instanceof NewArray){
+                ((NewArray) ref).addNewInitializationValue(expr);
+            } else{
+                myStatements.add(new Assignment(new SquareBrackets(ref, arrayIndex), expr));
+            }
         } else if (opString.equals("NOP")) {
             //do nothing
         } else if ((opString.contains("I2L") || opString.contains("F2L") || opString.contains("D2L")) && !myBodyStack.empty()) {
