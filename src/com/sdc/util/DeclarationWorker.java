@@ -270,9 +270,11 @@ public class DeclarationWorker {
     {
         int count = startIndex - 1;
         int pos = 0;
+        int index = count;
 
         AbstractFrame rootFrame = abstractMethod.getCurrentFrame();
-        Map<String, Integer> typeNameIndices =new HashMap<String, Integer>();
+        Map<String, Integer> typeNameIndices = new HashMap<String, Integer>();
+
         while (pos < descriptor.length()) {
             final int backupPos = pos;
             final int backupCount = count;
@@ -304,7 +306,7 @@ public class DeclarationWorker {
             }
 
             pos = getNextTypePosition(descriptor, pos);
-            final int index = (count - backupCount) == 1 ? count : count - 1;
+            index = (count - backupCount) == 1 ? count : count - 1;
 
             //final String name = "x" + index;
 
@@ -318,9 +320,9 @@ public class DeclarationWorker {
             rootFrame.createAndInsertVariable(index, variableType, name);
         }
 
-        rootFrame.setLastMethodParameterIndex(count);
+        rootFrame.setLastMethodParameterIndex(index);
 
-        abstractMethod.setLastLocalVariableIndex(count);
+        abstractMethod.setLastLocalVariableIndex(index);
     }
 
     private static String getNewTypeName(Map<String, Integer> typeNameIndices, String variableType) {
