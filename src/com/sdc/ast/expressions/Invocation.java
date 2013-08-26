@@ -32,6 +32,6 @@ public class Invocation extends PriorityExpression {
 
     @Override
     public boolean isBoolean() {
-        return myReturnType.contains("boolean");
+        return myReturnType.toLowerCase().contains("boolean");
     }
 }

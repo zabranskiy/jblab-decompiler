@@ -143,6 +143,7 @@ class JavaPrinter: AbstractPrinter() {
         if(!myType!!.endsWith("[] ")){
             return printExpression(variable, nestSize)
         }
+        variable.declare()
         return text(myType.substring(0, myType.size - 3) + "... ") + printExpression(variable.getName(), nestSize)
     }
 }

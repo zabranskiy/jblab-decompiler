@@ -45,12 +45,18 @@ class KotlinPrinter: AbstractPrinter() {
 
     override fun printBaseClass(): PrimeDoc = text("Any?")
 
+    override fun printForEachLieInOperator(): PrimeDoc = text("in")
+
     override fun printExpression(expression: Expression?, nestSize: Int): PrimeDoc =
         when (expression) {
             is KotlinNewArray -> {
-                var newArray : PrimeDoc = text("Array<" + expression.getType() + ">(")
-                newArray = newArray + printExpression(expression.getDimensions()!!.get(0), nestSize) + text(", ") + printExpression(expression.getInitializer(), nestSize) + text(")")
-                newArray
+                if (expression.getInitializer() != null) {
+                    var newArray : PrimeDoc = text("Array<" + expression.getType() + ">(")
+                    newArray = newArray + printExpression(expression.getDimensions()!!.get(0), nestSize) + text(", ") + printExpression(expression.getInitializer(), nestSize) + text(")")
+                    newArray
+                } else {
+                    text("Array<" + expression.getType() + ">(") + printExpression(expression.getDimensions()!!.get(0), nestSize) + text(", i -> null)")
+                }
             }
 
             is LambdaFunction -> {
