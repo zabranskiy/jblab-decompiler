@@ -525,18 +525,17 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
     @Override
     public void visitTypeInsn(final int opcode, final String type) {
         final String opString = Printer.OPCODES[opcode];
+        final boolean needToGetDescriptor = type.contains("[") || type.contains(";");
+        final String actualType = needToGetDescriptor ? getDescriptor(type, 0, myDecompiledMethod.getImports()) : decompileClassNameWithOuterClasses(type);
 
         if (opString.contains("NEWARRAY")) {
             List<Expression> dimensions = new ArrayList<Expression>();
             dimensions.add(getTopOfBodyStack());
-            myBodyStack.push(createNewArray(1, decompileClassNameWithOuterClasses(type), dimensions));
+            myBodyStack.push(createNewArray(1, actualType, dimensions));
         } else if (opString.contains("INSTANCEOF")) {
-            myBodyStack.push(new InstanceOf(decompileClassNameWithOuterClasses(type), getTopOfBodyStack()));
+            myBodyStack.push(new InstanceOf(actualType, getTopOfBodyStack()));
         } else if (opString.contains("CHECKCAST") && !myBodyStack.empty()) {
-            final boolean needToGetDescriptor = type.contains("[") || type.contains(";");
-            final String castClassName = needToGetDescriptor ? getDescriptor(type, 0, myDecompiledMethod.getImports()) : decompileClassNameWithOuterClasses(type);
-
-            myBodyStack.push(new UnaryExpression(CHECK_CAST, myBodyStack.pop(), castClassName));
+            myBodyStack.push(new UnaryExpression(CHECK_CAST, myBodyStack.pop(), actualType));
         } else if (opString.equals("NEW")) {
             myBodyStack.push(new New(null));
         }

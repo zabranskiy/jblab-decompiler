@@ -177,7 +177,10 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
         final String decompiledOwnerName = DeclarationWorker.decompileFullClassName(owner);
         final int srcIndex = myDecompiledOwnerFullClassName.indexOf(".src.");
         final String methodOwner = srcIndex == -1 ? myDecompiledOwnerFullClassName : myDecompiledOwnerFullClassName.substring(0, srcIndex);
-        if (!decompiledOwnerName.equals(methodOwner) && decompiledOwnerName.contains(methodOwner) && decompiledOwnerName.contains(myDecompiledMethod.getName())) {
+        if (!decompiledOwnerName.equals(methodOwner)
+                && decompiledOwnerName.contains(methodOwner)
+                && (decompiledOwnerName.contains(myDecompiledMethod.getName()) || myDecompiledMethod.getName().equals("invoke")))
+        {
             try {
                 AbstractClassVisitor cv = myVisitorFactory.createClassVisitor(myDecompiledMethod.getTextWidth(), myDecompiledMethod.getNestSize());
                 cv.setIsLambdaFunction(true);
