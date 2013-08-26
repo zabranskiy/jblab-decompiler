@@ -117,7 +117,28 @@ class KotlinPrinter: AbstractPrinter() {
     }
 
     fun checkForSharedVar(expression : Expression?): Boolean =
-            expression is Field && KotlinVariable.isSharedVar(expression.getType()) || expression is KotlinVariable && KotlinVariable.isSharedVar(expression.getActualType())
+        expression is Field && KotlinVariable.isSharedVar(expression.getType()) || expression is KotlinVariable && KotlinVariable.isSharedVar(expression.getActualType())
+
+    override fun printAnonymousClassDeclaration(anonymousClass: AbstractClass?, arguments: List<Expression>?): PrimeDoc {
+        var declaration : PrimeDoc = nil()
+
+        val hasDefaultSuperClass = anonymousClass!!.getSuperClass()!!.isEmpty()
+        if (!hasDefaultSuperClass) {
+            declaration = declaration + text(anonymousClass.getSuperClass()) + printInvocationArguments(arguments, anonymousClass.getNestSize())
+        }
+
+        val implementedInterfaces = anonymousClass.getImplementedInterfaces()
+
+        if (!implementedInterfaces!!.isEmpty()) {
+            declaration = declaration + (if (!hasDefaultSuperClass) text(", ") else nil()) + text(implementedInterfaces.get(0))
+            for (interface in implementedInterfaces.drop(1))
+                declaration = declaration + text(", ") + text(interface)
+        } else if (hasDefaultSuperClass) {
+            declaration = printBaseClass() + text("()")
+        }
+
+        return declaration + text(" {")
+    }
 
     override fun printClass(decompiledClass: AbstractClass): PrimeDoc {
         val kotlinClass: KotlinClass = decompiledClass as KotlinClass

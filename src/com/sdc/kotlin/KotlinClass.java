@@ -50,6 +50,16 @@ public class KotlinClass extends AbstractClass {
     }
 
     @Override
+    public String getTypeToString() {
+        switch (myType) {
+            case INTERFACE:
+                return "trait ";
+            default:
+                return super.getTypeToString();
+        }
+    }
+
+    @Override
     public String toString() {
         return PrettyPackage.pretty(myTextWidth, (new KotlinPrinter()).printClass(this));
     }

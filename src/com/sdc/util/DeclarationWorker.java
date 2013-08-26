@@ -118,8 +118,7 @@ public class DeclarationWorker {
         return result;
     }
 
-    public static String
-    getJavaDescriptor(final String descriptor, final int pos, List<String> imports) {
+    public static String getJavaDescriptor(final String descriptor, final int pos, List<String> imports) {
         switch (descriptor.charAt(pos)) {
             case 'V':
                 return "void";
