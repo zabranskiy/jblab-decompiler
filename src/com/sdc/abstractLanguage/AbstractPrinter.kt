@@ -550,22 +550,23 @@ abstract class AbstractPrinter {
                 nil()
             }
 
-    open fun printAnonymousClass(anonymousClass: AbstractClass?, arguments: List<Expression>?): PrimeDoc {
-        val superClassName = anonymousClass!!.getSuperClass()
-        val declaration =
-                if (superClassName!!.isEmpty()) {
-                    val implementedInterfaces = anonymousClass.getImplementedInterfaces()
-                    val declaration =
-                            if (implementedInterfaces!!.isEmpty())
-                                printBaseClass()
-                            else
-                                text(implementedInterfaces.get(0))
-                    declaration + text("() {")
-                } else {
-                    text(superClassName) + printInvocationArguments(arguments, anonymousClass.getNestSize())
-                }
+    open fun printAnonymousClassDeclaration(anonymousClass: AbstractClass?, arguments: List<Expression>?): PrimeDoc =
+        if (anonymousClass!!.getSuperClass()!!.isEmpty()) {
+            val implementedInterfaces = anonymousClass.getImplementedInterfaces()
+            val declaration =
+                    if (implementedInterfaces!!.isEmpty())
+                        printBaseClass()
+                    else
+                        text(implementedInterfaces.get(0))
+            declaration + text("() {")
+        } else {
+            text(anonymousClass.getSuperClass()) + printInvocationArguments(arguments, anonymousClass.getNestSize())
+        }
 
-        var anonClassCode: PrimeDoc = declaration + nest(anonymousClass.getNestSize(), printClassBodyInnerClasses(anonymousClass))
+    open fun printAnonymousClass(anonymousClass: AbstractClass?, arguments: List<Expression>?): PrimeDoc {
+        val declaration = printAnonymousClassDeclaration(anonymousClass, arguments)
+
+        var anonClassCode : PrimeDoc = declaration + nest(anonymousClass!!.getNestSize(), printClassBodyInnerClasses(anonymousClass))
 
         for (classField in anonymousClass.getFields()!!.toList())
             anonClassCode = anonClassCode + nest(anonymousClass.getNestSize(), line() + printField(classField))
