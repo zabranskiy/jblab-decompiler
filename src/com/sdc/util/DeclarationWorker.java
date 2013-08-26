@@ -273,7 +273,7 @@ public class DeclarationWorker {
         int pos = 0;
 
         AbstractFrame rootFrame = abstractMethod.getCurrentFrame();
-
+        Map<String, Integer> typeNameIndices =new HashMap<String, Integer>();
         while (pos < descriptor.length()) {
             final int backupPos = pos;
             final int backupCount = count;
@@ -307,9 +307,11 @@ public class DeclarationWorker {
             pos = getNextTypePosition(descriptor, pos);
             final int index = (count - backupCount) == 1 ? count : count - 1;
 
-            final String name = "x" + index;
+            //final String name = "x" + index;
 
             String variableType = type;
+            String name = getNewTypeName(typeNameIndices, variableType);
+
             if (language == SupportedLanguage.KOTLIN) {
                 variableType = isPrimitiveClass ? convertJavaPrimitiveClassToKotlin(type) + "?" : type;
             }
@@ -320,6 +322,28 @@ public class DeclarationWorker {
         rootFrame.setLastMethodParameterIndex(count);
 
         abstractMethod.setLastLocalVariableIndex(count);
+    }
+
+    private static String getNewTypeName(Map<String, Integer> typeNameIndices, String variableType) {
+        char firstChar = variableType.charAt(0);
+        String name = firstChar + "";
+        Integer typeNameIndex;
+        if (Character.isLowerCase(firstChar)) {
+            //primitive type
+            typeNameIndex = typeNameIndices.get(name);
+
+        } else {
+            //for Classes
+            typeNameIndex = typeNameIndices.get(variableType);
+            name = "a" + variableType.trim();
+
+        }
+        if (typeNameIndex == null) {
+            typeNameIndices.put(name, 1);
+        } else {
+            name += typeNameIndex;
+        }
+        return name;
     }
 
     public static void parseGenericDeclaration(final String signature, List<String> genericTypesList,
