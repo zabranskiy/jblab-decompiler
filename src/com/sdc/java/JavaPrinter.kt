@@ -59,13 +59,13 @@ class JavaPrinter: AbstractPrinter() {
             )
         }
 
-        var javaClassCode : PrimeDoc = group(headerCode + declaration + text(" {")) + nest(javaClass.getNestSize(), printClassBodyInnerClasses(javaClass))
+        var javaClassCode : PrimeDoc = headerCode / group(declaration + text(" {")) + nest(javaClass.getNestSize(), printClassBodyInnerClasses(javaClass))
 
         for (classField in javaClass.getFields()!!.toList())
             javaClassCode = javaClassCode + nest(javaClass.getNestSize(), line() + printField(classField))
 
         for (classMethod in javaClass.getMethods()!!.toList())
-            javaClassCode = javaClassCode + nest(javaClass.getNestSize(), line() + printMethod(classMethod))
+            javaClassCode = javaClassCode / nest(javaClass.getNestSize(), line() + printMethod(classMethod))
 
 
         return javaClassCode / text("}")

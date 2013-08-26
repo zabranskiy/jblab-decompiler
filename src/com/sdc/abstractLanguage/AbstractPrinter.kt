@@ -544,7 +544,7 @@ abstract class AbstractPrinter {
                 var imports = group(nil())
                 for (importName in decompiledClass.getImports()!!.toArray())
                     imports = group(imports + text("import " + importName + ";") + line())
-                packageCode + imports
+                packageCode / imports
             } else {
                 nil()
             }
