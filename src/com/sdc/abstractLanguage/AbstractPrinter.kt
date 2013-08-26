@@ -32,6 +32,7 @@ import com.sdc.cfg.constructions.Switch
 import com.sdc.cfg.constructions.SwitchCase
 import com.sdc.ast.expressions.ArrayLength
 import com.sdc.ast.expressions.SquareBrackets
+import com.decompiler.Decompiler
 
 abstract class AbstractPrinter {
     abstract fun getOperationPrinter(): AbstractOperationPrinter;
@@ -529,7 +530,7 @@ abstract class AbstractPrinter {
         val errorClasses = decompiledClass.getInnerClassesErrors()
         var errorClassesCode: PrimeDoc = nil()
         for ((className, error) in errorClasses)
-            errorClassesCode = errorClassesCode / text("// Error occurred while decompiling class " + className + ": " + error.getMessage())
+            errorClassesCode = errorClassesCode / text("// Error occurred while decompiling class " + className + ": " + Decompiler.printExceptionToString(error))
 
         return errorClassesCode + printClasses(decompiledClass.getClassBodyInnerClasses())
     }
