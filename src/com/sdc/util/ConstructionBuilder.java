@@ -36,7 +36,7 @@ public class ConstructionBuilder {
         return extractArrayForEach(extractIteratorForEach(extractFor(build(myNodes.get(0)))));
     }
 
-    private Construction extractArrayForEach(Construction baseConstruction) {
+    protected Construction extractArrayForEach(Construction baseConstruction) {
         final Construction forStartConstruction = baseConstruction.getNextConstruction();
 
         if (baseConstruction instanceof ElementaryBlock && forStartConstruction != null && forStartConstruction instanceof For) {

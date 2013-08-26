@@ -47,6 +47,30 @@ public class KotlinConstructionBuilder extends ConstructionBuilder {
         }
     }
 
+    @Override
+    protected Construction extractArrayForEach(Construction baseConstruction) {
+        final Construction forStartConstruction = baseConstruction.getNextConstruction();
+
+        if (baseConstruction instanceof ElementaryBlock && forStartConstruction != null && forStartConstruction instanceof For) {
+            //TODO: get first statement and check if it has in the right side array[index] same as in for header
+            if (((For) forStartConstruction).getCondition() instanceof BinaryExpression && ((BinaryExpression) ((For) forStartConstruction).getCondition()).getRight() instanceof ArrayLength) {
+                ForEach forEach = new ForEach((Variable)((Assignment)((ElementaryBlock) ((For) forStartConstruction).getBody()).getFirstStatement()).getLeft()
+                        , ((ArrayLength) ((BinaryExpression) ((For) forStartConstruction).getCondition()).getRight()).getOperand());
+
+                Construction body = ((For) forStartConstruction).getBody();
+
+                forEach.setBody(body);
+
+                ((ElementaryBlock) body).removeFirstStatement();
+
+                forEach.setNextConstruction(forStartConstruction.getNextConstruction());
+                baseConstruction.setNextConstruction(forEach);
+            }
+        }
+
+        return baseConstruction;
+    }
+
     private boolean extractNullSafeFunctionCall(Construction baseConstruction) {
         final Construction throwNpeIf = baseConstruction.getNextConstruction();
 
