@@ -1,10 +1,9 @@
 package com.sdc.kotlin;
 
 import com.sdc.ast.OperationType;
-import com.sdc.ast.controlflow.Assignment;
+import com.sdc.ast.controlflow.*;
 import com.sdc.ast.controlflow.InstanceInvocation;
 import com.sdc.ast.controlflow.Invocation;
-import com.sdc.ast.controlflow.Statement;
 import com.sdc.ast.expressions.*;
 import com.sdc.cfg.constructions.*;
 import com.sdc.ast.expressions.identifiers.Variable;
@@ -82,21 +81,29 @@ public class KotlinConstructionBuilder extends ConstructionBuilder {
             if (initializationBody instanceof ElementaryBlock) {
                 final ElementaryBlock initializationBlock = (ElementaryBlock) initializationBody;
 
-                if (initializationBlock.getStatements().size() == 1) {
-                    final Statement initializationStatement = initializationBlock.getStatements().get(0);
+                if (initializationBlock.getStatements().size() == 0) {
+                    final Statement initializationStatement = ((ElementaryBlock) baseConstruction).getBeforelastStatement();
 
-                    if (initializationStatement instanceof Assignment
-                            && ((Assignment) initializationStatement).getLeft() instanceof SquareBrackets
-                            && ((Assignment) initializationStatement).getLeft().getName() instanceof NewArray)
+                    if (initializationStatement != null && initializationStatement instanceof Assignment
+                            && ((Assignment) initializationStatement).getRight() instanceof ArrayLength
+                            && ((ArrayLength) ((Assignment) initializationStatement).getRight()).getOperand() instanceof NewArray)
                     {
-                        final Expression lambdaFunction = ((com.sdc.ast.expressions.InstanceInvocation)((Assignment) initializationStatement).getRight()).getInstance();
+                        final Expression lambdaFunction = ((com.sdc.ast.expressions.InstanceInvocation)(((NewArray) ((ArrayLength) ((Assignment) initializationStatement).getRight()).getOperand()).getInitializationValues().get(0))).getInstance();
 
                         ((ElementaryBlock) baseConstruction).removeLastStatement();
                         ((ElementaryBlock) baseConstruction).removeLastStatement();
 
-                        KotlinNewArray newArray = new KotlinNewArray(1, ((NewArray) ((Assignment) initializationStatement).getLeft().getName()).getType(), ((NewArray) ((Assignment) initializationStatement).getLeft().getName()).getDimensions());
+                        KotlinNewArray newArray = new KotlinNewArray(1
+                                , ((NewArray) ((ArrayLength) ((Assignment) initializationStatement).getRight()).getOperand()).getType()
+                                , ((NewArray) ((ArrayLength) ((Assignment) initializationStatement).getRight()).getOperand()).getDimensions());
                         newArray.setInitializer(lambdaFunction);
-                        ((Assignment)((ElementaryBlock) newArrayInitialization.getNextConstruction()).getStatements().get(0)).setRight(newArray);
+
+                        Statement statementWithArrayInitialization = ((ElementaryBlock) newArrayInitialization.getNextConstruction()).getStatements().get(0);
+                        if (statementWithArrayInitialization instanceof Assignment) {
+                            ((Assignment) statementWithArrayInitialization).setRight(newArray);
+                        } else if (statementWithArrayInitialization instanceof Return) {
+                            ((Return) statementWithArrayInitialization).setReturnValue(newArray);
+                        }
 
                         baseConstruction.setNextConstruction(newArrayInitialization.getNextConstruction());
 

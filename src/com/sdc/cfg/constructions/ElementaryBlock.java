@@ -16,6 +16,13 @@ public class ElementaryBlock extends Construction {
         this.myStatements = statements;
     }
 
+    public Statement getBeforelastStatement() {
+        if (myStatements.size() >= 2) {
+            return myStatements.get(myStatements.size() - 2);
+        }
+        return null;
+    }
+
     public Statement getLastStatement() {
         if (!myStatements.isEmpty()) {
             return myStatements.get(myStatements.size() - 1);
