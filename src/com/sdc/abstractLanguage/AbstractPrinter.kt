@@ -461,7 +461,7 @@ abstract class AbstractPrinter {
 
     open fun printMethodParameters(method: AbstractMethod?): PrimeDoc {
         var arguments: PrimeDoc = nil()
-        if (method!!.getLastLocalVariableIndex() != 0 || (!method.isNormalClassMethod() && method.getLastLocalVariableIndex() >= 0)) {
+        if (method!!.getLastLocalVariableIndex() > 0 || (!method.isNormalClassMethod() && method.getLastLocalVariableIndex() >= 0)) {
             var variables = method.getParameters()!!.toList()
             var index = 0
             for (i in variables.indices) {
