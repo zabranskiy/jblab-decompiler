@@ -36,9 +36,10 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
     protected List<Node> myNodes = new ArrayList<Node>();
     protected List<Label> myLabels = new ArrayList<Label>();
-    protected Map<Label, List<Integer>> myMap1 = new HashMap<Label, List<Integer>>();  // for GOTO
-    protected Map<Integer, Label> myMap2 = new HashMap<Integer, Label>(); // for IF ELSE Branch
+    protected Map<Label, List<Integer>> myGoToMap = new HashMap<Label, List<Integer>>();  // for GOTO
+    protected Map<Integer, Label> myIfElseMap = new HashMap<Integer, Label>(); // for IF ELSE Branch
     protected List<Label> myNodeInnerLabels = new ArrayList<Label>();
+    protected Map<String, Integer> myTypeNameIndices = new HashMap<String, Integer>();
 
     protected boolean myHasDebugInformation = false;
 
@@ -358,9 +359,9 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             final Expression expr = getTopOfBodyStack();
             final Expression arrayIndex = getTopOfBodyStack();
             Expression ref = getTopOfBodyStack();
-            if(ref instanceof NewArray){
+            if (ref instanceof NewArray) {
                 ((NewArray) ref).addNewInitializationValue(expr);
-            } else{
+            } else {
                 myStatements.add(new Assignment(new SquareBrackets(ref, arrayIndex), expr));
             }
         } else if (opString.equals("NOP")) {
@@ -456,56 +457,11 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             } else if (expr instanceof LambdaFunction) {
                 variableType = ((LambdaFunction) expr).getType();
             }
-
-            int lastIndex = myStatements.size() - 1;
-            Expression expr2 = (myBodyStack.empty() ? null : myBodyStack.peek());
-            if (expr instanceof BinaryExpression && ((BinaryExpression) expr).isIncrementCastableType()) {
-                BinaryExpression binaryExpression = (BinaryExpression) expr;
-                Expression left = binaryExpression.getLeft();
-                Expression right = binaryExpression.getRight();
-                OperationType type = binaryExpression.getOperationType();
-                if (left instanceof Variable && ((Variable) left).getIndex() == var) {
-                    myStatements.remove(lastIndex);
-                    if (expr.equals(expr2)) {
-                        myBodyStack.pop();
-                        myBodyStack.add(new ExprIncrement((Variable) left, right, type));
-                    } else {
-                        myStatements.add(new Increment((Variable) left, right, type));
-                    }
-                } else if (right instanceof Variable && ((Variable) right).getIndex() == var
-                        && binaryExpression.isAssociative()) {
-                    myStatements.remove(lastIndex);
-                    if (expr.equals(expr2)) {
-                        myBodyStack.pop();
-                        myBodyStack.add(new ExprIncrement((Variable) right, left, type));
-                    } else {
-                        myStatements.add(new Increment((Variable) right, left, type));
-                    }
-                } else if (left instanceof ExprIncrement && ((ExprIncrement) left).getVariable().getIndex() == var) {
-                    myStatements.remove(lastIndex);
-                    myStatements.add(new Increment((ExprIncrement) left));
-                    if (expr.equals(expr2)) {
-                        myBodyStack.pop();
-                        myBodyStack.add(new ExprIncrement(((ExprIncrement) left).getVariable(), right, type));
-                    } else {
-                        myStatements.add(new Increment(((ExprIncrement) left).getVariable(), right, type));
-                    }
-                } else if (right instanceof ExprIncrement && ((ExprIncrement) right).getVariable().getIndex() == var
-                        && binaryExpression.isAssociative()) {
-                    myStatements.remove(lastIndex);
-                    myStatements.add(new Increment((ExprIncrement) right));
-                    if (expr.equals(expr2)) {
-                        myBodyStack.pop();
-                        myBodyStack.add(new ExprIncrement(((ExprIncrement) right).getVariable(), left, type));
-                    } else {
-                        myStatements.add(new Increment(((ExprIncrement) right).getVariable(), left, type));
-                    }
-                }
-            }
+            checkIncrements(var, expr);
         }
 
         if (!opString.contains("LOAD") && var > myDecompiledMethod.getLastLocalVariableIndex()) {
-            final String name = "y" + var;
+            String name = "y" + var;
 
             String descriptorType;
             if (currentFrameHasStack) {
@@ -518,7 +474,79 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 variableType = descriptorType;
             }
 
+            name = getNewTypeName(variableType);
             currentFrame.updateVariableInformation(var, variableType, name);
+        }
+    }
+
+    private String getNewTypeName(String variableType) {
+        variableType = variableType.trim();
+        char firstChar = variableType.charAt(0);
+        String name = firstChar + "";
+        Integer index;
+        if (Character.isLowerCase(firstChar)) {
+            //primitive type
+            index = myTypeNameIndices.get(name);
+
+        } else {
+            //for Classes
+            index = myTypeNameIndices.get(variableType);
+            name = "a" + variableType;
+
+        }
+        if (index == null) {
+            myTypeNameIndices.put(name, 1);
+        } else {
+            name += index;
+        }
+        return name;
+    }
+
+    private void checkIncrements(int var, Expression expr) {
+        int lastIndex = myStatements.size() - 1;
+        Expression expr2 = (myBodyStack.empty() ? null : myBodyStack.peek());
+        if (expr instanceof BinaryExpression && ((BinaryExpression) expr).isIncrementCastableType()) {
+            BinaryExpression binaryExpression = (BinaryExpression) expr;
+            Expression left = binaryExpression.getLeft();
+            Expression right = binaryExpression.getRight();
+            OperationType type = binaryExpression.getOperationType();
+            if (left instanceof Variable && ((Variable) left).getIndex() == var) {
+                myStatements.remove(lastIndex);
+                if (expr.equals(expr2)) {
+                    myBodyStack.pop();
+                    myBodyStack.add(new ExprIncrement((Variable) left, right, type));
+                } else {
+                    myStatements.add(new Increment((Variable) left, right, type));
+                }
+            } else if (right instanceof Variable && ((Variable) right).getIndex() == var
+                    && binaryExpression.isAssociative()) {
+                myStatements.remove(lastIndex);
+                if (expr.equals(expr2)) {
+                    myBodyStack.pop();
+                    myBodyStack.add(new ExprIncrement((Variable) right, left, type));
+                } else {
+                    myStatements.add(new Increment((Variable) right, left, type));
+                }
+            } else if (left instanceof ExprIncrement && ((ExprIncrement) left).getVariable().getIndex() == var) {
+                myStatements.remove(lastIndex);
+                myStatements.add(new Increment((ExprIncrement) left));
+                if (expr.equals(expr2)) {
+                    myBodyStack.pop();
+                    myBodyStack.add(new ExprIncrement(((ExprIncrement) left).getVariable(), right, type));
+                } else {
+                    myStatements.add(new Increment(((ExprIncrement) left).getVariable(), right, type));
+                }
+            } else if (right instanceof ExprIncrement && ((ExprIncrement) right).getVariable().getIndex() == var
+                    && binaryExpression.isAssociative()) {
+                myStatements.remove(lastIndex);
+                myStatements.add(new Increment((ExprIncrement) right));
+                if (expr.equals(expr2)) {
+                    myBodyStack.pop();
+                    myBodyStack.add(new ExprIncrement(((ExprIncrement) right).getVariable(), left, type));
+                } else {
+                    myStatements.add(new Increment(((ExprIncrement) right).getVariable(), left, type));
+                }
+            }
         }
     }
 
@@ -622,7 +650,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             if (myNodes.isEmpty() || !myNodeInnerLabels.isEmpty() || (myNodes.get(getLeftEmptyNodeIndex() - 1).getCondition() == null)) {
                 for (Node node : myNodes) {
                     if (!(node instanceof DoWhile) && node.getInnerLabels().contains(label) && myNodes.get(myNodes.size() - 1).getCondition() == null) {
-                        myMap2.put(myNodes.size(), label);
+                        myIfElseMap.put(myNodes.size(), label);
                         int index = node.getInnerLabels().indexOf(label);
                         DoWhile dw = new DoWhile(null, new ArrayList<Label>(myNodeInnerLabels), myNodes.size());
                         dw.setStatements(new ArrayList<Statement>(node.getStatements().subList(0, index)));
@@ -651,7 +679,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                     innerNode.setEmpty(true);
                     myNodes.add(innerNode);
 
-                    myMap2.put(myNodes.size(), label);
+                    myIfElseMap.put(myNodes.size(), label);
 
                     DoWhile dw = new DoWhile(new ArrayList<Statement>(), new ArrayList<Label>(), myNodes.size());
                     dw.setCondition(getConditionFromStack(opString));
@@ -663,7 +691,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                     return;
                 }
                 myLabels.add(myLastIFLabel);
-                myMap2.put(myNodes.size(), label);
+                myIfElseMap.put(myNodes.size(), label);
                 applyNode();
                 final int last = myNodes.size() - 1;
                 myNodes.get(last).setCondition(getConditionFromStack(opString));
@@ -672,12 +700,12 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         } else if (opString.contains("GOTO")) {
             myLabels.add(label);
             final int value = getLeftEmptyNodeIndex();
-            if (!myMap1.containsKey(label)) {
+            if (!myGoToMap.containsKey(label)) {
                 List<Integer> list = new ArrayList<Integer>();
                 list.add(value);
-                myMap1.put(label, list);
+                myGoToMap.put(label, list);
             } else {
-                myMap1.get(label).add(value);
+                myGoToMap.get(label).add(value);
             }
         }
     }
@@ -769,10 +797,10 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         list.add(temp);
         if (type == null) {
         } else {
-            myMap1.put(handler, list);
+            myGoToMap.put(handler, list);
 
         }
-        //  myMap1.put(handler, list);
+        //  myGoToMap.put(handler, list);
     }*/
 
     @Override
@@ -822,10 +850,10 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
     private void placeEdges() {
         // GOTO
-        for (final Label lbl : myMap1.keySet()) {
+        for (final Label lbl : myGoToMap.keySet()) {
             for (final Node node : myNodes) {
                 if (node.containsLabel(lbl)) {
-                    for (final Integer i : myMap1.get(lbl)) {
+                    for (final Integer i : myGoToMap.get(lbl)) {
                         if (i != myNodes.indexOf(node)) {
                             myNodes.get(i).addTail(node);
                             node.addAncestor(myNodes.get(i));
@@ -854,9 +882,9 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             }
         }
         // IF ELSE Branch
-        for (final Integer index : myMap2.keySet()) {
+        for (final Integer index : myIfElseMap.keySet()) {
             for (final Node node : myNodes) {
-                if (node.containsLabel(myMap2.get(index))) {
+                if (node.containsLabel(myIfElseMap.get(index))) {
                     myNodes.get(index).addTail(node);
                     node.addAncestor(myNodes.get(index));
                     break;
@@ -885,12 +913,12 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             } else if (opString.contains("NULL")) {
                 return new BinaryExpression(OperationType.EQ, e, new Constant("null", false));
             } else {
-                if(e.isBoolean()){
-                    if(opString.contains("EQ")){
+                if (e.isBoolean()) {
+                    if (opString.contains("EQ")) {
                         return e.invert();
                     }
                     return e;
-                } else{
+                } else {
                     return new BinaryExpression(OperationType.valueOf(opString.substring(2)), e, new Constant(0, false));
                 }
             }
