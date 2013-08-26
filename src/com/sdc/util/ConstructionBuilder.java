@@ -3,6 +3,7 @@ package com.sdc.util;
 import com.sdc.ast.controlflow.Assignment;
 import com.sdc.ast.controlflow.Increment;
 import com.sdc.ast.controlflow.Statement;
+import com.sdc.ast.expressions.ArrayLength;
 import com.sdc.ast.expressions.InstanceInvocation;
 import com.sdc.ast.expressions.UnaryExpression;
 import com.sdc.ast.expressions.identifiers.Variable;
@@ -32,10 +33,48 @@ public class ConstructionBuilder {
     }
 
     public Construction build() {
-        return extractForEach(extractFor(build(myNodes.get(0))));
+        return extractArrayForEach(extractIteratorForEach(extractFor(build(myNodes.get(0)))));
     }
 
-    private Construction extractForEach(Construction baseConstruction) {
+    private Construction extractArrayForEach(Construction baseConstruction) {
+        final Construction forStartConstruction = baseConstruction.getNextConstruction();
+
+        if (baseConstruction instanceof ElementaryBlock && forStartConstruction != null && forStartConstruction instanceof For) {
+            final ElementaryBlock blockBeforeForConstruction = (ElementaryBlock) baseConstruction;
+
+            if (!blockBeforeForConstruction.getStatements().isEmpty()) {
+                final Statement containerDeclarationForFor = blockBeforeForConstruction.getBeforeLastStatement();
+                final Statement containerLengthDeclaration = blockBeforeForConstruction.getLastStatement();
+
+                if (containerDeclarationForFor instanceof Assignment && containerLengthDeclaration instanceof Assignment) {
+                    final Assignment containerAssignmentForFor = (Assignment) containerDeclarationForFor;
+                    final Assignment containerLengthAssignment = (Assignment) containerLengthDeclaration;
+
+                    if ((containerAssignmentForFor.getLeft().getType().contains("[") || containerAssignmentForFor.getLeft().getType().contains("Array"))
+                            && containerLengthAssignment.getRight() instanceof ArrayLength)
+                    {
+                        ForEach forEach = new ForEach((Variable)((Assignment)((ElementaryBlock) ((For) forStartConstruction).getBody()).getFirstStatement()).getLeft()
+                                , containerAssignmentForFor.getRight());
+
+                        Construction body = ((For) forStartConstruction).getBody();
+
+                        forEach.setBody(body);
+
+                        ((ElementaryBlock) body).removeFirstStatement();
+                        blockBeforeForConstruction.removeLastStatement();
+                        blockBeforeForConstruction.removeLastStatement();
+
+                        forEach.setNextConstruction(forStartConstruction.getNextConstruction());
+                        blockBeforeForConstruction.setNextConstruction(forEach);
+                    }
+                }
+            }
+        }
+
+        return baseConstruction;
+    }
+
+    private Construction extractIteratorForEach(Construction baseConstruction) {
 
         final Construction whileStartConstruction = baseConstruction.getNextConstruction();
 

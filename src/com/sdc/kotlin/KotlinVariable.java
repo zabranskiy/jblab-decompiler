@@ -11,7 +11,7 @@ public class KotlinVariable extends Variable {
     private boolean myIsNotNull = false;
     private boolean myIsInForEachDeclaration = false;
 
-    public void setIsInForEachDeclaration(final boolean isInForEachDeclaration) {
+    public void setIsInForDeclaration(final boolean isInForEachDeclaration) {
         this.myIsInForEachDeclaration = isInForEachDeclaration;
     }
 

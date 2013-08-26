@@ -30,16 +30,20 @@ public class KotlinConstructionBuilder extends ConstructionBuilder {
         extractNullSafeFunctionCall(generalConstruction);
         extractWhen(generalConstruction);
         extractNewArrayInitialization(generalConstruction);
-        adjustForEachVariable(generalConstruction);
+        adjustForVariable(generalConstruction);
 
         return generalConstruction;
     }
 
-    private void adjustForEachVariable(Construction baseConstruction) {
-        final Construction forEachConstruction = baseConstruction.getNextConstruction();
+    private void adjustForVariable(Construction baseConstruction) {
+        final Construction forConstruction = baseConstruction.getNextConstruction();
 
-        if (forEachConstruction != null && forEachConstruction instanceof ForEach) {
-            ((KotlinVariable)((ForEach) forEachConstruction).getVariable()).setIsInForEachDeclaration(true);
+        if (forConstruction != null) {
+            if (forConstruction instanceof ForEach) {
+                ((KotlinVariable)((ForEach) forConstruction).getVariable()).setIsInForDeclaration(true);
+            } else if (forConstruction instanceof For) {
+                ((KotlinVariable)((For) forConstruction).getVariableInitialization().getLeft()).setIsInForDeclaration(true);
+            }
         }
     }
 
