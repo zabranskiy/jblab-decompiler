@@ -63,6 +63,9 @@ public class Variable extends Identifier {
         Variable copy = createVariable(myIndex, myVariableType,((Constant) myName).getValue().toString());
         myChildCopy = copy;
         copy.setParentCopy(this);
+        if (isDeclared()) {
+            copy.declare();
+        }
 
         return copy;
     }
