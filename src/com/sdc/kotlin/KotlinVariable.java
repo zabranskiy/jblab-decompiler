@@ -9,6 +9,11 @@ public class KotlinVariable extends Variable {
     public static final String SHARED_VAR_IDENTIFIER = "SharedVar.";
 
     private boolean myIsNotNull = false;
+    private boolean myIsInForEachDeclaration = false;
+
+    public void setIsInForEachDeclaration(final boolean isInForEachDeclaration) {
+        this.myIsInForEachDeclaration = isInForEachDeclaration;
+    }
 
     public static boolean isSharedVar(final String type) {
         return type.startsWith(SHARED_VAR_IDENTIFIER);
@@ -29,7 +34,7 @@ public class KotlinVariable extends Variable {
     @Override
     public Expression getName() {
         final String name = ((Constant) super.getName()).getValue().toString();
-        final String actualName = myIsMethodParameter ? name : "var " + name;
+        final String actualName = myIsMethodParameter || myIsInForEachDeclaration ? name : "var " + name;
 
         return myIsDeclared ? myName : new Constant(actualName, false);
     }

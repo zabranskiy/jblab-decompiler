@@ -16,7 +16,14 @@ public class ElementaryBlock extends Construction {
         this.myStatements = statements;
     }
 
-    public Statement getBeforelastStatement() {
+    public Statement getFirstStatement() {
+        if (!myStatements.isEmpty()) {
+            return myStatements.get(0);
+        }
+        return null;
+    }
+
+    public Statement getBeforeLastStatement() {
         if (myStatements.size() >= 2) {
             return myStatements.get(myStatements.size() - 2);
         }
@@ -28,6 +35,12 @@ public class ElementaryBlock extends Construction {
             return myStatements.get(myStatements.size() - 1);
         }
         return null;
+    }
+
+    public void removeFirstStatement() {
+        if (!myStatements.isEmpty()) {
+            myStatements.remove(0);
+        }
     }
 
     public void removeLastStatement() {

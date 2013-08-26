@@ -324,8 +324,9 @@ abstract class AbstractPrinter {
     }
 
     open fun printForEach(forEachBlock: ForEach, nestSize: Int): PrimeDoc {
+        val header = text("for (") + printExpression(forEachBlock.getVariable(), nestSize) + text(" ") + printForEachLieInOperator() + text(" ") + printExpression(forEachBlock.getContainer(), nestSize) + text(") {")
         val body = printConstruction(forEachBlock.getBody(), nestSize)
-        return text("for (") + printExpression(forEachBlock.getVariable(), nestSize) + text(" : ") + printExpression(forEachBlock.getContainer(), nestSize) + text(") {") + nest(nestSize, body) / text("}")
+        return header + nest(nestSize, body) / text("}")
     }
 
     open fun printTryCatch(tryCatchBlock: TryCatch, nestSize: Int): PrimeDoc {
@@ -419,6 +420,8 @@ abstract class AbstractPrinter {
     open fun printInstanceOfOperator(): PrimeDoc = text("instanceof ")
 
     open fun printNewOperator(): PrimeDoc = text("new ")
+
+    open fun printForEachLieInOperator(): PrimeDoc = text(":")
 
     open fun printStatements(statements: List<Statement>?, nestSize: Int): PrimeDoc {
         var body: PrimeDoc = nil()

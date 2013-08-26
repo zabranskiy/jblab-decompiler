@@ -30,8 +30,17 @@ public class KotlinConstructionBuilder extends ConstructionBuilder {
         extractNullSafeFunctionCall(generalConstruction);
         extractWhen(generalConstruction);
         extractNewArrayInitialization(generalConstruction);
+        adjustForEachVariable(generalConstruction);
 
         return generalConstruction;
+    }
+
+    private void adjustForEachVariable(Construction baseConstruction) {
+        final Construction forEachConstruction = baseConstruction.getNextConstruction();
+
+        if (forEachConstruction != null && forEachConstruction instanceof ForEach) {
+            ((KotlinVariable)((ForEach) forEachConstruction).getVariable()).setIsInForEachDeclaration(true);
+        }
     }
 
     private boolean extractNullSafeFunctionCall(Construction baseConstruction) {
@@ -82,7 +91,7 @@ public class KotlinConstructionBuilder extends ConstructionBuilder {
                 final ElementaryBlock initializationBlock = (ElementaryBlock) initializationBody;
 
                 if (initializationBlock.getStatements().size() == 0) {
-                    final Statement initializationStatement = ((ElementaryBlock) baseConstruction).getBeforelastStatement();
+                    final Statement initializationStatement = ((ElementaryBlock) baseConstruction).getBeforeLastStatement();
 
                     if (initializationStatement != null && initializationStatement instanceof Assignment
                             && ((Assignment) initializationStatement).getRight() instanceof ArrayLength

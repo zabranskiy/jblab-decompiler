@@ -45,6 +45,8 @@ class KotlinPrinter: AbstractPrinter() {
 
     override fun printBaseClass(): PrimeDoc = text("Any?")
 
+    override fun printForEachLieInOperator(): PrimeDoc = text("in")
+
     override fun printExpression(expression: Expression?, nestSize: Int): PrimeDoc =
         when (expression) {
             is KotlinNewArray -> {

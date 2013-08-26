@@ -3,6 +3,8 @@ package com.sdc.util;
 import com.sdc.ast.controlflow.Assignment;
 import com.sdc.ast.controlflow.Increment;
 import com.sdc.ast.controlflow.Statement;
+import com.sdc.ast.expressions.InstanceInvocation;
+import com.sdc.ast.expressions.UnaryExpression;
 import com.sdc.ast.expressions.identifiers.Variable;
 import com.sdc.cfg.constructions.*;
 import com.sdc.cfg.nodes.DoWhile;
@@ -30,7 +32,43 @@ public class ConstructionBuilder {
     }
 
     public Construction build() {
-        return extractFor(build(myNodes.get(0)));
+        return extractForEach(extractFor(build(myNodes.get(0))));
+    }
+
+    private Construction extractForEach(Construction baseConstruction) {
+
+        final Construction whileStartConstruction = baseConstruction.getNextConstruction();
+
+        if (baseConstruction instanceof ElementaryBlock && whileStartConstruction != null && whileStartConstruction instanceof While) {
+            final ElementaryBlock blockBeforeWhileConstruction = (ElementaryBlock) baseConstruction;
+
+            if (!blockBeforeWhileConstruction.getStatements().isEmpty()) {
+                final Statement variableDeclarationForWhile = blockBeforeWhileConstruction.getLastStatement();
+
+                if (variableDeclarationForWhile instanceof Assignment) {
+                    final Assignment variableAssignmentForWhen = (Assignment) variableDeclarationForWhile;
+
+                     if (variableAssignmentForWhen.getLeft().getType().toLowerCase().trim().replace("?", "").equals("iterator")
+                             && ((While) whileStartConstruction).getCondition() instanceof UnaryExpression
+                             && ((InstanceInvocation) ((UnaryExpression) ((While) whileStartConstruction).getCondition()).getOperand()).getFunction().equals("hasNext"))
+                     {
+                         ForEach forEach = new ForEach((Variable)((Assignment)((ElementaryBlock) ((While) whileStartConstruction).getBody()).getFirstStatement()).getLeft()
+                                 , ((InstanceInvocation) variableAssignmentForWhen.getRight()).getInstance()) ;
+
+                         Construction body = ((While) whileStartConstruction).getBody();
+
+                         forEach.setBody(body);
+                         ((ElementaryBlock) body).removeFirstStatement();
+                         blockBeforeWhileConstruction.removeLastStatement();
+
+                         forEach.setNextConstruction(whileStartConstruction.getNextConstruction());
+                         blockBeforeWhileConstruction.setNextConstruction(forEach);
+                     }
+                }
+            }
+        }
+
+        return baseConstruction;
     }
 
     private Construction extractFor(Construction baseConstruction) {
@@ -41,10 +79,10 @@ public class ConstructionBuilder {
             final ElementaryBlock blockBeforeWhileConstruction = (ElementaryBlock) baseConstruction;
 
             if (!blockBeforeWhileConstruction.getStatements().isEmpty()) {
-                final Statement variableDeclarationForWhen = blockBeforeWhileConstruction.getLastStatement();
+                final Statement variableDeclarationForWhile = blockBeforeWhileConstruction.getLastStatement();
 
-                if (variableDeclarationForWhen instanceof Assignment) {
-                    final Assignment variableAssignmentForWhen = (Assignment) variableDeclarationForWhen;
+                if (variableDeclarationForWhile instanceof Assignment) {
+                    final Assignment variableAssignmentForWhen = (Assignment) variableDeclarationForWhile;
 
                     if (variableAssignmentForWhen.getLeft() instanceof Variable) {
                         final int forVariableIndex = ((Variable) variableAssignmentForWhen.getLeft()).getIndex();
