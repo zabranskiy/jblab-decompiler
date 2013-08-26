@@ -70,6 +70,8 @@ public abstract class AbstractClass {
     protected Map<String, AbstractClass> myInnerClasses = new HashMap<String, AbstractClass>();
     protected InnerClassIdentifier myInnerClassIdentifier;
 
+    protected AbstractClass myOuterClass;
+
     protected Map<String, Exception> myInnerClassesErrors = new HashMap<String, Exception>();
 
     protected final int myTextWidth;
@@ -180,6 +182,25 @@ public abstract class AbstractClass {
 
     public boolean isLambdaFunctionClass() {
         return myIsLambdaFunctionClass;
+    }
+
+    public AbstractClass getOuterClass(final String name) {
+        if (myName.equals(name)) {
+            return this;
+        }
+
+        if (myOuterClass != null) {
+            if (myOuterClass.getName().equals(name)) {
+                return myOuterClass;
+            } else {
+                myOuterClass.getOuterClass(name);
+            }
+        }
+        return null;
+    }
+
+    public void setOuterClass(final AbstractClass outerClass) {
+        this.myOuterClass = outerClass;
     }
 
     public void appendField(final AbstractClassField field) {

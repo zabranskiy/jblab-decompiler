@@ -149,8 +149,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 stackedVariableType = DeclarationWorker.getDescriptorByInt((Integer) stack[0], myLanguage);
             } else {
                 final String className = (String) stack[0];
-                myDecompiledMethod.addImport(DeclarationWorker.decompileFullClassName(className));
-                stackedVariableType = decompileClassNameWithOuterClasses(className) + " ";
+                stackedVariableType = getDescriptor(className, 0, myDecompiledMethod.getImports()) + " ";
             }
 
             getCurrentFrame().setStackedVariableType(stackedVariableType);
@@ -405,7 +404,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         } else if (opString.contains("NEWARRAY")) {
             List<Expression> dimensions = new ArrayList<Expression>();
             dimensions.add(getTopOfBodyStack());
-            myBodyStack.push(new NewArray(1, Printer.TYPES[operand].substring(2).toLowerCase(), dimensions));
+            myBodyStack.push(createNewArray(1, Printer.TYPES[operand].substring(2).toLowerCase(), dimensions));
         }
     }
 
@@ -414,7 +413,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         final String opString = Printer.OPCODES[opcode];
 
         final AbstractFrame currentFrame = getCurrentFrame();
-        final boolean currentFrameHasStack = currentFrame.checkStack();
+        final boolean currentFrameHasStack = currentFrame.checkStack() && myBodyStack.isEmpty();
 
         String variableType = null;
 
@@ -558,7 +557,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         if (opString.contains("NEWARRAY")) {
             List<Expression> dimensions = new ArrayList<Expression>();
             dimensions.add(getTopOfBodyStack());
-            myBodyStack.push(new NewArray(1, decompileClassNameWithOuterClasses(type), dimensions));
+            myBodyStack.push(createNewArray(1, decompileClassNameWithOuterClasses(type), dimensions));
         } else if (opString.contains("INSTANCEOF")) {
             myBodyStack.push(new InstanceOf(decompileClassNameWithOuterClasses(type), getTopOfBodyStack()));
         } else if (opString.contains("CHECKCAST") && !myBodyStack.empty()) {
@@ -778,7 +777,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         }
 
         final String className = getDescriptor(desc.substring(dims), 0, myDecompiledMethod.getImports()).trim();
-        myBodyStack.push(new NewArray(dims, className, dimensions));
+        myBodyStack.push(createNewArray(dims, className, dimensions));
     }
 
 /*    @Override
@@ -1083,6 +1082,10 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
             appendInvocation(invocationName, returnType, arguments);
         }
+    }
+
+    protected NewArray createNewArray(final int dimensionsCount, final String type, final List<Expression> dimensions) {
+        return new NewArray(dimensionsCount, type, dimensions);
     }
 
     private void multiPush(Expression... expressions) {

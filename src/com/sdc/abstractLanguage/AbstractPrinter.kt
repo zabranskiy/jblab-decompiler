@@ -463,22 +463,17 @@ abstract class AbstractPrinter {
             var index = 0
             for (i in variables.indices) {
                 val variableName =
-                if(i == (variables.size()-1)){
-                    // for "..." in parameters in Java code
-                     printLastMethodParameter(variables[i], method.getNestSize());
-                } else{
-                    printExpression(variables[i], method.getNestSize())
-                }
+                    if (i == (variables.size() - 1)){
+                        // for "..." in parameters in Java code
+                        printLastMethodParameter(variables[i], method.getNestSize());
+                    } else{
+                        printExpression(variables[i], method.getNestSize())
+                    }
+
                 if (method.checkParameterForAnnotation(index))
-                    arguments = nest(
-                            2 * method.getNestSize()
-                            , arguments + printAnnotations(method.getParameterAnnotations(index)!!.toList()) + variableName
-                    )
+                    arguments = arguments + printAnnotations(method.getParameterAnnotations(index)!!.toList()) + variableName
                 else
-                    arguments = nest(
-                            2 * method.getNestSize()
-                            , arguments + variableName
-                    )
+                    arguments = arguments + variableName
 
                 if (index + 1 < variables.size)
                     arguments = group(arguments + text(",") + line())
@@ -486,7 +481,7 @@ abstract class AbstractPrinter {
                 index++
             }
         }
-        return arguments
+        return group(nest(2 * method.getNestSize(), arguments))
     }
 
     open fun printLastMethodParameter(variable: Variable, nestSize: Int): PrimeDoc =
