@@ -10,6 +10,8 @@ import com.sdc.js.JSClassVisitor;
 import com.sdc.kotlin.KotlinClassVisitor;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.util.TraceClassVisitor;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -93,21 +95,30 @@ public class Decompiler {
     }
 
     private static String getDecompiledCode(final String languageName, final ClassReader cr, final String classFilesJarPath, final Integer textWidth, final Integer tabSize) throws IOException {
-        AbstractClassVisitor cv;
+        ClassVisitor specifiedLanguageClassVisitor;
+        StringWriter sw = new StringWriter();
 
-        if (languageName.equals("JavaScript")) {
-            cv = new JSClassVisitor(textWidth, tabSize);
-        } else if (languageName.equals("Kotlin")) {
-            cv = new KotlinClassVisitor(textWidth, tabSize);
+        if (languageName.toLowerCase().equals("javascript")) {
+            specifiedLanguageClassVisitor = new JSClassVisitor(textWidth, tabSize);
+        } else if (languageName.toLowerCase().equals("kotlin")) {
+            specifiedLanguageClassVisitor = new KotlinClassVisitor(textWidth, tabSize);
+        } else if (languageName.toLowerCase().equals("java")) {
+            specifiedLanguageClassVisitor = new JavaClassVisitor(textWidth, tabSize);
         } else {
-            // Java
-            cv = new JavaClassVisitor(textWidth, tabSize);
+            specifiedLanguageClassVisitor = new TraceClassVisitor(new PrintWriter(sw));
         }
-        cv.setClassFilesJarPath(classFilesJarPath);
+
+        if (specifiedLanguageClassVisitor instanceof AbstractClassVisitor) {
+            ((AbstractClassVisitor) specifiedLanguageClassVisitor).setClassFilesJarPath(classFilesJarPath);
+        }
 
         try {
-            cr.accept(cv, 0);
-            return cv.getDecompiledCode();
+            cr.accept(specifiedLanguageClassVisitor, 0);
+            if (specifiedLanguageClassVisitor instanceof AbstractClassVisitor) {
+                return ((AbstractClassVisitor) specifiedLanguageClassVisitor).getDecompiledCode();
+            } else {
+                return sw.toString();
+            }
         } catch (RuntimeException e) {
             return "General class decompiling error occurred:" + printExceptionToString(e);
         }

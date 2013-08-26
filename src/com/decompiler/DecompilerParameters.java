@@ -10,7 +10,7 @@ public class DecompilerParameters {
     private List<String> myParameters = new ArrayList<String>();
 
     @Parameter(names = {"-l", "--language"}, description = "Decompiler's output language name. Current supported languages are: {java, javascript, kotlin}.")
-    private String myLanguage = "java";
+    private String myLanguage = "trace";
 
     @Parameter(names = {"-h", "--help"}, description = "Print help information.", help = true)
     private boolean myHelp = false;
