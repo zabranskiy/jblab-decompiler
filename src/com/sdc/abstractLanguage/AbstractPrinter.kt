@@ -324,8 +324,9 @@ abstract class AbstractPrinter {
     }
 
     open fun printForEach(forEachBlock: ForEach, nestSize: Int): PrimeDoc {
+        val header = text("for (") + printExpression(forEachBlock.getVariable(), nestSize) + text(" ") + printForEachLieInOperator() + text(" ") + printExpression(forEachBlock.getContainer(), nestSize) + text(") {")
         val body = printConstruction(forEachBlock.getBody(), nestSize)
-        return text("for (") + printExpression(forEachBlock.getVariable(), nestSize) + text(" : ") + printExpression(forEachBlock.getContainer(), nestSize) + text(") {") + nest(nestSize, body) / text("}")
+        return header + nest(nestSize, body) / text("}")
     }
 
     open fun printTryCatch(tryCatchBlock: TryCatch, nestSize: Int): PrimeDoc {
@@ -420,6 +421,8 @@ abstract class AbstractPrinter {
 
     open fun printNewOperator(): PrimeDoc = text("new ")
 
+    open fun printForEachLieInOperator(): PrimeDoc = text(":")
+
     open fun printStatements(statements: List<Statement>?, nestSize: Int): PrimeDoc {
         var body: PrimeDoc = nil()
         if (statements != null && statements.size != 0)
@@ -458,7 +461,7 @@ abstract class AbstractPrinter {
 
     open fun printMethodParameters(method: AbstractMethod?): PrimeDoc {
         var arguments: PrimeDoc = nil()
-        if (method!!.getLastLocalVariableIndex() != 0 || (!method.isNormalClassMethod() && method.getLastLocalVariableIndex() >= 0)) {
+        if (method!!.getLastLocalVariableIndex() > 0 || (!method.isNormalClassMethod() && method.getLastLocalVariableIndex() >= 0)) {
             var variables = method.getParameters()!!.toList()
             var index = 0
             for (i in variables.indices) {

@@ -3,7 +3,7 @@ package com.sdc.ast.controlflow;
 import com.sdc.ast.expressions.Expression;
 
 public class Return extends Statement {
-    private final Expression myReturnValue;
+    private Expression myReturnValue;
     private boolean myNeedToPrintReturn = true;
 
     public Return() {
@@ -16,6 +16,10 @@ public class Return extends Statement {
 
     public Expression getReturnValue() {
         return myReturnValue;
+    }
+
+    public void setReturnValue(final Expression returnValue) {
+        this.myReturnValue = returnValue;
     }
 
     public boolean needToPrintReturn() {
