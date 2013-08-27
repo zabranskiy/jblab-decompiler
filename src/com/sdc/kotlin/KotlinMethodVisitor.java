@@ -185,6 +185,7 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
             try {
                 AbstractClassVisitor cv = myVisitorFactory.createClassVisitor(myDecompiledMethod.getTextWidth(), myDecompiledMethod.getNestSize());
                 cv.setIsLambdaFunction(true);
+                cv.setClassFilesJarPath(myClassFilesJarPath);
                 ClassReader cr = AbstractClassVisitor.getInnerClassClassReader(myClassFilesJarPath, owner);
                 cr.accept(cv, 0);
                 final AbstractClass decompiledClass = cv.getDecompiledClass();
