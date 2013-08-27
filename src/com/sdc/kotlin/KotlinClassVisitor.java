@@ -6,6 +6,8 @@ import com.sdc.abstractLanguage.AbstractMethodVisitor;
 import com.sdc.util.DeclarationWorker;
 import org.objectweb.asm.*;
 
+import java.io.IOException;
+
 public class KotlinClassVisitor extends AbstractClassVisitor {
     private static final String DEFAULT_EXTENDED_CLASS = "java/lang/Object";
     private static final String DEFAULT_IMPLEMENTED_INTERFACE = "jet/JetObject";
@@ -62,6 +64,24 @@ public class KotlinClassVisitor extends AbstractClassVisitor {
         }
 
         return methodVisitor;
+    }
+
+    @Override
+    public void visitEnd() {
+        super.visitEnd();
+
+        final String decompiledClassName = getKotlinClass().getSrcClassName();
+        if (myDecompiledClass.getName().equals("KotlinPackage") && decompiledClassName != null) {
+            try {
+                AbstractClassVisitor cv = myVisitorFactory.createClassVisitor(myDecompiledClass.getTextWidth(), myDecompiledClass.getNestSize());
+                cv.setClassFilesJarPath(myClassFilesJarPath);
+                ClassReader cr = AbstractClassVisitor.getInnerClassClassReader(myClassFilesJarPath, decompiledClassName);
+                cr.accept(cv, 0);
+                myDecompiledClass = cv.getDecompiledClass();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     private KotlinClass getKotlinClass() {

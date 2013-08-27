@@ -143,7 +143,7 @@ class KotlinPrinter: AbstractPrinter() {
     override fun printClass(decompiledClass: AbstractClass): PrimeDoc {
         val kotlinClass: KotlinClass = decompiledClass as KotlinClass
 
-        var headerCode : PrimeDoc = printPackageAndImports(decompiledClass)
+        var headerCode : PrimeDoc = printPackageAndImports(decompiledClass) + line()
 
         if (kotlinClass.isNormalClass()) {
             var declaration : PrimeDoc = printAnnotations(kotlinClass.getAnnotations()!!.toList()) + text(kotlinClass.getModifier() + kotlinClass.getTypeToString() + kotlinClass.getName())

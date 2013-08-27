@@ -15,6 +15,7 @@ public class KotlinClass extends AbstractClass {
 
     private AbstractMethod myConstructor;
     private Expression mySuperClassConstructor;
+    private String mySrcClassName;
 
     public KotlinClass(final String modifier, final ClassType type, final String name, final String packageName,
                        final List<String> traits, final String superClass,
@@ -47,6 +48,21 @@ public class KotlinClass extends AbstractClass {
 
     protected void removeMethod(final AbstractMethod abstractMethod) {
         myMethods.remove(abstractMethod);
+    }
+
+    public void setSrcClassName(final String srcClassName) {
+        this.mySrcClassName = srcClassName;
+    }
+
+    public String getSrcClassName() {
+        return mySrcClassName;
+    }
+
+    @Override
+    public void appendImport(final String importName) {
+        if (!importName.contains(".src.") && !importName.endsWith("KotlinPackage")) {
+            super.appendImport(importName);
+        }
     }
 
     @Override
