@@ -1,5 +1,6 @@
 package com.sdc.kotlin;
 
+import com.sdc.ast.Type;
 import com.sdc.ast.expressions.Constant;
 import com.sdc.ast.expressions.Expression;
 import com.sdc.ast.expressions.identifiers.Variable;
@@ -19,7 +20,7 @@ public class KotlinVariable extends Variable {
         return type.startsWith(SHARED_VAR_IDENTIFIER);
     }
 
-    public KotlinVariable(final int index, final String variableType, final String name) {
+    public KotlinVariable(final int index, final Type variableType, final String name) {
         super(index, variableType, name);
     }
 
@@ -33,35 +34,36 @@ public class KotlinVariable extends Variable {
 
     @Override
     public Expression getName() {
-        final String name = ((Constant) super.getName()).getValue().toString();
+        Object value = ((Constant) super.getName()).getValue();
+        final String name = value==null?null:value.toString();
         final String actualName = myIsMethodParameter || myIsInForDeclaration ? name : "var " + name;
 
-        return myIsDeclared ? myName : new Constant(actualName, false);
+        return myIsDeclared ? myName : new Constant(actualName, false, myType);
     }
 
     @Override
-    public String getType() {
-        String actualType = super.getType();
-        boolean notNeedNullableMark = myIsNotNull || DeclarationWorker.isPrimitiveClass(myVariableType) || myVariableType.endsWith("?");
+    public Type getType() {
+        String myVariableType = myType.toString(KotlinOperationPrinter.getInstance());
+        boolean notNeedNullableMark = myIsNotNull ||  DeclarationWorker.isPrimitiveClass(myVariableType) || myVariableType.endsWith("?");
 
         if (isSharedVar(myVariableType)) {
-            actualType = DeclarationWorker.convertJavaPrimitiveClassToKotlin(actualType.substring(SHARED_VAR_IDENTIFIER.length()));
-            if (!actualType.equals("Any")) {
+            myVariableType = DeclarationWorker.convertJavaPrimitiveClassToKotlin(myVariableType.substring(SHARED_VAR_IDENTIFIER.length()));
+            if (!myVariableType.equals("Any")) {
                 notNeedNullableMark = true;
             }
         }
 
         final String nullableMark = notNeedNullableMark ? "" : "?";
 
-        return actualType + nullableMark;
+        return new Type(myVariableType + nullableMark);
     }
 
-    public String getActualType() {
+    public Type getActualType() {
         return super.getType();
     }
 
     @Override
-    protected Variable createVariable(final int index, final String variableType, final String name) {
+    protected Variable createVariable(final int index, final Type variableType, final String name) {
         return new KotlinVariable(index, variableType, name);
     }
 }

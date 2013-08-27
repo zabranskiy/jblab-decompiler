@@ -1,8 +1,8 @@
 package com.sdc.abstractLanguage;
 
-import com.sdc.ast.OperationType;
+import com.sdc.ast.ExpressionType;
 
-import static com.sdc.ast.OperationType.*;
+import static com.sdc.ast.ExpressionType.*;
 
 public abstract class AbstractOperationPrinter {
     protected static AbstractOperationPrinter ourInstance;
@@ -194,10 +194,11 @@ public abstract class AbstractOperationPrinter {
         return ".length";
     }
 
-    public int getPriority(OperationType type) {
+
+    public int getPriority(ExpressionType type) {
         if (type == VARIABLE || type == FIELD || type == CONST) {
             return 0;
-        }  else if (type == SQUARE_BRACKETS || type == ARRAYLENGTH || type == INVOCATION) {
+        } else if (type == SQUARE_BRACKETS || type == ARRAYLENGTH || type == INVOCATION) {
             return 1;
         } else if (type == NOT || type == NEGATE || type == DEC || type == INC || type == DEC_REV || type == INC_REV
                 || type == INT_CAST || type == DOUBLE_CAST || type == LONG_CAST || type == SHORT_CAST
@@ -227,7 +228,7 @@ public abstract class AbstractOperationPrinter {
             return 13;
         } else if (type == MUL_INC || type == DIV_INC || type == REM_INC || type == ADD_INC || type == SUB_INC ||
                 type == BITWISE_OR_INC || type == BITWISE_AND_INC || type == BITWISE_XOR_INC ||
-                type == SHL_INC  || type == SHR_INC  || type == USHR_INC  ) {
+                type == SHL_INC || type == SHR_INC || type == USHR_INC) {
             return 14;
         } else if (type == NEWARRAY || type == NEW) {
             return 15;
@@ -236,4 +237,48 @@ public abstract class AbstractOperationPrinter {
     }
 
 
+    public String getBooleanTypeView() {
+        return "boolean";
+    }
+
+    public String getIntTypeView() {
+        return "int";
+    }
+
+    public String getCharTypeView() {
+        return "char";
+    }
+
+    public String getShortTypeView() {
+        return "short";
+    }
+
+    public String getDoubleTypeView() {
+        return "double";
+    }
+
+    public String getFloatTypeView() {
+        return "float";
+    }
+
+    public String getByteTypeView() {
+        return "byte";
+    }
+
+    public String getLongTypeView() {
+        return "long";
+    }
+
+    public String getNotPrimitiveView(String className) {
+        return className;
+    }
+
+
+    public String getBracketsView() {
+        return "[]";
+    }
+
+    public String getTypeWithBracketsView(String type) {
+        return type + "[]";
+    }
 }

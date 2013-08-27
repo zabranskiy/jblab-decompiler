@@ -1,6 +1,7 @@
 package com.sdc.kotlin;
 
 import com.sdc.abstractLanguage.AbstractFrame;
+import com.sdc.ast.Type;
 import com.sdc.ast.expressions.identifiers.Variable;
 
 public class KotlinFrame extends AbstractFrame {
@@ -10,7 +11,7 @@ public class KotlinFrame extends AbstractFrame {
     }
 
     @Override
-    protected Variable createVariable(int index, String type, String name) {
+    protected Variable createVariable(int index, Type type, String name) {
         return new KotlinVariable(index, type, name);
     }
 }

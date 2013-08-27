@@ -1,5 +1,6 @@
 package com.sdc.abstractLanguage;
 
+import com.sdc.ast.Type;
 import com.sdc.ast.controlflow.Return;
 import com.sdc.ast.controlflow.Statement;
 import com.sdc.ast.expressions.Expression;
@@ -28,6 +29,7 @@ public abstract class AbstractMethod {
 
     protected List<AbstractAnnotation> myAnnotations = new ArrayList<AbstractAnnotation>();
     protected Map<Integer, List<AbstractAnnotation>> myParameterAnnotations = new HashMap<Integer, List<AbstractAnnotation>>();
+    protected Map<String, Integer> myTypeNameIndices = new HashMap<String, Integer>();
 
     protected List<AbstractFrame> myFrames = new ArrayList<AbstractFrame>();
 
@@ -145,15 +147,15 @@ public abstract class AbstractMethod {
         myFrames.add(frame);
     }
 
-    public void addThisVariable(final String type) {
+    public void addThisVariable(final Type type) {
         getCurrentFrame().createAndInsertVariable(0, type, "this");
     }
 
-    public void updateVariableInformation(final int index, final String type, final String name) {
+    public void updateVariableInformation(final int index, final Type type, final String name) {
         getCurrentFrame().updateVariableInformation(index, type, name);
     }
 
-    public void updateVariableInformationFromDebugInfo(final int index, final String type, final String name, final Label start, final Label end) {
+    public void updateVariableInformationFromDebugInfo(final int index, final Type type, final String name, final Label start, final Label end) {
         boolean started = false;
 
         for (final AbstractFrame frame : myFrames) {
@@ -260,6 +262,47 @@ public abstract class AbstractMethod {
         return false;
     }
 
+    public String getNewTypeName(Type type) {
+        String variableType = type.toStringWithoutBrackets().trim();
+        for (int i = 0; i < type.getDimensions(); i++) {
+            variableType+="Arr";
+        }
+        char firstChar = variableType.charAt(0);
+        String name = firstChar + "";
+        Integer index;
+        if (Character.isLowerCase(firstChar)) {
+            //primitive type
+            index = myTypeNameIndices.get(name);
+
+        } else {
+            //for Classes
+            index = myTypeNameIndices.get(variableType);
+            String prefix = charIsVowel(firstChar) ? "an" : "a";
+            name = prefix + variableType;
+
+        }
+        if (index == null) {
+            myTypeNameIndices.put(name, 1);
+        } else {
+            myTypeNameIndices.put(name, index + 1);
+            name += index;
+        }
+        return name;
+    }
+
+    public static boolean charIsVowel(char c) {
+        switch (Character.toLowerCase(c)) {
+            case 'a':
+            case 'e':
+            case 'u':
+            case 'y':
+            case 'o':
+            case 'i':
+                return true;
+            default:
+                return false;
+        }
+    }
 /*
     public void drawCFG() {
         GraphDrawer graphDrawer = new GraphDrawer(myNodes, myNestSize, myTextWidth);

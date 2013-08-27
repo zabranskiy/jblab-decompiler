@@ -23,7 +23,7 @@ public class FNode extends Node {
     }
 
     public void addBranch(final int index) {
-        myBranches.add(new Return(new Invocation((index == 0) ? "start" : "fnode_" + index, "", null)));
+        myBranches.add(new Return(new Invocation((index == 0) ? "start" : "fnode_" + index, null, null)));     //todo remove maybe first null
     }
 
     public FType getType() {

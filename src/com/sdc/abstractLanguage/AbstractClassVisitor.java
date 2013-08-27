@@ -1,5 +1,6 @@
 package com.sdc.abstractLanguage;
 
+import com.sdc.ast.Type;
 import com.sdc.util.DeclarationWorker;
 import org.objectweb.asm.*;
 
@@ -262,7 +263,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
         final int startIndex = myDecompiledClass.isNormalClass() ? 1 : 0;
 
         if (myDecompiledClass.isNormalClass()) {
-            abstractMethod.addThisVariable(myDecompiledClass.getName());
+            abstractMethod.addThisVariable(new Type(myDecompiledClass.getName()));
             abstractMethod.declareThisVariable();
         }
 

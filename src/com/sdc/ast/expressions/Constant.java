@@ -1,21 +1,22 @@
 package com.sdc.ast.expressions;
 
-import com.sdc.ast.OperationType;
+import com.sdc.ast.ExpressionType;
+import com.sdc.ast.Type;
 
 public class Constant extends PriorityExpression {
     private final Object myValue;
     private final boolean myIsStringValue;
+    public static Constant NULL = new Constant("null", false, new Type("Object"));
 
 
-    public Constant(final Object value, final boolean isStringValue) {
+/*    public Constant(final Object value, final boolean isStringValue) {
         this(value, isStringValue, false);
-    }
+    }*/
 
-    public Constant(final Object value, final boolean isStringValue, final boolean hasDoubleLength) {
+    public Constant(final Object value, final boolean isStringValue, Type type) {
+        super(ExpressionType.CONST,type);
         this.myValue = value;
         this.myIsStringValue = isStringValue;
-        setDoubleLength(hasDoubleLength);
-        myType = OperationType.CONST;
     }
 
     public Object getValue() {
@@ -37,8 +38,4 @@ public class Constant extends PriorityExpression {
         return myValue.equals("this") && !myIsStringValue;
     }
 
-    @Override
-    public boolean isBoolean() {
-        return false;
-    }
 }

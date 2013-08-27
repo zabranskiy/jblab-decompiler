@@ -1,5 +1,6 @@
 package com.sdc.abstractLanguage;
 
+import com.sdc.ast.Type;
 import com.sdc.ast.expressions.identifiers.Variable;
 import org.objectweb.asm.Label;
 
@@ -99,7 +100,7 @@ public abstract class AbstractFrame {
         return false;
     }
 
-    public Variable createAndInsertVariable(final int index, final String type, final String name) {
+    public Variable createAndInsertVariable(final int index, final Type type, final String name) {
         if (!containsVariable(index)) {
             final Variable variable = createVariable(index, type, name);
             variable.setIsMethodParameter(index > 0 && index <= myLastMethodParameterIndex);
@@ -112,9 +113,9 @@ public abstract class AbstractFrame {
         return null;
     }
 
-    public void updateVariableInformation(final int index, final String type, final String name) {
+    public void updateVariableInformation(final int index, final Type type, final String name) {
         Variable variable = getVariable(index);
-        variable.setVariableType(type);
+        variable.setType(type);
         variable.setName(name);
     }
 
@@ -163,7 +164,7 @@ public abstract class AbstractFrame {
         return myVariableIndexToArrayPosition.keySet().contains(index);
     }
 
-    protected Variable createVariable(final int index, final String type, final String name) {
+    protected Variable createVariable(final int index, final Type type, final String name) {
         return new Variable(index, type, name);
     }
 }

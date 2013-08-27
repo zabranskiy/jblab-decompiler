@@ -4,6 +4,7 @@ import com.sdc.abstractLanguage.AbstractClass;
 import com.sdc.abstractLanguage.AbstractClassVisitor;
 import com.sdc.abstractLanguage.AbstractMethod;
 import com.sdc.abstractLanguage.AbstractMethodVisitor;
+import com.sdc.ast.Type;
 import com.sdc.ast.controlflow.Assignment;
 import com.sdc.ast.controlflow.Statement;
 import com.sdc.ast.expressions.Expression;
@@ -66,7 +67,7 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
             final Statement lastStatement = myStatements.get(myStatements.size() - 1);
             if (lastStatement instanceof Assignment
                     && ((Assignment) lastStatement).getRight() instanceof New
-                    && KotlinVariable.isSharedVar(((New) ((Assignment) lastStatement).getRight()).getReturnType()))
+                    && KotlinVariable.isSharedVar(((Assignment) lastStatement).getRight().getType().toString(KotlinOperationPrinter.getInstance())))
             {
                 myStatements.remove(myStatements.size() - 1);
             }
@@ -89,7 +90,7 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
 
         if (opString.contains("INVOKEVIRTUAL") || opString.contains("INVOKEINTERFACE")) {
             if (!name.equals("<init>")) {
-                appendInstanceInvocation(name, hasVoidReturnType ? "" : returnType, arguments, myBodyStack.pop());
+                appendInstanceInvocation(name, hasVoidReturnType ? Type.VOID : new Type(returnType), arguments, myBodyStack.pop());
                 return;
             }
         }
@@ -119,7 +120,7 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
                 if (!decompiledOwnerFullClassName.contains(".src.")) {
                     if (ownerClassName.contains("..")) {
                         invocationName = "super<" + ownerClassName.substring(0, ownerClassName.indexOf("..")) + ">."  + name;
-                        appendInstanceInvocation(invocationName, hasVoidReturnType ? "" : returnType, arguments, arguments.remove(0));
+                        appendInstanceInvocation(invocationName, hasVoidReturnType ? Type.VOID : new Type(returnType), arguments, arguments.remove(0));
                         return;
                     } else {
                         invocationName = ownerClassName + "." + name;
@@ -128,7 +129,7 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
                     invocationName = name;
                 }
             } else {
-                appendInstanceInvocation(name, hasVoidReturnType ? "" : returnType, arguments, arguments.remove(0));
+                appendInstanceInvocation(name, hasVoidReturnType ? Type.VOID : new Type(returnType), arguments, arguments.remove(0));
                 return;
             }
 
@@ -139,7 +140,7 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
             }
         }
 
-        appendInvocationOrConstructor(isStaticInvocation, name, invocationName, hasVoidReturnType ? "" : returnType, arguments, decompiledOwnerFullClassName);
+        appendInvocationOrConstructor(isStaticInvocation, name, invocationName, hasVoidReturnType ? Type.VOID : new Type(returnType), arguments, decompiledOwnerFullClassName);
     }
 
     @Override
@@ -169,7 +170,7 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
     }
 
     @Override
-    protected void processSuperClassConstructorInvocation(final String invocationName, final String returnType, final List<Expression> arguments) {
+    protected void processSuperClassConstructorInvocation(final String invocationName, final Type returnType, final List<Expression> arguments) {
         ((KotlinClass) myDecompiledMethod.getDecompiledClass()).setSuperClassConstructor(new com.sdc.ast.expressions.Invocation(invocationName, returnType, arguments));
     }
 

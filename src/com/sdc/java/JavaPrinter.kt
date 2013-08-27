@@ -140,10 +140,13 @@ class JavaPrinter: AbstractPrinter() {
 
     override fun printLastMethodParameter(variable: Variable, nestSize: Int): PrimeDoc {
         val myType = variable.getType()
-        if(!myType!!.endsWith("[] ")){
+        if(myType?.isArray() as Boolean){
+            variable.declare()
+            val typeWithoutOnePairOfBrackets = myType?.getTypeWithOnPairOfBrackets()?.toString(getOperationPrinter())
+            return text(typeWithoutOnePairOfBrackets?.trim() + "... ") + printExpression(variable.getName(), nestSize)
+        } else {
             return printExpression(variable, nestSize)
         }
-        variable.declare()
-        return text(myType.substring(0, myType.size - 3) + "... ") + printExpression(variable.getName(), nestSize)
+
     }
 }

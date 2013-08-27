@@ -1,6 +1,7 @@
 package com.sdc.ast.expressions.identifiers;
 
-import com.sdc.ast.OperationType;
+import com.sdc.ast.ExpressionType;
+import com.sdc.ast.Type;
 import com.sdc.ast.expressions.Constant;
 import com.sdc.ast.expressions.Expression;
 
@@ -8,7 +9,6 @@ public class Variable extends Identifier {
     protected final int myIndex;
 
     protected Expression myName;
-    protected String myVariableType;
 
     protected boolean myIsMethodParameter = false;
     protected boolean myIsDeclared = false;
@@ -16,12 +16,10 @@ public class Variable extends Identifier {
     protected Variable myParentCopy;
     protected Variable myChildCopy;
 
-    public Variable(final int index, final String variableType, final String name) {
+    public Variable(final int index, final Type type, final String name) {
+        super(ExpressionType.VARIABLE, type);
         this.myIndex = index;
-        this.myName = new Constant(name, false);
-        this.myVariableType = variableType;
-
-        myType = OperationType.VARIABLE;
+        this.myName = new Constant(name, false, type);
     }
 
     public void setIsMethodParameter(final boolean isMethodParameter) {
@@ -52,15 +50,11 @@ public class Variable extends Identifier {
     }
 
     public void setName(final String name) {
-        this.myName = new Constant(name, false);
-    }
-
-    public void setVariableType(final String variableType) {
-        this.myVariableType = variableType;
+        this.myName = new Constant(name, false, getType());
     }
 
     public Variable createCopy() {
-        Variable copy = createVariable(myIndex, myVariableType,((Constant) myName).getValue().toString());
+        Variable copy = createVariable(myIndex, getType(), ((Constant) myName).getValue().toString());
         myChildCopy = copy;
         copy.setParentCopy(this);
 
@@ -70,11 +64,6 @@ public class Variable extends Identifier {
     @Override
     public Expression getName() {
         return myName;
-    }
-
-    @Override
-    public String getType() {
-        return myVariableType;
     }
 
     public int getIndex() {
@@ -94,11 +83,6 @@ public class Variable extends Identifier {
                 ", myName=" + (name != null ? name : " no myName yet") + "}";
     }
 
-    @Override
-    public boolean isBoolean() {
-        return getType().contains("boolean");
-    }
-
     public boolean isThis() {
         return getName() instanceof Constant && ((Constant) getName()).isThis();
     }
@@ -111,7 +95,35 @@ public class Variable extends Identifier {
         myChildCopy = null;
     }
 
-    protected Variable createVariable(final int index, final String variableType, final String name) {
-        return new Variable(index, variableType, name);
+    protected Variable createVariable(final int index, final Type type, final String name) {
+        return new Variable(index, type, name);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        return equalsWithChildren(o) || equalsWithParents(o);
+    }
+
+    public boolean equalsWithParents(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        if (myParentCopy == null) return false;
+        else return myParentCopy.equalsWithParents(o);
+    }
+
+    public boolean equalsWithChildren(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        if (myChildCopy == null) return false;
+        else return myChildCopy.equalsWithChildren(o);
+    }
+
+    @Override
+    public int hashCode() {
+        return myIndex;   //todo correct
     }
 }

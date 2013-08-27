@@ -1,6 +1,7 @@
 package com.sdc.ast.expressions;
 
-import com.sdc.ast.OperationType;
+import com.sdc.ast.ExpressionType;
+import com.sdc.ast.Type;
 
 /**
  * Created with IntelliJ IDEA.
@@ -15,11 +16,10 @@ public class TernaryExpression extends PriorityExpression {
     private final Expression myRight;
 
     public TernaryExpression(Expression myCondition, Expression myLeft, Expression myRight) {
+        super(ExpressionType.TERNARY_IF, Type.getStrongerType(myLeft.getType(), myRight.getType()));
         this.myCondition = myCondition;
         this.myLeft = myLeft;
         this.myRight = myRight;
-        setDoubleLength(myLeft.hasDoubleLength() || myRight.hasDoubleLength());
-        myType = OperationType.TERNARY_IF;
     }
 
     public Expression getLeft() {
@@ -41,10 +41,5 @@ public class TernaryExpression extends PriorityExpression {
                 ", myLeft=" + myLeft +
                 ", myRight=" + myRight +
                 '}';
-    }
-
-    @Override
-    public boolean isBoolean() {
-        return false;
     }
 }

@@ -1,5 +1,7 @@
 package com.sdc.ast.expressions;
 
+import com.sdc.ast.Type;
+
 import java.util.List;
 
 public class InstanceInvocation extends Invocation {
@@ -10,8 +12,8 @@ public class InstanceInvocation extends Invocation {
         return myInstance;
     }
 
-    public InstanceInvocation(final String function, final String returnType, final List<Expression> arguments, final Expression instance) {
-        super(function, returnType, arguments);
+    public InstanceInvocation(final String function, final Type type, final List<Expression> arguments, final Expression instance) {
+        super(function, type, arguments);
         this.myInstance = instance;
     }
 
@@ -23,5 +25,9 @@ public class InstanceInvocation extends Invocation {
         this.myIsNotNullCheckedCall = isNotNullCheckedCall;
     }
 
+    @Override
+    public Expression getBase() {
+        return myInstance;
+    }
 
 }

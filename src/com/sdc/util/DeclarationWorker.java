@@ -2,6 +2,7 @@ package com.sdc.util;
 
 import com.sdc.abstractLanguage.AbstractFrame;
 import com.sdc.abstractLanguage.AbstractMethod;
+import com.sdc.ast.Type;
 import org.objectweb.asm.Opcodes;
 
 import java.util.*;
@@ -273,7 +274,6 @@ public class DeclarationWorker {
         int pos = 0;
 
         AbstractFrame rootFrame = abstractMethod.getCurrentFrame();
-        Map<String, Integer> typeNameIndices =new HashMap<String, Integer>();
         while (pos < descriptor.length()) {
             final int backupPos = pos;
             final int backupCount = count;
@@ -310,40 +310,18 @@ public class DeclarationWorker {
             //final String name = "x" + index;
 
             String variableType = type;
-            String name = getNewTypeName(typeNameIndices, variableType);
+            String name = abstractMethod.getNewTypeName( new Type(type));
 
             if (language == SupportedLanguage.KOTLIN) {
                 variableType = isPrimitiveClass ? convertJavaPrimitiveClassToKotlin(type) + "?" : type;
             }
 
-            rootFrame.createAndInsertVariable(index, variableType, name);
+            rootFrame.createAndInsertVariable(index, new Type(variableType), name);
         }
 
         rootFrame.setLastMethodParameterIndex(count);
 
         abstractMethod.setLastLocalVariableIndex(count);
-    }
-
-    private static String getNewTypeName(Map<String, Integer> typeNameIndices, String variableType) {
-        char firstChar = variableType.charAt(0);
-        String name = firstChar + "";
-        Integer typeNameIndex;
-        if (Character.isLowerCase(firstChar)) {
-            //primitive type
-            typeNameIndex = typeNameIndices.get(name);
-
-        } else {
-            //for Classes
-            typeNameIndex = typeNameIndices.get(variableType);
-            name = "a" + variableType.trim();
-
-        }
-        if (typeNameIndex == null) {
-            typeNameIndices.put(name, 1);
-        } else {
-            name += typeNameIndex;
-        }
-        return name;
     }
 
     public static void parseGenericDeclaration(final String signature, List<String> genericTypesList,
