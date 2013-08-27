@@ -93,7 +93,7 @@ class KotlinPrinter: AbstractPrinter() {
         val operand = expression.getOperand()
         val expr = printExpressionCheckBrackets(operand, opPriority, isAssociative, nestSize);
 
-        if (expression.getOperationType() == OperationType.CHECK_CAST)
+        if (expression.getOperationType()!!.name().contains("CAST"))
             return expr + text(expression.getOperation(getOperationPrinter()))
         else
             return text(expression.getOperation(getOperationPrinter())) + expr
