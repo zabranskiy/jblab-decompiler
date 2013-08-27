@@ -38,24 +38,23 @@ abstract class AbstractPrinter {
     abstract fun getOperationPrinter(): AbstractOperationPrinter;
 
     open fun printExpression(expression: Expression?, nestSize: Int): PrimeDoc =
-    when (expression) {
-        is Constant -> printConstant(expression, nestSize)
-        is BinaryExpression -> printBinaryExpression(expression, nestSize)
-        is UnaryExpression -> printUnaryExpression(expression, nestSize)
-        is Field -> printField(expression, nestSize)
-        is Variable -> printVariable(expression, nestSize)
-        is com.sdc.ast.expressions.Invocation -> printInvocationExpression(expression, nestSize)
-        is com.sdc.ast.expressions.New -> printNew(expression, nestSize)
-        is NewArray -> printNewArray(expression, nestSize)
-        is InstanceOf -> printInstanceOf(expression, nestSize)
-        is AnonymousClass -> printAnonymousClassExpression(expression, nestSize)
-        is TernaryExpression -> printTernaryExpression(expression, nestSize)
-        is ExprIncrement -> printExprIncrement(expression, nestSize)
-        is ArrayLength -> printArrayLength(expression, nestSize)
-        is SquareBrackets -> printSquareBrackets(expression,nestSize)
-        else -> throw IllegalArgumentException("Unknown Expression implementer!")
-    }
-
+        when (expression) {
+            is Constant -> printConstant(expression, nestSize)
+            is BinaryExpression -> printBinaryExpression(expression, nestSize)
+            is UnaryExpression -> printUnaryExpression(expression, nestSize)
+            is Field -> printField(expression, nestSize)
+            is Variable -> printVariable(expression, nestSize)
+            is com.sdc.ast.expressions.Invocation -> printInvocationExpression(expression, nestSize)
+            is com.sdc.ast.expressions.New -> printNew(expression, nestSize)
+            is NewArray -> printNewArray(expression, nestSize)
+            is InstanceOf -> printInstanceOf(expression, nestSize)
+            is AnonymousClass -> printAnonymousClassExpression(expression, nestSize)
+            is TernaryExpression -> printTernaryExpression(expression, nestSize)
+            is ExprIncrement -> printExprIncrement(expression, nestSize)
+            is ArrayLength -> printArrayLength(expression, nestSize)
+            is SquareBrackets -> printSquareBrackets(expression,nestSize)
+            else -> throw IllegalArgumentException("Unknown Expression implementer!")
+        }
 
     open fun printExpressionCheckBrackets(expression: Expression?, nextOpPriority: Int, nestSize: Int): PrimeDoc =
             printExpressionCheckBrackets(expression, nextOpPriority, false, nestSize)
@@ -403,10 +402,8 @@ abstract class AbstractPrinter {
     open fun printInstance(instance: Expression?, opPriority: Int, isAssociative: Boolean, nestSize: Int, isNotNullCheckedCall : Boolean = false): PrimeDoc {
         var instanceName: PrimeDoc = nil()
         if (instance is Variable ) {
-            var variableName = instance.getName()
             if (!instance.isThis()) {
-                instanceName = printExpressionCheckBrackets(variableName, opPriority, isAssociative, nestSize) + text(if (isNotNullCheckedCall) "!!." else ".")
-
+                instanceName = printExpressionCheckBrackets(instance, opPriority, isAssociative, nestSize) + text(if (isNotNullCheckedCall) "!!." else ".")
             }
         } else {
             instanceName = printExpressionCheckBrackets(instance, opPriority, isAssociative, nestSize) + text(if (isNotNullCheckedCall) "!!." else ".")
