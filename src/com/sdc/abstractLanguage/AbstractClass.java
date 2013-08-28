@@ -185,7 +185,7 @@ public abstract class AbstractClass {
     }
 
     public AbstractClass getOuterClass(final String name) {
-        if (myName.equals(name)) {
+        if (myName.equals(name) || name == null) {
             return this;
         }
 
@@ -218,7 +218,9 @@ public abstract class AbstractClass {
     }
 
     public void appendImport(final String importName) {
-        if (!hasImport(importName) && !checkImportNameForBeingInPackages(importName, myDefaultPackages) && !importName.contains("." + myName + ".")) {
+        if (!hasImport(importName) && !checkImportNameForBeingInPackages(importName, myDefaultPackages)
+                && !importName.contains("." + myName + ".") && !importName.contains("..") && !importName.equals(myName))
+        {
             myImports.add(importName);
         }
     }

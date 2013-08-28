@@ -34,29 +34,30 @@ import com.sdc.ast.expressions.ArrayLength
 import com.sdc.ast.expressions.SquareBrackets
 import com.sdc.ast.expressions.Cast
 import com.sdc.ast.Type
+import com.decompiler.Decompiler
 
 abstract class AbstractPrinter {
     abstract fun getOperationPrinter(): AbstractOperationPrinter;
 
     open fun printExpression(expression: Expression?, nestSize: Int): PrimeDoc =
-    when (expression) {
-        is Constant -> printConstant(expression, nestSize)
-        is BinaryExpression -> printBinaryExpression(expression, nestSize)
-        is UnaryExpression -> printUnaryExpression(expression, nestSize)
-        is Field -> printField(expression, nestSize)
-        is Variable -> printVariable(expression, nestSize)
-        is com.sdc.ast.expressions.Invocation -> printInvocationExpression(expression, nestSize)
-        is com.sdc.ast.expressions.New -> printNew(expression, nestSize)
-        is NewArray -> printNewArray(expression, nestSize)
-        is InstanceOf -> printInstanceOf(expression, nestSize)
-        is AnonymousClass -> printAnonymousClassExpression(expression, nestSize)
-        is TernaryExpression -> printTernaryExpression(expression, nestSize)
-        is ExprIncrement -> printExprIncrement(expression, nestSize)
-        is ArrayLength -> printArrayLength(expression, nestSize)
-        is SquareBrackets -> printSquareBrackets(expression,nestSize)
-        is Cast -> printCast(expression,nestSize)
-        else -> throw IllegalArgumentException("Unknown Expression implementer!")
-    }
+        when (expression) {
+            is Constant -> printConstant(expression, nestSize)
+            is BinaryExpression -> printBinaryExpression(expression, nestSize)
+            is UnaryExpression -> printUnaryExpression(expression, nestSize)
+            is Field -> printField(expression, nestSize)
+            is Variable -> printVariable(expression, nestSize)
+            is com.sdc.ast.expressions.Invocation -> printInvocationExpression(expression, nestSize)
+            is com.sdc.ast.expressions.New -> printNew(expression, nestSize)
+            is NewArray -> printNewArray(expression, nestSize)
+            is InstanceOf -> printInstanceOf(expression, nestSize)
+            is AnonymousClass -> printAnonymousClassExpression(expression, nestSize)
+            is TernaryExpression -> printTernaryExpression(expression, nestSize)
+            is ExprIncrement -> printExprIncrement(expression, nestSize)
+            is ArrayLength -> printArrayLength(expression, nestSize)
+            is SquareBrackets -> printSquareBrackets(expression,nestSize)
+            is Cast -> printCast(expression,nestSize)
+            else -> throw IllegalArgumentException("Unknown Expression implementer!")
+        }
 
 
     open fun printExpressionCheckBrackets(expression: Expression?, nextOpPriority: Int, nestSize: Int): PrimeDoc =
@@ -415,10 +416,8 @@ abstract class AbstractPrinter {
     open fun printInstance(instance: Expression?, opPriority: Int, isAssociative: Boolean, nestSize: Int, isNotNullCheckedCall : Boolean = false): PrimeDoc {
         var instanceName: PrimeDoc = nil()
         if (instance is Variable ) {
-            var variableName = instance.getName()
             if (!instance.isThis()) {
-                instanceName = printExpressionCheckBrackets(variableName, opPriority, isAssociative, nestSize) + text(if (isNotNullCheckedCall) "!!." else ".")
-
+                instanceName = printExpressionCheckBrackets(instance, opPriority, isAssociative, nestSize) + text(if (isNotNullCheckedCall) "!!." else ".")
             }
         } else {
             instanceName = printExpressionCheckBrackets(instance, opPriority, isAssociative, nestSize) + text(if (isNotNullCheckedCall) "!!." else ".")
@@ -542,7 +541,7 @@ abstract class AbstractPrinter {
         val errorClasses = decompiledClass.getInnerClassesErrors()
         var errorClassesCode: PrimeDoc = nil()
         for ((className, error) in errorClasses)
-            errorClassesCode = errorClassesCode / text("// Error occurred while decompiling class " + className + ": " + error.getMessage())
+            errorClassesCode = errorClassesCode / text("// Error occurred while decompiling class " + className + ": " + Decompiler.printExceptionToString(error))
 
         return errorClassesCode + printClasses(decompiledClass.getClassBodyInnerClasses())
     }
@@ -562,22 +561,23 @@ abstract class AbstractPrinter {
                 nil()
             }
 
-    open fun printAnonymousClass(anonymousClass: AbstractClass?, arguments: List<Expression>?): PrimeDoc {
-        val superClassName = anonymousClass!!.getSuperClass()
-        val declaration =
-                if (superClassName!!.isEmpty()) {
-                    val implementedInterfaces = anonymousClass.getImplementedInterfaces()
-                    val declaration =
-                            if (implementedInterfaces!!.isEmpty())
-                                printBaseClass()
-                            else
-                                text(implementedInterfaces.get(0))
-                    declaration + text("() {")
-                } else {
-                    text(superClassName) + printInvocationArguments(arguments, anonymousClass.getNestSize())
-                }
+    open fun printAnonymousClassDeclaration(anonymousClass: AbstractClass?, arguments: List<Expression>?): PrimeDoc =
+        if (anonymousClass!!.getSuperClass()!!.isEmpty()) {
+            val implementedInterfaces = anonymousClass.getImplementedInterfaces()
+            val declaration =
+                    if (implementedInterfaces!!.isEmpty())
+                        printBaseClass()
+                    else
+                        text(implementedInterfaces.get(0))
+            declaration + text("() {")
+        } else {
+            text(anonymousClass.getSuperClass()) + printInvocationArguments(arguments, anonymousClass.getNestSize())
+        }
 
-        var anonClassCode: PrimeDoc = declaration + nest(anonymousClass.getNestSize(), printClassBodyInnerClasses(anonymousClass))
+    open fun printAnonymousClass(anonymousClass: AbstractClass?, arguments: List<Expression>?): PrimeDoc {
+        val declaration = printAnonymousClassDeclaration(anonymousClass, arguments)
+
+        var anonClassCode : PrimeDoc = declaration + nest(anonymousClass!!.getNestSize(), printClassBodyInnerClasses(anonymousClass))
 
         for (classField in anonymousClass.getFields()!!.toList())
             anonClassCode = anonClassCode + nest(anonymousClass.getNestSize(), line() + printField(classField))

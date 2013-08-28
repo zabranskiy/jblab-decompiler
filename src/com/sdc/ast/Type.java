@@ -3,6 +3,8 @@ package com.sdc.ast;
 import com.sdc.abstractLanguage.AbstractOperationPrinter;
 import com.sdc.java.JavaOperationPrinter;
 
+import java.util.HashSet;
+
 import static com.sdc.ast.Type.PrimitiveType.*;
 
 public class Type {
@@ -26,6 +28,14 @@ public class Type {
     private final int myDimensions; //for arrays with primitives types or classes
     private boolean myIsExtends = false;
 
+    private static  HashSet<String> myPrimitiveTypes = new HashSet<String>();
+
+    static {
+        for( PrimitiveType type: PrimitiveType.values()){
+            myPrimitiveTypes.add(type.name().toLowerCase());
+        }
+    }
+
     private Type(PrimitiveType type, String className, int dimensions,String originalClassName, boolean isExtends) {
         myType = type;
         myClassName = className;
@@ -42,8 +52,17 @@ public class Type {
     }
 
     public Type(String className) {
+        this(className,0);
+    }
+
+    public Type(PrimitiveType type, int dimensions) {
+        myType = type;
+        myDimensions = dimensions;
+        myClassName = null;
+    }
+
+    public Type(String className, int dimensions) {
         myOriginalClassName = className;
-        int dimensions = 0;
         if (className == null) {
             myClassName = null;
             myType = null;
@@ -62,25 +81,13 @@ public class Type {
             className = newClassName;
         }
         myDimensions = dimensions;
-        if (Character.isLowerCase(className.charAt(0))) {
+        if (myPrimitiveTypes.contains(className.trim().toLowerCase())) {
             myType = PrimitiveType.valueOf(className.trim().toUpperCase());
             myClassName = null;
         } else {
             myClassName = className.trim();
             myType = null;
         }
-    }
-
-    public Type(PrimitiveType type, int dimensions) {
-        myType = type;
-        myDimensions = dimensions;
-        myClassName = null;
-    }
-
-    public Type(String className, int dimensions) {
-        myType = null;
-        myDimensions = dimensions;
-        myClassName = className;
     }
 
 
@@ -137,6 +144,7 @@ public class Type {
     }
     @Override
     public String toString() {
+        if(myOriginalClassName!=null) return myOriginalClassName;
         return toString(JavaOperationPrinter.getInstance());
     }
 

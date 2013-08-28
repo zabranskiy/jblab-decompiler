@@ -111,13 +111,34 @@ class KotlinPrinter: AbstractPrinter() {
     }
 
     fun checkForSharedVar(expression : Expression?): Boolean =
-            expression is Field && KotlinVariable.isSharedVar(expression.getType()?.toString(KotlinOperationPrinter.getInstance())) ||
-            expression is KotlinVariable && KotlinVariable.isSharedVar(expression.getActualType()?.toString(KotlinOperationPrinter.getInstance()))
+            expression is Field && KotlinVariable.isSharedVar(expression.getType()?.toString(KotlinOperationPrinter.getInstance()))
+            || expression is KotlinVariable && KotlinVariable.isSharedVar(expression.getActualType()?.toString(KotlinOperationPrinter.getInstance()))
+
+    override fun printAnonymousClassDeclaration(anonymousClass: AbstractClass?, arguments: List<Expression>?): PrimeDoc {
+        var declaration : PrimeDoc = nil()
+
+        val hasDefaultSuperClass = anonymousClass!!.getSuperClass()!!.isEmpty()
+        if (!hasDefaultSuperClass) {
+            declaration = declaration + text(anonymousClass.getSuperClass()) + printInvocationArguments(arguments, anonymousClass.getNestSize())
+        }
+
+        val implementedInterfaces = anonymousClass.getImplementedInterfaces()
+
+        if (!implementedInterfaces!!.isEmpty()) {
+            declaration = declaration + (if (!hasDefaultSuperClass) text(", ") else nil()) + text(implementedInterfaces.get(0))
+            for (interface in implementedInterfaces.drop(1))
+                declaration = declaration + text(", ") + text(interface)
+        } else if (hasDefaultSuperClass) {
+            declaration = printBaseClass() + text("()")
+        }
+
+        return declaration + text(" {")
+    }
 
     override fun printClass(decompiledClass: AbstractClass): PrimeDoc {
         val kotlinClass: KotlinClass = decompiledClass as KotlinClass
 
-        var headerCode : PrimeDoc = printPackageAndImports(decompiledClass)
+        var headerCode : PrimeDoc = printPackageAndImports(decompiledClass) + line()
 
         if (kotlinClass.isNormalClass()) {
             var declaration : PrimeDoc = printAnnotations(kotlinClass.getAnnotations()!!.toList()) + text(kotlinClass.getModifier() + kotlinClass.getTypeToString() + kotlinClass.getName())

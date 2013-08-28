@@ -34,8 +34,16 @@ public class Constant extends PriorityExpression {
                 '}';
     }
 
+    public String valueToString(){
+        return myValue.toString();
+    }
+
     public boolean isThis(){
         return myValue.equals("this") && !myIsStringValue;
+    }
+
+    public boolean isNull(){
+        return ((myValue==null) || myValue.toString().contains("null")) && !myIsStringValue;
     }
 
 }

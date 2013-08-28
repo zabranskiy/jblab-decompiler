@@ -196,7 +196,7 @@ public abstract class AbstractOperationPrinter {
 
 
     public int getPriority(ExpressionType type) {
-        if (type == VARIABLE || type == FIELD || type == CONST) {
+        if (type == VARIABLE || type == FIELD || type == CONST || type == NEWARRAY || type == NEW) {
             return 0;
         } else if (type == SQUARE_BRACKETS || type == ARRAYLENGTH || type == INVOCATION) {
             return 1;
@@ -230,8 +230,6 @@ public abstract class AbstractOperationPrinter {
                 type == BITWISE_OR_INC || type == BITWISE_AND_INC || type == BITWISE_XOR_INC ||
                 type == SHL_INC || type == SHR_INC || type == USHR_INC) {
             return 14;
-        } else if (type == NEWARRAY || type == NEW) {
-            return 15;
         }
         return 100;
     }

@@ -451,7 +451,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         }
 
         if (!opString.contains("LOAD") && var > myDecompiledMethod.getLastLocalVariableIndex()) {
-            String name = "y" + var;
+
 
             String descriptorType;
             if (currentFrameHasStack) {
@@ -463,9 +463,14 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             if (!descriptorType.equals("Object ") && !descriptorType.equals("Any") || variableType == null) {
                 variableType = new Type(descriptorType);
             }
-
-            name = myDecompiledMethod.getNewTypeName(variableType);
+            //todo
+            Variable variable = currentFrame.getVariable(var);
+            Constant name = null;
+            if (variable.isUndefined()) {
+                name = new Constant(myDecompiledMethod.getNewTypeName(variableType), false, Type.VOID);
+            }
             currentFrame.updateVariableInformation(var, variableType, name);
+
         }
     }
 
@@ -781,7 +786,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         final String description = signature != null ? signature : desc;
 
         String descriptor = getDescriptor(description, 0, myDecompiledMethod.getImports());
-        myDecompiledMethod.updateVariableInformationFromDebugInfo(index, new Type(descriptor), name, start, end);
+        myDecompiledMethod.updateVariableInformationFromDebugInfo(index, new Type(descriptor), new Constant(name, false, Type.VOID), start, end);
     }
 
     @Override
@@ -990,9 +995,9 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
     protected void appendInvocation(final String function, final Type returnType, final List<Expression> arguments) {
         if (returnType.isVOID()) {
-            myStatements.add(new com.sdc.ast.controlflow.Invocation(new Invocation(function,  returnType, arguments)));
+            myStatements.add(new com.sdc.ast.controlflow.Invocation(new Invocation(function, returnType, arguments)));
         } else {
-            myBodyStack.push(new Invocation(function,  returnType, arguments));
+            myBodyStack.push(new Invocation(function, returnType, arguments));
         }
     }
 
@@ -1022,7 +1027,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
     protected void processSuperClassConstructorInvocation(final String invocationName, final Type returnType, final List<Expression> arguments) {
         if (!arguments.isEmpty()) {
-            myStatements.add(new com.sdc.ast.controlflow.Invocation(new Invocation("super",  returnType, arguments)));
+            myStatements.add(new com.sdc.ast.controlflow.Invocation(new Invocation("super", returnType, arguments)));
         }
     }
 
@@ -1038,7 +1043,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                     myBodyStack.pop();
                     myBodyStack.pop();
 
-                    myBodyStack.push(new New(new com.sdc.ast.expressions.Invocation(invocationName,  returnType, arguments)));
+                    myBodyStack.push(new New(new com.sdc.ast.expressions.Invocation(invocationName, returnType, arguments)));
                 } else {
                     myBodyStack.push(new com.sdc.ast.expressions.nestedclasses.AnonymousClass(myDecompiledMethod.getDecompiledClass().getAnonymousClass(invocationName), arguments));
                 }

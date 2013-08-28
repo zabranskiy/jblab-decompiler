@@ -2,7 +2,6 @@ package com.sdc.kotlin;
 
 import com.sdc.ast.Type;
 import com.sdc.ast.expressions.Constant;
-import com.sdc.ast.expressions.Expression;
 import com.sdc.ast.expressions.identifiers.Variable;
 import com.sdc.util.DeclarationWorker;
 
@@ -33,8 +32,8 @@ public class KotlinVariable extends Variable {
     }
 
     @Override
-    public Expression getName() {
-        Object value = ((Constant) super.getName()).getValue();
+    public Constant getName() {
+        Object value = super.getName().getValue();
         final String name = value==null?null:value.toString();
         final String actualName = myIsMethodParameter || myIsInForDeclaration ? name : "var " + name;
 

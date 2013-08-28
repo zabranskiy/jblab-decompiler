@@ -7,6 +7,7 @@ import com.sdc.abstractLanguage.AbstractMethodVisitor;
 import com.sdc.ast.Type;
 import com.sdc.ast.controlflow.Assignment;
 import com.sdc.ast.controlflow.Statement;
+import com.sdc.ast.expressions.Constant;
 import com.sdc.ast.expressions.Expression;
 import com.sdc.ast.expressions.New;
 import com.sdc.ast.expressions.NewArray;
@@ -116,7 +117,7 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
 
         if (opString.contains("INVOKESTATIC")) {
             myDecompiledMethod.addImport(decompiledOwnerFullClassName);
-            if (!ownerClassName.equals("KotlinPackage") && !ownerClassName.equals(myDecompiledMethod.getDecompiledClass().getName())) {
+            if (!ownerClassName.equals("KotlinPackage") && !ownerClassName.contains(myDecompiledMethod.getDecompiledClass().getName())) {
                 if (!decompiledOwnerFullClassName.contains(".src.")) {
                     if (ownerClassName.contains("..")) {
                         invocationName = "super<" + ownerClassName.substring(0, ownerClassName.indexOf("..")) + ">."  + name;
@@ -126,6 +127,7 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
                         invocationName = ownerClassName + "." + name;
                     }
                 } else {
+                    ((KotlinClass) myDecompiledMethod.getDecompiledClass()).setSrcClassName(owner);
                     invocationName = name;
                 }
             } else {
@@ -157,7 +159,7 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
             if (!myHasDebugInformation) {
                 myHasDebugInformation = true;
             }
-            myDecompiledMethod.updateVariableNameFromDebugInfo(index, name, start, end);
+            myDecompiledMethod.updateVariableNameFromDebugInfo(index, new Constant(name,false,Type.VOID), start, end);
             return;
         }
 
@@ -185,6 +187,7 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
             try {
                 AbstractClassVisitor cv = myVisitorFactory.createClassVisitor(myDecompiledMethod.getTextWidth(), myDecompiledMethod.getNestSize());
                 cv.setIsLambdaFunction(true);
+                cv.setClassFilesJarPath(myClassFilesJarPath);
                 ClassReader cr = AbstractClassVisitor.getInnerClassClassReader(myClassFilesJarPath, owner);
                 cr.accept(cv, 0);
                 final AbstractClass decompiledClass = cv.getDecompiledClass();

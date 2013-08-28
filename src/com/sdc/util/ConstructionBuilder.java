@@ -442,7 +442,7 @@ public class ConstructionBuilder {
                     }
                 }
 
-                if (tailIndex == beginIndex) {
+                if (tailIndex == beginIndex && !node.getConstruction().hasBreak()) {
                     node.getConstruction().setContinue("");
                 }
             }

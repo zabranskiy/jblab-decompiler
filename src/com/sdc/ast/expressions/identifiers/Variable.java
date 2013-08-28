@@ -8,7 +8,7 @@ import com.sdc.ast.expressions.Expression;
 public class Variable extends Identifier {
     protected final int myIndex;
 
-    protected Expression myName;
+    protected Constant myName;
 
     protected boolean myIsMethodParameter = false;
     protected boolean myIsDeclared = false;
@@ -49,20 +49,23 @@ public class Variable extends Identifier {
         myParentCopy = null;
     }
 
-    public void setName(final String name) {
-        this.myName = new Constant(name, false, getType());
+    public void setName(final Constant name) {
+        this.myName = name;
     }
 
     public Variable createCopy() {
         Variable copy = createVariable(myIndex, getType(), ((Constant) myName).getValue().toString());
         myChildCopy = copy;
         copy.setParentCopy(this);
+        if (isDeclared()) {
+            copy.declare();
+        }
 
         return copy;
     }
 
     @Override
-    public Expression getName() {
+    public Constant getName() {
         return myName;
     }
 
@@ -83,6 +86,9 @@ public class Variable extends Identifier {
                 ", myName=" + (name != null ? name : " no myName yet") + "}";
     }
 
+    public String nameToString(){
+        return myName==null?"null":myName.valueToString();
+    }
     public boolean isThis() {
         return getName() instanceof Constant && ((Constant) getName()).isThis();
     }
@@ -125,5 +131,8 @@ public class Variable extends Identifier {
     @Override
     public int hashCode() {
         return myIndex;   //todo correct
+    }
+    public boolean isUndefined(){
+        return myName.isNull();
     }
 }

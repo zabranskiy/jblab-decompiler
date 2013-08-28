@@ -119,8 +119,7 @@ public class DeclarationWorker {
         return result;
     }
 
-    public static String
-    getJavaDescriptor(final String descriptor, final int pos, List<String> imports) {
+    public static String getJavaDescriptor(final String descriptor, final int pos, List<String> imports) {
         switch (descriptor.charAt(pos)) {
             case 'V':
                 return "void";
@@ -272,8 +271,10 @@ public class DeclarationWorker {
     {
         int count = startIndex - 1;
         int pos = 0;
+        int index = count;
 
         AbstractFrame rootFrame = abstractMethod.getCurrentFrame();
+
         while (pos < descriptor.length()) {
             final int backupPos = pos;
             final int backupCount = count;
@@ -305,7 +306,7 @@ public class DeclarationWorker {
             }
 
             pos = getNextTypePosition(descriptor, pos);
-            final int index = (count - backupCount) == 1 ? count : count - 1;
+            index = (count - backupCount) == 1 ? count : count - 1;
 
             //final String name = "x" + index;
 
@@ -319,9 +320,9 @@ public class DeclarationWorker {
             rootFrame.createAndInsertVariable(index, new Type(variableType), name);
         }
 
-        rootFrame.setLastMethodParameterIndex(count);
+        rootFrame.setLastMethodParameterIndex(index);
 
-        abstractMethod.setLastLocalVariableIndex(count);
+        abstractMethod.setLastLocalVariableIndex(index);
     }
 
     public static void parseGenericDeclaration(final String signature, List<String> genericTypesList,

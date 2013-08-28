@@ -190,9 +190,12 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
                 decompiledClass.setIsNestedClass(true);
 
                 if (innerName != null) {
-                    myDecompiledClass.getOuterClass(outerClassName).addInnerClass(innerClassName, decompiledClass);
-                    if (outerClassName != null) {
-                        decompiledClass.setInnerClassIdentifier(outerClassName, null, null);
+                    AbstractClass outerClass = myDecompiledClass.getOuterClass(outerClassName);
+                    if (outerClass != null) {
+                        outerClass.addInnerClass(innerClassName, decompiledClass);
+                        if (outerClassName != null) {
+                            decompiledClass.setInnerClassIdentifier(outerClassName, null, null);
+                        }
                     }
                 } else {
                     myDecompiledClass.addAnonymousClass(innerClassName, decompiledClass);
@@ -263,7 +266,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
         final int startIndex = myDecompiledClass.isNormalClass() ? 1 : 0;
 
         if (myDecompiledClass.isNormalClass()) {
-            abstractMethod.addThisVariable(new Type(myDecompiledClass.getName()));
+            abstractMethod.addThisVariable(new Type(getDescriptor("L" + myDecompiledClass.getName() + ";", 0, new ArrayList<String>())));
             abstractMethod.declareThisVariable();
         }
 

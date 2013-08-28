@@ -1,10 +1,14 @@
 package com.sdc.abstractLanguage;
 
 import com.sdc.ast.Type;
+import com.sdc.ast.expressions.Constant;
 import com.sdc.ast.expressions.identifiers.Variable;
 import org.objectweb.asm.Label;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public abstract class AbstractFrame {
     protected boolean myStackChecked = false;
@@ -113,10 +117,12 @@ public abstract class AbstractFrame {
         return null;
     }
 
-    public void updateVariableInformation(final int index, final Type type, final String name) {
+    public void updateVariableInformation(final int index, final Type type, final Constant name) {
         Variable variable = getVariable(index);
         variable.setType(type);
-        variable.setName(name);
+        if(name!=null){
+            variable.setName(name);
+        }
     }
 
     public Variable getVariable(final int variableIndex) {

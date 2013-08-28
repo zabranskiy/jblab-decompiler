@@ -3,6 +3,7 @@ package com.sdc.abstractLanguage;
 import com.sdc.ast.Type;
 import com.sdc.ast.controlflow.Return;
 import com.sdc.ast.controlflow.Statement;
+import com.sdc.ast.expressions.Constant;
 import com.sdc.ast.expressions.Expression;
 import com.sdc.ast.expressions.identifiers.Variable;
 import com.sdc.cfg.constructions.Construction;
@@ -151,11 +152,11 @@ public abstract class AbstractMethod {
         getCurrentFrame().createAndInsertVariable(0, type, "this");
     }
 
-    public void updateVariableInformation(final int index, final Type type, final String name) {
+    public void updateVariableInformation(final int index, final Type type, final Constant name) {
         getCurrentFrame().updateVariableInformation(index, type, name);
     }
 
-    public void updateVariableInformationFromDebugInfo(final int index, final Type type, final String name, final Label start, final Label end) {
+    public void updateVariableInformationFromDebugInfo(final int index, final Type type, final Constant name, final Label start, final Label end) {
         boolean started = false;
 
         for (final AbstractFrame frame : myFrames) {
@@ -173,7 +174,7 @@ public abstract class AbstractMethod {
         }
     }
 
-    public void updateVariableNameFromDebugInfo(final int index, final String name, final Label start, final Label end) {
+    public void updateVariableNameFromDebugInfo(final int index, final Constant name, final Label start, final Label end) {
         for (final AbstractFrame frame : myFrames) {
             if (frame.hasLabel(start)) {
                 Variable variable = frame.getVariable(index);
@@ -264,23 +265,20 @@ public abstract class AbstractMethod {
 
     public String getNewTypeName(Type type) {
         String variableType = type.toStringWithoutBrackets().trim();
+        String suffix="";
         for (int i = 0; i < type.getDimensions(); i++) {
-            variableType+="Arr";
+            suffix+="Arr";
         }
         char firstChar = variableType.charAt(0);
-        String name = firstChar + "";
+        String name = Character.toLowerCase(firstChar) + ""; //primitive type
         Integer index;
-        if (Character.isLowerCase(firstChar)) {
-            //primitive type
-            index = myTypeNameIndices.get(name);
-
-        } else {
+        if (!type.isPrimitive()) {
             //for Classes
-            index = myTypeNameIndices.get(variableType);
             String prefix = charIsVowel(firstChar) ? "an" : "a";
             name = prefix + variableType;
-
         }
+        name+=suffix;
+        index = myTypeNameIndices.get(name);
         if (index == null) {
             myTypeNameIndices.put(name, 1);
         } else {
