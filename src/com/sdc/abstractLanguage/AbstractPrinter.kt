@@ -349,7 +349,19 @@ abstract class AbstractPrinter {
     }
 
     open fun printForEach(forEachBlock: ForEach, nestSize: Int): PrimeDoc {
-        val header = text("for (") + printExpression(forEachBlock.getVariable(), nestSize) + text(" ") + printForEachLieInOperator() + text(" ") + printExpression(forEachBlock.getContainer(), nestSize) + text(") {")
+        val tupleVariables = forEachBlock.getVariables()
+
+        var tuplePrintedVariables = tupleVariables!!.map { arg -> printExpression(arg, nestSize) }
+        var tupleCode : PrimeDoc = tuplePrintedVariables.get(0)
+        for (variable in tuplePrintedVariables.drop(1)) {
+            tupleCode = tupleCode + text(", ") + variable
+        }
+
+        if (tupleVariables.size() > 1) {
+            tupleCode = text("(") + tupleCode + text(")")
+        }
+
+        val header = text("for (") + tupleCode + text(" ") + printForEachLieInOperator() + text(" ") + printExpression(forEachBlock.getContainer(), nestSize) + text(") {")
         val body = printConstruction(forEachBlock.getBody(), nestSize)
         return header + nest(nestSize, body) / text("}")
     }

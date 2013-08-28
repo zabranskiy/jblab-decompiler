@@ -13,6 +13,7 @@ import com.sdc.cfg.nodes.Node;
 import com.sdc.cfg.nodes.Switch;
 import com.sdc.cfg.nodes.SwitchCase;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ConstructionBuilder {
@@ -53,8 +54,9 @@ public class ConstructionBuilder {
                     if ((containerAssignmentForFor.getLeft().getType().isArray())
                             && containerLengthAssignment.getRight() instanceof ArrayLength)
                     {
-                        ForEach forEach = new ForEach((Variable)((Assignment)((ElementaryBlock) ((For) forStartConstruction).getBody()).getFirstStatement()).getLeft()
-                                , containerAssignmentForFor.getRight());
+                        List<Variable> forEachVariables = new ArrayList<Variable>();
+                        forEachVariables.add((Variable)((Assignment)((ElementaryBlock) ((For) forStartConstruction).getBody()).getFirstStatement()).getLeft());
+                        ForEach forEach = new ForEach(forEachVariables, containerAssignmentForFor.getRight());
 
                         Construction body = ((For) forStartConstruction).getBody();
 
@@ -87,12 +89,13 @@ public class ConstructionBuilder {
                 if (variableDeclarationForWhile instanceof Assignment) {
                     final Assignment variableAssignmentForWhen = (Assignment) variableDeclarationForWhile;
 
-                     if (variableAssignmentForWhen.getLeft().getType().toString().toLowerCase().trim().replace("?", "").equals("iterator")
+                     if (variableAssignmentForWhen.getLeft().getType().toString().toLowerCase().replace("?", "").trim().equals("iterator")
                              && ((While) whileStartConstruction).getCondition() instanceof UnaryExpression
                              && ((InstanceInvocation) ((UnaryExpression) ((While) whileStartConstruction).getCondition()).getOperand()).getFunction().equals("hasNext"))
                      {
-                         ForEach forEach = new ForEach((Variable)((Assignment)((ElementaryBlock) ((While) whileStartConstruction).getBody()).getFirstStatement()).getLeft()
-                                 , ((InstanceInvocation) variableAssignmentForWhen.getRight()).getInstance()) ;
+                         List<Variable> forEachVariables = new ArrayList<Variable>();
+                         forEachVariables.add((Variable)((Assignment)((ElementaryBlock) ((While) whileStartConstruction).getBody()).getFirstStatement()).getLeft());
+                         ForEach forEach = new ForEach(forEachVariables, ((InstanceInvocation) variableAssignmentForWhen.getRight()).getInstance());
 
                          Construction body = ((While) whileStartConstruction).getBody();
 

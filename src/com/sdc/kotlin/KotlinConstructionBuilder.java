@@ -11,6 +11,7 @@ import com.sdc.cfg.nodes.Node;
 import com.sdc.util.ConstructionBuilder;
 import com.sdc.util.DominatorTreeGenerator;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class KotlinConstructionBuilder extends ConstructionBuilder {
@@ -30,6 +31,7 @@ public class KotlinConstructionBuilder extends ConstructionBuilder {
         extractNullSafeFunctionCall(generalConstruction);
         extractWhen(generalConstruction);
         extractNewArrayInitialization(generalConstruction);
+        extractTupleForEach(generalConstruction);
         adjustForVariable(generalConstruction);
 
         return generalConstruction;
@@ -40,12 +42,45 @@ public class KotlinConstructionBuilder extends ConstructionBuilder {
 
         if (forConstruction != null) {
             if (forConstruction instanceof ForEach) {
-                ((KotlinVariable)((ForEach) forConstruction).getVariable()).setIsInForDeclaration(true);
+                for (Variable variable : ((ForEach) forConstruction).getVariables()) {
+                    ((KotlinVariable) variable).setIsInForDeclaration(true);
+                }
             } else if (forConstruction instanceof For) {
                 ((KotlinVariable)((For) forConstruction).getVariableInitialization().getLeft()).setIsInForDeclaration(true);
             }
         }
     }
+
+    protected Construction extractTupleForEach(Construction baseConstruction) {
+        final Construction forEachStartConstruction = baseConstruction.getNextConstruction();
+
+        if (baseConstruction instanceof ElementaryBlock && forEachStartConstruction != null && forEachStartConstruction instanceof ForEach) {
+            Construction body = ((ForEach) forEachStartConstruction).getBody();
+            if (body instanceof ElementaryBlock) {
+                List<Variable> forEachVariables = new ArrayList<Variable>();
+
+                for (final Statement statement : ((ElementaryBlock) body).getStatements()) {
+                    if (statement instanceof Assignment && ((Assignment) statement).getRight().getBase() instanceof com.sdc.ast.expressions.InstanceInvocation
+                            && ((com.sdc.ast.expressions.InstanceInvocation) ((Assignment) statement).getRight().getBase()).getFunction().startsWith("component"))
+                    {
+                        forEachVariables.add((Variable) ((Assignment) statement).getLeft());
+                    } else {
+                        break;
+                    }
+                }
+
+                if (forEachVariables.size() > 1) {
+                    ((ForEach) forEachStartConstruction).setVariables(forEachVariables);
+                    for (final Variable v : forEachVariables) {
+                        ((ElementaryBlock) body).removeFirstStatement();
+                    }
+                }
+            }
+        }
+
+        return baseConstruction;
+    }
+
 
     @Override
     protected Construction extractArrayForEach(Construction baseConstruction) {
@@ -54,8 +89,9 @@ public class KotlinConstructionBuilder extends ConstructionBuilder {
         if (baseConstruction instanceof ElementaryBlock && forStartConstruction != null && forStartConstruction instanceof For) {
             //TODO: get first statement and check if it has in the right side array[index] same as in for header
             if (((For) forStartConstruction).getCondition() instanceof BinaryExpression && ((BinaryExpression) ((For) forStartConstruction).getCondition()).getRight() instanceof ArrayLength) {
-                ForEach forEach = new ForEach((Variable)((Assignment)((ElementaryBlock) ((For) forStartConstruction).getBody()).getFirstStatement()).getLeft()
-                        , ((ArrayLength) ((BinaryExpression) ((For) forStartConstruction).getCondition()).getRight()).getOperand());
+                List<Variable> forEachVariables = new ArrayList<Variable>();
+                forEachVariables.add((Variable)((Assignment)((ElementaryBlock) ((For) forStartConstruction).getBody()).getFirstStatement()).getLeft());
+                ForEach forEach = new ForEach(forEachVariables, ((ArrayLength) ((BinaryExpression) ((For) forStartConstruction).getCondition()).getRight()).getOperand());
 
                 Construction body = ((For) forStartConstruction).getBody();
 
