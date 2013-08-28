@@ -39,16 +39,16 @@ import com.sdc.cfg.constructions.When
 import com.sdc.cfg.constructions.Switch
 import com.sdc.cfg.constructions.SwitchCase
 
-import com.sdc.languages.general.printers.AbstractOperationPrinter
+import com.sdc.languages.general.printers.OperationPrinter
 
-import com.sdc.languages.general.languageParts.AbstractClass
-import com.sdc.languages.general.languageParts.AbstractMethod
-import com.sdc.languages.general.languageParts.AbstractClassField
-import com.sdc.languages.general.languageParts.AbstractAnnotation
+import com.sdc.languages.general.languageParts.GeneralClass
+import com.sdc.languages.general.languageParts.Method
+import com.sdc.languages.general.languageParts.ClassField
+import com.sdc.languages.general.languageParts.Annotation
 
 
-abstract class AbstractPrinter {
-    abstract fun getOperationPrinter(): AbstractOperationPrinter;
+abstract class Printer {
+    abstract fun getOperationPrinter(): OperationPrinter;
 
     open fun printExpression(expression: Expression?, nestSize: Int): PrimeDoc =
         when (expression) {
@@ -477,7 +477,7 @@ abstract class AbstractPrinter {
         return body
     }
 
-    open fun printAnnotation(annotation: AbstractAnnotation): PrimeDoc {
+    open fun printAnnotation(annotation: Annotation): PrimeDoc {
         var annotationCode = group(printAnnotationIdentifier() + text(annotation.getName()))
         val properties = annotation.getProperties()
         if (!properties!!.isEmpty()) {
@@ -495,7 +495,7 @@ abstract class AbstractPrinter {
         return annotationCode
     }
 
-    open fun printAnnotations(annotations: List<AbstractAnnotation>): PrimeDoc {
+    open fun printAnnotations(annotations: List<Annotation>): PrimeDoc {
         var annotationsCode = group(nil())
         for (annotation in annotations)
             annotationsCode = group(annotationsCode + printAnnotation(annotation) + line())
@@ -505,7 +505,7 @@ abstract class AbstractPrinter {
     open fun printExpressionWithBrackets(expression: Expression?, nestSize: Int): PrimeDoc =
             text("(") + printExpression(expression, nestSize) + text(")")
 
-    open fun printMethodParameters(method: AbstractMethod?): PrimeDoc {
+    open fun printMethodParameters(method: Method?): PrimeDoc {
         var arguments: PrimeDoc = nil()
         if (method!!.getLastLocalVariableIndex() > 0 || (!method.isNormalClassMethod() && method.getLastLocalVariableIndex() >= 0)) {
             var variables = method.getParameters()!!.toList()
@@ -570,7 +570,7 @@ abstract class AbstractPrinter {
         return generics
     }
 
-    open fun printClasses(decompiledClasses: List<AbstractClass>?): PrimeDoc {
+    open fun printClasses(decompiledClasses: List<GeneralClass>?): PrimeDoc {
         var innerClassesCode: PrimeDoc = nil()
         for (innerClass in decompiledClasses!!.toList()) {
             innerClassesCode = innerClassesCode / printClass(innerClass)
@@ -578,7 +578,7 @@ abstract class AbstractPrinter {
         return innerClassesCode
     }
 
-    open fun printClassBodyInnerClasses(decompiledClass: AbstractClass): PrimeDoc {
+    open fun printClassBodyInnerClasses(decompiledClass: GeneralClass): PrimeDoc {
         val errorClasses = decompiledClass.getInnerClassesErrors()
         var errorClassesCode: PrimeDoc = nil()
         for ((className, error) in errorClasses)
@@ -587,11 +587,11 @@ abstract class AbstractPrinter {
         return errorClassesCode + printClasses(decompiledClass.getClassBodyInnerClasses())
     }
 
-    open fun printMethodInnerClasses(decompiledClass: AbstractClass?, methodName: String?, descriptor: String?): PrimeDoc {
+    open fun printMethodInnerClasses(decompiledClass: GeneralClass?, methodName: String?, descriptor: String?): PrimeDoc {
         return printClasses(decompiledClass!!.getMethodInnerClasses(methodName, descriptor))
     }
 
-    open fun printPackageAndImports(decompiledClass: AbstractClass?): PrimeDoc =
+    open fun printPackageAndImports(decompiledClass: GeneralClass?): PrimeDoc =
             if (!decompiledClass!!.isNestedClass()) {
                 val packageCode = text("package " + decompiledClass.getPackage() + ";") + line()
                 var imports = group(nil())
@@ -602,7 +602,7 @@ abstract class AbstractPrinter {
                 nil()
             }
 
-    open fun printAnonymousClassDeclaration(anonymousClass: AbstractClass?, arguments: List<Expression>?): PrimeDoc =
+    open fun printAnonymousClassDeclaration(anonymousClass: GeneralClass?, arguments: List<Expression>?): PrimeDoc =
         if (anonymousClass!!.getSuperClass()!!.isEmpty()) {
             val implementedInterfaces = anonymousClass.getImplementedInterfaces()
             val declaration =
@@ -615,7 +615,7 @@ abstract class AbstractPrinter {
             text(anonymousClass.getSuperClass()) + printInvocationArguments(arguments, anonymousClass.getNestSize())
         }
 
-    open fun printAnonymousClass(anonymousClass: AbstractClass?, arguments: List<Expression>?): PrimeDoc {
+    open fun printAnonymousClass(anonymousClass: GeneralClass?, arguments: List<Expression>?): PrimeDoc {
         val declaration = printAnonymousClassDeclaration(anonymousClass, arguments)
 
         var anonClassCode : PrimeDoc = declaration + nest(anonymousClass!!.getNestSize(), printClassBodyInnerClasses(anonymousClass))
@@ -629,7 +629,7 @@ abstract class AbstractPrinter {
         return anonClassCode / text("}")
     }
 
-    open fun printMethodError(decompiledMethod: AbstractMethod?): PrimeDoc {
+    open fun printMethodError(decompiledMethod: Method?): PrimeDoc {
         val error = decompiledMethod!!.getError()
         return if (error != null) line() + text("// " + error.getErrorLocation() + ":") + text(error.getException()) else nil()
     }
@@ -638,9 +638,9 @@ abstract class AbstractPrinter {
 
     abstract fun printAnnotationIdentifier(): PrimeDoc;
 
-    abstract fun printClass(decompiledClass: AbstractClass): PrimeDoc;
+    abstract fun printClass(decompiledClass: GeneralClass): PrimeDoc;
 
-    abstract fun printMethod(decompiledMethod: AbstractMethod): PrimeDoc;
+    abstract fun printMethod(decompiledMethod: Method): PrimeDoc;
 
-    abstract fun printField(decompiledField: AbstractClassField): PrimeDoc;
+    abstract fun printField(decompiledField: ClassField): PrimeDoc;
 }

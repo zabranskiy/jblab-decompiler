@@ -1,11 +1,11 @@
 package com.sdc.languages.kotlin.printers;
 
-import com.sdc.languages.general.printers.AbstractOperationPrinter;
+import com.sdc.languages.general.printers.OperationPrinter;
 
-public class KotlinOperationPrinter extends AbstractOperationPrinter {
-    protected static AbstractOperationPrinter ourInstance = new KotlinOperationPrinter();
+public class KotlinOperationPrinter extends OperationPrinter {
+    protected static OperationPrinter ourInstance = new KotlinOperationPrinter();
 
-    public static AbstractOperationPrinter getInstance(){
+    public static OperationPrinter getInstance(){
         return ourInstance;
     }
 

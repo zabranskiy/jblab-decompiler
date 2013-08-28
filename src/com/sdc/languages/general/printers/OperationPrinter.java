@@ -4,14 +4,14 @@ import com.sdc.ast.ExpressionType;
 
 import static com.sdc.ast.ExpressionType.*;
 
-public abstract class AbstractOperationPrinter {
-    protected static AbstractOperationPrinter ourInstance;
+public abstract class OperationPrinter {
+    protected static OperationPrinter ourInstance;
 
-    public static AbstractOperationPrinter getInstance() {
+    public static OperationPrinter getInstance() {
         return ourInstance;
     }
 
-    protected AbstractOperationPrinter() {
+    protected OperationPrinter() {
     }
 
     public String getAddView() {

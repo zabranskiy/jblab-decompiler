@@ -1,10 +1,10 @@
 package com.sdc.languages.js.astUtils;
 
-import com.sdc.languages.general.astUtils.AbstractFrame;
+import com.sdc.languages.general.astUtils.Frame;
 
-public class JSFrame extends AbstractFrame {
+public class JSFrame extends Frame {
     @Override
-    protected AbstractFrame createFrame() {
+    protected Frame createFrame() {
         return new JSFrame();
     }
 }

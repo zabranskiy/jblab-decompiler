@@ -1,8 +1,8 @@
 package com.sdc.languages.kotlin.visitors;
 
-import com.sdc.languages.general.visitors.AbstractClassVisitor;
-import com.sdc.languages.general.languageParts.AbstractMethod;
-import com.sdc.languages.general.visitors.AbstractMethodVisitor;
+import com.sdc.languages.general.languageParts.Method;
+import com.sdc.languages.general.visitors.GeneralClassVisitor;
+import com.sdc.languages.general.visitors.GeneralMethodVisitor;
 import com.sdc.languages.kotlin.languageParts.KotlinClass;
 import com.sdc.languages.kotlin.languageParts.KotlinLanguagePartFactory;
 import com.sdc.util.DeclarationWorker;
@@ -10,7 +10,7 @@ import org.objectweb.asm.*;
 
 import java.io.IOException;
 
-public class KotlinClassVisitor extends AbstractClassVisitor {
+public class KotlinClassVisitor extends GeneralClassVisitor {
     private static final String DEFAULT_EXTENDED_CLASS = "java/lang/Object";
     private static final String DEFAULT_IMPLEMENTED_INTERFACE = "jet/JetObject";
 
@@ -56,10 +56,10 @@ public class KotlinClassVisitor extends AbstractClassVisitor {
             return null;
         }
 
-        final AbstractMethodVisitor methodVisitor = (AbstractMethodVisitor) super.visitMethod(access, name, desc, signature, exceptions);
+        final GeneralMethodVisitor methodVisitor = (GeneralMethodVisitor) super.visitMethod(access, name, desc, signature, exceptions);
 
         if (name.equals("<init>")) {
-            final AbstractMethod decompiledMethod = methodVisitor.getDecompiledMethod();
+            final Method decompiledMethod = methodVisitor.getDecompiledMethod();
             final KotlinClass kotlinClass = getKotlinClass();
             kotlinClass.setConstructor(decompiledMethod);
             kotlinClass.removeMethod(decompiledMethod);
@@ -75,9 +75,9 @@ public class KotlinClassVisitor extends AbstractClassVisitor {
         final String decompiledClassName = getKotlinClass().getSrcClassName();
         if (myDecompiledClass.getName().equals("KotlinPackage") && decompiledClassName != null) {
             try {
-                AbstractClassVisitor cv = myVisitorFactory.createClassVisitor(myDecompiledClass.getTextWidth(), myDecompiledClass.getNestSize());
+                GeneralClassVisitor cv = myVisitorFactory.createClassVisitor(myDecompiledClass.getTextWidth(), myDecompiledClass.getNestSize());
                 cv.setClassFilesJarPath(myClassFilesJarPath);
-                ClassReader cr = AbstractClassVisitor.getInnerClassClassReader(myClassFilesJarPath, decompiledClassName);
+                ClassReader cr = GeneralClassVisitor.getInnerClassClassReader(myClassFilesJarPath, decompiledClassName);
                 cr.accept(cv, 0);
                 myDecompiledClass = cv.getDecompiledClass();
             } catch (IOException e) {

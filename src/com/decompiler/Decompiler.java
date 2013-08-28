@@ -4,7 +4,7 @@ import com.beust.jcommander.JCommander;
 import com.config.PluginConfigComponent;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.testFramework.LightVirtualFile;
-import com.sdc.languages.general.visitors.AbstractClassVisitor;
+import com.sdc.languages.general.visitors.GeneralClassVisitor;
 import com.sdc.languages.java.visitors.JavaClassVisitor;
 import com.sdc.languages.js.visitors.JSClassVisitor;
 import com.sdc.languages.kotlin.visitors.KotlinClassVisitor;
@@ -108,14 +108,14 @@ public class Decompiler {
             specifiedLanguageClassVisitor = new TraceClassVisitor(new PrintWriter(sw));
         }
 
-        if (specifiedLanguageClassVisitor instanceof AbstractClassVisitor) {
-            ((AbstractClassVisitor) specifiedLanguageClassVisitor).setClassFilesJarPath(classFilesJarPath);
+        if (specifiedLanguageClassVisitor instanceof GeneralClassVisitor) {
+            ((GeneralClassVisitor) specifiedLanguageClassVisitor).setClassFilesJarPath(classFilesJarPath);
         }
 
         try {
             cr.accept(specifiedLanguageClassVisitor, 0);
-            if (specifiedLanguageClassVisitor instanceof AbstractClassVisitor) {
-                return ((AbstractClassVisitor) specifiedLanguageClassVisitor).getDecompiledCode();
+            if (specifiedLanguageClassVisitor instanceof GeneralClassVisitor) {
+                return ((GeneralClassVisitor) specifiedLanguageClassVisitor).getDecompiledCode();
             } else {
                 return sw.toString();
             }

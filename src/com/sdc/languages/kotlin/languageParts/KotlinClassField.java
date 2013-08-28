@@ -1,8 +1,8 @@
 package com.sdc.languages.kotlin.languageParts;
 
-import com.sdc.languages.general.languageParts.AbstractClassField;
+import com.sdc.languages.general.languageParts.ClassField;
 
-public class KotlinClassField extends AbstractClassField {
+public class KotlinClassField extends ClassField {
     private int myAssignmentsCount = 0;
 
     public KotlinClassField(final String modifier, final String type, final String name, final int textWidth, final int nestSize) {

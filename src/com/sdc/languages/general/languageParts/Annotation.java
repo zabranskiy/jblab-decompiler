@@ -3,7 +3,7 @@ package com.sdc.languages.general.languageParts;
 import java.util.HashMap;
 import java.util.Map;
 
-public class AbstractAnnotation {
+public class Annotation {
     protected String myName;
     protected Map<String, Object> myProperties = new HashMap<String, Object>();
 

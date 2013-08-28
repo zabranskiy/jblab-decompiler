@@ -1,10 +1,9 @@
 package com.sdc.languages.general.visitors;
 
 import com.decompiler.Decompiler;
-import com.sdc.languages.general.visitors.AbstractMethodVisitor;
 import org.objectweb.asm.*;
 
-public class MethodVisitorStub extends AbstractMethodVisitor {
+public class MethodVisitorStub extends GeneralMethodVisitor {
     public class DecompilerException {
         private final String myErrorLocation;
         private final Exception myException;
@@ -26,7 +25,7 @@ public class MethodVisitorStub extends AbstractMethodVisitor {
     private boolean myHasDecompilingError = false;
     private DecompilerException myError = null;
 
-    public MethodVisitorStub(final AbstractMethodVisitor mv) {
+    public MethodVisitorStub(final GeneralMethodVisitor mv) {
         super(mv.getDecompiledMethod(), mv.getDecompiledOwnerFullClassName(), mv.getDecompiledOwnerSuperClassName());
         this.mv = mv;
     }
@@ -317,6 +316,6 @@ public class MethodVisitorStub extends AbstractMethodVisitor {
                 processOccurredError("Error occurred while visiting end", e);
             }
         }
-        ((AbstractMethodVisitor) mv).getDecompiledMethod().setError(myError);
+        ((GeneralMethodVisitor) mv).getDecompiledMethod().setError(myError);
     }
 }

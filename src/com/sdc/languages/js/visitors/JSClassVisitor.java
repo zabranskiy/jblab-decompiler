@@ -1,10 +1,10 @@
 package com.sdc.languages.js.visitors;
 
-import com.sdc.languages.general.visitors.AbstractClassVisitor;
+import com.sdc.languages.general.visitors.GeneralClassVisitor;
 import com.sdc.languages.js.languageParts.JSLanguagePartFactory;
 import com.sdc.util.DeclarationWorker;
 
-public class JSClassVisitor extends AbstractClassVisitor {
+public class JSClassVisitor extends GeneralClassVisitor {
     private static final String DEFAULT_EXTENDED_CLASS = "java/lang/Object";
 
     public JSClassVisitor(final int textWidth, final int nestSize) {

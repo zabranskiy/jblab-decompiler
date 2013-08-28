@@ -11,12 +11,12 @@ import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-import static com.sdc.languages.general.languageParts.AbstractClass.ClassType.*;
+import static com.sdc.languages.general.languageParts.GeneralClass.ClassType.*;
 import static org.objectweb.asm.Opcodes.ASM4;
 
-public abstract class AbstractClassVisitor extends ClassVisitor {
-    protected AbstractClass myOuterClass;
-    protected AbstractClass myDecompiledClass;
+public abstract class GeneralClassVisitor extends ClassVisitor {
+    protected GeneralClass myOuterClass;
+    protected GeneralClass myDecompiledClass;
     protected final int myTextWidth;
     protected final int myNestSize;
 
@@ -24,14 +24,14 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
 
     protected String myClassFilesJarPath = "";
 
-    protected AbstractLanguagePartFactory myLanguagePartFactory;
-    protected AbstractVisitorFactory myVisitorFactory;
+    protected LanguagePartFactory myLanguagePartFactory;
+    protected GeneralVisitorFactory myVisitorFactory;
 
     protected DeclarationWorker.SupportedLanguage myLanguage;
 
     protected Set<String> myVisitedClasses = new HashSet<String>();
 
-    public AbstractClassVisitor(final int textWidth, final int nestSize) {
+    public GeneralClassVisitor(final int textWidth, final int nestSize) {
         super(ASM4);
         this.myTextWidth = textWidth;
         this.myNestSize = nestSize;
@@ -47,7 +47,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
         return myDecompiledClass.toString();
     }
 
-    public AbstractClass getDecompiledClass() {
+    public GeneralClass getDecompiledClass() {
         return myDecompiledClass;
     }
 
@@ -63,7 +63,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
         this.myClassFilesJarPath = classFilesJarPath;
     }
 
-    public void setOuterClass(final AbstractClass outerClass) {
+    public void setOuterClass(final GeneralClass outerClass) {
         this.myOuterClass = outerClass;
     }
 
@@ -71,7 +71,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
     public void visit(final int version, final int access, final String name
             , final String signature, final String superName, final String[] interfaces) {
         String modifier = DeclarationWorker.getAccess(access & ~Opcodes.ACC_SUPER, myLanguage);
-        AbstractClass.ClassType type = SIMPLE_CLASS;
+        GeneralClass.ClassType type = SIMPLE_CLASS;
 
         if ((access & Opcodes.ACC_ENUM) == 0
                 && (access & Opcodes.ACC_INTERFACE) == 0
@@ -156,7 +156,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
         final String annotationName = getDescriptor(desc, 0, annotationImports);
 
         if (!checkForAutomaticallyGeneratedAnnotation(annotationName)) {
-            AbstractAnnotation annotation = myLanguagePartFactory.createAnnotation();
+            Annotation annotation = myLanguagePartFactory.createAnnotation();
             annotation.setName(annotationName);
 
             myDecompiledClass.appendAnnotation(annotation);
@@ -179,7 +179,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
 
         if (!myVisitedClasses.contains(innerClassName)) {
             try {
-                AbstractClassVisitor cv = myVisitorFactory.createClassVisitor(myDecompiledClass.getTextWidth(), myDecompiledClass.getNestSize());
+                GeneralClassVisitor cv = myVisitorFactory.createClassVisitor(myDecompiledClass.getTextWidth(), myDecompiledClass.getNestSize());
                 cv.setVisitedClasses(myVisitedClasses);
                 cv.setClassFilesJarPath(myClassFilesJarPath);
                 cv.setOuterClass(myDecompiledClass);
@@ -187,11 +187,11 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
                 ClassReader cr = getInnerClassClassReader(myClassFilesJarPath, name);
                 cr.accept(cv, 0);
 
-                AbstractClass decompiledClass = cv.getDecompiledClass();
+                GeneralClass decompiledClass = cv.getDecompiledClass();
                 decompiledClass.setIsNestedClass(true);
 
                 if (innerName != null) {
-                    AbstractClass outerClass = myDecompiledClass.getOuterClass(outerClassName);
+                    GeneralClass outerClass = myDecompiledClass.getOuterClass(outerClassName);
                     if (outerClass != null) {
                         outerClass.addInnerClass(innerClassName, decompiledClass);
                         if (outerClassName != null) {
@@ -212,7 +212,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
         List<String> fieldDeclarationImports = new ArrayList<String>();
         final String description = signature != null ? signature : desc;
 
-        final AbstractClassField cf = myLanguagePartFactory.createClassField(DeclarationWorker.getAccess(access, myLanguage)
+        final ClassField cf = myLanguagePartFactory.createClassField(DeclarationWorker.getAccess(access, myLanguage)
                 , getDescriptor(description, 0, fieldDeclarationImports)
                 , name, myTextWidth, myNestSize);
 
@@ -256,7 +256,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
             myDecompiledClass.appendImports(methodReturnTypeImports);
         }
 
-        final AbstractMethod abstractMethod = myLanguagePartFactory.createMethod(modifier, returnType, methodName, desc
+        final Method method = myLanguagePartFactory.createMethod(modifier, returnType, methodName, desc
                 , throwedExceptions.toArray(new String[throwedExceptions.size()])
                 , myDecompiledClass, genericTypesList, genericIdentifiersList
                 , myTextWidth, myNestSize);
@@ -267,15 +267,15 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
         final int startIndex = myDecompiledClass.isNormalClass() ? 1 : 0;
 
         if (myDecompiledClass.isNormalClass()) {
-            abstractMethod.addThisVariable(new Type(getDescriptor("L" + myDecompiledClass.getName() + ";", 0, new ArrayList<String>())));
-            abstractMethod.declareThisVariable();
+            method.addThisVariable(new Type(getDescriptor("L" + myDecompiledClass.getName() + ";", 0, new ArrayList<String>())));
+            method.declareThisVariable();
         }
 
-        DeclarationWorker.addInformationAboutParameters(parameters, abstractMethod, startIndex, myLanguage);
+        DeclarationWorker.addInformationAboutParameters(parameters, method, startIndex, myLanguage);
 
-        myDecompiledClass.appendMethod(abstractMethod);
+        myDecompiledClass.appendMethod(method);
 
-        AbstractMethodVisitor methodVisitor = myVisitorFactory.createMethodVisitor(abstractMethod, myDecompiledClass.getFullClassName(), myDecompiledClass.getSuperClass());
+        GeneralMethodVisitor methodVisitor = myVisitorFactory.createMethodVisitor(method, myDecompiledClass.getFullClassName(), myDecompiledClass.getSuperClass());
         methodVisitor.setClassFilesJarPath(myClassFilesJarPath);
 
         return new MethodVisitorStub(methodVisitor);
@@ -283,7 +283,7 @@ public abstract class AbstractClassVisitor extends ClassVisitor {
 
     @Override
     public void visitEnd() {
-        for (final AbstractMethod method : myDecompiledClass.getMethods()) {
+        for (final Method method : myDecompiledClass.getMethods()) {
             myDecompiledClass.appendImports(method.getImports());
         }
     }

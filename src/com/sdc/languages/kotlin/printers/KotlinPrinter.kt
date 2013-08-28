@@ -15,12 +15,12 @@ import com.sdc.ast.expressions.identifiers.Field
 
 import com.sdc.ast.controlflow.Assignment
 
-import com.sdc.languages.general.languageParts.AbstractClass
-import com.sdc.languages.general.languageParts.AbstractMethod
-import com.sdc.languages.general.languageParts.AbstractClassField
+import com.sdc.languages.general.languageParts.GeneralClass
+import com.sdc.languages.general.languageParts.Method
+import com.sdc.languages.general.languageParts.ClassField
 
-import com.sdc.languages.general.printers.AbstractPrinter
-import com.sdc.languages.general.printers.AbstractOperationPrinter
+import com.sdc.languages.general.printers.Printer
+import com.sdc.languages.general.printers.OperationPrinter
 
 import com.sdc.languages.kotlin.languageParts.KotlinClass
 import com.sdc.languages.kotlin.languageParts.KotlinMethod
@@ -32,9 +32,9 @@ import com.sdc.languages.kotlin.astUtils.KotlinNewArray
 import com.sdc.languages.kotlin.printers.KotlinOperationPrinter
 
 
-class KotlinPrinter: AbstractPrinter() {
-    override fun getOperationPrinter(): AbstractOperationPrinter{
-        return KotlinOperationPrinter.getInstance() as AbstractOperationPrinter;
+class KotlinPrinter: Printer() {
+    override fun getOperationPrinter(): OperationPrinter {
+        return KotlinOperationPrinter.getInstance() as OperationPrinter;
     }
     override fun printVariableName(variableName: String?): String? = if (variableName.equals("this$")) "this" else variableName
 
@@ -73,9 +73,9 @@ class KotlinPrinter: AbstractPrinter() {
                 arguments + body
             }
 
-            is AnonymousClass -> text("object : ") + super<AbstractPrinter>.printExpression(expression, nestSize)
+            is AnonymousClass -> text("object : ") + super<Printer>.printExpression(expression, nestSize)
 
-            else -> super<AbstractPrinter>.printExpression(expression, nestSize)
+            else -> super<Printer>.printExpression(expression, nestSize)
         }
 
     override fun printVariable(expression: Variable, nestSize: Int): PrimeDoc =
@@ -119,7 +119,7 @@ class KotlinPrinter: AbstractPrinter() {
             expression is Field && KotlinVariable.isSharedVar(expression.getType()?.toString(KotlinOperationPrinter.getInstance()))
             || expression is KotlinVariable && KotlinVariable.isSharedVar(expression.getActualType()?.toString(KotlinOperationPrinter.getInstance()))
 
-    override fun printAnonymousClassDeclaration(anonymousClass: AbstractClass?, arguments: List<Expression>?): PrimeDoc {
+    override fun printAnonymousClassDeclaration(anonymousClass: GeneralClass?, arguments: List<Expression>?): PrimeDoc {
         var declaration : PrimeDoc = nil()
 
         val hasDefaultSuperClass = anonymousClass!!.getSuperClass()!!.isEmpty()
@@ -140,7 +140,7 @@ class KotlinPrinter: AbstractPrinter() {
         return declaration + text(" {")
     }
 
-    override fun printClass(decompiledClass: AbstractClass): PrimeDoc {
+    override fun printClass(decompiledClass: GeneralClass): PrimeDoc {
         val kotlinClass: KotlinClass = decompiledClass as KotlinClass
 
         var headerCode : PrimeDoc = printPackageAndImports(decompiledClass) + line()
@@ -191,7 +191,7 @@ class KotlinPrinter: AbstractPrinter() {
         }
     }
 
-    override fun printMethod(decompiledMethod: AbstractMethod): PrimeDoc {
+    override fun printMethod(decompiledMethod: Method): PrimeDoc {
         val kotlinMethod: KotlinMethod = decompiledMethod as KotlinMethod
 
         var declaration : PrimeDoc = printAnnotations(kotlinMethod.getAnnotations()!!.toList()) + text(kotlinMethod.getModifier() + "fun ")
@@ -215,7 +215,7 @@ class KotlinPrinter: AbstractPrinter() {
         return declaration + arguments + text(")") + returnTypeCode + text("{") + nestedClasses + body
     }
 
-    override fun printField(decompiledField: AbstractClassField): PrimeDoc {
+    override fun printField(decompiledField: ClassField): PrimeDoc {
         val kotlinClassField: KotlinClassField = decompiledField as KotlinClassField
 
         var fieldCode : PrimeDoc = text(kotlinClassField.getModifier() + (if (kotlinClassField.isMutable()) "var " else "val ") + kotlinClassField.getName() + " : " + kotlinClassField.getType())
@@ -224,7 +224,7 @@ class KotlinPrinter: AbstractPrinter() {
         return fieldCode
     }
 
-    fun printPrimaryConstructorParameters(constructor: AbstractMethod?): PrimeDoc =
+    fun printPrimaryConstructorParameters(constructor: Method?): PrimeDoc =
         text("(") + printMethodParameters(constructor) + text(")")
 
     fun printSuperClassConstructor(superClassConstructor : Expression?, nestSize : Int): PrimeDoc =
@@ -233,7 +233,7 @@ class KotlinPrinter: AbstractPrinter() {
             else
                 text("/* Super class constructor error */")
 
-    fun printInitialConstructor(constructor: AbstractMethod?): PrimeDoc {
+    fun printInitialConstructor(constructor: Method?): PrimeDoc {
         val body = nest(
                 constructor!!.getNestSize(),
                 printConstruction(constructor.getBegin(), constructor.getNestSize())
@@ -241,7 +241,7 @@ class KotlinPrinter: AbstractPrinter() {
         return text("initial constructor {") + body / text("}")
     }
 
-    fun printMethodReturnType(method : AbstractMethod?): PrimeDoc {
+    fun printMethodReturnType(method : Method?): PrimeDoc {
         var returnTypeCode = text(" ")
         val returnType = method!!.getReturnType()
         if (!returnType!!.equals("Unit"))

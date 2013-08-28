@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public abstract class AbstractClass {
+public abstract class GeneralClass {
     public enum ClassType {
         INTERFACE, ANNOTATION, ENUM, SIMPLE_CLASS, ABSTRACT_CLASS
     }
@@ -49,10 +49,10 @@ public abstract class AbstractClass {
     protected final List<String> myGenericTypes;
     protected final List<String> myGenericIdentifiers;
 
-    protected List<AbstractClassField> myFields = new ArrayList<AbstractClassField>();
-    protected List<AbstractMethod> myMethods = new ArrayList<AbstractMethod>();
+    protected List<ClassField> myFields = new ArrayList<ClassField>();
+    protected List<Method> myMethods = new ArrayList<Method>();
 
-    protected List<AbstractAnnotation> myAnnotations = new ArrayList<AbstractAnnotation>();
+    protected List<Annotation> myAnnotations = new ArrayList<Annotation>();
 
     protected List<String> myImports = new ArrayList<String>();
 
@@ -66,21 +66,21 @@ public abstract class AbstractClass {
     protected boolean myIsAbstractClass = false;
     protected boolean myIsAnnotation = false;
 
-    protected Map<String, AbstractClass> myAnonymousClasses = new HashMap<String, AbstractClass>();
-    protected Map<String, AbstractClass> myInnerClasses = new HashMap<String, AbstractClass>();
+    protected Map<String, GeneralClass> myAnonymousClasses = new HashMap<String, GeneralClass>();
+    protected Map<String, GeneralClass> myInnerClasses = new HashMap<String, GeneralClass>();
     protected InnerClassIdentifier myInnerClassIdentifier;
 
-    protected AbstractClass myOuterClass;
+    protected GeneralClass myOuterClass;
 
     protected Map<String, Exception> myInnerClassesErrors = new HashMap<String, Exception>();
 
     protected final int myTextWidth;
     protected final int myNestSize;
 
-    public AbstractClass(final String modifier, final ClassType type, final String name, final String packageName,
-                         final List<String> implementedInterfaces, final String superClass,
-                         final List<String> genericTypes, final List<String> genericIdentifiers,
-                         final int textWidth, final int nestSize) {
+    public GeneralClass(final String modifier, final ClassType type, final String name, final String packageName,
+                        final List<String> implementedInterfaces, final String superClass,
+                        final List<String> genericTypes, final List<String> genericIdentifiers,
+                        final int textWidth, final int nestSize) {
         this.myModifier = modifier;
         this.myType = type;
         this.myName = name;
@@ -136,11 +136,11 @@ public abstract class AbstractClass {
         return mySuperClass;
     }
 
-    public List<AbstractClassField> getFields() {
+    public List<ClassField> getFields() {
         return myFields;
     }
 
-    public List<AbstractMethod> getMethods() {
+    public List<Method> getMethods() {
         return myMethods;
     }
 
@@ -184,7 +184,7 @@ public abstract class AbstractClass {
         return myIsLambdaFunctionClass;
     }
 
-    public AbstractClass getOuterClass(final String name) {
+    public GeneralClass getOuterClass(final String name) {
         if (myName.equals(name) || name == null) {
             return this;
         }
@@ -199,15 +199,15 @@ public abstract class AbstractClass {
         return null;
     }
 
-    public void setOuterClass(final AbstractClass outerClass) {
+    public void setOuterClass(final GeneralClass outerClass) {
         this.myOuterClass = outerClass;
     }
 
-    public void appendField(final AbstractClassField field) {
+    public void appendField(final ClassField field) {
         myFields.add(field);
     }
 
-    public void appendMethod(final AbstractMethod method) {
+    public void appendMethod(final Method method) {
         myMethods.add(method);
     }
 
@@ -225,11 +225,11 @@ public abstract class AbstractClass {
         }
     }
 
-    public void appendAnnotation(final AbstractAnnotation annotation) {
+    public void appendAnnotation(final Annotation annotation) {
         myAnnotations.add(annotation);
     }
 
-    public List<AbstractAnnotation> getAnnotations() {
+    public List<Annotation> getAnnotations() {
         return myAnnotations;
     }
 
@@ -245,8 +245,8 @@ public abstract class AbstractClass {
         getField(fieldName).setInitializer(initializer);
     }
 
-    public AbstractClassField getField(final String fieldName) {
-        for (AbstractClassField field : myFields) {
+    public ClassField getField(final String fieldName) {
+        for (ClassField field : myFields) {
             if (field.getName().equals(fieldName)) {
                 return field;
             }
@@ -255,7 +255,7 @@ public abstract class AbstractClass {
     }
 
     public boolean hasField(final String fieldName) {
-        for (AbstractClassField field : myFields) {
+        for (ClassField field : myFields) {
             if (field.getName().equalsIgnoreCase(fieldName)) {
                 return true;
             }
@@ -280,11 +280,11 @@ public abstract class AbstractClass {
         return result;
     }
 
-    public void addAnonymousClass(final String className, final AbstractClass decompiledClass) {
+    public void addAnonymousClass(final String className, final GeneralClass decompiledClass) {
         myAnonymousClasses.put(className, decompiledClass);
     }
 
-    public void addInnerClass(final String innerClassName, final AbstractClass decompiledClass) {
+    public void addInnerClass(final String innerClassName, final GeneralClass decompiledClass) {
         myInnerClasses.put(innerClassName, decompiledClass);
     }
 
@@ -296,9 +296,9 @@ public abstract class AbstractClass {
         return myInnerClassIdentifier;
     }
 
-    public List<AbstractClass> getMethodInnerClasses(final String methodName, final String descriptor) {
-        List<AbstractClass> result = new ArrayList<AbstractClass>();
-        for (final Map.Entry<String, AbstractClass> innerClass : myInnerClasses.entrySet()) {
+    public List<GeneralClass> getMethodInnerClasses(final String methodName, final String descriptor) {
+        List<GeneralClass> result = new ArrayList<GeneralClass>();
+        for (final Map.Entry<String, GeneralClass> innerClass : myInnerClasses.entrySet()) {
             final String name = innerClass.getValue().getInnerClassIdentifier().getName();
             final String desc = innerClass.getValue().getInnerClassIdentifier().getDescriptor();
 
@@ -309,9 +309,9 @@ public abstract class AbstractClass {
         return result;
     }
 
-    public List<AbstractClass> getClassBodyInnerClasses() {
-        List<AbstractClass> result = new ArrayList<AbstractClass>();
-        for (final Map.Entry<String, AbstractClass> innerClass : myInnerClasses.entrySet()) {
+    public List<GeneralClass> getClassBodyInnerClasses() {
+        List<GeneralClass> result = new ArrayList<GeneralClass>();
+        for (final Map.Entry<String, GeneralClass> innerClass : myInnerClasses.entrySet()) {
             final InnerClassIdentifier innerClassIdentifier = innerClass.getValue().getInnerClassIdentifier();
             if (innerClassIdentifier.getName() == null && innerClassIdentifier.getOwner().equals(myName)) {
                 result.add(innerClass.getValue());
@@ -324,7 +324,7 @@ public abstract class AbstractClass {
         return myAnonymousClasses.containsKey(name);
     }
 
-    public AbstractClass getAnonymousClass(final String name) {
+    public GeneralClass getAnonymousClass(final String name) {
         return myAnonymousClasses.get(name);
     }
 

@@ -1,6 +1,6 @@
 package com.sdc.ast.expressions;
 
-import com.sdc.languages.general.printers.AbstractOperationPrinter;
+import com.sdc.languages.general.printers.OperationPrinter;
 import com.sdc.ast.ExpressionType;
 import com.sdc.ast.Type;
 import com.sdc.ast.controlflow.Increment;
@@ -102,7 +102,7 @@ public class ExprIncrement extends PriorityExpression {
         }
     }
 
-    public String getOperation(AbstractOperationPrinter operationPrinter) {
+    public String getOperation(OperationPrinter operationPrinter) {
         switch (myExpressionType) {
             case INC:
                 return operationPrinter.getIncView();

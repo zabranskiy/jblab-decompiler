@@ -1,10 +1,10 @@
 package com.sdc.languages.kotlin.visitors;
 
-import com.sdc.languages.general.languageParts.AbstractAnnotation;
-import com.sdc.languages.general.visitors.AbstractAnnotationVisitor;
+import com.sdc.languages.general.languageParts.Annotation;
+import com.sdc.languages.general.visitors.GeneralAnnotationVisitor;
 
-public class KotlinAnnotationVisitor extends AbstractAnnotationVisitor {
-    public KotlinAnnotationVisitor(final AbstractAnnotation annotation) {
+public class KotlinAnnotationVisitor extends GeneralAnnotationVisitor {
+    public KotlinAnnotationVisitor(final Annotation annotation) {
         super(annotation);
     }
 }

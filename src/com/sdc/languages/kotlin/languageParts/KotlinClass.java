@@ -1,19 +1,19 @@
 package com.sdc.languages.kotlin.languageParts;
 
 import KotlinPrinters.KotlinPrinter;
+import com.sdc.languages.general.languageParts.Method;
 import pretty.PrettyPackage;
 
-import com.sdc.languages.general.languageParts.AbstractClass;
-import com.sdc.languages.general.languageParts.AbstractMethod;
+import com.sdc.languages.general.languageParts.GeneralClass;
 import com.sdc.ast.expressions.Expression;
 
 import java.util.Arrays;
 import java.util.List;
 
-public class KotlinClass extends AbstractClass {
+public class KotlinClass extends GeneralClass {
     public final static String INHERITANCE_IDENTIFIER = ":";
 
-    private AbstractMethod myConstructor;
+    private Method myConstructor;
     private Expression mySuperClassConstructor;
     private String mySrcClassName;
 
@@ -26,7 +26,7 @@ public class KotlinClass extends AbstractClass {
         this.myDefaultPackages = Arrays.asList(myPackage, "java.lang", "jet", "jet.runtime");
     }
 
-    public void setConstructor(final AbstractMethod constructor) {
+    public void setConstructor(final Method constructor) {
         this.myConstructor = constructor;
     }
 
@@ -34,7 +34,7 @@ public class KotlinClass extends AbstractClass {
         this.mySuperClassConstructor = superClassConstructor;
     }
 
-    public AbstractMethod getConstructor() {
+    public Method getConstructor() {
         return myConstructor;
     }
 
@@ -46,8 +46,8 @@ public class KotlinClass extends AbstractClass {
         return INHERITANCE_IDENTIFIER;
     }
 
-    public void removeMethod(final AbstractMethod abstractMethod) {
-        myMethods.remove(abstractMethod);
+    public void removeMethod(final Method method) {
+        myMethods.remove(method);
     }
 
     public void setSrcClassName(final String srcClassName) {

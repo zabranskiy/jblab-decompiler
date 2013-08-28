@@ -1,6 +1,6 @@
 package com.sdc.ast.expressions;
 
-import com.sdc.languages.general.printers.AbstractOperationPrinter;
+import com.sdc.languages.general.printers.OperationPrinter;
 import com.sdc.ast.ExpressionType;
 import com.sdc.ast.Type;
 
@@ -14,7 +14,7 @@ public abstract class PriorityExpression extends Expression {
         myExpressionType = expressionType;
     }
 
-    public int getPriority(AbstractOperationPrinter operationPrinter) {
+    public int getPriority(OperationPrinter operationPrinter) {
         return operationPrinter.getPriority(myExpressionType);
     }
 

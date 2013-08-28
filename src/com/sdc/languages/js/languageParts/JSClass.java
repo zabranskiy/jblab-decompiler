@@ -3,12 +3,12 @@ package com.sdc.languages.js.languageParts;
 import JSPrinters.JSPrinter;
 import pretty.PrettyPackage;
 
-import com.sdc.languages.general.languageParts.AbstractClass;
+import com.sdc.languages.general.languageParts.GeneralClass;
 
 import java.util.Arrays;
 import java.util.List;
 
-public class JSClass extends AbstractClass {
+public class JSClass extends GeneralClass {
     public final static String INHERITANCE_IDENTIFIER = "extends";
 
     public JSClass(final String modifier, final ClassType type, final String name, final String packageName,

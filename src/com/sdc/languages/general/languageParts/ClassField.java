@@ -2,7 +2,7 @@ package com.sdc.languages.general.languageParts;
 
 import com.sdc.ast.expressions.Expression;
 
-public abstract class AbstractClassField {
+public abstract class ClassField {
     protected final String myModifier;
     protected final String myType;
     protected final String myName;
@@ -12,7 +12,7 @@ public abstract class AbstractClassField {
     protected final int myTextWidth;
     protected final int myNestSize;
 
-    public AbstractClassField(final String modifier, final String type, final String name, final int textWidth, final int nestSize) {
+    public ClassField(final String modifier, final String type, final String name, final int textWidth, final int nestSize) {
         this.myModifier = modifier;
         this.myType = type;
         this.myName = name;

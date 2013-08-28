@@ -3,12 +3,12 @@ package com.sdc.languages.java.languageParts;
 import JavaPrinters.JavaPrinter;
 import pretty.PrettyPackage;
 
-import com.sdc.languages.general.languageParts.AbstractClass;
+import com.sdc.languages.general.languageParts.GeneralClass;
 
 import java.util.Arrays;
 import java.util.List;
 
-public class JavaClass extends AbstractClass {
+public class JavaClass extends GeneralClass {
     public final static String INHERITANCE_IDENTIFIER = "extends";
 
     public JavaClass(final String modifier, final ClassType type, final String name, final String packageName,

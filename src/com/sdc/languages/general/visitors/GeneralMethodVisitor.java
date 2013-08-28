@@ -13,10 +13,10 @@ import com.sdc.ast.expressions.identifiers.Variable;
 import com.sdc.cfg.nodes.DoWhile;
 import com.sdc.cfg.nodes.Node;
 import com.sdc.cfg.nodes.Switch;
-import com.sdc.languages.general.astUtils.AbstractFrame;
-import com.sdc.languages.general.languageParts.AbstractAnnotation;
-import com.sdc.languages.general.languageParts.AbstractLanguagePartFactory;
-import com.sdc.languages.general.languageParts.AbstractMethod;
+import com.sdc.languages.general.astUtils.Frame;
+import com.sdc.languages.general.languageParts.Annotation;
+import com.sdc.languages.general.languageParts.LanguagePartFactory;
+import com.sdc.languages.general.languageParts.Method;
 import com.sdc.languages.general.ConstructionBuilder;
 import com.sdc.util.DeclarationWorker;
 import com.sdc.util.DominatorTreeGenerator;
@@ -29,8 +29,8 @@ import static com.sdc.ast.ExpressionType.*;
 import static com.sdc.ast.expressions.IntConstant.*;
 import static org.objectweb.asm.Opcodes.ASM4;
 
-public abstract class AbstractMethodVisitor extends MethodVisitor {
-    protected AbstractMethod myDecompiledMethod;
+public abstract class GeneralMethodVisitor extends MethodVisitor {
+    protected Method myDecompiledMethod;
 
     protected final String myDecompiledOwnerFullClassName;
     protected final String myDecompiledOwnerSuperClassName;
@@ -48,25 +48,25 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
     protected String myClassFilesJarPath = "";
 
-    protected AbstractLanguagePartFactory myLanguagePartFactory;
-    protected AbstractVisitorFactory myVisitorFactory;
+    protected LanguagePartFactory myLanguagePartFactory;
+    protected GeneralVisitorFactory myVisitorFactory;
 
     protected DeclarationWorker.SupportedLanguage myLanguage;
 
-    public AbstractMethodVisitor(final AbstractMethod abstractMethod, final String decompiledOwnerFullClassName, final String decompiledOwnerSuperClassName) {
+    public GeneralMethodVisitor(final Method method, final String decompiledOwnerFullClassName, final String decompiledOwnerSuperClassName) {
         super(ASM4);
-        this.myDecompiledMethod = abstractMethod;
+        this.myDecompiledMethod = method;
         this.myDecompiledOwnerFullClassName = decompiledOwnerFullClassName;
         this.myDecompiledOwnerSuperClassName = decompiledOwnerSuperClassName;
     }
 
     protected abstract boolean checkForAutomaticallyGeneratedAnnotation(final String annotationName);
 
-    protected AbstractFrame getCurrentFrame() {
+    protected Frame getCurrentFrame() {
         return myDecompiledMethod.getCurrentFrame();
     }
 
-    public AbstractMethod getDecompiledMethod() {
+    public Method getDecompiledMethod() {
         return myDecompiledMethod;
     }
 
@@ -86,7 +86,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         List<String> annotationsImports = new ArrayList<String>();
         final String annotationName = getDescriptor(desc, 0, annotationsImports);
         if (!checkForAutomaticallyGeneratedAnnotation(annotationName)) {
-            AbstractAnnotation annotation = myLanguagePartFactory.createAnnotation();
+            Annotation annotation = myLanguagePartFactory.createAnnotation();
             annotation.setName(annotationName);
             if (parameter == -1) {
                 myDecompiledMethod.appendAnnotation(annotation);
@@ -125,9 +125,9 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
     @Override
     public void visitFrame(final int type, final int nLocal, final Object[] local, final int nStack, final Object[] stack) {
-        AbstractFrame currentFrame = getCurrentFrame();
+        Frame currentFrame = getCurrentFrame();
 
-        AbstractFrame newFrame = null;
+        Frame newFrame = null;
 
         if (type == 0) {
             // F_FULL
@@ -416,7 +416,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
     public void visitVarInsn(final int opcode, final int var) {
         final String opString = Printer.OPCODES[opcode];
 
-        final AbstractFrame currentFrame = getCurrentFrame();
+        final Frame currentFrame = getCurrentFrame();
         final boolean currentFrameHasStack = currentFrame.checkStack() && myBodyStack.isEmpty();
 
         Type variableType = null;

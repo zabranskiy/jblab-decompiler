@@ -1,11 +1,11 @@
 package com.sdc.languages.js.printers;
 
-import com.sdc.languages.general.printers.AbstractOperationPrinter;
+import com.sdc.languages.general.printers.OperationPrinter;
 
-public class JSOperationPrinter extends AbstractOperationPrinter {
-    protected static AbstractOperationPrinter ourInstance = new JSOperationPrinter();
+public class JSOperationPrinter extends OperationPrinter {
+    protected static OperationPrinter ourInstance = new JSOperationPrinter();
 
-    public static AbstractOperationPrinter getInstance(){
+    public static OperationPrinter getInstance(){
         return ourInstance;
     }
 }

@@ -4,9 +4,9 @@ import com.sdc.languages.general.languageParts.*;
 
 import java.util.List;
 
-public class KotlinLanguagePartFactory extends AbstractLanguagePartFactory {
+public class KotlinLanguagePartFactory extends LanguagePartFactory {
     @Override
-    public AbstractClass createClass(final String modifier, final AbstractClass.ClassType type, final String name, final String packageName,
+    public GeneralClass createClass(final String modifier, final GeneralClass.ClassType type, final String name, final String packageName,
                                      final List<String> implementedInterfaces, final String superClass,
                                      final List<String> genericTypes, final List<String> genericIdentifiers,
                                      final int textWidth, final int nestSize)
@@ -15,20 +15,20 @@ public class KotlinLanguagePartFactory extends AbstractLanguagePartFactory {
     }
 
     @Override
-    public AbstractMethod createMethod(final String modifier, final String returnType, final String name, final String signature, final String[] exceptions,
-                                       final AbstractClass abstractClass, final List<String> genericTypes, final List<String> genericIdentifiers,
+    public Method createMethod(final String modifier, final String returnType, final String name, final String signature, final String[] exceptions,
+                                       final GeneralClass generalClass, final List<String> genericTypes, final List<String> genericIdentifiers,
                                        final int textWidth, final int nestSize)
     {
-        return new KotlinMethod(modifier, returnType, name, signature, exceptions, abstractClass, genericTypes, genericIdentifiers, textWidth, nestSize);
+        return new KotlinMethod(modifier, returnType, name, signature, exceptions, generalClass, genericTypes, genericIdentifiers, textWidth, nestSize);
     }
 
     @Override
-    public AbstractAnnotation createAnnotation() {
+    public Annotation createAnnotation() {
         return new KotlinAnnotation();
     }
 
     @Override
-    public AbstractClassField createClassField(final String modifier, final String type,
+    public ClassField createClassField(final String modifier, final String type,
                                                final String name, final int textWidth, final int nestSize)
     {
         return new KotlinClassField(modifier, type, name, textWidth, nestSize);

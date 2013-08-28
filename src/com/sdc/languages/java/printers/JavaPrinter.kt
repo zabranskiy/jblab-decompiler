@@ -2,13 +2,13 @@ package JavaPrinters
 
 import pretty.*
 
-import com.sdc.languages.general.printers.AbstractPrinter
-import com.sdc.languages.general.printers.AbstractOperationPrinter
+import com.sdc.languages.general.printers.Printer
+import com.sdc.languages.general.printers.OperationPrinter
 
-import com.sdc.languages.general.languageParts.AbstractClass
-import com.sdc.languages.general.languageParts.AbstractClass.ClassType.*
-import com.sdc.languages.general.languageParts.AbstractMethod
-import com.sdc.languages.general.languageParts.AbstractClassField
+import com.sdc.languages.general.languageParts.GeneralClass
+import com.sdc.languages.general.languageParts.GeneralClass.ClassType.*
+import com.sdc.languages.general.languageParts.Method
+import com.sdc.languages.general.languageParts.ClassField
 
 import com.sdc.languages.java.printers.JavaOperationPrinter
 
@@ -19,16 +19,16 @@ import com.sdc.languages.java.languageParts.JavaClassField
 import com.sdc.ast.expressions.identifiers.Variable
 
 
-class JavaPrinter: AbstractPrinter() {
-    override fun getOperationPrinter():AbstractOperationPrinter{
-       return JavaOperationPrinter.getInstance() as AbstractOperationPrinter;
+class JavaPrinter: Printer() {
+    override fun getOperationPrinter(): OperationPrinter {
+       return JavaOperationPrinter.getInstance() as OperationPrinter;
     }
 
     override fun printAnnotationIdentifier(): PrimeDoc = text("@")
 
     override fun printBaseClass(): PrimeDoc = text("Object")
 
-    override fun printClass(decompiledClass: AbstractClass): PrimeDoc =
+    override fun printClass(decompiledClass: GeneralClass): PrimeDoc =
         when(decompiledClass.getType()){
             SIMPLE_CLASS -> printSimpleClass(decompiledClass)
             INTERFACE -> printSimpleClass(decompiledClass)
@@ -37,7 +37,7 @@ class JavaPrinter: AbstractPrinter() {
             else -> printSimpleClass(decompiledClass)
         }
 
-    fun printSimpleClass(decompiledClass: AbstractClass): PrimeDoc {
+    fun printSimpleClass(decompiledClass: GeneralClass): PrimeDoc {
         val javaClass: JavaClass = decompiledClass as JavaClass
 
         var headerCode : PrimeDoc = printPackageAndImports(decompiledClass)
@@ -76,7 +76,7 @@ class JavaPrinter: AbstractPrinter() {
         return javaClassCode / text("}")
     }
 
-    fun printEnum(decompiledClass: AbstractClass): PrimeDoc {
+    fun printEnum(decompiledClass: GeneralClass): PrimeDoc {
         val javaClass: JavaClass = decompiledClass as JavaClass
 
         var declaration : PrimeDoc = group(printAnnotations(javaClass.getAnnotations()!!.toList()) + text( javaClass.getModifier()+  javaClass.getTypeToString() + javaClass.getName()))
@@ -90,7 +90,7 @@ class JavaPrinter: AbstractPrinter() {
         return group( declaration + text(" {") + nest(nestSize, line() + argumentsCode) + text(fieldList.get(lastIndex-1).getName())) / text("}")
     }
 
-    override fun printMethod(decompiledMethod: AbstractMethod): PrimeDoc {
+    override fun printMethod(decompiledMethod: Method): PrimeDoc {
         if (decompiledMethod.getName().equals(decompiledMethod.getDecompiledClass()?.getName())
             && decompiledMethod.getParameters()?.isEmpty() as Boolean && decompiledMethod.hasEmptyBody())
         {
@@ -132,7 +132,7 @@ class JavaPrinter: AbstractPrinter() {
                    ) / text("}")
         return  declaration +
             if(decompiledMethod.getModifier()?.contains("abstract") as Boolean ||
-                decompiledMethod.getDecompiledClass()?.getType() == AbstractClass.ClassType.INTERFACE)
+                decompiledMethod.getDecompiledClass()?.getType() == GeneralClass.ClassType.INTERFACE)
             {
                  text(";")
             } else {
@@ -140,7 +140,7 @@ class JavaPrinter: AbstractPrinter() {
             }
     }
 
-    override fun printField(decompiledField: AbstractClassField): PrimeDoc {
+    override fun printField(decompiledField: ClassField): PrimeDoc {
         val classField: JavaClassField = decompiledField as JavaClassField
 
         var fieldCode : PrimeDoc = text(classField.getModifier() + classField.getType() + classField.getName())

@@ -1,24 +1,24 @@
 package com.sdc.languages.kotlin.languageParts;
 
 import KotlinPrinters.KotlinPrinter;
-import com.sdc.languages.general.astUtils.AbstractFrame;
+import com.sdc.languages.general.astUtils.Frame;
+import com.sdc.languages.general.languageParts.Method;
 import com.sdc.languages.kotlin.astUtils.KotlinFrame;
 import pretty.PrettyPackage;
 
-import com.sdc.languages.general.languageParts.AbstractClass;
-import com.sdc.languages.general.languageParts.AbstractMethod;
+import com.sdc.languages.general.languageParts.GeneralClass;
 
 import java.util.List;
 
-public class KotlinMethod extends AbstractMethod {
+public class KotlinMethod extends Method {
     private boolean hasReceiverParameter = false;
 
     public KotlinMethod(final String modifier, final String returnType, final String name, final String signature, final String[] exceptions,
-                      final AbstractClass abstractClass,
+                      final GeneralClass generalClass,
                       final List<String> genericTypes, final List<String> genericIdentifiers,
                       final int textWidth, final int nestSize)
     {
-        super(modifier, returnType, name, signature, exceptions, abstractClass, genericTypes, genericIdentifiers, textWidth, nestSize);
+        super(modifier, returnType, name, signature, exceptions, generalClass, genericTypes, genericIdentifiers, textWidth, nestSize);
     }
 
     @Override
@@ -32,7 +32,7 @@ public class KotlinMethod extends AbstractMethod {
     }
 
     @Override
-    public AbstractFrame createFrame() {
+    public Frame createFrame() {
         return new KotlinFrame();
     }
 
@@ -43,7 +43,7 @@ public class KotlinMethod extends AbstractMethod {
     }
 
     public boolean isNormalClassMethod() {
-        return myAbstractClass.isNormalClass();
+        return myGeneralClass.isNormalClass();
     }
 
     @Override

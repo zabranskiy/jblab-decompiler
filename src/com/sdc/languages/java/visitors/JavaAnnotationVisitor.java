@@ -1,10 +1,10 @@
 package com.sdc.languages.java.visitors;
 
-import com.sdc.languages.general.languageParts.AbstractAnnotation;
-import com.sdc.languages.general.visitors.AbstractAnnotationVisitor;
+import com.sdc.languages.general.languageParts.Annotation;
+import com.sdc.languages.general.visitors.GeneralAnnotationVisitor;
 
-public class JavaAnnotationVisitor extends AbstractAnnotationVisitor {
-    public JavaAnnotationVisitor(final AbstractAnnotation javaAnnotation) {
+public class JavaAnnotationVisitor extends GeneralAnnotationVisitor {
+    public JavaAnnotationVisitor(final Annotation javaAnnotation) {
         super(javaAnnotation);
     }
 }

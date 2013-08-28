@@ -2,12 +2,12 @@ package JSPrinters
 
 import pretty.*
 
-import com.sdc.languages.general.printers.AbstractPrinter
-import com.sdc.languages.general.printers.AbstractOperationPrinter
+import com.sdc.languages.general.printers.Printer
+import com.sdc.languages.general.printers.OperationPrinter
 
-import com.sdc.languages.general.languageParts.AbstractClass
-import com.sdc.languages.general.languageParts.AbstractMethod
-import com.sdc.languages.general.languageParts.AbstractClassField
+import com.sdc.languages.general.languageParts.GeneralClass
+import com.sdc.languages.general.languageParts.Method
+import com.sdc.languages.general.languageParts.ClassField
 
 import com.sdc.languages.js.printers.JSOperationPrinter
 
@@ -18,9 +18,9 @@ import com.sdc.languages.js.languageParts.JSMethod
 import com.sdc.ast.expressions.identifiers.Variable
 
 
-class JSPrinter : AbstractPrinter() {
-    override fun getOperationPrinter():AbstractOperationPrinter{
-        return JSOperationPrinter.getInstance() as AbstractOperationPrinter;
+class JSPrinter : Printer() {
+    override fun getOperationPrinter(): OperationPrinter {
+        return JSOperationPrinter.getInstance() as OperationPrinter;
     }
     override fun printAnnotationIdentifier(): PrimeDoc = text("")
 
@@ -29,7 +29,7 @@ class JSPrinter : AbstractPrinter() {
     override fun printUndeclaredVariable(expression: Variable, nestSize: Int): PrimeDoc =
         printExpression(expression.getName(), nestSize)
 
-    override fun printClass(decompiledClass: AbstractClass): PrimeDoc {
+    override fun printClass(decompiledClass: GeneralClass): PrimeDoc {
         val javaClass: JSClass = decompiledClass as JSClass
 
         val superClass = javaClass.getSuperClass()
@@ -45,7 +45,7 @@ class JSPrinter : AbstractPrinter() {
         return group(javaClassCode / text("}"))
     }
 
-    override fun printMethod(decompiledMethod: AbstractMethod): PrimeDoc {
+    override fun printMethod(decompiledMethod: Method): PrimeDoc {
         val classMethod: JSMethod = decompiledMethod as JSMethod
 
         var declaration = group(text(""))
@@ -72,7 +72,7 @@ class JSPrinter : AbstractPrinter() {
         return group(declaration + arguments + text(")") + throwsExceptions / text("{")) + body
     }
 
-    override fun printField(decompiledField: AbstractClassField): PrimeDoc {
+    override fun printField(decompiledField: ClassField): PrimeDoc {
         val classField: JSClassField = decompiledField as JSClassField
         return text(classField.getModifier() + classField.getType() + classField.getName() + ";")
     }

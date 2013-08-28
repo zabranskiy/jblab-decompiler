@@ -1,14 +1,14 @@
 package com.sdc.languages.general.visitors;
 
-import com.sdc.languages.general.languageParts.AbstractAnnotation;
+import com.sdc.languages.general.languageParts.Annotation;
 import org.objectweb.asm.AnnotationVisitor;
 
 import static org.objectweb.asm.Opcodes.ASM4;
 
-public class AbstractAnnotationVisitor extends AnnotationVisitor {
-    protected AbstractAnnotation myAnnotation;
+public class GeneralAnnotationVisitor extends AnnotationVisitor {
+    protected Annotation myAnnotation;
 
-    public AbstractAnnotationVisitor(final AbstractAnnotation annotation) {
+    public GeneralAnnotationVisitor(final Annotation annotation) {
         super(ASM4);
         this.myAnnotation = annotation;
     }

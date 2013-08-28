@@ -1,9 +1,9 @@
 package com.sdc.languages.kotlin.visitors;
 
-import com.sdc.languages.general.languageParts.AbstractClass;
-import com.sdc.languages.general.visitors.AbstractClassVisitor;
-import com.sdc.languages.general.languageParts.AbstractMethod;
-import com.sdc.languages.general.visitors.AbstractMethodVisitor;
+import com.sdc.languages.general.languageParts.GeneralClass;
+import com.sdc.languages.general.languageParts.Method;
+import com.sdc.languages.general.visitors.GeneralClassVisitor;
+import com.sdc.languages.general.visitors.GeneralMethodVisitor;
 import com.sdc.ast.Type;
 import com.sdc.ast.controlflow.Assignment;
 import com.sdc.ast.controlflow.Statement;
@@ -30,9 +30,9 @@ import org.objectweb.asm.util.Printer;
 import java.io.IOException;
 import java.util.List;
 
-public class KotlinMethodVisitor extends AbstractMethodVisitor {
-    public KotlinMethodVisitor(final AbstractMethod abstractMethod, final String decompiledOwnerFullClassName, final String decompiledOwnerSuperClassName) {
-        super(abstractMethod, decompiledOwnerFullClassName, decompiledOwnerSuperClassName);
+public class KotlinMethodVisitor extends GeneralMethodVisitor {
+    public KotlinMethodVisitor(final Method method, final String decompiledOwnerFullClassName, final String decompiledOwnerSuperClassName) {
+        super(method, decompiledOwnerFullClassName, decompiledOwnerSuperClassName);
 
         this.myLanguagePartFactory = new KotlinLanguagePartFactory();
         this.myVisitorFactory = new KotlinVisitorFactory();
@@ -203,12 +203,12 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
                 && (decompiledOwnerName.contains(myDecompiledMethod.getName()) || myDecompiledMethod.getName().equals("invoke")))
         {
             try {
-                AbstractClassVisitor cv = myVisitorFactory.createClassVisitor(myDecompiledMethod.getTextWidth(), myDecompiledMethod.getNestSize());
+                GeneralClassVisitor cv = myVisitorFactory.createClassVisitor(myDecompiledMethod.getTextWidth(), myDecompiledMethod.getNestSize());
                 cv.setIsLambdaFunction(true);
                 cv.setClassFilesJarPath(myClassFilesJarPath);
-                ClassReader cr = AbstractClassVisitor.getInnerClassClassReader(myClassFilesJarPath, owner);
+                ClassReader cr = GeneralClassVisitor.getInnerClassClassReader(myClassFilesJarPath, owner);
                 cr.accept(cv, 0);
-                final AbstractClass decompiledClass = cv.getDecompiledClass();
+                final GeneralClass decompiledClass = cv.getDecompiledClass();
                 final LambdaFunction lf = new LambdaFunction(decompiledClass, decompiledClass.getSuperClass().replace("Impl", ""));
                 if (lf.isKotlinLambda()) {
                     return lf;

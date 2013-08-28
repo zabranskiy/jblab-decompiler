@@ -8,7 +8,7 @@ import com.sdc.ast.expressions.Expression;
 import com.sdc.ast.expressions.identifiers.Variable;
 import com.sdc.cfg.constructions.Construction;
 import com.sdc.cfg.constructions.ElementaryBlock;
-import com.sdc.languages.general.astUtils.AbstractFrame;
+import com.sdc.languages.general.astUtils.Frame;
 import com.sdc.languages.general.visitors.MethodVisitorStub;
 import org.objectweb.asm.Label;
 
@@ -17,7 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public abstract class AbstractMethod {
+public abstract class Method {
     protected final String myModifier;
     protected final String myReturnType;
     protected String myName;
@@ -26,15 +26,15 @@ public abstract class AbstractMethod {
 
     protected List<String> myImports = new ArrayList<String>();
 
-    protected final AbstractClass myAbstractClass;
+    protected final GeneralClass myGeneralClass;
     protected final List<String> myGenericTypes;
     protected final List<String> myGenericIdentifiers;
 
-    protected List<AbstractAnnotation> myAnnotations = new ArrayList<AbstractAnnotation>();
-    protected Map<Integer, List<AbstractAnnotation>> myParameterAnnotations = new HashMap<Integer, List<AbstractAnnotation>>();
+    protected List<Annotation> myAnnotations = new ArrayList<Annotation>();
+    protected Map<Integer, List<Annotation>> myParameterAnnotations = new HashMap<Integer, List<Annotation>>();
     protected Map<String, Integer> myTypeNameIndices = new HashMap<String, Integer>();
 
-    protected List<AbstractFrame> myFrames = new ArrayList<AbstractFrame>();
+    protected List<Frame> myFrames = new ArrayList<Frame>();
 
     protected int myLastLocalVariableIndex;
 
@@ -45,15 +45,15 @@ public abstract class AbstractMethod {
     protected final int myTextWidth;
     protected final int myNestSize;
 
-    public AbstractMethod(final String modifier, final String returnType, final String name, final String signature, final String[] exceptions,
-                          final AbstractClass abstractClass, final List<String> genericTypes, final List<String> genericIdentifiers,
-                          final int textWidth, final int nestSize) {
+    public Method(final String modifier, final String returnType, final String name, final String signature, final String[] exceptions,
+                  final GeneralClass generalClass, final List<String> genericTypes, final List<String> genericIdentifiers,
+                  final int textWidth, final int nestSize) {
         this.myModifier = modifier;
         this.myReturnType = returnType;
         this.myName = name;
         this.mySignature = signature;
         this.myExceptions = exceptions;
-        this.myAbstractClass = abstractClass;
+        this.myGeneralClass = generalClass;
         this.myGenericTypes = genericTypes;
         this.myGenericIdentifiers = genericIdentifiers;
         this.myTextWidth = textWidth;
@@ -66,7 +66,7 @@ public abstract class AbstractMethod {
 
     protected abstract int getParametersStartIndex();
 
-    public abstract AbstractFrame createFrame();
+    public abstract Frame createFrame();
 
     public String getModifier() {
         return myModifier;
@@ -120,33 +120,33 @@ public abstract class AbstractMethod {
         this.myLastLocalVariableIndex = lastLocalVariableIndex;
     }
 
-    public AbstractClass getDecompiledClass() {
-        return myAbstractClass;
+    public GeneralClass getDecompiledClass() {
+        return myGeneralClass;
     }
 
     public boolean isNormalClassMethod() {
-        return myAbstractClass.isNormalClass();
+        return myGeneralClass.isNormalClass();
     }
 
     public void addImport(final String importClassName) {
         myImports.add(importClassName);
     }
 
-    public AbstractFrame getCurrentFrame() {
+    public Frame getCurrentFrame() {
         if (!myFrames.isEmpty()) {
             return myFrames.get(myFrames.size() - 1);
         }
         return null;
     }
 
-    public AbstractFrame getRootFrame() {
+    public Frame getRootFrame() {
         if (!myFrames.isEmpty()) {
             return myFrames.get(0);
         }
         return null;
     }
 
-    public void addNewFrame(final AbstractFrame frame) {
+    public void addNewFrame(final Frame frame) {
         myFrames.add(frame);
     }
 
@@ -161,7 +161,7 @@ public abstract class AbstractMethod {
     public void updateVariableInformationFromDebugInfo(final int index, final Type type, final Constant name, final Label start, final Label end) {
         boolean started = false;
 
-        for (final AbstractFrame frame : myFrames) {
+        for (final Frame frame : myFrames) {
             if (started || frame.hasLabel(start)) {
                 if (!started) {
                     frame.getVariable(index).cutParent();
@@ -177,7 +177,7 @@ public abstract class AbstractMethod {
     }
 
     public void updateVariableNameFromDebugInfo(final int index, final Constant name, final Label start, final Label end) {
-        for (final AbstractFrame frame : myFrames) {
+        for (final Frame frame : myFrames) {
             if (frame.hasLabel(start)) {
                 Variable variable = frame.getVariable(index);
                 updateVariableInformationFromDebugInfo(index, variable.getType(), name, start, end);
@@ -194,12 +194,12 @@ public abstract class AbstractMethod {
     }
 
     public boolean isGenericType(final String className) {
-        return myGenericTypes.contains(className) || myAbstractClass.isGenericType(className);
+        return myGenericTypes.contains(className) || myGeneralClass.isGenericType(className);
     }
 
     public String getGenericIdentifier(final String className) {
         if (!myGenericTypes.contains(className)) {
-            return myAbstractClass.getGenericIdentifier(className);
+            return myGeneralClass.getGenericIdentifier(className);
         } else {
             return myGenericIdentifiers.get(myGenericTypes.indexOf(className));
         }
@@ -218,17 +218,17 @@ public abstract class AbstractMethod {
         return result;
     }
 
-    public void appendAnnotation(final AbstractAnnotation annotation) {
+    public void appendAnnotation(final Annotation annotation) {
         myAnnotations.add(annotation);
     }
 
-    public List<AbstractAnnotation> getAnnotations() {
+    public List<Annotation> getAnnotations() {
         return myAnnotations;
     }
 
-    public void appendParameterAnnotation(final int index, final AbstractAnnotation annotation) {
+    public void appendParameterAnnotation(final int index, final Annotation annotation) {
         if (!myParameterAnnotations.containsKey(index)) {
-            myParameterAnnotations.put(index, new ArrayList<AbstractAnnotation>());
+            myParameterAnnotations.put(index, new ArrayList<Annotation>());
         }
         myParameterAnnotations.get(index).add(annotation);
     }
@@ -237,16 +237,16 @@ public abstract class AbstractMethod {
         return myParameterAnnotations.containsKey(index);
     }
 
-    public List<AbstractAnnotation> getParameterAnnotations(final int index) {
+    public List<Annotation> getParameterAnnotations(final int index) {
         return myParameterAnnotations.get(index);
     }
 
     public void addInitializerToField(final String fieldName, final Expression initializer) {
-        myAbstractClass.addInitializerToField(fieldName, initializer);
+        myGeneralClass.addInitializerToField(fieldName, initializer);
     }
 
     public boolean hasFieldInitializer(final String fieldName) {
-        return myAbstractClass.hasFieldInitializer(fieldName);
+        return myGeneralClass.hasFieldInitializer(fieldName);
     }
 
     public void setBegin(Construction myBegin) {

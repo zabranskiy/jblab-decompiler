@@ -1,12 +1,12 @@
 package com.sdc.languages.kotlin.astUtils;
 
-import com.sdc.languages.general.astUtils.AbstractFrame;
+import com.sdc.languages.general.astUtils.Frame;
 import com.sdc.ast.Type;
 import com.sdc.ast.expressions.identifiers.Variable;
 
-public class KotlinFrame extends AbstractFrame {
+public class KotlinFrame extends Frame {
     @Override
-    protected AbstractFrame createFrame() {
+    protected Frame createFrame() {
         return new KotlinFrame();
     }
 

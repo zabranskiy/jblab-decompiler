@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public abstract class AbstractFrame {
+public abstract class Frame {
     protected boolean myStackChecked = false;
     protected boolean myHasStack = false;
     protected String myStackedVariableType;
@@ -24,7 +24,7 @@ public abstract class AbstractFrame {
 
     protected int myLastCommonVariableIndexInList = -1;
 
-    protected abstract AbstractFrame createFrame();
+    protected abstract Frame createFrame();
 
     public boolean isMyStackChecked() {
         return myStackChecked;
@@ -137,8 +137,8 @@ public abstract class AbstractFrame {
         return myVariables.size();
     }
 
-    public AbstractFrame createNextFrameWithAbsoluteBound(final int rightBound) {
-        AbstractFrame newFrame = createFrame();
+    public Frame createNextFrameWithAbsoluteBound(final int rightBound) {
+        Frame newFrame = createFrame();
 
         newFrame.setVariables(getVariablesSubList(rightBound));
         newFrame.setLastCommonVariableIndexInList(rightBound - 1);
@@ -147,7 +147,7 @@ public abstract class AbstractFrame {
         return newFrame;
     }
 
-    public AbstractFrame createNextFrameWithRelativeBound(final int count) {
+    public Frame createNextFrameWithRelativeBound(final int count) {
         return createNextFrameWithAbsoluteBound(myLastCommonVariableIndexInList + count + 1);
     }
 

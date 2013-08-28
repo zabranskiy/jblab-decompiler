@@ -1,19 +1,19 @@
 package com.sdc.ast.expressions.nestedclasses;
 
-import com.sdc.languages.general.languageParts.AbstractClass;
+import com.sdc.languages.general.languageParts.GeneralClass;
 import com.sdc.ast.Type;
 import com.sdc.ast.expressions.Expression;
 import com.sdc.ast.expressions.identifiers.Variable;
 
 public class NestedClass extends Expression {
-    protected final AbstractClass myNestedClass;
+    protected final GeneralClass myNestedClass;
 
-    public NestedClass(final AbstractClass nestedClass) {
+    public NestedClass(final GeneralClass nestedClass) {
         super(new Type(nestedClass.getName()));
         this.myNestedClass = nestedClass;
     }
 
-    public AbstractClass getNestedClass() {
+    public GeneralClass getNestedClass() {
         return myNestedClass;
     }
 

@@ -1,10 +1,10 @@
 package com.sdc.languages.java.astUtils;
 
-import com.sdc.languages.general.astUtils.AbstractFrame;
+import com.sdc.languages.general.astUtils.Frame;
 
-public class JavaFrame extends AbstractFrame {
+public class JavaFrame extends Frame {
     @Override
-    protected AbstractFrame createFrame() {
+    protected Frame createFrame() {
         return new JavaFrame();
     }
 }

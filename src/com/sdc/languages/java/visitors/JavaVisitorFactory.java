@@ -1,27 +1,27 @@
 package com.sdc.languages.java.visitors;
 
-import com.sdc.languages.general.languageParts.AbstractAnnotation;
-import com.sdc.languages.general.languageParts.AbstractMethod;
-import com.sdc.languages.general.visitors.AbstractAnnotationVisitor;
-import com.sdc.languages.general.visitors.AbstractClassVisitor;
-import com.sdc.languages.general.visitors.AbstractMethodVisitor;
-import com.sdc.languages.general.visitors.AbstractVisitorFactory;
+import com.sdc.languages.general.languageParts.Annotation;
+import com.sdc.languages.general.languageParts.Method;
+import com.sdc.languages.general.visitors.GeneralAnnotationVisitor;
+import com.sdc.languages.general.visitors.GeneralClassVisitor;
+import com.sdc.languages.general.visitors.GeneralMethodVisitor;
+import com.sdc.languages.general.visitors.GeneralVisitorFactory;
 
-public class JavaVisitorFactory extends AbstractVisitorFactory {
+public class JavaVisitorFactory extends GeneralVisitorFactory {
     @Override
-    public AbstractAnnotationVisitor createAnnotationVisitor(final AbstractAnnotation annotation) {
+    public GeneralAnnotationVisitor createAnnotationVisitor(final Annotation annotation) {
         return new JavaAnnotationVisitor(annotation);
     }
 
     @Override
-    public AbstractMethodVisitor createMethodVisitor(AbstractMethod abstractMethod
+    public GeneralMethodVisitor createMethodVisitor(Method method
             , final String decompiledOwnerFullClassName, final String decompiledOwnerSuperClassName)
     {
-        return new JavaMethodVisitor(abstractMethod, decompiledOwnerFullClassName, decompiledOwnerSuperClassName);
+        return new JavaMethodVisitor(method, decompiledOwnerFullClassName, decompiledOwnerSuperClassName);
     }
 
     @Override
-    public AbstractClassVisitor createClassVisitor(final int textWidth, final int nestSize) {
+    public GeneralClassVisitor createClassVisitor(final int textWidth, final int nestSize) {
         return new JavaClassVisitor(textWidth, nestSize);
     }
 }
