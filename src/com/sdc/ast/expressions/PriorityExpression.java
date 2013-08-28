@@ -1,32 +1,33 @@
 package com.sdc.ast.expressions;
 
 import com.sdc.abstractLanguage.AbstractOperationPrinter;
-import com.sdc.ast.OperationType;
+import com.sdc.ast.ExpressionType;
+import com.sdc.ast.Type;
 
-import static com.sdc.ast.OperationType.*;
-import static com.sdc.ast.OperationType.EQ;
-import static com.sdc.ast.OperationType.NE;
+import static com.sdc.ast.ExpressionType.*;
 
 public abstract class PriorityExpression extends Expression {
-    protected OperationType myType;
+    protected final ExpressionType myExpressionType;
+
+    protected PriorityExpression(ExpressionType expressionType, Type myType) {
+        super(myType);
+        myExpressionType = expressionType;
+    }
 
     public int getPriority(AbstractOperationPrinter operationPrinter) {
-        return operationPrinter.getPriority(myType);
+        return operationPrinter.getPriority(myExpressionType);
     }
 
-    public OperationType getOperationType() {
-        return myType;
+    public ExpressionType getExpressionType() {
+        return myExpressionType;
     }
 
-    public void setOperationType(final OperationType type) {
-        this.myType = type;
-    }
 
     public boolean isAssociative() {
-        if (myType == ADD || myType == MUL || myType == AND || myType == OR
-                || myType == SQUARE_BRACKETS || myType == ARRAYLENGTH ||
-                myType == BITWISE_AND || myType == BITWISE_OR || myType == BITWISE_XOR || myType == EQ || myType == NE ||
-                isComplexIncrement() || myType == INVOCATION
+        if (myExpressionType == ADD || myExpressionType == MUL || myExpressionType == AND || myExpressionType == OR
+                || myExpressionType == SQUARE_BRACKETS || myExpressionType == ARRAYLENGTH ||
+                myExpressionType == BITWISE_AND || myExpressionType == BITWISE_OR || myExpressionType == BITWISE_XOR || myExpressionType == EQ || myExpressionType == NE ||
+                isComplexIncrement() || myExpressionType == INVOCATION
                 ) {
             return true;
         }
@@ -34,8 +35,8 @@ public abstract class PriorityExpression extends Expression {
     }
 
     private boolean isComplexIncrement() {
-        return myType == BITWISE_OR_INC || myType == BITWISE_AND_INC || myType == BITWISE_XOR_INC ||
-                myType == SHL_INC || myType == SHR_INC || myType == USHR_INC ||
-                myType == ADD_INC || myType == MUL_INC || myType == DIV_INC || myType == SUB_INC || myType == REM_INC;
+        return myExpressionType == BITWISE_OR_INC || myExpressionType == BITWISE_AND_INC || myExpressionType == BITWISE_XOR_INC ||
+                myExpressionType == SHL_INC || myExpressionType == SHR_INC || myExpressionType == USHR_INC ||
+                myExpressionType == ADD_INC || myExpressionType == MUL_INC || myExpressionType == DIV_INC || myExpressionType == SUB_INC || myExpressionType == REM_INC;
     }
 }

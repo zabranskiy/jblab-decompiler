@@ -1,7 +1,7 @@
 package com.sdc.abstractLanguage
 
 import pretty.*
-import com.sdc.ast.OperationType
+import com.sdc.ast.ExpressionType
 import com.sdc.ast.expressions.Expression
 import com.sdc.ast.expressions.Constant
 import com.sdc.ast.expressions.BinaryExpression
@@ -32,6 +32,8 @@ import com.sdc.cfg.constructions.Switch
 import com.sdc.cfg.constructions.SwitchCase
 import com.sdc.ast.expressions.ArrayLength
 import com.sdc.ast.expressions.SquareBrackets
+import com.sdc.ast.expressions.Cast
+import com.sdc.ast.Type
 import com.decompiler.Decompiler
 
 abstract class AbstractPrinter {
@@ -53,8 +55,10 @@ abstract class AbstractPrinter {
             is ExprIncrement -> printExprIncrement(expression, nestSize)
             is ArrayLength -> printArrayLength(expression, nestSize)
             is SquareBrackets -> printSquareBrackets(expression,nestSize)
+            is Cast -> printCast(expression,nestSize)
             else -> throw IllegalArgumentException("Unknown Expression implementer!")
         }
+
 
     open fun printExpressionCheckBrackets(expression: Expression?, nextOpPriority: Int, nestSize: Int): PrimeDoc =
             printExpressionCheckBrackets(expression, nextOpPriority, false, nestSize)
@@ -118,6 +122,8 @@ abstract class AbstractPrinter {
             return mainCode + breakCode + continueCode + nextConstructionCode
         }
     }
+    open fun printType(myType: Type?, nestSize: Int): PrimeDoc =
+                text(myType?.toString(getOperationPrinter()))
 
     open fun printConstant(expression: Constant, nestSize: Int): PrimeDoc =
             if (!expression.isStringValue())
@@ -143,6 +149,14 @@ abstract class AbstractPrinter {
         return text(expression.getOperation(getOperationPrinter())) + expr
     }
 
+    open fun printCast(expression: Cast, nestSize: Int): PrimeDoc {
+        val opPriority = expression.getPriority(getOperationPrinter())
+        val isAssociative = expression.isAssociative();
+        val operand = expression.getOperand()
+        val expr = printExpressionCheckBrackets(operand, opPriority,isAssociative, nestSize);
+        return text(expression.getOperation(getOperationPrinter())) + expr
+    }
+
     open fun printField(expression: Field, nestSize: Int): PrimeDoc {
         val owner = expression.getOwner()
         val ownerName = if (owner != null) printInstance(owner, nestSize) else text(expression.getStaticOwnerName() + ".")
@@ -159,7 +173,7 @@ abstract class AbstractPrinter {
         }
 
     open fun printUndeclaredVariable(expression: Variable, nestSize: Int): PrimeDoc =
-        text(expression.getType()) + printExpression(expression.getName(), nestSize)
+        printType(expression.getType(),nestSize) + printExpression(expression.getName(), nestSize)
 
     open fun printInvocationExpression(expression: com.sdc.ast.expressions.Invocation, nestSize: Int): PrimeDoc {
         var funName: PrimeDoc = group(text(expression.getFunction()))
@@ -185,7 +199,7 @@ abstract class AbstractPrinter {
             }
             newArray = group(newArray + printExpression(lastValue,nestSize) + text("}"))
         } else {
-            newArray = group(text("new") + nest(nestSize, line() + text(expression.getType())))
+            newArray = group(text("new") + nest(nestSize, line() + printType(expression.getType(),nestSize)))
             for (dimension in expression.getDimensions()!!.toList()) {
                 newArray = group(newArray + text("[") + printExpression(dimension, nestSize) + text("]"))
             }
@@ -196,7 +210,7 @@ abstract class AbstractPrinter {
 
     open fun printInstanceOf(expression : InstanceOf, nestSize : Int): PrimeDoc {
         if (!expression.isInverted()) {
-            return printInstanceOfArgument(expression, nestSize) + printInstanceOfOperator() + text(expression.getType())
+            return printInstanceOfArgument(expression, nestSize) + printInstanceOfOperator() + printType(expression.getType(),nestSize)
         } else {
             return printInvertedInstanceOf(expression, nestSize)
         }
@@ -212,7 +226,7 @@ abstract class AbstractPrinter {
     }
 
     open fun printInvertedInstanceOf(expression : InstanceOf, nestSize : Int): PrimeDoc =
-        printExpression(UnaryExpression(OperationType.NOT, expression.invert()), nestSize)
+        printExpression(UnaryExpression(ExpressionType.NOT, expression.invert()), nestSize)
 
 
     open fun printAnonymousClassExpression(expression: AnonymousClass, nestSize: Int): PrimeDoc =
@@ -232,9 +246,9 @@ abstract class AbstractPrinter {
     open fun printExprIncrement(expression: ExprIncrement, nestSize: Int): PrimeDoc {
         val expr = expression.getVariable();
         val printExpr = printExpression(expr, nestSize)
-        var myType = expression.getOperationType();
+        var myType = expression.getExpressionType();
         var operation = expression.getOperation(getOperationPrinter());
-        if(myType == OperationType.INC_REV || myType == OperationType.DEC_REV){
+        if(myType == ExpressionType.INC_REV || myType == ExpressionType.DEC_REV){
             return group(nest(nestSize, text(operation) + printExpr))
         }   else{
             val increment = expression.getIncrementExpression();

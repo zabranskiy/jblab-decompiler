@@ -1,6 +1,7 @@
 package com.sdc.abstractLanguage;
 
-import com.sdc.ast.OperationType;
+import com.sdc.ast.ExpressionType;
+import com.sdc.ast.Type;
 import com.sdc.ast.controlflow.*;
 import com.sdc.ast.expressions.*;
 import com.sdc.ast.expressions.InstanceInvocation;
@@ -9,7 +10,6 @@ import com.sdc.ast.expressions.New;
 import com.sdc.ast.expressions.identifiers.Field;
 import com.sdc.ast.expressions.identifiers.Identifier;
 import com.sdc.ast.expressions.identifiers.Variable;
-import com.sdc.ast.expressions.nestedclasses.LambdaFunction;
 import com.sdc.cfg.nodes.DoWhile;
 import com.sdc.cfg.nodes.Node;
 import com.sdc.cfg.nodes.Switch;
@@ -21,7 +21,7 @@ import org.objectweb.asm.util.Printer;
 
 import java.util.*;
 
-import static com.sdc.ast.OperationType.*;
+import static com.sdc.ast.ExpressionType.*;
 import static com.sdc.ast.expressions.IntConstant.*;
 import static org.objectweb.asm.Opcodes.ASM4;
 
@@ -39,7 +39,6 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
     protected Map<Label, List<Integer>> myGoToMap = new HashMap<Label, List<Integer>>();  // for GOTO
     protected Map<Integer, Label> myIfElseMap = new HashMap<Integer, Label>(); // for IF ELSE Branch
     protected List<Label> myNodeInnerLabels = new ArrayList<Label>();
-    protected Map<String, Integer> myTypeNameIndices = new HashMap<String, Integer>();
 
     protected boolean myHasDebugInformation = false;
 
@@ -172,7 +171,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 type = "BITWISE_" + type;
             }
             Expression res;
-            res = new BinaryExpression(OperationType.valueOf(type), e2, e1);
+            res = new BinaryExpression(ExpressionType.valueOf(type), e2, e1);
             myBodyStack.push(res);
         } else if (opString.contains("NEG")) {
             Expression e = getTopOfBodyStack();
@@ -180,12 +179,13 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         } else if (opString.contains("CONST_M1")) {
             myBodyStack.push(M_ONE);
         } else if (opString.contains("CONST_NULL")) {
-            myBodyStack.push(new Constant("null", false));
+            myBodyStack.push(Constant.NULL);
         } else if (opString.contains("CONST_")) {
             if (opString.contains("ICONST_")) {
                 myBodyStack.push(new IntConstant(Integer.valueOf(opString.substring(7).toLowerCase())));
             } else {
-                myBodyStack.push(new Constant(opString.substring(7).toLowerCase(), false));
+                String descriptor = DeclarationWorker.getJavaDescriptor(opString, 0, null);
+                myBodyStack.push(new Constant(opString.substring(7).toLowerCase(), false, new Type(descriptor)));
             }
         } else if (opString.equals("RETURN")) {
             replaceInvocationsFromExpressionsToStatements();
@@ -367,19 +367,19 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         } else if (opString.equals("NOP")) {
             //do nothing
         } else if ((opString.contains("I2L") || opString.contains("F2L") || opString.contains("D2L")) && !myBodyStack.empty()) {
-            myBodyStack.push(new UnaryExpression(LONG_CAST, getTopOfBodyStack()));
+            myBodyStack.push(new Cast(LONG_CAST, getTopOfBodyStack()));
         } else if ((opString.contains("I2D") || opString.contains("F2D") || opString.contains("L2D")) && !myBodyStack.isEmpty()) {
-            myBodyStack.push(new UnaryExpression(DOUBLE_CAST, getTopOfBodyStack()));
+            myBodyStack.push(new Cast(DOUBLE_CAST, getTopOfBodyStack()));
         } else if ((opString.contains("I2F") || opString.contains("L2F") || opString.contains("D2F")) && !myBodyStack.isEmpty()) {
-            myBodyStack.push(new UnaryExpression(FLOAT_CAST, getTopOfBodyStack()));
+            myBodyStack.push(new Cast(FLOAT_CAST, getTopOfBodyStack()));
         } else if ((opString.contains("L2I") || opString.contains("F2I") || opString.contains("D2I")) && !myBodyStack.isEmpty()) {
-            myBodyStack.push(new UnaryExpression(INT_CAST, getTopOfBodyStack()));
+            myBodyStack.push(new Cast(INT_CAST, getTopOfBodyStack()));
         } else if ((opString.contains("I2B")) && !myBodyStack.isEmpty()) {
-            myBodyStack.push(new UnaryExpression(BYTE_CAST, getTopOfBodyStack()));
+            myBodyStack.push(new Cast(BYTE_CAST, getTopOfBodyStack()));
         } else if ((opString.contains("I2C")) && !myBodyStack.isEmpty()) {
-            myBodyStack.push(new UnaryExpression(CHAR_CAST, getTopOfBodyStack()));
+            myBodyStack.push(new Cast(CHAR_CAST, getTopOfBodyStack()));
         } else if ((opString.contains("I2S")) && !myBodyStack.isEmpty()) {
-            myBodyStack.push(new UnaryExpression(SHORT_CAST, getTopOfBodyStack()));
+            myBodyStack.push(new Cast(SHORT_CAST, getTopOfBodyStack()));
         } else if (opString.contains("ARRAYLENGTH")) {
             Expression e = getTopOfBodyStack();
             myBodyStack.push(new ArrayLength(e));
@@ -415,7 +415,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         final AbstractFrame currentFrame = getCurrentFrame();
         final boolean currentFrameHasStack = currentFrame.checkStack() && myBodyStack.isEmpty();
 
-        String variableType = null;
+        Type variableType = null;
 
         if (opString.contains("LOAD")) {
             if (myStatements.isEmpty()) {
@@ -427,7 +427,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                         && ((Increment) lastStatement).getVariable().getIndex() == var) {
                     Increment increment = (Increment) lastStatement;
                     myStatements.remove(lastStatementIndex);
-                    OperationType type = increment.getOperationType();
+                    ExpressionType type = increment.getOperationType();
                     switch (type) {
                         case INC:
                             type = INC_REV;
@@ -446,22 +446,12 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             Identifier v = currentFrame.getVariable(var);
             final Expression expr = getTopOfBodyStack();
             myStatements.add(new Assignment(v, expr));
-            if (expr instanceof Invocation) {
-                variableType = ((Invocation) expr).getReturnType();
-            } else if (expr instanceof New) {
-                variableType = ((New) expr).getReturnType();
-            } else if (expr instanceof NewArray) {
-                variableType = ((NewArray) expr).getFullType();
-            } else if (expr instanceof Identifier) {
-                variableType = ((Identifier) expr).getType();
-            } else if (expr instanceof LambdaFunction) {
-                variableType = ((LambdaFunction) expr).getType();
-            }
+            variableType = expr.getType();
             checkIncrements(var, expr);
         }
 
         if (!opString.contains("LOAD") && var > myDecompiledMethod.getLastLocalVariableIndex()) {
-            String name = "y" + var;
+
 
             String descriptorType;
             if (currentFrameHasStack) {
@@ -471,35 +461,17 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             }
 
             if (!descriptorType.equals("Object ") && !descriptorType.equals("Any") || variableType == null) {
-                variableType = descriptorType;
+                variableType = new Type(descriptorType);
             }
-
-            name = getNewTypeName(variableType);
+            //todo
+            Variable variable = currentFrame.getVariable(var);
+            Constant name = null;
+            if (variable.isUndefined()) {
+                name = new Constant(myDecompiledMethod.getNewTypeName(variableType), false, Type.VOID);
+            }
             currentFrame.updateVariableInformation(var, variableType, name);
-        }
-    }
-
-    private String getNewTypeName(String variableType) {
-        variableType = variableType.trim();
-        char firstChar = variableType.charAt(0);
-        String name = firstChar + "";
-        Integer index;
-        if (Character.isLowerCase(firstChar)) {
-            //primitive type
-            index = myTypeNameIndices.get(name);
-
-        } else {
-            //for Classes
-            index = myTypeNameIndices.get(variableType);
-            name = "a" + variableType;
 
         }
-        if (index == null) {
-            myTypeNameIndices.put(name, 1);
-        } else {
-            name += index;
-        }
-        return name;
     }
 
     private void checkIncrements(int var, Expression expr) {
@@ -509,7 +481,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             BinaryExpression binaryExpression = (BinaryExpression) expr;
             Expression left = binaryExpression.getLeft();
             Expression right = binaryExpression.getRight();
-            OperationType type = binaryExpression.getOperationType();
+            ExpressionType type = binaryExpression.getExpressionType();
             if (left instanceof Variable && ((Variable) left).getIndex() == var) {
                 myStatements.remove(lastIndex);
                 if (expr.equals(expr2)) {
@@ -561,9 +533,9 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             dimensions.add(getTopOfBodyStack());
             myBodyStack.push(createNewArray(1, actualType, dimensions));
         } else if (opString.contains("INSTANCEOF")) {
-            myBodyStack.push(new InstanceOf(actualType, getTopOfBodyStack()));
+            myBodyStack.push(new InstanceOf(new Type(actualType), getTopOfBodyStack()));
         } else if (opString.contains("CHECKCAST") && !myBodyStack.empty()) {
-            myBodyStack.push(new UnaryExpression(CHECK_CAST, myBodyStack.pop(), actualType));
+            myBodyStack.push(new Cast(CHECK_CAST, myBodyStack.pop(), actualType));
         } else if (opString.equals("NEW")) {
             myBodyStack.push(new New(null));
         }
@@ -573,7 +545,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
     public void visitFieldInsn(final int opcode, final String owner, final String name, final String desc) {
         final String opString = Printer.OPCODES[opcode];
         final String fieldName = myDecompiledMethod.getDecompiledClass().isLambdaFunctionClass() && name.startsWith("$") ? name.substring(1) : name;
-        Field field = new Field(fieldName, getDescriptor(desc, 0, myDecompiledMethod.getImports()));
+        Field field = new Field(fieldName, new Type(getDescriptor(desc, 0, myDecompiledMethod.getImports())));
 
         Expression e = null;
         if (opString.contains("PUTFIELD") || opString.contains("PUTSTATIC")) {
@@ -615,7 +587,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
         if (opString.contains("INVOKEVIRTUAL") || opString.contains("INVOKEINTERFACE")
                 || (decompiledOwnerFullClassName.equals(myDecompiledOwnerFullClassName) && !name.equals("<init>"))) {
-            appendInstanceInvocation(name, hasVoidReturnType ? "" : returnType, arguments, getTopOfBodyStack());
+            appendInstanceInvocation(name, hasVoidReturnType ? Type.VOID : new Type(returnType), arguments, getTopOfBodyStack());
             return;
         }
 
@@ -635,7 +607,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
             isStaticInvocation = true;
         }
 
-        appendInvocationOrConstructor(isStaticInvocation, name, invocationName, hasVoidReturnType ? "" : returnType, arguments, decompiledOwnerFullClassName);
+        appendInvocationOrConstructor(isStaticInvocation, name, invocationName, hasVoidReturnType ? Type.VOID : new Type(returnType), arguments, decompiledOwnerFullClassName);
     }
 
     @Override
@@ -724,7 +696,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
     @Override
     public void visitLdcInsn(final Object cst) {
         final boolean hasDoubleLength = true;
-        myBodyStack.push(new Constant(cst, cst instanceof String, hasDoubleLength));
+        myBodyStack.push(new Constant(cst, cst instanceof String, new Type("String")));
     }
 
     @Override
@@ -813,7 +785,8 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
         final String description = signature != null ? signature : desc;
 
-        myDecompiledMethod.updateVariableInformationFromDebugInfo(index, getDescriptor(description, 0, myDecompiledMethod.getImports()), name, start, end);
+        String descriptor = getDescriptor(description, 0, myDecompiledMethod.getImports());
+        myDecompiledMethod.updateVariableInformationFromDebugInfo(index, new Type(descriptor), new Constant(name, false, Type.VOID), start, end);
     }
 
     @Override
@@ -905,13 +878,13 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         if (opString.contains("IF_")) {
             Expression e1 = getTopOfBodyStack();
             Expression e2 = getTopOfBodyStack();
-            return new BinaryExpression(OperationType.valueOf(opString.substring(7)), e2, e1);
+            return new BinaryExpression(ExpressionType.valueOf(opString.substring(7)), e2, e1);
         } else {
             Expression e = getTopOfBodyStack();
             if (opString.contains("NONNULL")) {
-                return new BinaryExpression(OperationType.NE, e, new Constant("null", false));
+                return new BinaryExpression(ExpressionType.NE, e, Constant.NULL);
             } else if (opString.contains("NULL")) {
-                return new BinaryExpression(OperationType.EQ, e, new Constant("null", false));
+                return new BinaryExpression(ExpressionType.EQ, e, Constant.NULL);
             } else {
                 if (e.isBoolean()) {
                     if (opString.contains("EQ")) {
@@ -919,7 +892,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                     }
                     return e;
                 } else {
-                    return new BinaryExpression(OperationType.valueOf(opString.substring(2)), e, new Constant(0, false));
+                    return new BinaryExpression(ExpressionType.valueOf(opString.substring(2)), e, IntConstant.ZERO);
                 }
             }
         }
@@ -1012,16 +985,16 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
         }
     }
 
-    protected void appendInstanceInvocation(final String function, final String returnType, final List<Expression> arguments, final Expression instance) {
-        if (returnType.isEmpty()) {
+    protected void appendInstanceInvocation(final String function, final Type returnType, final List<Expression> arguments, final Expression instance) {
+        if (returnType.isVOID()) {
             myStatements.add(new com.sdc.ast.controlflow.InstanceInvocation(new InstanceInvocation(function, returnType, arguments, instance)));
         } else {
             myBodyStack.push(new InstanceInvocation(function, returnType, arguments, instance));
         }
     }
 
-    protected void appendInvocation(final String function, final String returnType, final List<Expression> arguments) {
-        if (returnType.isEmpty()) {
+    protected void appendInvocation(final String function, final Type returnType, final List<Expression> arguments) {
+        if (returnType.isVOID()) {
             myStatements.add(new com.sdc.ast.controlflow.Invocation(new Invocation(function, returnType, arguments)));
         } else {
             myBodyStack.push(new Invocation(function, returnType, arguments));
@@ -1052,14 +1025,15 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
                 || myDecompiledOwnerSuperClassName.isEmpty() && decompiledOwnerFullClassName.equals("java.lang.Object"));
     }
 
-    protected void processSuperClassConstructorInvocation(final String invocationName, final String returnType, final List<Expression> arguments) {
+    protected void processSuperClassConstructorInvocation(final String invocationName, final Type returnType, final List<Expression> arguments) {
         if (!arguments.isEmpty()) {
             myStatements.add(new com.sdc.ast.controlflow.Invocation(new Invocation("super", returnType, arguments)));
         }
     }
 
     protected void appendInvocationOrConstructor(final boolean isStaticInvocation, final String visitMethodName,
-                                                 final String invocationName, final String returnType, final List<Expression> arguments, final String decompiledOwnerFullClassName) {
+                                                 final String invocationName, final Type returnType, final List<Expression> arguments, final String decompiledOwnerFullClassName) {
+
         if (visitMethodName.equals("<init>")) {
             if (checkForSuperClassConstructor(invocationName, decompiledOwnerFullClassName)) {
                 removeThisVariableFromStack();
@@ -1095,7 +1069,7 @@ public abstract class AbstractMethodVisitor extends MethodVisitor {
 
     protected Expression replaceBooleanConstant(final Expression expression) {
         if (expression instanceof Constant && myDecompiledMethod.getReturnType().toLowerCase().contains("boolean")) {
-            return new Constant(((Constant) expression).getValue().toString().equals("1"), false);
+            return new Constant(((Constant) expression).getValue().toString().equals("1"), false, Type.BOOLEAN_TYPE);
         } else {
             return expression;
         }

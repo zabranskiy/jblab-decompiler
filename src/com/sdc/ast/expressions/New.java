@@ -1,26 +1,17 @@
 package com.sdc.ast.expressions;
 
-import com.sdc.ast.OperationType;
+import com.sdc.ast.ExpressionType;
+import com.sdc.ast.Type;
 
 public class New extends PriorityExpression {
     private final Invocation myConstructor;
 
     public New(final Invocation constructor) {
+        super(ExpressionType.NEW,constructor==null?Type.VOID: new Type(constructor.getFunction()));
         this.myConstructor = constructor;
-        setDoubleLength(false);
-        myType = OperationType.NEW;
     }
 
     public Invocation getConstructor() {
         return myConstructor;
-    }
-
-    public String getReturnType() {
-        return myConstructor.getFunction();
-    }
-
-    @Override
-    public boolean isBoolean() {
-        return false;
     }
 }
