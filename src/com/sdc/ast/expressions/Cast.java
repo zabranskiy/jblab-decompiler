@@ -51,7 +51,7 @@ public class Cast extends PriorityExpression {
 
     @Override
     public Expression getBase() {
-        return myOperand;
+        return myOperand.getBase();
     }
 
     public static Type getMyType(ExpressionType expressionType, String param) {

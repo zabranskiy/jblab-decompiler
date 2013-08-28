@@ -27,7 +27,11 @@ public class InstanceInvocation extends Invocation {
 
     @Override
     public Expression getBase() {
-        return myInstance;
+        if (myInstance instanceof Invocation || myInstance instanceof Cast) {
+            return myInstance.getBase();
+        } else {
+            return this;
+        }
     }
 
 }
