@@ -11,37 +11,37 @@ public class KotlinOperationPrinter extends AbstractOperationPrinter {
 
     @Override
     public String getDoubleCastView() {
-        return " as Double";
+        return ".toDouble()";
     }
 
     @Override
     public String getIntCastView() {
-        return " as Int";
+        return ".toInt()";
     }
 
     @Override
     public String getLongCastView() {
-        return " as Long";
+        return ".toLong()";
     }
 
     @Override
     public String getFloatCastView() {
-        return " as Float";
+        return ".toFloat()";
     }
 
     @Override
     public String getCharCastView() {
-        return " as Char";
+        return ".toChar()";
     }
 
     @Override
     public String getShortCastView() {
-        return " as Short";
+        return ".toShort()";
     }
 
     @Override
     public String getByteCastView() {
-        return " as Byte";
+        return ".toByte()";
     }
 
     @Override
