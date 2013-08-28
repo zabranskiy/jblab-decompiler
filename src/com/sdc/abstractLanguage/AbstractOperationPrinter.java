@@ -279,4 +279,8 @@ public abstract class AbstractOperationPrinter {
     public String getTypeWithBracketsView(String type) {
         return type + "[]";
     }
+
+    public String getSpaceAfterType() {
+        return " ";
+    }
 }
