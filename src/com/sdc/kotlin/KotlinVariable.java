@@ -10,9 +10,14 @@ public class KotlinVariable extends Variable {
 
     private boolean myIsNotNull = false;
     private boolean myIsInForDeclaration = false;
+    private int myAssignmentsCount = 0;
 
     public void setIsInForDeclaration(final boolean isInForDeclaration) {
         this.myIsInForDeclaration = isInForDeclaration;
+    }
+
+    public void addAssignment() {
+        myAssignmentsCount++;
     }
 
     public static boolean isSharedVar(final String type) {
@@ -33,10 +38,8 @@ public class KotlinVariable extends Variable {
 
     @Override
     public Constant getName() {
-        Object value = super.getName().getValue();
-        final String name = value==null?null:value.toString();
-        final String actualName = myIsMethodParameter || myIsInForDeclaration ? name : "var " + name;
-
+        final String name =  super.getName().getValue().toString();
+        final String actualName = myIsMethodParameter || myIsInForDeclaration || myIsDeclared ? name : (isMutable() ? "var " : "val ") + name;
         return myIsDeclared ? myName : new Constant(actualName, false, myType);
     }
 
@@ -64,5 +67,37 @@ public class KotlinVariable extends Variable {
     @Override
     protected Variable createVariable(final int index, final Type variableType, final String name) {
         return new KotlinVariable(index, variableType, name);
+    }
+
+    protected boolean isMutable() {
+        KotlinVariable current = getRootParent();
+        boolean result = current.currentVariableIsMutable();
+
+        while (current.getChildCopy() != null) {
+            result = result || current.currentVariableIsMutable();
+            current = (KotlinVariable) current.getChildCopy();
+        }
+
+        return result;
+    }
+
+    protected Variable getParentCopy() {
+        return myParentCopy;
+    }
+
+    protected Variable getChildCopy() {
+        return myChildCopy;
+    }
+
+    private boolean currentVariableIsMutable() {
+        return isSharedVar(myType.toString(KotlinOperationPrinter.getInstance())) || !myIsMethodParameter && myAssignmentsCount > 1;
+    }
+
+    private KotlinVariable getRootParent() {
+        KotlinVariable current = this;
+        while (current.getParentCopy() != null) {
+            current = (KotlinVariable) current.getParentCopy();
+        }
+        return current;
     }
 }

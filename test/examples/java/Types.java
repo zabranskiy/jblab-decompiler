@@ -40,4 +40,8 @@ public class Types extends SuperClass implements SuperInterface{
 
         ((SuperClass) variableTest).superMethod();
     }
+
+    public void varargMethod(String ... args) {
+        varargMethod("1", "2", "3");
+    }
 }

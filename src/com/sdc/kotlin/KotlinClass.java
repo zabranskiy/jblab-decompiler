@@ -58,6 +58,10 @@ public class KotlinClass extends AbstractClass {
         return mySrcClassName;
     }
 
+    public void addAssignmentToField(final String fieldName) {
+        ((KotlinClassField) getField(fieldName)).addAssignment();
+    }
+
     @Override
     public void appendImport(final String importName) {
         if (!importName.contains(".src.") && !importName.endsWith("KotlinPackage")) {

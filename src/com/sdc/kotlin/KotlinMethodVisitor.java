@@ -52,9 +52,13 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
                 myBodyStack.push(lambdaFunction);
                 return;
             }
-        } else if (opString.contains("PUTFIELD") && myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName()) && !myDecompiledMethod.hasFieldInitializer(name)) {
-            myDecompiledMethod.addInitializerToField(name, getTopOfBodyStack());
-            return;
+        } else if (opString.contains("PUTFIELD") && myDecompiledOwnerFullClassName.equals(DeclarationWorker.decompileFullClassName(owner))) {
+            ((KotlinClass) myDecompiledMethod.getDecompiledClass()).addAssignmentToField(name);
+
+            if (myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName()) && !myDecompiledMethod.hasFieldInitializer(name)) {
+                myDecompiledMethod.addInitializerToField(name, getTopOfBodyStack());
+                return;
+            }
         }
 
         super.visitFieldInsn(opcode, owner, name, desc);
@@ -66,11 +70,18 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
 
         if (!myStatements.isEmpty()) {
             final Statement lastStatement = myStatements.get(myStatements.size() - 1);
-            if (lastStatement instanceof Assignment
-                    && ((Assignment) lastStatement).getRight() instanceof New
-                    && KotlinVariable.isSharedVar(((Assignment) lastStatement).getRight().getType().toString(KotlinOperationPrinter.getInstance())))
-            {
-                myStatements.remove(myStatements.size() - 1);
+            if (lastStatement instanceof Assignment) {
+                if (((Assignment) lastStatement).getRight() instanceof New
+                    && KotlinVariable.isSharedVar( ((Assignment) lastStatement).getRight().getType().toString(KotlinOperationPrinter.getInstance())))
+                {
+                    myStatements.remove(myStatements.size() - 1);
+                } else {
+                    final String opString = Printer.OPCODES[opcode];
+
+                    if (opString.contains("STORE") &&((Assignment) lastStatement).getLeft() instanceof KotlinVariable) {
+                        ((KotlinVariable) ((Assignment) lastStatement).getLeft()).addAssignment();
+                    }
+                }
             }
         }
     }

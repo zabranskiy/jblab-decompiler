@@ -22,6 +22,7 @@ import com.sdc.ast.expressions.identifiers.Field
 import com.sdc.kotlin.KotlinVariable
 import com.sdc.ast.controlflow.Assignment
 import com.sdc.kotlin.KotlinNewArray
+import com.sdc.ast.expressions.Cast
 
 class KotlinPrinter: AbstractPrinter() {
     override fun getOperationPrinter(): AbstractOperationPrinter{
@@ -81,16 +82,12 @@ class KotlinPrinter: AbstractPrinter() {
     override fun printInvertedInstanceOf(expression : InstanceOf, nestSize : Int): PrimeDoc =
         printInstanceOfArgument(expression, nestSize) + text("!") + printInstanceOfOperator() + printType(expression.getType(),nestSize)
 
-    override fun printUnaryExpression(expression: UnaryExpression, nestSize: Int): PrimeDoc {
+    override fun printCast(expression: Cast, nestSize: Int): PrimeDoc {
         val opPriority = expression.getPriority(getOperationPrinter())
         val isAssociative = expression.isAssociative();
         val operand = expression.getOperand()
-        val expr = printExpressionCheckBrackets(operand, opPriority, isAssociative, nestSize);
-
-        if (expression.getExpressionType() == ExpressionType.CHECK_CAST)
-            return expr + text(expression.getOperation(getOperationPrinter()))
-        else
-            return text(expression.getOperation(getOperationPrinter())) + expr
+        val expr = printExpressionCheckBrackets(operand, opPriority,isAssociative, nestSize);
+        return  expr + text(expression.getOperation(getOperationPrinter()))
     }
 
     override fun printField(expression: Field, nestSize: Int): PrimeDoc {
@@ -213,7 +210,7 @@ class KotlinPrinter: AbstractPrinter() {
     override fun printField(decompiledField: AbstractClassField): PrimeDoc {
         val kotlinClassField: KotlinClassField = decompiledField as KotlinClassField
 
-        var fieldCode : PrimeDoc = text(kotlinClassField.getModifier() + "var " + kotlinClassField.getName() + " : " + kotlinClassField.getType())
+        var fieldCode : PrimeDoc = text(kotlinClassField.getModifier() + (if (kotlinClassField.isMutable()) "var " else "val ") + kotlinClassField.getName() + " : " + kotlinClassField.getType())
         if (kotlinClassField.hasInitializer())
             fieldCode = fieldCode + text(" = ") + printExpression(kotlinClassField.getInitializer(), kotlinClassField.getNestSize())
         return fieldCode
