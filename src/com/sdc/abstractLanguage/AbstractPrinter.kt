@@ -206,7 +206,18 @@ abstract class AbstractPrinter {
         }
         return newArray
     }
-
+    open fun printNewArrayWithInitializationAsSequence(expression: NewArray, nestSize: Int): PrimeDoc {
+        var newArray = group(nil());
+        if(expression.hasInitialization()){
+            val values = expression.getInitializationValues()
+            val lastValue = values!!.remove(values.size()-1)
+            for(value in values){
+                newArray = group(newArray + printExpression(value,nestSize) + text(", "))
+            }
+            newArray = group(newArray + printExpression(lastValue,nestSize))
+        }
+        return newArray
+    }
 
     open fun printInstanceOf(expression : InstanceOf, nestSize : Int): PrimeDoc {
         if (!expression.isInverted()) {
@@ -520,7 +531,14 @@ abstract class AbstractPrinter {
             else {
                 var argsDocs = arguments.take(arguments.size - 1)
                         .map { arg -> printExpression(arg, nestSize) + text(", ") }
-                var argumentsCode: PrimeDoc = nest(2 * nestSize, fill(argsDocs + printExpression(arguments.last, nestSize)))
+                var printLastArgument : PrimeDoc = nil();
+                val lastArgument = arguments.last
+                if(lastArgument is NewArray && lastArgument.hasInitialization()){
+                    printLastArgument = printNewArrayWithInitializationAsSequence(lastArgument,nestSize)
+                }  else {
+                    printLastArgument = printExpression(lastArgument, nestSize)
+                }
+                var argumentsCode: PrimeDoc = nest(2 * nestSize, fill(argsDocs + printLastArgument))
 
                 text("(") + argumentsCode + text(")")
             }
