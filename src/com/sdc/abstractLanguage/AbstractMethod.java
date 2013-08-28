@@ -264,7 +264,7 @@ public abstract class AbstractMethod {
     }
 
     public String getNewTypeName(Type type) {
-        String variableType = type.toStringWithoutBrackets().trim();
+        String variableType = type.toStringWithoutBrackets().trim().replace(".","");
         String suffix="";
         for (int i = 0; i < type.getDimensions(); i++) {
             suffix+="Arr";

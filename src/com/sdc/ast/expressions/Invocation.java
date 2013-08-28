@@ -2,6 +2,7 @@ package com.sdc.ast.expressions;
 
 import com.sdc.ast.ExpressionType;
 import com.sdc.ast.Type;
+import com.sdc.ast.expressions.identifiers.Variable;
 
 import java.util.List;
 
@@ -21,5 +22,13 @@ public class Invocation extends PriorityExpression {
 
     public List<Expression> getArguments() {
         return myArguments;
+    }
+    @Override
+    public boolean findVariable(Variable variable) {
+        boolean res=false;
+        for(Expression expression: myArguments){
+            res=res || expression.findVariable(variable);
+        }
+        return res;
     }
 }

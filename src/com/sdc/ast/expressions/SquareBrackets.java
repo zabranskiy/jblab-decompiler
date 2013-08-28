@@ -2,6 +2,7 @@ package com.sdc.ast.expressions;
 
 import com.sdc.ast.ExpressionType;
 import com.sdc.ast.expressions.identifiers.Identifier;
+import com.sdc.ast.expressions.identifiers.Variable;
 
 public class SquareBrackets extends Identifier {
     private Expression myOperand;
@@ -32,5 +33,10 @@ public class SquareBrackets extends Identifier {
     @Override
     public Expression getName() {
         return myOperand;
+    }
+
+    @Override
+    public boolean findVariable(Variable variable) {
+        return myOperand.findVariable(variable) || myIndex.findVariable(variable);
     }
 }

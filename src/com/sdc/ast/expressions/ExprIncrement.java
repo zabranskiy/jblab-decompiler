@@ -163,4 +163,8 @@ public class ExprIncrement extends PriorityExpression {
     public Expression getVariableName() {
         return myVariable.getName();
     }
+    @Override
+    public boolean findVariable(Variable variable) {
+        return myIncrement.findVariable(variable) || myVariable.equals(variable);
+    }
 }
