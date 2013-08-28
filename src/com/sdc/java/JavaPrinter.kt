@@ -91,26 +91,32 @@ class JavaPrinter: AbstractPrinter() {
         {
             return nil()
         }
-
+        var isStaticBlock:Boolean = decompiledMethod.getName()!!.contains("<clinit>");
         val classMethod: JavaMethod = decompiledMethod as JavaMethod
 
-        var declaration : PrimeDoc = group(printAnnotations(classMethod.getAnnotations()!!.toList()) + text(classMethod.getModifier()))
+        var declaration : PrimeDoc = nil();
+        if(isStaticBlock){
+              declaration=text("static")
+        } else{
+            declaration = group(printAnnotations(classMethod.getAnnotations()!!.toList()) + text(classMethod.getModifier()))
 
-        val genericsCode = printGenerics(classMethod.getGenericDeclaration())
+            val genericsCode = printGenerics(classMethod.getGenericDeclaration())
 
-        declaration = group(declaration + genericsCode + text(classMethod.getReturnType() + classMethod.getName() + "("))
+            declaration = group(declaration + genericsCode + text(classMethod.getReturnType() + classMethod.getName() + "("))
 
-        var throwsExceptions = group(nil())
-        val exceptions = classMethod.getExceptions()
-        if (!exceptions!!.isEmpty()) {
-            throwsExceptions = group(text("throws " + exceptions.get(0)))
-            for (exception in exceptions.drop(1)) {
-                throwsExceptions = group((throwsExceptions + text(",")) / text(exception))
+            var throwsExceptions = group(nil())
+            val exceptions = classMethod.getExceptions()
+            if (!exceptions!!.isEmpty()) {
+                throwsExceptions = group(text("throws " + exceptions.get(0)))
+                for (exception in exceptions.drop(1)) {
+                    throwsExceptions = group((throwsExceptions + text(",")) / text(exception))
+                }
+                throwsExceptions = group(nest(2 * classMethod.getNestSize(), line() + throwsExceptions))
             }
-            throwsExceptions = group(nest(2 * classMethod.getNestSize(), line() + throwsExceptions))
-        }
 
-        var arguments: PrimeDoc = printMethodParameters(classMethod)
+            var arguments: PrimeDoc = printMethodParameters(classMethod)
+            declaration = group(declaration + arguments + text(")") + throwsExceptions)
+        }
 
         val nestedClasses = nest(classMethod.getNestSize(), printMethodInnerClasses(classMethod.getDecompiledClass(), classMethod.getName(), classMethod.getSignature()))
 
@@ -119,7 +125,7 @@ class JavaPrinter: AbstractPrinter() {
                         printConstruction(classMethod.getBegin(), classMethod.getNestSize())
                        + printMethodError(classMethod)
                    ) / text("}")
-        return group(declaration + arguments + text(")") + throwsExceptions) +
+        return  declaration +
             if(decompiledMethod.getModifier()?.contains("abstract") as Boolean ||
                 decompiledMethod.getDecompiledClass()?.getType() == AbstractClass.ClassType.INTERFACE)
             {
