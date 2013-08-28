@@ -218,7 +218,7 @@ class KotlinPrinter: AbstractPrinter() {
     override fun printField(decompiledField: AbstractClassField): PrimeDoc {
         val kotlinClassField: KotlinClassField = decompiledField as KotlinClassField
 
-        var fieldCode : PrimeDoc = text(kotlinClassField.getModifier() + "var " + kotlinClassField.getName() + " : " + kotlinClassField.getType())
+        var fieldCode : PrimeDoc = text(kotlinClassField.getModifier() + (if (kotlinClassField.isMutable()) "var " else "val ") + kotlinClassField.getName() + " : " + kotlinClassField.getType())
         if (kotlinClassField.hasInitializer())
             fieldCode = fieldCode + text(" = ") + printExpression(kotlinClassField.getInitializer(), kotlinClassField.getNestSize())
         return fieldCode

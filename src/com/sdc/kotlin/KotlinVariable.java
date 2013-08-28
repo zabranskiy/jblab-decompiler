@@ -10,9 +10,14 @@ public class KotlinVariable extends Variable {
 
     private boolean myIsNotNull = false;
     private boolean myIsInForDeclaration = false;
+    private int myAssignmentsCount = 0;
 
     public void setIsInForDeclaration(final boolean isInForDeclaration) {
         this.myIsInForDeclaration = isInForDeclaration;
+    }
+
+    public void addAssignment() {
+        myAssignmentsCount++;
     }
 
     public static boolean isSharedVar(final String type) {
@@ -34,7 +39,7 @@ public class KotlinVariable extends Variable {
     @Override
     public Expression getName() {
         final String name = ((Constant) super.getName()).getValue().toString();
-        final String actualName = myIsMethodParameter || myIsInForDeclaration ? name : "var " + name;
+        final String actualName = myIsMethodParameter || myIsInForDeclaration  ? name : (isMutable() ? "var " : "val ") + name;
 
         return myIsDeclared ? myName : new Constant(actualName, false);
     }
@@ -63,5 +68,12 @@ public class KotlinVariable extends Variable {
     @Override
     protected Variable createVariable(final int index, final String variableType, final String name) {
         return new KotlinVariable(index, variableType, name);
+    }
+
+    public boolean isMutable() {
+        boolean parentIsMutable = myParentCopy != null && ((KotlinVariable) myParentCopy).isMutable();
+        boolean childIsMutable = myChildCopy != null && ((KotlinVariable) myChildCopy).isMutable();
+
+        return isSharedVar(myVariableType) || parentIsMutable || childIsMutable || !myIsMethodParameter && myAssignmentsCount > 1;
     }
 }

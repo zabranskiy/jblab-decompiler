@@ -3,11 +3,11 @@ package examples.kotlin
 class LambdaFunctions {
     fun test(stringArray : Array<String>, valClosure: String, f : (Int) -> Int) {
         fun innerIntFun(i : Int): Int {
-            var k = 1
+            val k = 1
             k + i
         }
         fun innerVoidFun() {
-            var k = 2
+            val k = 2
         }
 
         innerIntFun(3)
@@ -16,7 +16,7 @@ class LambdaFunctions {
         stringArray.all { i -> true }
 
         stringArray.map { s ->
-            var str = "inner"
+            val str = "inner"
             valClosure
         }
 
@@ -24,7 +24,7 @@ class LambdaFunctions {
         var varClosure2 = 5
 
         stringArray.map { s ->
-            var str = "inner"
+            val str = "inner"
             varClosure1 + varClosure2
         }
 

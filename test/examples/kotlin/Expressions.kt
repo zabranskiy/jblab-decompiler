@@ -1,12 +1,14 @@
 package examples.kotlin
 
 class Expressions() {
-    var intField = 1
+    var varIntField = 1
+    val valIntField = 2
 
     fun expressionTest(k : Int, s : String): Long {
-        var a = (1 + 2) * 3 / k
-        var b = 2 * (intFun(a) + 12.5)
-        return a.toLong()
+        var a = (3 + 4) * 5 / k
+        val b = 6 * (intFun(a) + 7.8)
+        a = 9
+        return a.toLong() + valIntField
     }
 
     fun intFun(x : Int): Int {
@@ -14,7 +16,7 @@ class Expressions() {
     }
 
     fun propertiesTest() {
-        intField = 1
-        var i = 2 + intField + Expressions().intField
+        varIntField = 11
+        val i = 12 + varIntField + Expressions().varIntField
     }
 }
