@@ -39,7 +39,7 @@ public class KotlinVariable extends Variable {
     @Override
     public Expression getName() {
         final String name = ((Constant) super.getName()).getValue().toString();
-        final String actualName = myIsMethodParameter || myIsInForDeclaration  ? name : (isMutable() ? "var " : "val ") + name;
+        final String actualName = myIsMethodParameter || myIsInForDeclaration || myIsDeclared ? name : (isMutable() ? "var " : "val ") + name;
 
         return myIsDeclared ? myName : new Constant(actualName, false);
     }
@@ -70,10 +70,35 @@ public class KotlinVariable extends Variable {
         return new KotlinVariable(index, variableType, name);
     }
 
-    public boolean isMutable() {
-        boolean parentIsMutable = myParentCopy != null && ((KotlinVariable) myParentCopy).isMutable();
-        boolean childIsMutable = myChildCopy != null && ((KotlinVariable) myChildCopy).isMutable();
+    protected boolean isMutable() {
+        KotlinVariable current = getRootParent();
+        boolean result = false;
 
-        return isSharedVar(myVariableType) || parentIsMutable || childIsMutable || !myIsMethodParameter && myAssignmentsCount > 1;
+        while (current.getChildCopy() != null) {
+            result = result || current.currentVariableIsMutable();
+            current = (KotlinVariable) current.getChildCopy();
+        }
+
+        return  result;
+    }
+
+    protected Variable getParentCopy() {
+        return myParentCopy;
+    }
+
+    protected Variable getChildCopy() {
+        return myParentCopy;
+    }
+
+    private boolean currentVariableIsMutable() {
+        return isSharedVar(myVariableType) || !myIsMethodParameter && myAssignmentsCount > 1;
+    }
+
+    private KotlinVariable getRootParent() {
+        KotlinVariable current = this;
+        while (current.getParentCopy() != null) {
+            current = (KotlinVariable) current.getParentCopy();
+        }
+        return current;
     }
 }
