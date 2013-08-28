@@ -2,6 +2,7 @@ package com.sdc.ast.expressions;
 
 import com.sdc.ast.ExpressionType;
 import com.sdc.ast.Type;
+import com.sdc.ast.expressions.identifiers.Variable;
 
 /**
  * Created with IntelliJ IDEA.
@@ -41,5 +42,11 @@ public class TernaryExpression extends PriorityExpression {
                 ", myLeft=" + myLeft +
                 ", myRight=" + myRight +
                 '}';
+    }
+    @Override
+    public boolean findVariable(Variable variable) {
+        return myCondition.findVariable(variable)
+        || myLeft.findVariable(variable)
+        || myRight.findVariable(variable);
     }
 }

@@ -3,6 +3,7 @@ package com.sdc.ast.expressions;
 import com.sdc.abstractLanguage.AbstractOperationPrinter;
 import com.sdc.ast.ExpressionType;
 import com.sdc.ast.Type;
+import com.sdc.ast.expressions.identifiers.Variable;
 
 public class ArrayLength extends PriorityExpression {
     Expression myOperand;
@@ -25,4 +26,8 @@ public class ArrayLength extends PriorityExpression {
         }
     }
 
+    @Override
+    public boolean findVariable(Variable variable) {
+        return myOperand.findVariable(variable);
+    }
 }

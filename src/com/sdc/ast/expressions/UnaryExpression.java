@@ -3,6 +3,7 @@ package com.sdc.ast.expressions;
 import com.sdc.abstractLanguage.AbstractOperationPrinter;
 import com.sdc.ast.ExpressionType;
 import com.sdc.ast.Type;
+import com.sdc.ast.expressions.identifiers.Variable;
 
 import static com.sdc.ast.ExpressionType.*;
 
@@ -46,4 +47,10 @@ public class UnaryExpression extends PriorityExpression {
                 ", myOperand=" + myOperand +
                 '}';
     }
+
+    @Override
+      public boolean findVariable(Variable variable) {
+        return myOperand.findVariable(variable);
+    }
+
 }

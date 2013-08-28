@@ -2,6 +2,7 @@ package com.sdc.ast.expressions;
 
 import com.sdc.ast.ExpressionType;
 import com.sdc.ast.Type;
+import com.sdc.ast.expressions.identifiers.Variable;
 
 public class InstanceOf extends PriorityExpression {
     private final Type myInstanceOfType;
@@ -34,5 +35,10 @@ public class InstanceOf extends PriorityExpression {
 
     public boolean isInverted() {
         return myIsInverted;
+    }
+
+    @Override
+    public boolean findVariable(Variable variable) {
+        return myArgument.findVariable(variable);
     }
 }

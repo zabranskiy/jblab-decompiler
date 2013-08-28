@@ -3,6 +3,7 @@ package com.sdc.ast.expressions.nestedclasses;
 import com.sdc.abstractLanguage.AbstractClass;
 import com.sdc.ast.Type;
 import com.sdc.ast.expressions.Expression;
+import com.sdc.ast.expressions.identifiers.Variable;
 
 public class NestedClass extends Expression {
     protected final AbstractClass myNestedClass;
@@ -14,5 +15,10 @@ public class NestedClass extends Expression {
 
     public AbstractClass getNestedClass() {
         return myNestedClass;
+    }
+
+    @Override
+    public boolean findVariable(Variable variable) {
+        return false;
     }
 }

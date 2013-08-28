@@ -88,4 +88,9 @@ public class KotlinOperationPrinter extends AbstractOperationPrinter {
     public String getNotPrimitiveView(String className) {
         return className;
     }
+
+    @Override
+    public String getSpaceAfterType() {
+        return "";
+    }
 }

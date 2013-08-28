@@ -2,6 +2,7 @@ package com.sdc.ast.expressions;
 
 import com.sdc.ast.ExpressionType;
 import com.sdc.ast.Type;
+import com.sdc.ast.expressions.identifiers.Variable;
 
 public class Constant extends PriorityExpression {
     private final Object myValue;
@@ -46,4 +47,8 @@ public class Constant extends PriorityExpression {
         return ((myValue==null) || myValue.toString().contains("null")) && !myIsStringValue;
     }
 
+    @Override
+    public boolean findVariable(Variable variable) {
+        return false;
+    }
 }

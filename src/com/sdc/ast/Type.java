@@ -98,7 +98,7 @@ public class Type {
         for (int i = 0; i < myDimensions; i++) {
             res = operationPrinter.getTypeWithBracketsView(res);
         }
-        return res + " ";
+        return res + operationPrinter.getSpaceAfterType();
     }
 
     public String toStringWithoutBrackets(AbstractOperationPrinter operationPrinter) {
@@ -135,7 +135,7 @@ public class Type {
                     return "";
             }
         }
-        res = res + " ";
+        res = res + operationPrinter.getSpaceAfterType();
         return res;
     }
 
@@ -194,7 +194,7 @@ public class Type {
                 return BOOLEAN_TYPE;
             }
         }
-        return type1; //todo think more
+        return new Type("Object");
     }
 
     public boolean isDoubleLength() {
