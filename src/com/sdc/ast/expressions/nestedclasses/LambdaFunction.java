@@ -2,15 +2,16 @@ package com.sdc.ast.expressions.nestedclasses;
 
 import com.sdc.abstractLanguage.AbstractClass;
 import com.sdc.abstractLanguage.AbstractMethod;
+import com.sdc.ast.Type;
 
 import java.util.List;
 
 public class LambdaFunction extends NestedClass {
-    private final String myType;
+    //private final String myLambdaFunctionType;
 
     public LambdaFunction(final AbstractClass nestedClass, final String type) {
         super(nestedClass);
-        this.myType = type;
+        setType(new Type(type));
     }
 
     public AbstractMethod getFunction() {
@@ -28,7 +29,4 @@ public class LambdaFunction extends NestedClass {
         return superClass.startsWith("FunctionImpl");
     }
 
-    public String getType() {
-        return myType;
-    }
 }

@@ -1,19 +1,15 @@
 package KotlinPrinter
 
 import pretty.*
-
 import com.sdc.ast.expressions.Expression
-import com.sdc.ast.expressions.NewArray
 import com.sdc.ast.expressions.nestedclasses.LambdaFunction
 import com.sdc.ast.expressions.nestedclasses.AnonymousClass
 import com.sdc.ast.expressions.InstanceOf
-
 import com.sdc.abstractLanguage.AbstractClass
 import com.sdc.abstractLanguage.AbstractMethod
 import com.sdc.abstractLanguage.AbstractClassField
 import com.sdc.abstractLanguage.AbstractPrinter
 import com.sdc.abstractLanguage.AbstractOperationPrinter
-
 import com.sdc.kotlin.KotlinClass
 import com.sdc.kotlin.KotlinMethod
 import com.sdc.kotlin.KotlinClassField
@@ -21,13 +17,12 @@ import com.sdc.kotlin.KotlinOperationPrinter
 import com.sdc.ast.expressions.identifiers.Variable
 import com.sdc.ast.expressions.Constant
 import com.sdc.ast.expressions.UnaryExpression
-import com.sdc.ast.OperationType
+import com.sdc.ast.ExpressionType
 import com.sdc.ast.expressions.identifiers.Field
 import com.sdc.kotlin.KotlinVariable
-import com.sdc.ast.expressions.identifiers.Identifier
 import com.sdc.ast.controlflow.Assignment
 import com.sdc.kotlin.KotlinNewArray
-
+import com.sdc.ast.expressions.Cast
 
 class KotlinPrinter: AbstractPrinter() {
     override fun getOperationPrinter(): AbstractOperationPrinter{
@@ -82,21 +77,17 @@ class KotlinPrinter: AbstractPrinter() {
             super.printVariable(expression, nestSize)
 
     override fun printUndeclaredVariable(expression: Variable, nestSize: Int): PrimeDoc =
-        printExpression(expression.getName(), nestSize) + text(" : ") + text(expression.getType())
+        printExpression(expression.getName(), nestSize) + text(" : ") + printType(expression.getType(),nestSize)
 
     override fun printInvertedInstanceOf(expression : InstanceOf, nestSize : Int): PrimeDoc =
-        printInstanceOfArgument(expression, nestSize) + text("!") + printInstanceOfOperator() + text(expression.getType())
+        printInstanceOfArgument(expression, nestSize) + text("!") + printInstanceOfOperator() + printType(expression.getType(),nestSize)
 
-    override fun printUnaryExpression(expression: UnaryExpression, nestSize: Int): PrimeDoc {
+    override fun printCast(expression: Cast, nestSize: Int): PrimeDoc {
         val opPriority = expression.getPriority(getOperationPrinter())
         val isAssociative = expression.isAssociative();
         val operand = expression.getOperand()
-        val expr = printExpressionCheckBrackets(operand, opPriority, isAssociative, nestSize);
-
-        if (expression.getOperationType()!!.name().contains("CAST"))
-            return expr + text(expression.getOperation(getOperationPrinter()))
-        else
-            return text(expression.getOperation(getOperationPrinter())) + expr
+        val expr = printExpressionCheckBrackets(operand, opPriority,isAssociative, nestSize);
+        return  expr + text(expression.getOperation(getOperationPrinter()))
     }
 
     override fun printField(expression: Field, nestSize: Int): PrimeDoc {
@@ -117,7 +108,8 @@ class KotlinPrinter: AbstractPrinter() {
     }
 
     fun checkForSharedVar(expression : Expression?): Boolean =
-        expression is Field && KotlinVariable.isSharedVar(expression.getType()) || expression is KotlinVariable && KotlinVariable.isSharedVar(expression.getActualType())
+            expression is Field && KotlinVariable.isSharedVar(expression.getType()?.toString(KotlinOperationPrinter.getInstance()))
+            || expression is KotlinVariable && KotlinVariable.isSharedVar(expression.getActualType()?.toString(KotlinOperationPrinter.getInstance()))
 
     override fun printAnonymousClassDeclaration(anonymousClass: AbstractClass?, arguments: List<Expression>?): PrimeDoc {
         var declaration : PrimeDoc = nil()

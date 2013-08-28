@@ -50,7 +50,7 @@ public class ConstructionBuilder {
                     final Assignment containerAssignmentForFor = (Assignment) containerDeclarationForFor;
                     final Assignment containerLengthAssignment = (Assignment) containerLengthDeclaration;
 
-                    if ((containerAssignmentForFor.getLeft().getType().contains("[") || containerAssignmentForFor.getLeft().getType().contains("Array"))
+                    if ((containerAssignmentForFor.getLeft().getType().isArray())
                             && containerLengthAssignment.getRight() instanceof ArrayLength)
                     {
                         ForEach forEach = new ForEach((Variable)((Assignment)((ElementaryBlock) ((For) forStartConstruction).getBody()).getFirstStatement()).getLeft()
@@ -87,7 +87,7 @@ public class ConstructionBuilder {
                 if (variableDeclarationForWhile instanceof Assignment) {
                     final Assignment variableAssignmentForWhen = (Assignment) variableDeclarationForWhile;
 
-                     if (variableAssignmentForWhen.getLeft().getType().toLowerCase().trim().replace("?", "").equals("iterator")
+                     if (variableAssignmentForWhen.getLeft().getType().toString().toLowerCase().trim().replace("?", "").equals("iterator")
                              && ((While) whileStartConstruction).getCondition() instanceof UnaryExpression
                              && ((InstanceInvocation) ((UnaryExpression) ((While) whileStartConstruction).getCondition()).getOperand()).getFunction().equals("hasNext"))
                      {

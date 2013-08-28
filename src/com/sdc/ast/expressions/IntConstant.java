@@ -1,5 +1,7 @@
 package com.sdc.ast.expressions;
 
+import com.sdc.ast.Type;
+
 public class IntConstant extends Constant {
     private int myIntValue = 0;
 
@@ -8,7 +10,7 @@ public class IntConstant extends Constant {
     public static final Constant M_ONE = new IntConstant(-1);
 
     public IntConstant(int value) {
-        super(value, false, false);
+        super(value, false, Type.INT_TYPE);
         myIntValue = value;
     }
 

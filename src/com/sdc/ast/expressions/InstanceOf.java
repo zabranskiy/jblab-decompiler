@@ -1,23 +1,24 @@
 package com.sdc.ast.expressions;
 
-import com.sdc.ast.OperationType;
+import com.sdc.ast.ExpressionType;
+import com.sdc.ast.Type;
 
 public class InstanceOf extends PriorityExpression {
-    private final String myInstanceOfType;
+    private final Type myInstanceOfType;
     private final Expression myArgument;
     private boolean myIsInverted = false;
 
-    public InstanceOf(final String type, final Expression argument) {
-        this.myInstanceOfType = type;
+    public InstanceOf(final Type instanceOfType, final Expression argument) {
+        super(ExpressionType.INSTANCEOF, Type.BOOLEAN_TYPE);
+        this.myInstanceOfType = instanceOfType;
         this.myArgument = argument;
-        myType = OperationType.INSTANCEOF;
     }
 
-    public InstanceOf(final String type) {
-        this(type, null);
+    public InstanceOf(final Type instanceOfType) {
+        this(instanceOfType, null);
     }
 
-    public String getType() {
+    public Type getInstanceOfType() {
         return myInstanceOfType;
     }
 
@@ -33,10 +34,5 @@ public class InstanceOf extends PriorityExpression {
 
     public boolean isInverted() {
         return myIsInverted;
-    }
-
-    @Override
-    public boolean isBoolean() {
-        return true;
     }
 }

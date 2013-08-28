@@ -1,6 +1,6 @@
 package com.sdc.kotlin;
 
-import com.sdc.ast.OperationType;
+import com.sdc.ast.ExpressionType;
 import com.sdc.ast.controlflow.*;
 import com.sdc.ast.controlflow.InstanceInvocation;
 import com.sdc.ast.controlflow.Invocation;
@@ -131,7 +131,7 @@ public class KotlinConstructionBuilder extends ConstructionBuilder {
                         ((ElementaryBlock) baseConstruction).removeLastStatement();
 
                         KotlinNewArray newArray = new KotlinNewArray(1
-                                , ((NewArray) ((ArrayLength) ((Assignment) initializationStatement).getRight()).getOperand()).getType()
+                                , ((NewArray) ((ArrayLength) ((Assignment) initializationStatement).getRight()).getOperand()).getType().toString(KotlinOperationPrinter.getInstance())
                                 , ((NewArray) ((ArrayLength) ((Assignment) initializationStatement).getRight()).getOperand()).getDimensions());
                         newArray.setInitializer(lambdaFunction);
 
@@ -199,7 +199,7 @@ public class KotlinConstructionBuilder extends ConstructionBuilder {
         if (condition instanceof BinaryExpression) {
             final BinaryExpression conditionAsBinaryExpression = (BinaryExpression) condition;
 
-            if (conditionAsBinaryExpression.getLeft() instanceof Variable && conditionAsBinaryExpression.getOperationType() == OperationType.NE) {
+            if (conditionAsBinaryExpression.getLeft() instanceof Variable && conditionAsBinaryExpression.getExpressionType() == ExpressionType.NE) {
                 final Variable conditionVariable = (Variable) conditionAsBinaryExpression.getLeft();
 
                 if (conditionVariable.getIndex() == variableIndex && whenCondition.getElseBlock() instanceof ElementaryBlock) {

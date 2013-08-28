@@ -1,6 +1,6 @@
 package com.sdc.ast.expressions;
 
-import com.sdc.ast.OperationType;
+import com.sdc.ast.ExpressionType;
 import com.sdc.ast.expressions.identifiers.Identifier;
 
 public class SquareBrackets extends Identifier {
@@ -8,9 +8,9 @@ public class SquareBrackets extends Identifier {
     private Expression myIndex;
 
     public SquareBrackets(Expression operand, Expression index) {
+        super(ExpressionType.SQUARE_BRACKETS, operand.getType().getTypeWithOnPairOfBrackets());
         myOperand = operand;
         myIndex = index;
-        myType = OperationType.SQUARE_BRACKETS;
     }
 
     public Expression getOperand() {
@@ -32,17 +32,5 @@ public class SquareBrackets extends Identifier {
     @Override
     public Expression getName() {
         return myOperand;
-    }
-
-    @Override
-    public String getType() {
-        if(myOperand instanceof Identifier) return ((Identifier) myOperand).getType();
-        if(myOperand instanceof Invocation) return ((Invocation) myOperand).getReturnType();
-        return null; // not need, I think
-    }
-
-    @Override
-    public boolean isBoolean() {
-        return getType().contains("boolean");
     }
 }

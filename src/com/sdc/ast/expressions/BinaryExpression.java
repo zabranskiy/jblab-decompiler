@@ -1,22 +1,17 @@
 package com.sdc.ast.expressions;
 
 import com.sdc.abstractLanguage.AbstractOperationPrinter;
-import com.sdc.ast.OperationType;
+import com.sdc.ast.ExpressionType;
+import com.sdc.ast.Type;
 
-import static com.sdc.ast.OperationType.*;
+import static com.sdc.ast.ExpressionType.*;
 
 public class BinaryExpression extends PriorityExpression {
-    protected Expression myLeft;
-    protected Expression myRight;
+    protected final Expression myLeft;
+    protected final Expression myRight;
 
-    public BinaryExpression(final OperationType type, final Expression left, final Expression right) {
-        this.myType = type;
-        this.myLeft = left;
-        this.myRight = right;
-        setDoubleLength(left.hasDoubleLength() && right.hasDoubleLength());
-    }
-
-    public BinaryExpression(final Expression left, final Expression right) {
+    public BinaryExpression(final ExpressionType expressionType, final Expression left, final Expression right) {
+        super(expressionType, getMyType(expressionType,left,right));
         this.myLeft = left;
         this.myRight = right;
     }
@@ -30,7 +25,7 @@ public class BinaryExpression extends PriorityExpression {
     }
 
     public String getOperation(AbstractOperationPrinter operationPrinter) {
-        switch (myType) {
+        switch (myExpressionType) {
             case ADD:
                 return operationPrinter.getAddView();
             case SUB:
@@ -71,65 +66,53 @@ public class BinaryExpression extends PriorityExpression {
     }
 
     public Expression invert() {
-        switch (myType) {
+        switch (myExpressionType) {
             case AND:
-                myType = OR;
-                invertOperands();
-                break;
+                return new BinaryExpression(OR,myLeft.invert(),myRight.invert());
             case OR:
-                myType = AND;
-                invertOperands();
-                break;
+                return new BinaryExpression(AND, myLeft.invert(),myRight.invert());
             case EQ:
-                myType = NE;
-                break;
+                return new BinaryExpression(NE, myLeft,myRight);
             case NE:
-                myType = EQ;
-                break;
+                return new BinaryExpression(EQ, myLeft,myRight);
             case GE:
-                myType = LT;
-                break;
+                return new BinaryExpression(LT, myLeft,myRight);
             case LT:
-                myType = GE;
-                break;
+                return new BinaryExpression(GE, myLeft,myRight);
             case LE:
-                myType = GT;
-                break;
+                return new BinaryExpression(GT, myLeft,myRight);
             case GT:
-                myType = LE;
-                break;
+                return new BinaryExpression(LE, myLeft,myRight);
             default:
                 return super.invert();
         }
-        return this;
-    }
-
-    private void invertOperands() {
-        myLeft = myLeft.invert();
-        myRight = myRight.invert();
     }
 
     @Override
     public String toString() {
         return "BinaryExpression{" +
-                "myType=" + myType +
+                "myExpressionType=" + myExpressionType +
                 ", myLeft=" + myLeft +
                 ", myRight=" + myRight +
                 '}';
     }
 
     public boolean isIncrementCastableType() {
-        return myType == ADD || myType == SUB || myType == MUL || myType == DIV || myType == REM ||
-                myType == USHR || myType == SHR || myType == SHL ||
-                myType == BITWISE_AND || myType == BITWISE_OR || myType == BITWISE_XOR;
+        return myExpressionType == ADD || myExpressionType == SUB || myExpressionType == MUL || myExpressionType == DIV || myExpressionType == REM ||
+                myExpressionType == USHR || myExpressionType == SHR || myExpressionType == SHL ||
+                myExpressionType == BITWISE_AND || myExpressionType == BITWISE_OR || myExpressionType == BITWISE_XOR;
     }
 
     public boolean isLogicType() {
-        return myType == EQ || myType == NE || myType == GE || myType == LE || myType == LT || myType == GT || myType == AND || myType == OR;
+        return BinaryExpression.isLogicType(myExpressionType);
+    }
+    public static boolean isLogicType(ExpressionType expressionType) {
+        return expressionType == EQ || expressionType == NE ||
+                expressionType == GE || expressionType == LE || expressionType == LT || expressionType == GT ||
+                expressionType == AND || expressionType == OR;
     }
 
-    @Override
-    public boolean isBoolean() {
-        return isLogicType();
+    public static Type getMyType(final ExpressionType expressionType, final Expression left, final Expression right) {
+        return isLogicType(expressionType) ? Type.BOOLEAN_TYPE : Type.getStrongerType(left.getType(), right.getType());
     }
 }

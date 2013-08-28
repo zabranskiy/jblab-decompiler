@@ -1,14 +1,15 @@
 package com.sdc.ast.expressions;
 
 import com.sdc.abstractLanguage.AbstractOperationPrinter;
-import com.sdc.ast.OperationType;
+import com.sdc.ast.ExpressionType;
+import com.sdc.ast.Type;
 
 public class ArrayLength extends PriorityExpression {
     Expression myOperand;
 
     public ArrayLength(Expression myOperand) {
+        super(ExpressionType.ARRAYLENGTH, Type.INT_TYPE);
         this.myOperand = myOperand;
-        myType = OperationType.ARRAYLENGTH;
     }
 
     public Expression getOperand() {
@@ -16,7 +17,7 @@ public class ArrayLength extends PriorityExpression {
     }
 
     public String getOperation(AbstractOperationPrinter operationPrinter) {
-        switch (myType) {
+        switch (myExpressionType) {
             case ARRAYLENGTH:
                 return operationPrinter.getArrayLengthView();
             default:
@@ -24,8 +25,4 @@ public class ArrayLength extends PriorityExpression {
         }
     }
 
-    @Override
-    public boolean isBoolean() {
-        return false;
-    }
 }
