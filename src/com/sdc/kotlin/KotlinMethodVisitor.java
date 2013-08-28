@@ -64,11 +64,18 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
 
         if (!myStatements.isEmpty()) {
             final Statement lastStatement = myStatements.get(myStatements.size() - 1);
-            if (lastStatement instanceof Assignment
-                    && ((Assignment) lastStatement).getRight() instanceof New
+            if (lastStatement instanceof Assignment) {
+                if (((Assignment) lastStatement).getRight() instanceof New
                     && KotlinVariable.isSharedVar(((New) ((Assignment) lastStatement).getRight()).getReturnType()))
-            {
-                myStatements.remove(myStatements.size() - 1);
+                {
+                    myStatements.remove(myStatements.size() - 1);
+                } else {
+                    final String opString = Printer.OPCODES[opcode];
+
+                    if (opString.contains("STORE") &&((Assignment) lastStatement).getLeft() instanceof KotlinVariable) {
+                        ((KotlinVariable) ((Assignment) lastStatement).getLeft()).addAssignment();
+                    }
+                }
             }
         }
     }

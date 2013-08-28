@@ -5,7 +5,8 @@ class Expressions() {
 
     fun expressionTest(k : Int, s : String): Long {
         var a = (1 + 2) * 3 / k
-        var b = 2 * (intFun(a) + 12.5)
+        val b = 2 * (intFun(a) + 12.5)
+        a = 123
         return a.toLong()
     }
 
@@ -15,6 +16,6 @@ class Expressions() {
 
     fun propertiesTest() {
         intField = 1
-        var i = 2 + intField + Expressions().intField
+        val i = 2 + intField + Expressions().intField
     }
 }
