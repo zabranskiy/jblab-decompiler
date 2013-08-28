@@ -50,9 +50,13 @@ public class KotlinMethodVisitor extends AbstractMethodVisitor {
                 myBodyStack.push(lambdaFunction);
                 return;
             }
-        } else if (opString.contains("PUTFIELD") && myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName()) && !myDecompiledMethod.hasFieldInitializer(name)) {
-            myDecompiledMethod.addInitializerToField(name, getTopOfBodyStack());
-            return;
+        } else if (opString.contains("PUTFIELD") && myDecompiledOwnerFullClassName.equals(DeclarationWorker.decompileFullClassName(owner))) {
+            ((KotlinClass) myDecompiledMethod.getDecompiledClass()).addAssignmentToField(name);
+
+            if (myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName()) && !myDecompiledMethod.hasFieldInitializer(name)) {
+                myDecompiledMethod.addInitializerToField(name, getTopOfBodyStack());
+                return;
+            }
         }
 
         super.visitFieldInsn(opcode, owner, name, desc);
