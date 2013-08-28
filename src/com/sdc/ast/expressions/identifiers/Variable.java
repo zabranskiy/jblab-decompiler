@@ -135,4 +135,9 @@ public class Variable extends Identifier {
     public boolean isUndefined(){
         return myName.isNull();
     }
+
+    @Override
+    public boolean findVariable(Variable variable) {
+        return equals(variable);
+    }
 }

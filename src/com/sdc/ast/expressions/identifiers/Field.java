@@ -35,4 +35,9 @@ public class Field extends Identifier {
     public Expression getName() {
         return new Constant(myName, false, getType());
     }
+
+    @Override
+    public boolean findVariable(Variable variable) {
+        return false;
+    }
 }

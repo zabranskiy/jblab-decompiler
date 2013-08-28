@@ -3,6 +3,7 @@ package com.sdc.ast.expressions;
 import com.sdc.abstractLanguage.AbstractOperationPrinter;
 import com.sdc.ast.ExpressionType;
 import com.sdc.ast.Type;
+import com.sdc.ast.expressions.identifiers.Variable;
 
 import static com.sdc.ast.Type.*;
 
@@ -52,6 +53,11 @@ public class Cast extends PriorityExpression {
     @Override
     public Expression getBase() {
         return myOperand;
+    }
+
+    @Override
+    public boolean findVariable(Variable variable) {
+        return myOperand.findVariable(variable);
     }
 
     public static Type getMyType(ExpressionType expressionType, String param) {

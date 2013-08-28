@@ -2,6 +2,7 @@ package com.sdc.ast.expressions;
 
 import com.sdc.ast.ExpressionType;
 import com.sdc.ast.Type;
+import com.sdc.ast.expressions.identifiers.Variable;
 
 public class New extends PriorityExpression {
     private final Invocation myConstructor;
@@ -13,5 +14,9 @@ public class New extends PriorityExpression {
 
     public Invocation getConstructor() {
         return myConstructor;
+    }
+    @Override
+    public boolean findVariable(Variable variable) {
+        return myConstructor.findVariable(variable);
     }
 }

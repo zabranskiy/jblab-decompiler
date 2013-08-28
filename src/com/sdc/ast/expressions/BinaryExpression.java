@@ -3,6 +3,7 @@ package com.sdc.ast.expressions;
 import com.sdc.abstractLanguage.AbstractOperationPrinter;
 import com.sdc.ast.ExpressionType;
 import com.sdc.ast.Type;
+import com.sdc.ast.expressions.identifiers.Variable;
 
 import static com.sdc.ast.ExpressionType.*;
 
@@ -114,5 +115,9 @@ public class BinaryExpression extends PriorityExpression {
 
     public static Type getMyType(final ExpressionType expressionType, final Expression left, final Expression right) {
         return isLogicType(expressionType) ? Type.BOOLEAN_TYPE : Type.getStrongerType(left.getType(), right.getType());
+    }
+    @Override
+    public boolean findVariable(Variable variable) {
+        return myLeft.findVariable(variable) || myRight.findVariable(variable);
     }
 }

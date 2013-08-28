@@ -2,6 +2,7 @@ package com.sdc.ast.expressions;
 
 import com.sdc.ast.ExpressionType;
 import com.sdc.ast.Type;
+import com.sdc.ast.expressions.identifiers.Variable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,5 +37,16 @@ public class NewArray extends PriorityExpression {
 
     public int getDimensionsCount() {
         return myDimensionsCount;
+    }
+    @Override
+    public boolean findVariable(Variable variable) {
+        boolean res=false;
+        for(Expression expression: myDimensions){
+            res = res || expression.findVariable(variable);
+        }
+        for(Expression expression: myInitializationValues){
+            res = res || expression.findVariable(variable);
+        }
+        return res;
     }
 }

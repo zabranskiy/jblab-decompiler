@@ -1,6 +1,7 @@
 package com.sdc.ast.expressions;
 
 import com.sdc.ast.Type;
+import com.sdc.ast.expressions.identifiers.Variable;
 
 import static com.sdc.ast.ExpressionType.NOT;
 
@@ -31,7 +32,7 @@ public abstract class Expression {
     }
     //public abstract List<Identifier> findIdentifiers();
 
-    //public abstract boolean findIdentifier(Identifier identifier);
+    public abstract boolean findVariable(Variable variable);
     public final boolean isBoolean(){
         return getType().isBoolean();
     }
