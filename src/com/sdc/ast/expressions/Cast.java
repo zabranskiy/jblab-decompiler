@@ -52,7 +52,7 @@ public class Cast extends PriorityExpression {
 
     @Override
     public Expression getBase() {
-        return myOperand;
+        return myOperand.getBase();
     }
 
     @Override

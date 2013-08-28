@@ -3,18 +3,24 @@ package com.sdc.cfg.constructions;
 import com.sdc.ast.expressions.Expression;
 import com.sdc.ast.expressions.identifiers.Variable;
 
+import java.util.List;
+
 public class ForEach extends Construction {
-    private final Variable myVariable;
+    private List<Variable> myVariables;
     private final Expression myContainer;
     private Construction myBody;
 
-    public ForEach(final Variable variable, final Expression container) {
-        this.myVariable = variable;
+    public ForEach(final List<Variable> variables, final Expression container) {
+        this.myVariables = variables;
         this.myContainer = container;
     }
 
-    public Variable getVariable() {
-        return myVariable;
+    public List<Variable> getVariables() {
+        return myVariables;
+    }
+
+    public void setVariables(final List<Variable> variables) {
+        this.myVariables = variables;
     }
 
     public Expression getContainer() {
