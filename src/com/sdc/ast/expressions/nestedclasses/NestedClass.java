@@ -1,6 +1,6 @@
 package com.sdc.ast.expressions.nestedclasses;
 
-import com.sdc.abstractLanguage.AbstractClass;
+import com.sdc.languages.general.languageParts.AbstractClass;
 import com.sdc.ast.Type;
 import com.sdc.ast.expressions.Expression;
 import com.sdc.ast.expressions.identifiers.Variable;

@@ -1,7 +1,7 @@
 package com.sdc.ast.expressions.nestedclasses;
 
-import com.sdc.abstractLanguage.AbstractClass;
-import com.sdc.abstractLanguage.AbstractMethod;
+import com.sdc.languages.general.languageParts.AbstractClass;
+import com.sdc.languages.general.languageParts.AbstractMethod;
 import com.sdc.ast.Type;
 
 import java.util.List;

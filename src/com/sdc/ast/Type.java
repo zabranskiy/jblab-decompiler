@@ -1,7 +1,7 @@
 package com.sdc.ast;
 
-import com.sdc.abstractLanguage.AbstractOperationPrinter;
-import com.sdc.java.JavaOperationPrinter;
+import com.sdc.languages.general.printers.AbstractOperationPrinter;
+import com.sdc.languages.java.printers.JavaOperationPrinter;
 
 import java.util.HashSet;
 

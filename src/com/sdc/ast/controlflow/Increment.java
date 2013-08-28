@@ -1,6 +1,6 @@
 package com.sdc.ast.controlflow;
 
-import com.sdc.abstractLanguage.AbstractOperationPrinter;
+import com.sdc.languages.general.printers.AbstractOperationPrinter;
 import com.sdc.ast.ExpressionType;
 import com.sdc.ast.expressions.ExprIncrement;
 import com.sdc.ast.expressions.Expression;

@@ -1,7 +1,7 @@
 package com.sdc.util;
 
-import com.sdc.abstractLanguage.AbstractFrame;
-import com.sdc.abstractLanguage.AbstractMethod;
+import com.sdc.languages.general.astUtils.AbstractFrame;
+import com.sdc.languages.general.languageParts.AbstractMethod;
 import com.sdc.ast.Type;
 import org.objectweb.asm.Opcodes;
 
