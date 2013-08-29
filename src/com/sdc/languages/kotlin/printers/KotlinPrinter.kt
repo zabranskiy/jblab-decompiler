@@ -21,6 +21,9 @@ import com.sdc.languages.general.languageParts.ClassField
 
 import com.sdc.languages.general.printers.Printer
 import com.sdc.languages.general.printers.OperationPrinter
+import com.sdc.languages.general.printers.ExpressionPrinter
+import com.sdc.languages.general.printers.StatementPrinter
+import com.sdc.languages.general.printers.ConstructionPrinter
 
 import com.sdc.languages.kotlin.languageParts.KotlinClass
 import com.sdc.languages.kotlin.languageParts.KotlinMethod
@@ -30,116 +33,32 @@ import com.sdc.languages.kotlin.astUtils.KotlinVariable
 import com.sdc.languages.kotlin.astUtils.KotlinNewArray
 
 import com.sdc.languages.kotlin.printers.KotlinOperationPrinter
+import com.sdc.languages.kotlin.printers.KotlinExpressionPrinter
+import com.sdc.languages.kotlin.printers.KotlinStatementPrinter
+import com.sdc.languages.kotlin.printers.KotlinConstructionPrinter
 
 
 class KotlinPrinter: Printer() {
-    override fun getOperationPrinter(): OperationPrinter {
-        return KotlinOperationPrinter.getInstance() as OperationPrinter;
-    }
-    override fun printVariableName(variableName: String?): String? = if (variableName.equals("this$")) "this" else variableName
+    /***
+     * Support stuff
+     */
+    override fun createExpressionPrinter(): ExpressionPrinter =
+        KotlinExpressionPrinter(this)
 
-    override fun printStatementsDelimiter(): PrimeDoc = text("")
+    override fun createStatementPrinter(expressionPrinter: ExpressionPrinter): StatementPrinter =
+        KotlinStatementPrinter(expressionPrinter)
+
+    override fun createConstructionPrinter(expressionPrinter: ExpressionPrinter, statementPrinter: StatementPrinter): ConstructionPrinter =
+        KotlinConstructionPrinter(expressionPrinter, statementPrinter)
 
     override fun printAnnotationIdentifier(): PrimeDoc = text("")
 
-    override fun printInstanceOfOperator(): PrimeDoc = text("is ")
-
-    override fun printNewOperator(): PrimeDoc = text("")
-
     override fun printBaseClass(): PrimeDoc = text("Any?")
 
-    override fun printForEachLieInOperator(): PrimeDoc = text("in")
 
-    override fun printExpression(expression: Expression?, nestSize: Int): PrimeDoc =
-        when (expression) {
-            is KotlinNewArray -> {
-                if (expression.getInitializer() != null) {
-                    var newArray : PrimeDoc = text("Array<" + expression.getType() + ">(")
-                    newArray = newArray + printExpression(expression.getDimensions()!!.get(0), nestSize) + text(", ") + printExpression(expression.getInitializer(), nestSize) + text(")")
-                    newArray
-                } else {
-                    text("Array<" + expression.getType() + ">(") + printExpression(expression.getDimensions()!!.get(0), nestSize) + text(", i -> null)")
-                }
-            }
-
-            is LambdaFunction -> {
-                val lambdaFunction = expression.getFunction()
-                val returnTypeCode = printMethodReturnType(lambdaFunction)
-                val arguments = text("{ (") + printMethodParameters(lambdaFunction) + text(")") + returnTypeCode + text("-> ")
-                val body = nest(
-                        lambdaFunction!!.getNestSize(),
-                          printConstruction(lambdaFunction.getBegin(), lambdaFunction.getNestSize())
-                ) / text("}")
-                arguments + body
-            }
-
-            is AnonymousClass -> text("object : ") + super<Printer>.printExpression(expression, nestSize)
-
-            else -> super<Printer>.printExpression(expression, nestSize)
-        }
-
-    override fun printVariable(expression: Variable, nestSize: Int): PrimeDoc =
-        if (expression.getName() is Constant && (expression.getName() as Constant).getValue().toString().equals("this$"))
-            text("this")
-        else
-            super.printVariable(expression, nestSize)
-
-    override fun printUndeclaredVariable(expression: Variable, nestSize: Int): PrimeDoc =
-        printExpression(expression.getName(), nestSize) + text(" : ") + printType(expression.getType(),nestSize)
-
-    override fun printInvertedInstanceOf(expression : InstanceOf, nestSize : Int): PrimeDoc =
-        printInstanceOfArgument(expression, nestSize) + text("!") + printInstanceOfOperator() + printType(expression.getType(),nestSize)
-
-    override fun printCast(expression: Cast, nestSize: Int): PrimeDoc {
-        val opPriority = expression.getPriority(getOperationPrinter())
-        val isAssociative = expression.isAssociative();
-        val operand = expression.getOperand()
-        val expr = printExpressionCheckBrackets(operand, opPriority,isAssociative, nestSize);
-        return  expr + text(expression.getOperation(getOperationPrinter()))
-    }
-
-    override fun printField(expression: Field, nestSize: Int): PrimeDoc {
-        val owner = expression.getOwner()
-        if (owner != null && checkForSharedVar(owner)) {
-            return printExpression(owner, nestSize)
-        } else {
-            return super.printField(expression, nestSize)
-        }
-    }
-
-    override fun printAssignment(statement: Assignment, nestSize: Int): PrimeDoc {
-        if (checkForSharedVar(statement.getLeft()) && statement.getRight() is Constant && (statement.getRight() as Constant).getValue().toString().equals("null"))
-            return nil()
-        else {
-            return super.printAssignment(statement, nestSize)
-        }
-    }
-
-    fun checkForSharedVar(expression : Expression?): Boolean =
-            expression is Field && KotlinVariable.isSharedVar(expression.getType()?.toString(KotlinOperationPrinter.getInstance()))
-            || expression is KotlinVariable && KotlinVariable.isSharedVar(expression.getActualType()?.toString(KotlinOperationPrinter.getInstance()))
-
-    override fun printAnonymousClassDeclaration(anonymousClass: GeneralClass?, arguments: List<Expression>?): PrimeDoc {
-        var declaration : PrimeDoc = nil()
-
-        val hasDefaultSuperClass = anonymousClass!!.getSuperClass()!!.isEmpty()
-        if (!hasDefaultSuperClass) {
-            declaration = declaration + text(anonymousClass.getSuperClass()) + printInvocationArguments(arguments, anonymousClass.getNestSize())
-        }
-
-        val implementedInterfaces = anonymousClass.getImplementedInterfaces()
-
-        if (!implementedInterfaces!!.isEmpty()) {
-            declaration = declaration + (if (!hasDefaultSuperClass) text(", ") else nil()) + text(implementedInterfaces.get(0))
-            for (interface in implementedInterfaces.drop(1))
-                declaration = declaration + text(", ") + text(interface)
-        } else if (hasDefaultSuperClass) {
-            declaration = printBaseClass() + text("()")
-        }
-
-        return declaration + text(" {")
-    }
-
+    /***
+     * Main overridden printing methods
+     */
     override fun printClass(decompiledClass: GeneralClass): PrimeDoc {
         val kotlinClass: KotlinClass = decompiledClass as KotlinClass
 
@@ -206,7 +125,7 @@ class KotlinPrinter: Printer() {
 
         val body = nest(
                 kotlinMethod.getNestSize(),
-                printConstruction(kotlinMethod.getBegin(), kotlinMethod.getNestSize())
+                myConstructionPrinter.printConstruction(kotlinMethod.getBegin(), kotlinMethod.getNestSize())
                 + printMethodError(kotlinMethod)
         ) / text("}")
 
@@ -220,32 +139,40 @@ class KotlinPrinter: Printer() {
 
         var fieldCode : PrimeDoc = text(kotlinClassField.getModifier() + (if (kotlinClassField.isMutable()) "var " else "val ") + kotlinClassField.getName() + " : " + kotlinClassField.getType())
         if (kotlinClassField.hasInitializer())
-            fieldCode = fieldCode + text(" = ") + printExpression(kotlinClassField.getInitializer(), kotlinClassField.getNestSize())
+            fieldCode = fieldCode + text(" = ") + myExpressionPrinter.printExpression(kotlinClassField.getInitializer(), kotlinClassField.getNestSize())
+
         return fieldCode
     }
 
+
+    /***
+     * Support stuff
+     */
     fun printPrimaryConstructorParameters(constructor: Method?): PrimeDoc =
         text("(") + printMethodParameters(constructor) + text(")")
 
     fun printSuperClassConstructor(superClassConstructor : Expression?, nestSize : Int): PrimeDoc =
-            if (superClassConstructor != null)
-                printExpression(superClassConstructor, nestSize)
-            else
-                text("/* Super class constructor error */")
+        if (superClassConstructor != null)
+            myExpressionPrinter.printExpression(superClassConstructor, nestSize)
+        else
+            text("/* Super class constructor error */")
 
     fun printInitialConstructor(constructor: Method?): PrimeDoc {
         val body = nest(
-                constructor!!.getNestSize(),
-                printConstruction(constructor.getBegin(), constructor.getNestSize())
+            constructor!!.getNestSize(),
+            myConstructionPrinter.printConstruction(constructor.getBegin(), constructor.getNestSize())
         )
+
         return text("initial constructor {") + body / text("}")
     }
 
     fun printMethodReturnType(method : Method?): PrimeDoc {
         var returnTypeCode = text(" ")
+
         val returnType = method!!.getReturnType()
         if (!returnType!!.equals("Unit"))
             returnTypeCode = text(": " + returnType + " ")
+
         return returnTypeCode
     }
 }
