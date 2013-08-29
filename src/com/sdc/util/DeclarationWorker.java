@@ -1,7 +1,7 @@
 package com.sdc.util;
 
-import com.sdc.abstractLanguage.AbstractFrame;
-import com.sdc.abstractLanguage.AbstractMethod;
+import com.sdc.languages.general.astUtils.Frame;
+import com.sdc.languages.general.languageParts.Method;
 import com.sdc.ast.Type;
 import org.objectweb.asm.Opcodes;
 
@@ -266,19 +266,19 @@ public class DeclarationWorker {
         return result;
     }
 
-    public static void addInformationAboutParameters(final String descriptor, final AbstractMethod abstractMethod
+    public static void addInformationAboutParameters(final String descriptor, final Method method
             , final int startIndex, final SupportedLanguage language)
     {
         int count = startIndex - 1;
         int pos = 0;
         int index = count;
 
-        AbstractFrame rootFrame = abstractMethod.getCurrentFrame();
+        Frame rootFrame = method.getCurrentFrame();
 
         while (pos < descriptor.length()) {
             final int backupPos = pos;
             final int backupCount = count;
-            final String type = getDescriptor(descriptor, backupPos, abstractMethod.getImports(), language);
+            final String type = getDescriptor(descriptor, backupPos, method.getImports(), language);
 
             boolean isPrimitiveClass = false;
             switch (descriptor.charAt(pos)) {
@@ -311,7 +311,7 @@ public class DeclarationWorker {
             //final String name = "x" + index;
 
             String variableType = type;
-            String name = abstractMethod.getNewTypeName( new Type(type));
+            String name = method.getNewTypeName( new Type(type));
 
             if (language == SupportedLanguage.KOTLIN) {
                 variableType = isPrimitiveClass ? convertJavaPrimitiveClassToKotlin(type) + "?" : type;
@@ -322,7 +322,7 @@ public class DeclarationWorker {
 
         rootFrame.setLastMethodParameterIndex(index);
 
-        abstractMethod.setLastLocalVariableIndex(index);
+        method.setLastLocalVariableIndex(index);
     }
 
     public static void parseGenericDeclaration(final String signature, List<String> genericTypesList,
