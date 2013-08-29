@@ -113,7 +113,17 @@ abstract class Printer {
         return group(nest(2 * method.getNestSize(), arguments))
     }
 
-    open fun printLastMethodParameter(variable: Variable, nestSize: Int): PrimeDoc =
+    open fun printLastMethodParameter(variable: Variable, nestSize: Int): PrimeDoc {
+        val myType = variable.getType()
+
+        if (myType?.isArray() as Boolean) {
+            return printVarArgMethodParameter(variable, nestSize)
+        } else {
+            return myExpressionPrinter.printExpression(variable, nestSize)
+        }
+    }
+
+    open fun printVarArgMethodParameter(variable: Variable, nestSize: Int): PrimeDoc =
         myExpressionPrinter.printExpression(variable, nestSize)
 
     open fun printGenerics(genericsDeclaration: List<String>?): PrimeDoc {
