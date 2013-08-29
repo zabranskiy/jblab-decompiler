@@ -71,7 +71,7 @@ public class Type {
             return;
         }
 
-        String newClassName = className;
+        String newClassName = className.trim();
         while (newClassName.endsWith("[]")) {
             dimensions++;
             newClassName = newClassName.substring(0, newClassName.length() - 2);
@@ -82,11 +82,11 @@ public class Type {
         }
 
         myDimensions = dimensions;
-        if (myPrimitiveTypes.contains(newClassName.trim().toLowerCase())) {
-            myType = PrimitiveType.valueOf(newClassName.trim().toUpperCase());
+        if (myPrimitiveTypes.contains(newClassName.toLowerCase())) {
+            myType = PrimitiveType.valueOf(newClassName.toUpperCase());
             myClassName = null;
         } else {
-            myClassName = newClassName.trim();
+            myClassName = newClassName;
             myType = null;
         }
     }
