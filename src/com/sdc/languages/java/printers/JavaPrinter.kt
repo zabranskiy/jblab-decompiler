@@ -117,16 +117,13 @@ class JavaPrinter: Printer() {
         return fieldCode + text(";")
     }
 
-    override fun printLastMethodParameter(variable: Variable, nestSize: Int): PrimeDoc {
-        val myType = variable.getType()
+    override fun printVarArgMethodParameter(variable: Variable, nestSize: Int): PrimeDoc {
+        variable.declare()
 
-        if (myType?.isArray() as Boolean) {
-            variable.declare()
-            val typeWithoutOnePairOfBrackets = myType?.getTypeWithOnPairOfBrackets()?.toString(myExpressionPrinter.getOperationPrinter())
-            return text(typeWithoutOnePairOfBrackets?.trim() + " ... ") + myExpressionPrinter.printExpression(variable.getName(), nestSize)
-        } else {
-            return myExpressionPrinter.printExpression(variable, nestSize)
-        }
+        val myType = variable.getType()
+        val typeWithoutOnePairOfBrackets = myType?.getTypeWithOnPairOfBrackets()?.toString(myExpressionPrinter.getOperationPrinter())
+
+        return text(typeWithoutOnePairOfBrackets?.trim() + " ... ") + myExpressionPrinter.printExpression(variable.getName(), nestSize)
     }
 
     fun printSimpleClass(decompiledClass: GeneralClass): PrimeDoc {

@@ -148,6 +148,16 @@ class KotlinPrinter: Printer() {
     /***
      * Support stuff
      */
+    override fun printVarArgMethodParameter(variable: Variable, nestSize: Int): PrimeDoc {
+        variable.declare()
+
+        val myType = variable.getType()
+        val typeWithoutOnePairOfBrackets = myType?.getTypeWithOnPairOfBrackets()?.toString(myExpressionPrinter.getOperationPrinter())
+
+        return text("vararg ") + myExpressionPrinter.printExpression(variable.getName(), nestSize) + text(" : " + typeWithoutOnePairOfBrackets?.trim())
+    }
+
+
     fun printPrimaryConstructorParameters(constructor: Method?): PrimeDoc =
         text("(") + printMethodParameters(constructor) + text(")")
 
