@@ -1,7 +1,6 @@
 package com.sdc.languages.general.printers
 
 import pretty.*
-
 import com.sdc.ast.Type
 import com.sdc.ast.ExpressionType
 import com.sdc.ast.expressions.Expression
@@ -21,10 +20,8 @@ import com.sdc.ast.expressions.SquareBrackets
 import com.sdc.ast.expressions.Cast
 import com.sdc.ast.expressions.Invocation
 import com.sdc.ast.expressions.New
-
 import com.sdc.languages.general.languageParts.GeneralClass
 import com.sdc.ast.expressions.InstanceInvocation
-
 
 abstract class ExpressionPrinter(printer : Printer) {
     val myPrinter : Printer = printer
@@ -113,7 +110,18 @@ abstract class ExpressionPrinter(printer : Printer) {
         val isAssociative = expression.isAssociative();
 
         if (expression is InstanceInvocation) {
-            funName = printInstance(expression.getInstance(), opPriority, isAssociative, nestSize, expression.isNotNullCheckedCall()) + funName
+            val appendExpressions: MutableList<Expression> = expression.getAppendSequenceExpressions() as MutableList<Expression>;
+            if(appendExpressions.isEmpty()){
+                funName = printInstance(expression.getInstance(), opPriority, isAssociative, nestSize, expression.isNotNullCheckedCall()) + funName
+            } else {
+                var lastSumExpression = appendExpressions.remove(appendExpressions.size() - 1)
+                funName = nil();
+                for(sumExpression in appendExpressions){
+                    funName = nest(nestSize, funName + printExpression(sumExpression, nestSize) + text(" + "))
+                }
+                funName = group(funName + printExpression(lastSumExpression, nestSize))
+                return funName
+            }
         }
 
         return funName + printInvocationArguments(expression.getArguments(), nestSize)

@@ -44,7 +44,8 @@ public class Expressions {
         k++;
         i*=k+-j;
         i>>=k-=(j*=4);
-
+        strs[2][3]= strs[1][1]+1+"w";
+        method("w"+23+strs[0][0]+ " s"+ 2.4,"ast"+strs[1][2]);
         long t=1+i;
         t=t+1;
         k<<=(i*=(i|=2)+(j>>=1)*(i&=j<<=(int)(p*=i)));
