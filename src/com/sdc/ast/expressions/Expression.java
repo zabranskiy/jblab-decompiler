@@ -3,6 +3,8 @@ package com.sdc.ast.expressions;
 import com.sdc.ast.Type;
 import com.sdc.ast.expressions.identifiers.Variable;
 
+import java.util.List;
+
 import static com.sdc.ast.ExpressionType.NOT;
 
 public abstract class Expression {
@@ -39,5 +41,16 @@ public abstract class Expression {
 
     public final void setType(Type type){
         myType = type;
+    }
+
+    public boolean hasNonStaticInvocations() {
+        for (Expression e: getSubExpressions()){
+            if(e.hasNonStaticInvocations()) return true;
+        }
+        return false;
+    }
+
+    public List<Expression> getSubExpressions(){
+        return null; //todo
     }
 }

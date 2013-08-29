@@ -17,17 +17,17 @@ public class Expressions {
         return true;
     }
 
-    private void method(String... strings){
+    private void method(String... strings) {
         int i = strings.length;
         int a;
         int g;
-        int h   ;
+        int h;
         Object o;
 
     }
 
-    private void meth(short d){
-        d= (short) (d+1);
+    private void meth(short d) {
+        d = (short) (d + 1);
     }
 
     public void interfaceMethod() {
@@ -36,22 +36,22 @@ public class Expressions {
         long k = 1;
         double p = 10;
         byte e = 3;
-        byte[] d={1,2,3,4,5};
-        float[][] w={{1,2},{4,5,6},{2,3}};
-        String[][] strs={{"a","b"},{"c"}};
+        byte[] d = {1, 2, 3, 4, 5};
+        float[][] w = {{1, 2}, {4, 5, 6}, {2, 3}};
+        String[][] strs = {{"a", "b"}, {"c"}};
         d[1]++;
-         p=p-i+j;
+        p = p - i + j;
         k++;
-        i*=k+-j;
-        i>>=k-=(j*=4);
-        strs[2][3]= strs[1][1]+1+"w";
-        method("w"+23+strs[0][0]+ " s"+ 2.4,"ast"+strs[1][2]);
-        long t=1+i;
-        t=t+1;
-        k<<=(i*=(i|=2)+(j>>=1)*(i&=j<<=(int)(p*=i)));
-        if(swap(1,1)){
+        i *= k + -j;
+        i >>= k -= (j *= 4);
+        strs[2][3] = strs[1][1] + 1 + "w";
+        method("w" + 23 + strs[0][0] + " s" + 2.4, "ast" + strs[1][2]);
+        long t = 1 + i;
+        t = t + 1;
+        k <<= (i *= (i |= 2) + (j >>= 1) * (i &= j <<= (int) (p *= i)));
+        if (swap(1, 1)) {
             i++;
-        } else  if(privateIncMethod(1,1,1)[1]){
+        } else if (privateIncMethod(1, 1, 1)[1]) {
             i++;
         }
 
@@ -59,15 +59,15 @@ public class Expressions {
         String[][] arr = new String[100][100];
         i = arr[i].length;
         arr[i][j] += 2;
-        System.out.println(arr[99][99] = arr[i+(j^(i|j))][arr.length + 'z']);
-        a[1][1]=1;
+        System.out.println(arr[99][99] = arr[i + (j ^ (i | j))][arr.length + 'z']);
+        a[1][1] = 1;
         k = a.length;
-        String[] s=new String[10];
+        String[] s = new String[10];
         char c = s[5].charAt(0);
-        if(privateIncMethod(1,1,1)[(int) k*j]){
-            a[100][i+(int)k/j]=3;
+        if (privateIncMethod(1, 1, 1)[(int) k * j]) {
+            a[100][i + (int) k / j] = 3;
         }
-        a[2][3]=6;
+        a[2][3] = 6;
         k = new double[1000].length - a.length;
 /*        int p = 0;
         for(int forI = k; forI < i; forI++) {
@@ -115,72 +115,14 @@ public class Expressions {
             k = i + 3;
         }*/
 
-//        i = (j += (-3 + j));
-        //i= (j+=(-(3+j)));
-        //j= (4|j % ((i+=(-3))+1))^(2&i|(3 <<j));
-        //int new_var = i++ / j % 2;
-        //i += new_var;
-        //++i;
-        //i+=5;
-/*        if(i++==++i) {
-            return;
-        }
-        for(long l=0;l<100;l++){
+        i = (j += (-3 + j));
+        i= (j+=(-(3+j)));
+        j= (4|j % ((i+=(-3))+1))^(2&i|(3 <<j));
+        int new_var = i++ / j % 2;
+        i += new_var;
+        ++i;
+        i+=5;
 
-        }
-        switch (j) {
-            case 1:
-                double a = 1;
-                break;
-            case 2:
-                double b = 2;
-                break;
-            case 3:
-                double c = 3;
-                break;
-            case 4:
-                double d = 4;
-                break;
-            default:
-                double e = 5;
-                break;
-        }*/
 
     }
-   /* public Example returnExample() {
-        return new Example();
-    }
-
-    public void differentInvocationsTest(int a, Example e1, Example e2, int b) {
-        superMethod();
-        super.superMethod();
-
-        SuperInterface si = returnExample();
-        int i = 5;
-        si.interfaceMethod();
-    }
-
-    public void tryCatchTest(int i) {
-        try {
-            int asd = 123;
-        } catch (RuntimeException asdsa) {
-            asdsa.printStackTrace();
-        }
-    }
-
-    public K genericTest1(L a, M b, double c, K d) {
-        L aa = a;
-        M bb = b;
-        ArrayList<String> arrayListTest = new ArrayList<String>();
-        L.staticMethod();
-        c = 45.5;
-        return d;
-    }
-
-    public <R, S extends SuperClass, T> T genericTest2(K a, T b, R d) {
-        K aa = a;
-        R dd = d;
-        S.staticMethod();
-        return b;
-    }*/
 }

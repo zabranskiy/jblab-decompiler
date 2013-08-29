@@ -467,7 +467,6 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
             if (!descriptorType.equals("Object ") && !descriptorType.equals("Any") || variableType == null) {
                 variableType = new Type(descriptorType);
             }
-            //todo
             Variable variable = currentFrame.getVariable(var);
             Constant name = null;
             if (variable.isUndefined()) {
@@ -565,7 +564,7 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
         }
 
         if (opString.contains("PUTFIELD") || opString.contains("PUTSTATIC")) {
-            if (myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName()) && e instanceof Constant && !myDecompiledMethod.hasFieldInitializer(name)) {
+            if ((myDecompiledMethod.getName().equals("<clinit>") || myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName())) && e instanceof Constant && !myDecompiledMethod.hasFieldInitializer(name)) {
                 myDecompiledMethod.addInitializerToField(name, e);
             } else {
                 myStatements.add(new Assignment(field, e));
@@ -573,6 +572,28 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
         } else if (opString.contains("GETFIELD") || opString.contains("GETSTATIC")) {
             myBodyStack.push(field);
         }
+    }
+
+    private boolean isInitializationStaticField(Expression value) {
+        boolean res;
+        List<Variable> params = myDecompiledMethod.getParameters();
+        res = myDecompiledMethod.getName().equals("<clinit>");
+        for (Variable v : params) {
+            res = res && !value.findVariable(v);
+        }
+        res = res && !value.hasNonStaticInvocations();
+        return res;
+    }
+
+    private boolean isInitializationNotStaticField(Expression value) {
+        boolean res;
+        List<Variable> params = myDecompiledMethod.getParameters();
+        res = myDecompiledMethod.getName().equals("<clinit>");
+        for (Variable v : params) {
+            res = res && !value.findVariable(v);
+        }
+        res = res && !value.hasNonStaticInvocations();
+        return res;
     }
 
     @Override

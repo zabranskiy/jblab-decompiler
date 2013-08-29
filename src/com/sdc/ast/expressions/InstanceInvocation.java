@@ -57,6 +57,9 @@ public class InstanceInvocation extends Invocation {
         if (isToString()) {
             List<InstanceInvocation> instanceInvocations = getInstanceInvocationSequenceExceptThis();
             int size = instanceInvocations.size();
+            if(size == 0) {
+                return appendExpressions;
+            }
             InstanceInvocation lastInvocation = instanceInvocations.get(0);
             Expression base = lastInvocation.getInstance();
             if (base instanceof New && ((New) base).getConstructor().getFunction().equals("StringBuilder")) {
