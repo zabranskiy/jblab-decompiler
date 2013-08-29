@@ -71,7 +71,7 @@ public class Type {
             return;
         }
 
-        String newClassName = className.trim();
+        String newClassName = className.trim().replace("?", "");
         while (newClassName.endsWith("[]")) {
             dimensions++;
             newClassName = newClassName.substring(0, newClassName.length() - 2);
@@ -93,6 +93,10 @@ public class Type {
 
 
     public String toString(OperationPrinter operationPrinter) {
+        if (myOriginalClassName != null) {
+            return myOriginalClassName;
+        }
+
         //correct for kotlin and java
         String res = "";
         res = toStringWithoutBrackets(operationPrinter).trim();
