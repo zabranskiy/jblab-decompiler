@@ -19,6 +19,10 @@ public class FieldInitializationAndAccess {
         ie.ps = getA().getA().getA().ps;
     }
 
+    FieldInitializationAndAccess(int asd) {
+        System.out.println(asd);
+    }
+
     public FieldInitializationAndAccess getA() {
         return this;
     }

@@ -508,7 +508,7 @@ public class DeclarationWorker {
                         }
                     case ',':
                         if (stack.isEmpty()) {
-                            parts.add(type.substring(beginPartPos, endPartPos));
+                            parts.add(type.substring(beginPartPos, endPartPos).replaceFirst("((in|out) )", ""));
                             endPartPos += 2;
                             beginPartPos = endPartPos;
                             continue;
@@ -526,7 +526,6 @@ public class DeclarationWorker {
             }
             result = result.append(") -> ").append(parts.get(parametersCount));
 
-//            return result.toString().replaceAll("([\\( ])(in|out) ", "$1");
             return result.toString();
         } else {
             return type;

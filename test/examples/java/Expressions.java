@@ -1,8 +1,6 @@
 package examples.java;
 
 public class Expressions {
-
-
     private boolean[] privateIncMethod(int c, int j, int i) {
         i = c + 4;
         i *= 7;
@@ -17,17 +15,16 @@ public class Expressions {
         return true;
     }
 
-    private void method(String... strings){
+    private void method(String ... strings) {
         int i = strings.length;
         int a;
         int g;
-        int h   ;
+        int h;
         Object o;
-
     }
 
-    private void meth(short d){
-        d= (short) (d+1);
+    private void meth(short d) {
+        d = (short) (d + 1);
     }
 
     public void interfaceMethod() {
@@ -36,39 +33,55 @@ public class Expressions {
         long k = 1;
         double p = 10;
         byte e = 3;
-        byte[] d={1,2,3,4,5};
-        float[][] w={{1,2},{4,5,6},{2,3}};
-        String[][] strs={{"a","b"},{"c"}};
+
+        byte[] d = {1, 2, 3, 4, 5};
+        float[][] w = {{1, 2}, {4, 5, 6}, {2, 3}};
+
+        String[][] strs = {{"a", "b"}, {"c"}};
+
         d[1]++;
-         p=p-i+j;
+
+        p = p - i + j;
         k++;
-        i*=k+-j;
-        i>>=k-=(j*=4);
-        strs[2][3]= strs[1][1]+1+"w";
-        method("w"+23+strs[0][0]+ " s"+ 2.4,"ast"+strs[1][2]);
-        long t=1+i;
-        t=t+1;
-        k<<=(i*=(i|=2)+(j>>=1)*(i&=j<<=(int)(p*=i)));
-        if(swap(1,1)){
+        i *= k + -j;
+        i >>= k -= (j *= 4);
+
+        strs[2][3] = strs[1][1] + 1 + "w";
+        method("w" + 23 + strs[0][0] + " s" + 2.4, "ast" + strs[1][2]);
+        String sq = new StringBuilder().append(1234).append(14).delete(1, 2).toString();
+
+        long t = 1 + i;
+        t = t + 1;
+
+        k <<= (i *= (i |= 2) + (j >>= 1) * (i &= j <<= (int) (p *= i)));
+
+        if (swap(1, 1)) {
             i++;
-        } else  if(privateIncMethod(1,1,1)[1]){
+        } else if (privateIncMethod(1, 1, 1)[1]) {
             i++;
         }
 
         int[][] a = new int[100][100];
         String[][] arr = new String[100][100];
+
         i = arr[i].length;
         arr[i][j] += 2;
-        System.out.println(arr[99][99] = arr[i+(j^(i|j))][arr.length + 'z']);
-        a[1][1]=1;
+
+        System.out.println(arr[99][99] = arr[i + (j ^ (i | j))][arr.length + 'z']);
+
+        a[1][1] = 1;
         k = a.length;
-        String[] s=new String[10];
+
+        String[] s = new String[10];
         char c = s[5].charAt(0);
-        if(privateIncMethod(1,1,1)[(int) k*j]){
-            a[100][i+(int)k/j]=3;
+
+        if (privateIncMethod(1, 1, 1)[(int) k * j]) {
+            a[100][i + (int) k / j] = 3;
         }
-        a[2][3]=6;
+
+        a[2][3] = 6;
         k = new double[1000].length - a.length;
+
 /*        int p = 0;
         for(int forI = k; forI < i; forI++) {
            i++;

@@ -63,29 +63,30 @@ public class Type {
 
     public Type(String className, int dimensions) {
         myOriginalClassName = className;
+
         if (className == null) {
             myClassName = null;
             myType = null;
             myDimensions = 0;
             return;
         }
-        className = className.replace("?","");
-        String newClassName;
-        while (!className.equals(newClassName = className.replaceFirst("\\[\\]", ""))) {
+
+        String newClassName = className;
+        while (newClassName.endsWith("[]")) {
             dimensions++;
-            className = newClassName;
+            newClassName = newClassName.substring(0, newClassName.length() - 2);
         }
-        while (!className.equals(newClassName = className.replaceFirst("Array<", ""))) {
-            newClassName = newClassName.replaceFirst(">", "");
+        while (newClassName.startsWith("Array<") && newClassName.endsWith(">")) {
             dimensions++;
-            className = newClassName;
+            newClassName = newClassName.substring("Array<".length(), newClassName.length() - 1);
         }
+
         myDimensions = dimensions;
-        if (myPrimitiveTypes.contains(className.trim().toLowerCase())) {
-            myType = PrimitiveType.valueOf(className.trim().toUpperCase());
+        if (myPrimitiveTypes.contains(newClassName.trim().toLowerCase())) {
+            myType = PrimitiveType.valueOf(newClassName.trim().toUpperCase());
             myClassName = null;
         } else {
-            myClassName = className.trim();
+            myClassName = newClassName.trim();
             myType = null;
         }
     }

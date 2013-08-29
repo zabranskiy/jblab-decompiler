@@ -6,7 +6,7 @@ class Expressions() {
 
     fun expressionTest(k : Int, s : String): Long {
         var a = (3 + 4) * 5 / k
-        val b = 6 * (intFun(a) + 7.8)
+        val b : Double? = 6 * (intFun(a) + 7.8)
         a = 9
         return a.toLong() + valIntField
     }
