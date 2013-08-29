@@ -1,6 +1,6 @@
 package com.sdc.ast.expressions;
 
-import com.sdc.abstractLanguage.AbstractOperationPrinter;
+import com.sdc.languages.general.printers.OperationPrinter;
 import com.sdc.ast.ExpressionType;
 import com.sdc.ast.Type;
 import com.sdc.ast.expressions.identifiers.Variable;
@@ -23,7 +23,7 @@ public class Cast extends PriorityExpression {
     }
 
 
-    public String getOperation(AbstractOperationPrinter operationPrinter) {
+    public String getOperation(OperationPrinter operationPrinter) {
         switch (myExpressionType) {
             case DOUBLE_CAST:
                 return operationPrinter.getDoubleCastView();

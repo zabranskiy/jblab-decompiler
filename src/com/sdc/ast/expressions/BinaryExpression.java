@@ -1,6 +1,6 @@
 package com.sdc.ast.expressions;
 
-import com.sdc.abstractLanguage.AbstractOperationPrinter;
+import com.sdc.languages.general.printers.OperationPrinter;
 import com.sdc.ast.ExpressionType;
 import com.sdc.ast.Type;
 import com.sdc.ast.expressions.identifiers.Variable;
@@ -25,7 +25,7 @@ public class BinaryExpression extends PriorityExpression {
         return myRight;
     }
 
-    public String getOperation(AbstractOperationPrinter operationPrinter) {
+    public String getOperation(OperationPrinter operationPrinter) {
         switch (myExpressionType) {
             case ADD:
                 return operationPrinter.getAddView();

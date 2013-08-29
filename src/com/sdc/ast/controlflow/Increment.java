@@ -1,6 +1,6 @@
 package com.sdc.ast.controlflow;
 
-import com.sdc.abstractLanguage.AbstractOperationPrinter;
+import com.sdc.languages.general.printers.OperationPrinter;
 import com.sdc.ast.ExpressionType;
 import com.sdc.ast.expressions.ExprIncrement;
 import com.sdc.ast.expressions.Expression;
@@ -30,7 +30,7 @@ public class Increment extends Statement implements ExpressionWrapper {
         return myExprIncrement.getVariableName();
     }
 
-    public String getOperation(AbstractOperationPrinter operationPrinter) {
+    public String getOperation(OperationPrinter operationPrinter) {
        return myExprIncrement.getOperation(operationPrinter);
     }
 
@@ -46,7 +46,7 @@ public class Increment extends Statement implements ExpressionWrapper {
         return myExprIncrement.IsIncrementSimple();
     }
 
-    public int getPriority(AbstractOperationPrinter operationPrinter){
+    public int getPriority(OperationPrinter operationPrinter){
         return myExprIncrement.getPriority(operationPrinter);
     }
 

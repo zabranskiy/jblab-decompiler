@@ -1,7 +1,7 @@
 package com.sdc.ast;
 
-import com.sdc.abstractLanguage.AbstractOperationPrinter;
-import com.sdc.java.JavaOperationPrinter;
+import com.sdc.languages.general.printers.OperationPrinter;
+import com.sdc.languages.java.printers.JavaOperationPrinter;
 
 import java.util.HashSet;
 
@@ -91,7 +91,7 @@ public class Type {
     }
 
 
-    public String toString(AbstractOperationPrinter operationPrinter) {
+    public String toString(OperationPrinter operationPrinter) {
         //correct for kotlin and java
         String res = "";
         res = toStringWithoutBrackets(operationPrinter).trim();
@@ -101,7 +101,7 @@ public class Type {
         return res + operationPrinter.getSpaceAfterType();
     }
 
-    public String toStringWithoutBrackets(AbstractOperationPrinter operationPrinter) {
+    public String toStringWithoutBrackets(OperationPrinter operationPrinter) {
         String res = "";
         if (!isPrimitive()) {
             res += operationPrinter.getNotPrimitiveView(myClassName);
