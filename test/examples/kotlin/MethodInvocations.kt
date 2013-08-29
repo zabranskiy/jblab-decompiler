@@ -27,11 +27,11 @@ class MethodInvocations : Trait3, SuperClass() {
 
     override fun traitMethodForOverride(i : Int) {}
 
-    fun defaultParameters(s : String?, i : Int = 1, j : Int = 2) {
+    fun defaultParameters(s : String?, i : Int = 1, j : Int = 2, k : Int = 6) {
         defaultParameters("string2", 3)
 
         var variable = MethodInvocations()
-        variable.defaultParameters("string1")
+        variable.defaultParameters("string1", k = 123)
         variable.defaultParameters("string3", 4, 5)
     }
 }
