@@ -1,5 +1,7 @@
 package com.sdc.languages.kotlin.visitors;
 
+import com.sdc.ast.ExpressionType;
+import com.sdc.ast.expressions.*;
 import com.sdc.languages.general.languageParts.GeneralClass;
 import com.sdc.languages.general.languageParts.Method;
 import com.sdc.languages.general.visitors.GeneralClassVisitor;
@@ -7,10 +9,6 @@ import com.sdc.languages.general.visitors.GeneralMethodVisitor;
 import com.sdc.ast.Type;
 import com.sdc.ast.controlflow.Assignment;
 import com.sdc.ast.controlflow.Statement;
-import com.sdc.ast.expressions.Constant;
-import com.sdc.ast.expressions.Expression;
-import com.sdc.ast.expressions.New;
-import com.sdc.ast.expressions.NewArray;
 import com.sdc.ast.expressions.nestedclasses.LambdaFunction;
 import com.sdc.cfg.nodes.Node;
 import com.sdc.languages.kotlin.*;
@@ -90,6 +88,22 @@ public class KotlinMethodVisitor extends GeneralMethodVisitor {
                     }
                 }
             }
+        }
+    }
+
+    @Override
+    public void visitTypeInsn(final int opcode, final String type) {
+        final String opString = Printer.OPCODES[opcode];
+        final boolean needToGetDescriptor = type.contains("[") || type.contains(";");
+        final String actualType = needToGetDescriptor ? getDescriptor(type, 0, myDecompiledMethod.getImports()) : decompileClassNameWithOuterClasses(type);
+
+        if (opString.contains("CHECKCAST") && !myBodyStack.empty()) {
+            final String expressionType = myBodyStack.peek().getType().toString();
+            if (!actualType.equals(expressionType) && !(actualType + "?").equals(expressionType)) {
+                myBodyStack.push(new Cast(ExpressionType.CHECK_CAST, myBodyStack.pop(), actualType));
+            }
+        } else {
+            super.visitTypeInsn(opcode, type);
         }
     }
 

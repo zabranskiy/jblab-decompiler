@@ -264,7 +264,7 @@ public abstract class GeneralClassVisitor extends ClassVisitor {
         myDecompiledClass.appendImports(genericTypesImports);
 
         final String parameters = description.substring(description.indexOf('(') + 1, description.indexOf(')'));
-        final int startIndex = myDecompiledClass.isNormalClass() ? 1 : 0;
+        final int startIndex = getStartIndexForParameters(method);
 
         if (myDecompiledClass.isNormalClass()) {
             method.addThisVariable(new Type(getDescriptor("L" + myDecompiledClass.getName() + ";", 0, new ArrayList<String>())));
@@ -286,6 +286,10 @@ public abstract class GeneralClassVisitor extends ClassVisitor {
         for (final Method method : myDecompiledClass.getMethods()) {
             myDecompiledClass.appendImports(method.getImports());
         }
+    }
+
+    protected int getStartIndexForParameters(final Method method) {
+        return myDecompiledClass.isNormalClass() ? 1 : 0;
     }
 
     protected String decompileClassNameWithOuterClasses(final String fullClassName) {

@@ -74,9 +74,10 @@ class KotlinExpressionPrinter(printer : Printer) : ExpressionPrinter(printer) {
         val opPriority = expression.getPriority(getOperationPrinter())
         val isAssociative = expression.isAssociative();
         val operand = expression.getOperand()
+        val operation = expression.getOperation(getOperationPrinter())
         val expr = printExpressionCheckBrackets(operand, opPriority, isAssociative, nestSize);
 
-        return  expr + text(expression.getOperation(getOperationPrinter()))
+        return expr + text(operation)
     }
 
     override fun printField(expression: Field, nestSize: Int): PrimeDoc {

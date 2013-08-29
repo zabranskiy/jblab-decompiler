@@ -9,13 +9,13 @@ fun test(a : String, b : String?, i : Int?, j : Long, s : Short?): String? {
     return "string2"
 }
 
-fun Array<Int>.inversionTest1(s : Array<Int>, f : (Int) -> Int) {
+fun Array<Int>.extensionTest1(s : Array<Int>, f : (Int) -> Int) {
     f(5)
     s.map(f)
     s.any { w -> false }
-    this.inversionTest1(s, f)
+    this.extensionTest1(s, f)
 }
 
-fun String.inversionTest2(i : Int) {
+fun String.extensionTest2(i : Int) {
     println(this + i)
 }
