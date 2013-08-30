@@ -21,6 +21,7 @@ public abstract class GeneralClassVisitor extends ClassVisitor {
     protected final int myNestSize;
 
     protected boolean myIsLambdaFunction = false;
+    protected boolean myIsNestedClass = false;
 
     protected String myClassFilesJarPath = "";
 
@@ -53,6 +54,10 @@ public abstract class GeneralClassVisitor extends ClassVisitor {
 
     public void setIsLambdaFunction(final boolean isLambdaFunction) {
         this.myIsLambdaFunction = isLambdaFunction;
+    }
+
+    public void setIsNestedClass(final boolean isNestedClass) {
+        this.myIsNestedClass = isNestedClass;
     }
 
     public void setVisitedClasses(final Set<String> visitedClasses) {
@@ -130,6 +135,7 @@ public abstract class GeneralClassVisitor extends ClassVisitor {
                 , superClass, genericTypesList, genericIdentifiersList, myTextWidth, myNestSize);
 
         myDecompiledClass.setIsLambdaFunctionClass(myIsLambdaFunction);
+        myDecompiledClass.setIsNestedClass(myIsNestedClass);
         myDecompiledClass.setFullClassName(DeclarationWorker.decompileFullClassName(name));
         myDecompiledClass.setOuterClass(myOuterClass);
 
@@ -183,12 +189,12 @@ public abstract class GeneralClassVisitor extends ClassVisitor {
                 cv.setVisitedClasses(myVisitedClasses);
                 cv.setClassFilesJarPath(myClassFilesJarPath);
                 cv.setOuterClass(myDecompiledClass);
+                cv.setIsNestedClass(true);
 
                 ClassReader cr = getInnerClassClassReader(myClassFilesJarPath, name);
                 cr.accept(cv, 0);
 
                 GeneralClass decompiledClass = cv.getDecompiledClass();
-                decompiledClass.setIsNestedClass(true);
 
                 if (innerName != null) {
                     GeneralClass outerClass = myDecompiledClass.getOuterClass(outerClassName);

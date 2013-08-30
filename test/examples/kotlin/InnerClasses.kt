@@ -30,7 +30,7 @@ open class InnerClasses {
                 var a : Int = varField
                 innerClassesTest()
                 privateMethod()
-
+                c = 123 * c
             }
         }
 
