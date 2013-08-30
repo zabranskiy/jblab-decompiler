@@ -87,7 +87,15 @@ abstract class Printer {
 
         if (method!!.getLastLocalVariableIndex() > 0 || ((!method.isNormalClassMethod() || method.getModifier()!!.contains("static")) && method.getLastLocalVariableIndex() >= 0)) {
             val allVariables = method.getParameters()!!.toList()
-            val variables = if (method.getDecompiledClass()!!.isNestedClass() && method.isConstructor()) allVariables.tail else allVariables
+
+            val variables =
+                if (method.getDecompiledClass()!!.isNestedClass() && method.isConstructor()) {
+                    allVariables.head!!.declare()
+                    allVariables.tail
+                } else {
+                    allVariables
+                }
+
             var index = 0
 
             for (i in variables.indices) {

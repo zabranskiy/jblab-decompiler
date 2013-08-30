@@ -129,7 +129,7 @@ public abstract class Frame {
         if (containsVariable(variableIndex)) {
             return myVariables.get(myVariableIndexToArrayPosition.get(variableIndex));
         } else {
-            return createAndInsertVariable(variableIndex, null, null);
+            return createAndInsertVariable(variableIndex, Type.VOID, "notDefinedVariable");
         }
     }
 

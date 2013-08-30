@@ -548,7 +548,8 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
     @Override
     public void visitFieldInsn(final int opcode, final String owner, final String name, final String desc) {
         final String opString = Printer.OPCODES[opcode];
-        final String fieldName = myDecompiledMethod.getDecompiledClass().isLambdaFunctionClass() && name.startsWith("$") ? name.substring(1) : name;
+        final String fieldName = (myDecompiledMethod.getDecompiledClass().isLambdaFunctionClass() || myDecompiledMethod.getDecompiledClass().isNestedClass())
+                && name.startsWith("$") ? name.substring(1) : name;
         Field field = new Field(fieldName, new Type(getDescriptor(desc, 0, myDecompiledMethod.getImports())));
 
         Expression e = null;
@@ -1057,7 +1058,11 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
                 removeThisVariableFromStack();
             }
 
-            appendInvocation(invocationName, returnType, arguments);
+            if (!myDecompiledMethod.getModifier().contains("synthetic static")) {
+                appendInvocation(invocationName, returnType, arguments);
+            } else {
+                appendInstanceInvocation(invocationName, returnType, arguments, myBodyStack.pop());
+            }
         }
     }
 

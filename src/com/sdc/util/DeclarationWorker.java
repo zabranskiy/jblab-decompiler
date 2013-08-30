@@ -94,6 +94,9 @@ public class DeclarationWorker {
         if ((access & Opcodes.ACC_SYNTHETIC) != 0) {
             sb.append("synthetic ");
         }
+        if ((access & Opcodes.ACC_STATIC) != 0) {
+            sb.append("static ");
+        }
 
         return sb.toString();
     }

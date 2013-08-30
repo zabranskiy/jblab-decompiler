@@ -4,16 +4,17 @@ import examples.java.support.SuperClass;
 import examples.java.support.SuperInterface;
 
 public class InnerAndAnonymousClasses {
-    public int asd = 123;
-    public int asd4235 = 123;
+    public int publicField = 123;
+    private int privateField = 123;
+
 
     class Inner1 {
         class InnerInner {
             public int rty = zxc;
-            public int fgh = asd4235 + asd;
+            public int fgh = privateField + publicField;
         }
 
-        public int zxc = asd;
+        public int zxc = publicField;
 
     }
 
@@ -43,7 +44,11 @@ public class InnerAndAnonymousClasses {
             @Override
             public void interfaceMethod() {
                 int a = qwe;
+                methodWithInnerClasses();
+                privateMethod();
             }
         };
     }
+
+    private void privateMethod() {}
 }
