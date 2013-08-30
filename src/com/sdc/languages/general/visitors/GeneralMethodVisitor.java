@@ -566,7 +566,8 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
 
         if (opString.contains("PUTFIELD") || opString.contains("PUTSTATIC")) {
             if ((myDecompiledMethod.getName().equals("<clinit>") || myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName()))
-                    && isInitializationValueCorrect(e) && !myDecompiledMethod.hasFieldInitializer(name)) {
+                    && isInitializationValueCorrect(e) && !myDecompiledMethod.hasFieldInitializer(name))
+            {
                 myDecompiledMethod.addInitializerToField(name, e);
             } else if (!name.startsWith("this$")) {
                 myStatements.add(new Assignment(field, e));

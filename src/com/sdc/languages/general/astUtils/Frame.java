@@ -152,7 +152,11 @@ public abstract class Frame {
     }
 
     public List<Variable> getMethodParameters(final int startIndex) {
-        return myVariables.subList(startIndex, myVariableIndexToArrayPosition.get(myLastMethodParameterIndex) + 1);
+        if (myLastCommonVariableIndexInList != -1) {
+            return myVariables.subList(startIndex, myVariableIndexToArrayPosition.get(myLastMethodParameterIndex) + 1);
+        } else {
+            return new ArrayList<Variable>();
+        }
     }
 
     protected List<Variable> getVariablesSubList(final int rightBound) {
