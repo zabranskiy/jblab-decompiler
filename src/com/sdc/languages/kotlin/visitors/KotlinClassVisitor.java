@@ -88,7 +88,7 @@ public class KotlinClassVisitor extends GeneralClassVisitor {
 
     @Override
     protected int getStartIndexForParameters(final Method method) {
-        return myDecompiledClass.isNormalClass() && !method.getName().endsWith("$default") ? 1 : 0;
+        return myDecompiledClass.isNormalClass() && !method.getName().endsWith("$default") && !method.getModifier().contains("static") ? 1 : 0;
     }
 
     private KotlinClass getKotlinClass() {

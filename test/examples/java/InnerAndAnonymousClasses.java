@@ -4,7 +4,20 @@ import examples.java.support.SuperClass;
 import examples.java.support.SuperInterface;
 
 public class InnerAndAnonymousClasses {
-    class Inner1 { class InnerInner {} }
+    public int publicField = 123;
+    private int privateField = 123;
+
+
+    class Inner1 {
+        class InnerInner {
+            public int rty = zxc;
+            public int fgh = privateField + publicField;
+        }
+
+        public int zxc = publicField;
+
+    }
+
     class Inner2 {}
 
     enum InnerEnum {ONE, TWO, THREE}
@@ -26,10 +39,16 @@ public class InnerAndAnonymousClasses {
 
         SuperClass.Kolasd qew;
 
+        final int qwe = 123;
         SuperInterface sc = new SuperInterface() {
             @Override
             public void interfaceMethod() {
+                int a = qwe;
+                methodWithInnerClasses();
+                privateMethod();
             }
         };
     }
+
+    private void privateMethod() {}
 }
