@@ -15,6 +15,7 @@ public class Expressions {
         return true;
     }
 
+
     private void method(String ... strings) {
         int i = strings.length;
         int a;
@@ -33,7 +34,6 @@ public class Expressions {
         long k = 1;
         double p = 10;
         byte e = 3;
-
         byte[] d = {1, 2, 3, 4, 5};
         float[][] w = {{1, 2}, {4, 5, 6}, {2, 3}};
 
@@ -45,6 +45,7 @@ public class Expressions {
         k++;
         i *= k + -j;
         i >>= k -= (j *= 4);
+
 
         strs[2][3] = strs[1][1] + 1 + "w";
         method("w" + 23 + strs[0][0] + " s" + 2.4, "ast" + strs[1][2]);
@@ -66,6 +67,7 @@ public class Expressions {
 
         i = arr[i].length;
         arr[i][j] += 2;
+
 
         System.out.println(arr[99][99] = arr[i + (j ^ (i | j))][arr.length + 'z']);
 
@@ -128,72 +130,14 @@ public class Expressions {
             k = i + 3;
         }*/
 
-//        i = (j += (-3 + j));
-        //i= (j+=(-(3+j)));
-        //j= (4|j % ((i+=(-3))+1))^(2&i|(3 <<j));
-        //int new_var = i++ / j % 2;
-        //i += new_var;
-        //++i;
-        //i+=5;
-/*        if(i++==++i) {
-            return;
-        }
-        for(long l=0;l<100;l++){
+        i = (j += (-3 + j));
+        i= (j+=(-(3+j)));
+        j= (4|j % ((i+=(-3))+1))^(2&i|(3 <<j));
+        int new_var = i++ / j % 2;
+        i += new_var;
+        ++i;
+        i+=5;
 
-        }
-        switch (j) {
-            case 1:
-                double a = 1;
-                break;
-            case 2:
-                double b = 2;
-                break;
-            case 3:
-                double c = 3;
-                break;
-            case 4:
-                double d = 4;
-                break;
-            default:
-                double e = 5;
-                break;
-        }*/
 
     }
-   /* public Example returnExample() {
-        return new Example();
-    }
-
-    public void differentInvocationsTest(int a, Example e1, Example e2, int b) {
-        superMethod();
-        super.superMethod();
-
-        SuperInterface si = returnExample();
-        int i = 5;
-        si.interfaceMethod();
-    }
-
-    public void tryCatchTest(int i) {
-        try {
-            int asd = 123;
-        } catch (RuntimeException asdsa) {
-            asdsa.printStackTrace();
-        }
-    }
-
-    public K genericTest1(L a, M b, double c, K d) {
-        L aa = a;
-        M bb = b;
-        ArrayList<String> arrayListTest = new ArrayList<String>();
-        L.staticMethod();
-        c = 45.5;
-        return d;
-    }
-
-    public <R, S extends SuperClass, T> T genericTest2(K a, T b, R d) {
-        K aa = a;
-        R dd = d;
-        S.staticMethod();
-        return b;
-    }*/
 }

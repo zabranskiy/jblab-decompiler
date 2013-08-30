@@ -1,9 +1,9 @@
 package com.sdc.ast.expressions.nestedclasses;
 
-import com.sdc.languages.general.languageParts.GeneralClass;
 import com.sdc.ast.Type;
 import com.sdc.ast.expressions.Expression;
 import com.sdc.ast.expressions.identifiers.Variable;
+import com.sdc.languages.general.languageParts.GeneralClass;
 
 public class NestedClass extends Expression {
     protected final GeneralClass myNestedClass;

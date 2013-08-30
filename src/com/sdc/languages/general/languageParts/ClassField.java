@@ -2,12 +2,16 @@ package com.sdc.languages.general.languageParts;
 
 import com.sdc.ast.expressions.Expression;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public abstract class ClassField {
     protected final String myModifier;
     protected final String myType;
     protected final String myName;
 
     protected Expression myInitializer;
+    protected Set<Method> myConstructors = new HashSet<Method>();
 
     protected final int myTextWidth;
     protected final int myNestSize;
@@ -46,5 +50,13 @@ public abstract class ClassField {
 
     public boolean hasInitializer() {
         return myInitializer != null;
+    }
+
+    public void addConstructor(Method method){
+        myConstructors.add(method);
+    }
+
+    public boolean hasInitializer(Method method){
+        return myConstructors.contains(method);
     }
 }

@@ -4,6 +4,9 @@ import com.sdc.ast.ExpressionType;
 import com.sdc.ast.Type;
 import com.sdc.ast.expressions.identifiers.Variable;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Constant extends PriorityExpression {
     private final Object myValue;
     private final boolean myIsStringValue;
@@ -50,5 +53,10 @@ public class Constant extends PriorityExpression {
     @Override
     public boolean findVariable(Variable variable) {
         return false;
+    }
+
+    @Override
+    public List<Expression> getSubExpressions() {
+        return new ArrayList<Expression>();
     }
 }

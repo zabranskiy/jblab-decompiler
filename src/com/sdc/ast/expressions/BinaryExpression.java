@@ -5,6 +5,9 @@ import com.sdc.ast.ExpressionType;
 import com.sdc.ast.Type;
 import com.sdc.ast.expressions.identifiers.Variable;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static com.sdc.ast.ExpressionType.*;
 
 public class BinaryExpression extends PriorityExpression {
@@ -119,5 +122,12 @@ public class BinaryExpression extends PriorityExpression {
     @Override
     public boolean findVariable(Variable variable) {
         return myLeft.findVariable(variable) || myRight.findVariable(variable);
+    }
+    @Override
+    public List<Expression> getSubExpressions() {
+        List<Expression> subExpressions = new ArrayList<Expression>();
+        subExpressions.add(myLeft);
+        subExpressions.add(myRight);
+        return subExpressions;
     }
 }

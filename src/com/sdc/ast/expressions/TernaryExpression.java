@@ -4,6 +4,9 @@ import com.sdc.ast.ExpressionType;
 import com.sdc.ast.Type;
 import com.sdc.ast.expressions.identifiers.Variable;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created with IntelliJ IDEA.
  * User: 1
@@ -48,5 +51,14 @@ public class TernaryExpression extends PriorityExpression {
         return myCondition.findVariable(variable)
         || myLeft.findVariable(variable)
         || myRight.findVariable(variable);
+    }
+
+    @Override
+    public List<Expression> getSubExpressions() {
+        List<Expression> subExpressions = new ArrayList<Expression>();
+        subExpressions.add(myLeft);
+        subExpressions.add(myRight);
+        subExpressions.add(myCondition);
+        return subExpressions;
     }
 }

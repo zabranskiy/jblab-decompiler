@@ -242,11 +242,11 @@ public abstract class Method {
     }
 
     public void addInitializerToField(final String fieldName, final Expression initializer) {
-        myGeneralClass.addInitializerToField(fieldName, initializer);
+        myGeneralClass.addInitializerToField(fieldName, initializer, this);
     }
 
     public boolean hasFieldInitializer(final String fieldName) {
-        return myGeneralClass.hasFieldInitializer(fieldName);
+        return myGeneralClass.hasFieldInitializer(fieldName, this);
     }
 
     public void setBegin(Construction myBegin) {

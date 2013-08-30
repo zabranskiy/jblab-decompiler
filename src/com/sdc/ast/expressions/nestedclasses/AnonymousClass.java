@@ -3,6 +3,7 @@ package com.sdc.ast.expressions.nestedclasses;
 import com.sdc.languages.general.languageParts.GeneralClass;
 import com.sdc.ast.expressions.Expression;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class AnonymousClass extends NestedClass {
@@ -15,5 +16,13 @@ public class AnonymousClass extends NestedClass {
 
     public List<Expression> getConstructorArguments() {
         return myConstructorArguments;
+    }
+
+
+    @Override
+    public List<Expression> getSubExpressions() {
+        List<Expression> subExpressions = new ArrayList<Expression>();
+        subExpressions.addAll(myConstructorArguments);
+        return subExpressions;
     }
 }
