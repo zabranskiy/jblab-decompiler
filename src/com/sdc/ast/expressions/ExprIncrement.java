@@ -6,6 +6,9 @@ import com.sdc.ast.Type;
 import com.sdc.ast.controlflow.Increment;
 import com.sdc.ast.expressions.identifiers.Variable;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static com.sdc.ast.ExpressionType.*;
 
 public class ExprIncrement extends PriorityExpression {
@@ -166,5 +169,13 @@ public class ExprIncrement extends PriorityExpression {
     @Override
     public boolean findVariable(Variable variable) {
         return myIncrement.findVariable(variable) || myVariable.equals(variable);
+    }
+
+    @Override
+    public List<Expression> getSubExpressions() {
+        List<Expression> subExpressions = new ArrayList<Expression>();
+        subExpressions.add(myVariable);
+        subExpressions.add(myIncrement);
+        return subExpressions;
     }
 }

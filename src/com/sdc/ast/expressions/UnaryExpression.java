@@ -1,11 +1,14 @@
 package com.sdc.ast.expressions;
 
-import com.sdc.languages.general.printers.OperationPrinter;
 import com.sdc.ast.ExpressionType;
 import com.sdc.ast.Type;
 import com.sdc.ast.expressions.identifiers.Variable;
+import com.sdc.languages.general.printers.OperationPrinter;
 
-import static com.sdc.ast.ExpressionType.*;
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.sdc.ast.ExpressionType.NOT;
 
 public class UnaryExpression extends PriorityExpression {
     protected final Expression myOperand;
@@ -53,4 +56,10 @@ public class UnaryExpression extends PriorityExpression {
         return myOperand.findVariable(variable);
     }
 
+    @Override
+    public List<Expression> getSubExpressions() {
+        List<Expression> subExpressions = new ArrayList<Expression>();
+        subExpressions.add(myOperand);
+        return subExpressions;
+    }
 }

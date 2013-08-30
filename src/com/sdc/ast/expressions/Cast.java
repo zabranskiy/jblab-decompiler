@@ -5,6 +5,9 @@ import com.sdc.ast.ExpressionType;
 import com.sdc.ast.Type;
 import com.sdc.ast.expressions.identifiers.Variable;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static com.sdc.ast.Type.*;
 
 public class Cast extends PriorityExpression {
@@ -79,5 +82,11 @@ public class Cast extends PriorityExpression {
             default:
                 return new Type(param);
         }
+    }
+    @Override
+    public List<Expression> getSubExpressions() {
+        List<Expression> subExpressions = new ArrayList<Expression>();
+        subExpressions.add(myOperand);
+        return subExpressions;
     }
 }
