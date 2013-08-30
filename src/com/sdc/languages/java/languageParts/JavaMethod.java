@@ -26,7 +26,7 @@ public class JavaMethod extends Method {
 
     @Override
     protected int getParametersStartIndex() {
-        return 1;
+        return myModifier.contains("static") ? 0 : 1;
     }
 
     @Override

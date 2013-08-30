@@ -21,6 +21,7 @@ public abstract class GeneralClassVisitor extends ClassVisitor {
     protected final int myNestSize;
 
     protected boolean myIsLambdaFunction = false;
+    protected boolean myIsNestedClass = false;
 
     protected String myClassFilesJarPath = "";
 
@@ -53,6 +54,10 @@ public abstract class GeneralClassVisitor extends ClassVisitor {
 
     public void setIsLambdaFunction(final boolean isLambdaFunction) {
         this.myIsLambdaFunction = isLambdaFunction;
+    }
+
+    public void setIsNestedClass(final boolean isNestedClass) {
+        this.myIsNestedClass = isNestedClass;
     }
 
     public void setVisitedClasses(final Set<String> visitedClasses) {
@@ -130,6 +135,7 @@ public abstract class GeneralClassVisitor extends ClassVisitor {
                 , superClass, genericTypesList, genericIdentifiersList, myTextWidth, myNestSize);
 
         myDecompiledClass.setIsLambdaFunctionClass(myIsLambdaFunction);
+        myDecompiledClass.setIsNestedClass(myIsNestedClass);
         myDecompiledClass.setFullClassName(DeclarationWorker.decompileFullClassName(name));
         myDecompiledClass.setOuterClass(myOuterClass);
 
@@ -183,12 +189,12 @@ public abstract class GeneralClassVisitor extends ClassVisitor {
                 cv.setVisitedClasses(myVisitedClasses);
                 cv.setClassFilesJarPath(myClassFilesJarPath);
                 cv.setOuterClass(myDecompiledClass);
+                cv.setIsNestedClass(true);
 
                 ClassReader cr = getInnerClassClassReader(myClassFilesJarPath, name);
                 cr.accept(cv, 0);
 
                 GeneralClass decompiledClass = cv.getDecompiledClass();
-                decompiledClass.setIsNestedClass(true);
 
                 if (innerName != null) {
                     GeneralClass outerClass = myDecompiledClass.getOuterClass(outerClassName);
@@ -211,13 +217,16 @@ public abstract class GeneralClassVisitor extends ClassVisitor {
     public FieldVisitor visitField(final int access, final String name, final String desc, final String signature, final Object value) {
         List<String> fieldDeclarationImports = new ArrayList<String>();
         final String description = signature != null ? signature : desc;
+        final String accessString = DeclarationWorker.getAccess(access, myLanguage);
 
-        final ClassField cf = myLanguagePartFactory.createClassField(DeclarationWorker.getAccess(access, myLanguage)
-                , getDescriptor(description, 0, fieldDeclarationImports)
-                , name, myTextWidth, myNestSize);
+        if (!accessString.contains("synthetic")) {
+            final ClassField cf = myLanguagePartFactory.createClassField(accessString
+                    , getDescriptor(description, 0, fieldDeclarationImports)
+                    , name, myTextWidth, myNestSize);
 
-        myDecompiledClass.appendField(cf);
-        myDecompiledClass.appendImports(fieldDeclarationImports);
+            myDecompiledClass.appendField(cf);
+            myDecompiledClass.appendImports(fieldDeclarationImports);
+        }
 
         return null;
     }
@@ -266,7 +275,7 @@ public abstract class GeneralClassVisitor extends ClassVisitor {
         final String parameters = description.substring(description.indexOf('(') + 1, description.indexOf(')'));
         final int startIndex = getStartIndexForParameters(method);
 
-        if (myDecompiledClass.isNormalClass()) {
+        if (myDecompiledClass.isNormalClass() && !modifier.contains("static")) {
             method.addThisVariable(new Type(getDescriptor("L" + myDecompiledClass.getName() + ";", 0, new ArrayList<String>())));
             method.declareThisVariable();
         }
@@ -289,7 +298,7 @@ public abstract class GeneralClassVisitor extends ClassVisitor {
     }
 
     protected int getStartIndexForParameters(final Method method) {
-        return myDecompiledClass.isNormalClass() ? 1 : 0;
+        return myDecompiledClass.isNormalClass() && !method.getModifier().contains("static") ? 1 : 0;
     }
 
     protected String decompileClassNameWithOuterClasses(final String fullClassName) {

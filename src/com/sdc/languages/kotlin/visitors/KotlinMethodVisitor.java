@@ -57,7 +57,7 @@ public class KotlinMethodVisitor extends GeneralMethodVisitor {
                 myBodyStack.push(lambdaFunction);
                 return;
             }
-        } else if (opString.contains("PUTFIELD") && myDecompiledOwnerFullClassName.equals(DeclarationWorker.decompileFullClassName(owner))) {
+        } else if (opString.contains("PUTFIELD") && !name.startsWith("this$") && myDecompiledOwnerFullClassName.equals(DeclarationWorker.decompileFullClassName(owner))) {
             ((KotlinClass) myDecompiledMethod.getDecompiledClass()).addAssignmentToField(name);
 
             if (myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName()) && !myDecompiledMethod.hasFieldInitializer(name)) {

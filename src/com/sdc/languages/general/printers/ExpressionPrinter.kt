@@ -90,7 +90,14 @@ abstract class ExpressionPrinter(printer : Printer) {
 
     open fun printField(expression: Field, nestSize: Int): PrimeDoc {
         val owner = expression.getOwner()
-        val ownerName = if (owner != null) printInstance(owner, nestSize) else text(expression.getStaticOwnerName() + ".")
+
+        var ownerName = if (owner == null) text(expression.getStaticOwnerName() + ".") else nil()
+
+        if (owner != null && ((expression.getName() as Constant).getValue().toString().startsWith("this$")
+            || !(owner is Field && (owner.getName() as Constant).getValue().toString().startsWith("this$"))))
+        {
+            ownerName = printInstance(owner, nestSize)
+        }
 
         return ownerName + printExpression(expression.getName(), nestSize)
     }
@@ -110,13 +117,16 @@ abstract class ExpressionPrinter(printer : Printer) {
         val isAssociative = expression.isAssociative();
 
         if (expression is InstanceInvocation) {
-            val appendExpressions: MutableList<Expression> = expression.getAppendSequenceExpressions() as MutableList<Expression>;
-            if(appendExpressions.isEmpty()){
-                funName = printInstance(expression.getInstance(), opPriority, isAssociative, nestSize, expression.isNotNullCheckedCall()) + funName
+            val appendExpressions : MutableList<Expression> = expression.getAppendSequenceExpressions() as MutableList<Expression>
+            if (appendExpressions.isEmpty()) {
+                val instance = expression.getInstance()
+                if (!(instance is Field && (instance.getName() as Constant).getValue().toString().startsWith("this$"))) {
+                    funName = printInstance(instance, opPriority, isAssociative, nestSize, expression.isNotNullCheckedCall()) + funName
+                }
             } else {
                 var lastSumExpression = appendExpressions.remove(appendExpressions.size() - 1)
                 funName = nil();
-                for(sumExpression in appendExpressions){
+                for (sumExpression in appendExpressions) {
                     funName = nest(nestSize, funName + printExpression(sumExpression, nestSize) + text(" + "))
                 }
                 funName = group(funName + printExpression(lastSumExpression, nestSize))

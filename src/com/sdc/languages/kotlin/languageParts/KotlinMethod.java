@@ -28,7 +28,7 @@ public class KotlinMethod extends Method {
 
     @Override
     protected int getParametersStartIndex() {
-        return isNormalClassMethod() || hasReceiverParameter ? 1 : 0;
+        return myModifier.contains("static") ? 0 : isNormalClassMethod() || hasReceiverParameter ? 1 : 0;
     }
 
     @Override

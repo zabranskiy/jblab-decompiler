@@ -56,8 +56,9 @@ class JavaPrinter: Printer() {
         }
 
     override fun printMethod(decompiledMethod: Method): PrimeDoc {
-        if (decompiledMethod.getName().equals(decompiledMethod.getDecompiledClass()?.getName())
-            && decompiledMethod.getParameters()?.isEmpty() as Boolean && decompiledMethod.hasEmptyBody())
+        val parameters = decompiledMethod.getParameters()
+        if (decompiledMethod.isConstructor() && decompiledMethod.hasEmptyBody()
+            && (parameters!!.isEmpty() || decompiledMethod.getDecompiledClass()!!.isNestedClass() && parameters.size() == 1))
         {
             return nil()
         }
@@ -175,10 +176,10 @@ class JavaPrinter: Printer() {
         var fieldList = javaClass.getFields()!!.toList()
         val lastIndex = fieldList.size() - 1
 
-        var argsDocs = fieldList.take(fieldList.size - 2).map { arg -> text(arg.getName() + ", ") }
+        var argsDocs = fieldList.take(fieldList.size - 1).map { arg -> text(arg.getName() + ", ") }
 
         var argumentsCode: PrimeDoc = fill(argsDocs)
 
-        return group(declaration + text(" {") + nest(nestSize, line() + argumentsCode) + text(fieldList.get(lastIndex - 1).getName())) / text("}")
+        return group(declaration + text(" {") + nest(nestSize, line() + argumentsCode) + text(fieldList.get(lastIndex).getName())) / text("}")
     }
 }

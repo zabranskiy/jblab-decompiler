@@ -90,7 +90,7 @@ public class Variable extends Identifier {
         return myName==null?"null":myName.valueToString();
     }
     public boolean isThis() {
-        return getName() instanceof Constant && ((Constant) getName()).isThis();
+        return getName().isThis();
     }
 
     protected void setParentCopy(final Variable parent) {
