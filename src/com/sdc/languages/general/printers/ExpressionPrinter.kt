@@ -22,6 +22,7 @@ import com.sdc.ast.expressions.Invocation
 import com.sdc.ast.expressions.New
 import com.sdc.languages.general.languageParts.GeneralClass
 import com.sdc.ast.expressions.InstanceInvocation
+import org.apache.commons.lang.StringEscapeUtils
 
 abstract class ExpressionPrinter(printer : Printer) {
     val myPrinter : Printer = printer
@@ -55,7 +56,7 @@ abstract class ExpressionPrinter(printer : Printer) {
         if (!expression.isStringValue())
             text(expression.getValue().toString())
         else
-            text("\"" + expression.getValue().toString() + "\"")
+            text("\"" + StringEscapeUtils.escapeJava(expression.getValue()!!.toString()) + "\"")
 
     open fun printBinaryExpression(expression: BinaryExpression, nestSize: Int): PrimeDoc {
         val l = expression.getLeft()
