@@ -1071,7 +1071,7 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
                 removeThisVariableFromStack();
             }
 
-            if (!myDecompiledMethod.getModifier().contains("synthetic static")) {
+            if (!myDecompiledMethod.getModifier().contains("synthetic static") || invocationName.contains(".")) {
                 appendInvocation(invocationName, returnType, arguments);
             } else {
                 appendInstanceInvocation(invocationName, returnType, arguments, myBodyStack.pop());
