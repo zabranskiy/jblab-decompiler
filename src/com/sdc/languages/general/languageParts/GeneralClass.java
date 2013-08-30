@@ -241,8 +241,10 @@ public abstract class GeneralClass {
         return myGenericIdentifiers.get(myGenericTypes.indexOf(className));
     }
 
-    public void addInitializerToField(final String fieldName, final Expression initializer) {
-        getField(fieldName).setInitializer(initializer);
+    public void addInitializerToField(final String fieldName, final Expression initializer, Method method) {
+        ClassField field = getField(fieldName);
+        field.setInitializer(initializer);
+        field.addConstructor(method);
     }
 
     public ClassField getField(final String fieldName) {
@@ -263,8 +265,9 @@ public abstract class GeneralClass {
         return false;
     }
 
-    public boolean hasFieldInitializer(final String fieldName) {
-        return getField(fieldName).getInitializer() != null;
+    public boolean hasFieldInitializer(final String fieldName, final Method method) {
+        ClassField field = getField(fieldName);
+        return field.getInitializer() != null && field.hasInitializer(method);
     }
 
     public List<String> getGenericDeclaration() {

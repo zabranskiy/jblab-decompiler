@@ -1,6 +1,7 @@
 package com.sdc.ast.expressions;
 
 import com.sdc.ast.Type;
+import com.sdc.ast.expressions.nestedclasses.NestedClass;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -79,4 +80,20 @@ public class InstanceInvocation extends Invocation {
         return getFunction().equals("toString");
     }
 
+    @Override
+    public List<Expression> getSubExpressions() {
+        List<Expression> subExpressions = new ArrayList<Expression>();
+        subExpressions.add(myInstance);
+        subExpressions.addAll(getArguments());
+        return subExpressions;
+    }
+
+    @Override
+    public boolean hasNotStaticInvocations() {
+        boolean res = super.hasNotStaticInvocations();
+        if(!(myInstance instanceof NestedClass)){
+            res = true;
+        }
+        return res;
+    }
 }

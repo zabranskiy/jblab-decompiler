@@ -49,4 +49,11 @@ public class NewArray extends PriorityExpression {
         }
         return res;
     }
+
+    @Override
+    public List<Expression> getSubExpressions() {
+        List<Expression> subExpressions = new ArrayList<Expression>();
+        subExpressions.addAll(myDimensions);
+        return subExpressions;
+    }
 }

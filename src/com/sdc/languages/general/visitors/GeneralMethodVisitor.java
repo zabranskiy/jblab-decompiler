@@ -564,7 +564,8 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
         }
 
         if (opString.contains("PUTFIELD") || opString.contains("PUTSTATIC")) {
-            if ((myDecompiledMethod.getName().equals("<clinit>") || myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName())) && e instanceof Constant && !myDecompiledMethod.hasFieldInitializer(name)) {
+            if ((myDecompiledMethod.getName().equals("<clinit>") || myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName()))
+                    && isInitializationValueCorrect(e) && !myDecompiledMethod.hasFieldInitializer(name)) {
                 myDecompiledMethod.addInitializerToField(name, e);
             } else {
                 myStatements.add(new Assignment(field, e));
@@ -574,25 +575,15 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
         }
     }
 
-    private boolean isInitializationStaticField(Expression value) {
+    private boolean isInitializationValueCorrect(Expression value) {
+        //todo
         boolean res;
         List<Variable> params = myDecompiledMethod.getParameters();
-        res = myDecompiledMethod.getName().equals("<clinit>");
+        res = true;
         for (Variable v : params) {
             res = res && !value.findVariable(v);
         }
-        res = res && !value.hasNonStaticInvocations();
-        return res;
-    }
-
-    private boolean isInitializationNotStaticField(Expression value) {
-        boolean res;
-        List<Variable> params = myDecompiledMethod.getParameters();
-        res = myDecompiledMethod.getName().equals("<clinit>");
-        for (Variable v : params) {
-            res = res && !value.findVariable(v);
-        }
-        res = res && !value.hasNonStaticInvocations();
+        //res = res && !value.hasNotStaticInvocations();
         return res;
     }
 
@@ -611,7 +602,7 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
         boolean isStaticInvocation = false;
 
         if (opString.contains("INVOKEVIRTUAL") || opString.contains("INVOKEINTERFACE")
-                || (decompiledOwnerFullClassName.equals(myDecompiledOwnerFullClassName) && !name.equals("<init>"))) {
+                || (!opString.contains("INVOKESTATIC") && decompiledOwnerFullClassName.equals(myDecompiledOwnerFullClassName) && !name.equals("<init>"))) {
             appendInstanceInvocation(name, hasVoidReturnType ? Type.VOID : new Type(returnType), arguments, getTopOfBodyStack());
             return;
         }

@@ -4,6 +4,7 @@ import com.sdc.ast.ExpressionType;
 import com.sdc.ast.Type;
 import com.sdc.ast.expressions.identifiers.Variable;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Invocation extends PriorityExpression {
@@ -30,5 +31,12 @@ public class Invocation extends PriorityExpression {
             res=res || expression.findVariable(variable);
         }
         return res;
+    }
+
+    @Override
+    public List<Expression> getSubExpressions() {
+        List<Expression> subExpressions = new ArrayList<Expression>();
+        subExpressions.addAll(myArguments);
+        return subExpressions;
     }
 }

@@ -3,6 +3,7 @@ package com.sdc.ast.expressions;
 import com.sdc.ast.Type;
 import com.sdc.ast.expressions.identifiers.Variable;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.sdc.ast.ExpressionType.NOT;
@@ -43,14 +44,14 @@ public abstract class Expression {
         myType = type;
     }
 
-    public boolean hasNonStaticInvocations() {
+    public boolean hasNotStaticInvocations() {
         for (Expression e: getSubExpressions()){
-            if(e.hasNonStaticInvocations()) return true;
+            if(e.hasNotStaticInvocations()) return true;
         }
         return false;
     }
 
     public List<Expression> getSubExpressions(){
-        return null; //todo
+        return new ArrayList<Expression>();
     }
 }
