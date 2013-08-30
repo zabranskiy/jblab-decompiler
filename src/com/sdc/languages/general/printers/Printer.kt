@@ -85,8 +85,9 @@ abstract class Printer {
     open fun printMethodParameters(method: Method?): PrimeDoc {
         var arguments: PrimeDoc = nil()
 
-        if (method!!.getLastLocalVariableIndex() > 0 || (!method.isNormalClassMethod() && method.getLastLocalVariableIndex() >= 0)) {
-            val variables = method.getParameters()!!.toList()
+        if (method!!.getLastLocalVariableIndex() > 0 || ((!method.isNormalClassMethod() || method.getModifier()!!.contains("static")) && method.getLastLocalVariableIndex() >= 0)) {
+            val allVariables = method.getParameters()!!.toList()
+            val variables = if (method.getDecompiledClass()!!.isNestedClass() && method.isConstructor()) allVariables.tail else allVariables
             var index = 0
 
             for (i in variables.indices) {

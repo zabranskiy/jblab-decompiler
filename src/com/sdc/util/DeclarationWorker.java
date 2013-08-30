@@ -91,6 +91,9 @@ public class DeclarationWorker {
         if ((access & Opcodes.ACC_BRIDGE) != 0) {
             sb.append("bridge ");
         }
+        if ((access & Opcodes.ACC_SYNTHETIC) != 0) {
+            sb.append("synthetic ");
+        }
 
         return sb.toString();
     }

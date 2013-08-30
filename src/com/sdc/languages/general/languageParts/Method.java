@@ -265,6 +265,10 @@ public abstract class Method {
         return false;
     }
 
+    public boolean isConstructor() {
+        return myName.equals(myGeneralClass.getName());
+    }
+
     public String getNewTypeName(Type type) {
         String variableType = type.toStringWithoutBrackets().trim().replace(".", "");
         String suffix="";

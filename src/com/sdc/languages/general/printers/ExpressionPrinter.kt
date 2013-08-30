@@ -90,7 +90,14 @@ abstract class ExpressionPrinter(printer : Printer) {
 
     open fun printField(expression: Field, nestSize: Int): PrimeDoc {
         val owner = expression.getOwner()
-        val ownerName = if (owner != null) printInstance(owner, nestSize) else text(expression.getStaticOwnerName() + ".")
+
+        var ownerName = if (owner == null) text(expression.getStaticOwnerName() + ".") else nil()
+
+        if (owner != null && ((expression.getName() as Constant).getValue().toString().startsWith("this$")
+            || !(owner is Field && (owner.getName() as Constant).getValue().toString().startsWith("this$"))))
+        {
+            ownerName = printInstance(owner, nestSize)
+        }
 
         return ownerName + printExpression(expression.getName(), nestSize)
     }
