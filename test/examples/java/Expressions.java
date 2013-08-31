@@ -26,6 +26,7 @@ public class Expressions {
 
     private void meth(short d) {
         d = (short) (d + 1);
+        String s= '\u8040'+"\n\t\\\"\b\r\'";
     }
 
     public void interfaceMethod() {
