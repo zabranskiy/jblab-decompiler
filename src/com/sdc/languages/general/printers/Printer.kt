@@ -45,7 +45,7 @@ abstract class Printer {
         if (!decompiledClass!!.isNestedClass()) {
             val packageCode = text("package " + decompiledClass.getPackage() + ";") + line()
             var imports = group(nil())
-            for (importName in decompiledClass.getImports()!!.toArray())
+            for (importName in decompiledClass.getImports()!!.toList())
                 imports = group(imports + text("import " + importName + ";") + line())
             packageCode / imports
         } else {

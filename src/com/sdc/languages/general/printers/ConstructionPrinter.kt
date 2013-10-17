@@ -144,7 +144,7 @@ abstract class ConstructionPrinter(expressionPrinter : ExpressionPrinter, statem
 
     open fun printSwitchCase(switchCaseBlock: SwitchCase, nestSize: Int): PrimeDoc {
         var caseKeysCode: PrimeDoc = nil()
-        for (key in switchCaseBlock.getKeys()!!.toArray()) {
+        for (key in switchCaseBlock.getKeys()!!.toList()) {
             caseKeysCode = caseKeysCode / text((if (key == null) "default" else "case " + key) + ":")
         }
 

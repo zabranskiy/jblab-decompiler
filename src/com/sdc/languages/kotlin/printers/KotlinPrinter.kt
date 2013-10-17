@@ -77,9 +77,9 @@ class KotlinPrinter: Printer() {
             val superClass = kotlinClass.getSuperClass()
             if (!superClass!!.isEmpty()) {
                 declaration = declaration + group(nest(2 * kotlinClass.getNestSize(), line() + text(": " ) + printSuperClassConstructor(kotlinClass.getSuperClassConstructor(), kotlinClass.getNestSize())))
-                val traits = kotlinClass.getImplementedInterfaces()!!.toArray()
+                val traits = kotlinClass.getImplementedInterfaces()!!.toList()
                 for (singleTrait in traits)
-                    declaration = declaration + text(",") + group(nest(2 * kotlinClass.getNestSize(), line() + text(singleTrait as String)))
+                    declaration = declaration + text(",") + group(nest(2 * kotlinClass.getNestSize(), line() + text(singleTrait)))
             } else {
                 var traits = kotlinClass.getImplementedInterfaces()
                 if (!traits!!.isEmpty()) {

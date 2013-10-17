@@ -141,13 +141,13 @@ class JavaPrinter: Printer() {
         if (!superClass!!.isEmpty())
             declaration = group(declaration + nest(javaClass.getNestSize(), line() + text("extends " + superClass)))
 
-        val implementedInterfaces = javaClass.getImplementedInterfaces()!!.toArray()
+        val implementedInterfaces = javaClass.getImplementedInterfaces()!!.toList()
         if (!implementedInterfaces.isEmpty())
             declaration = group(
                     declaration
                     + nest(2 * javaClass.getNestSize(), line() + text("implements " + implementedInterfaces.get(0)))
             )
-        for (interface in implementedInterfaces.drop(1)) {
+        for (interface in implementedInterfaces!!.drop(1)) {
             declaration = group(
                     (declaration + text(","))
                     + nest(2 * javaClass.getNestSize(), line() + text(interface as String))
