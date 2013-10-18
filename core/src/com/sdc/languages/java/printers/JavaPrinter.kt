@@ -66,7 +66,7 @@ class JavaPrinter: Printer() {
         val isStaticBlock = decompiledMethod.getName()!!.contains("<clinit>");
         val classMethod : JavaMethod = decompiledMethod as JavaMethod
 
-        var declaration : PrimeDoc = nil();
+        var declaration : PrimeDoc;
         if (isStaticBlock) {
               declaration = text("static")
         } else {
@@ -147,10 +147,10 @@ class JavaPrinter: Printer() {
                     declaration
                     + nest(2 * javaClass.getNestSize(), line() + text("implements " + implementedInterfaces.get(0)))
             )
-        for (interface in implementedInterfaces!!.drop(1)) {
+        for (interface in implementedInterfaces.drop(1)) {
             declaration = group(
                     (declaration + text(","))
-                    + nest(2 * javaClass.getNestSize(), line() + text(interface as String))
+                    + nest(2 * javaClass.getNestSize(), line() + text(interface))
             )
         }
 

@@ -1,4 +1,4 @@
-package config;
+package com.config;
 
 import com.decompiler.Language;
 import com.intellij.openapi.components.ApplicationComponent;
@@ -23,18 +23,16 @@ import javax.swing.*;
         storages = {@Storage(id = "other", file = "$APP_CONFIG$/jblab.decompiler.xml")}
 )
 public class PluginConfigComponent implements ApplicationComponent, Configurable, PersistentStateComponent<Element> {
-    private static final String COMPONENT_NAME = "JBLab decompiler.Decompiler Plugin Config";
-    private static final String DISPLAY_NAME = "JBLab decompiler.Decompiler";
+    private static final String COMPONENT_NAME = "JBLab Decompiler Plugin Config";
+    private static final String DISPLAY_NAME = "JBLab Decompiler";
     private static final String CONFIGURATION_CONFIG_ELEMENT = "configuration";
     private static final String SHOW_PRETTY_ATTRIBUTE = "displayPrettyEnabled";
     private static final String CHOOSE_LANGUAGE_ATTRIBUTE = "selectLanguage";
     private static final String SHOW_TAB_SIZE = "displayTabSize";
     private static final String SHOW_TEXT_WIDTH = "displayTextWidth";
     private static final String DEFAULT_LANGUAGE = "Java";
-
     private PluginConfigurationPane myConfigPane;
     private boolean myShowPrettyEnabled;
-
     private Language myChosenLanguage;
     private Integer myTextWidth, myTabSize;
 
@@ -100,24 +98,24 @@ public class PluginConfigComponent implements ApplicationComponent, Configurable
         return myChosenLanguage;
     }
 
-    public Integer getTextWidth() {
-        return myTextWidth;
+    public void setChosenLanguage(final Language lang) {
+        this.myChosenLanguage = lang;
     }
 
-    public Integer getTabSize() {
-        return myTabSize;
+    public Integer getTextWidth() {
+        return myTextWidth;
     }
 
     public void setTextWidth(final Integer textWidth) {
         this.myTextWidth = textWidth;
     }
 
-    public void setTabSize(final Integer tabSize) {
-        this.myTabSize = tabSize;
+    public Integer getTabSize() {
+        return myTabSize;
     }
 
-    public void setChosenLanguage(final Language lang) {
-        this.myChosenLanguage = lang;
+    public void setTabSize(final Integer tabSize) {
+        this.myTabSize = tabSize;
     }
 
     public boolean isShowPrettyEnabled() {

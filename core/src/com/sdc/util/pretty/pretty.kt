@@ -280,7 +280,7 @@ fun best(width: Int, startAlreadyOccupied: Int, doc : PrimeDoc, nestSize : Int =
             }
             is PrimeText   -> {
                 resultStack.add(StackText(doc.text as String))
-                alreadyOccupied += doc.text!!.length()
+                alreadyOccupied += doc.text.length()
             }
             is PrimeLine   -> {
                 resultStack.add(StackLine(nestSize))

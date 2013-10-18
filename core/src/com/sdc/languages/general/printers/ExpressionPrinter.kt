@@ -305,7 +305,7 @@ abstract class ExpressionPrinter(printer: Printer) {
             else {
                 var argsDocs = arguments.take(arguments.size - 1)
                         .map { arg -> printExpression(arg, nestSize) + text(", ") }
-                var printLastArgument: PrimeDoc = nil();
+                var printLastArgument: PrimeDoc;
 
                 val lastArgument = arguments.last
 
