@@ -76,7 +76,7 @@
     </dependencies>
 
     <build>
-        <sourceDirectory>src</sourceDirectory>
+        <sourceDirectory>core/src</sourceDirectory>
     </build>
 
 </project>

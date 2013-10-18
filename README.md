@@ -1,12 +1,14 @@
-**JBLab JVM-bytecode Decompiler**
+#JBLab JVM-bytecode Decompiler
 
 Yet another JVM-bytecode decompiler in some programming languages such as Java, Kotlin, JavaScript.
+
 Fast, easy scalable. Can be used as IntelliJ IDEA plugin or console application.
 
-**Running process**
-To run decompiler from console just build it using maven from root pom.xml
+##Running process
 
-To test decompiler as IDEA plugin follow these instructions:
+To run decompiler from console just build it using maven from root pom.xml<br>
+
+To test decompiler as IDEA plugin follow these instructions:<br>
 
 1. Create IDEA plugin project in /plugin
 2. Import core module from pom.xml
