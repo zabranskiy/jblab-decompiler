@@ -1,20 +1,18 @@
 package com.decompiler;
 
 import com.beust.jcommander.JCommander;
-import com.config.PluginConfigComponent;
-import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.testFramework.LightVirtualFile;
 import com.sdc.languages.general.visitors.GeneralClassVisitor;
 import com.sdc.languages.java.visitors.JavaClassVisitor;
 import com.sdc.languages.js.visitors.JSClassVisitor;
 import com.sdc.languages.kotlin.visitors.KotlinClassVisitor;
-import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.util.TraceClassVisitor;
 
-import java.io.*;
-import java.nio.ByteBuffer;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 
 public class Decompiler {
@@ -47,38 +45,6 @@ public class Decompiler {
         System.out.println(getDecompiledCode(language, cr, "", textWidth, tabSize));
     }
 
-    @Nullable
-    public static VirtualFile decompile(final PluginConfigComponent config, final VirtualFile virtualFile) {
-        //Number of bytes CAFEBABE
-        final int CAFEBABE = 4;
-
-        LightVirtualFile decompiledFile = null;
-
-        try {
-            InputStream is = virtualFile.getInputStream();
-            byte[] bytes = new byte[CAFEBABE];
-            is.mark(CAFEBABE);
-            is.read(bytes);
-            final int magic = ByteBuffer.wrap(bytes).getInt();
-            if (magic == 0xCAFEBABE) {
-                is.reset();
-                final Language lang = config.getChosenLanguage();
-
-                final String initialClassFilePath = virtualFile.getPath();
-                final int jarIndex = initialClassFilePath.indexOf(".jar!/");
-                final String jarPath = jarIndex == -1 ? "" : initialClassFilePath.substring(0, jarIndex + 4);
-
-                decompiledFile = new LightVirtualFile(virtualFile.getNameWithoutExtension() + lang.getExtension(),
-                        getDecompiledCode(lang.getName(), is, jarPath, config.getTextWidth(), config.getTabSize()));
-            }
-            is.close();
-        } catch (IOException e1) {
-            e1.printStackTrace();
-        }
-
-        return decompiledFile;
-    }
-
     public static String printExceptionToString(final Exception exception) {
         StringBuilder sb = new StringBuilder("\n//\t");
 
@@ -90,11 +56,7 @@ public class Decompiler {
         return sb.toString();
     }
 
-    private static String getDecompiledCode(final String languageName, final InputStream is, final String classFilesJarPath, final Integer textWidth, final Integer tabSize) throws IOException {
-        return getDecompiledCode(languageName, new ClassReader(is), classFilesJarPath, textWidth, tabSize);
-    }
-
-    private static String getDecompiledCode(final String languageName, final ClassReader cr, final String classFilesJarPath, final Integer textWidth, final Integer tabSize) throws IOException {
+    public static String getDecompiledCode(final String languageName, final ClassReader cr, final String classFilesJarPath, final Integer textWidth, final Integer tabSize) throws IOException {
         ClassVisitor specifiedLanguageClassVisitor;
         StringWriter sw = new StringWriter();
 

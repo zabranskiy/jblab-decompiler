@@ -1,4 +1,4 @@
-package com.config;
+package config;
 
 import com.decompiler.Language;
 import com.intellij.openapi.components.ApplicationComponent;
@@ -23,8 +23,8 @@ import javax.swing.*;
         storages = {@Storage(id = "other", file = "$APP_CONFIG$/jblab.decompiler.xml")}
 )
 public class PluginConfigComponent implements ApplicationComponent, Configurable, PersistentStateComponent<Element> {
-    private static final String COMPONENT_NAME = "JBLab Decompiler Plugin Config";
-    private static final String DISPLAY_NAME = "JBLab Decompiler";
+    private static final String COMPONENT_NAME = "JBLab decompiler.Decompiler Plugin Config";
+    private static final String DISPLAY_NAME = "JBLab decompiler.Decompiler";
     private static final String CONFIGURATION_CONFIG_ELEMENT = "configuration";
     private static final String SHOW_PRETTY_ATTRIBUTE = "displayPrettyEnabled";
     private static final String CHOOSE_LANGUAGE_ATTRIBUTE = "selectLanguage";

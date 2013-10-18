@@ -1,8 +1,5 @@
-package com;
-
-import com.actions.DecompilationChoiceListener;
-import com.actions.NavigationListener;
-import com.config.PluginConfigComponent;
+import actions.DecompilationChoiceListener;
+import actions.NavigationListener;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ApplicationComponent;
 import com.intellij.openapi.fileEditor.FileEditorManager;
@@ -14,9 +11,9 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.codeStyle.CodeStyleManager;
+import config.PluginConfigComponent;
+import decompiler.Decompiler;
 import org.jetbrains.annotations.NotNull;
-
-import static com.decompiler.Decompiler.decompile;
 
 
 public class JBLabDecompiler implements ApplicationComponent, DecompilationChoiceListener, ProjectManagerListener {
@@ -32,7 +29,7 @@ public class JBLabDecompiler implements ApplicationComponent, DecompilationChoic
 
     @NotNull
     public String getComponentName() {
-        return "JBLab Decompiler";
+        return "JBLab decompiler.Decompiler";
     }
 
     @Override
@@ -61,7 +58,7 @@ public class JBLabDecompiler implements ApplicationComponent, DecompilationChoic
     public void treatFile(final FileEditorManager manager, final VirtualFile file) {
         PluginConfigComponent config = ApplicationManager.getApplication().getComponent(PluginConfigComponent.class);
 
-        VirtualFile decompiledFile = decompile(config, file);
+        VirtualFile decompiledFile = Decompiler.decompile(config, file);
 
         if (decompiledFile != null) {
             if (!config.isShowPrettyEnabled()) {

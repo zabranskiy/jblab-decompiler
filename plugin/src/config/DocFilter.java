@@ -1,4 +1,4 @@
-package com.config;
+package config;
 
 import org.jetbrains.annotations.NotNull;
 

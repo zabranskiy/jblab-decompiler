@@ -1,4 +1,4 @@
-package com.config;
+package config;
 
 import com.decompiler.Language;
 import com.intellij.ui.HyperlinkLabel;

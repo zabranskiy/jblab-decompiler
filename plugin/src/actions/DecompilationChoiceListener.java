@@ -1,4 +1,4 @@
-package com.actions;
+package actions;
 
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.vfs.VirtualFile;
