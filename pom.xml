@@ -4,52 +4,51 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>edu.com.decompiler</groupId>
-    <artifactId>decompiler</artifactId>
+    <groupId>com.jblab.decompiler</groupId>
+    <artifactId>core</artifactId>
     <version>1.0.0-SNAPSHOT</version>
-    <packaging>pom</packaging>
 
     <properties>
         <kotlin.version>0.6.602</kotlin.version>
-        <junitVersion>4.11</junitVersion>
-        <asmVersion>4.2</asmVersion>
+        <junit.version>4.11</junit.version>
+        <asm.version>4.2</asm.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>org.ow2.asm</groupId>
             <artifactId>asm</artifactId>
-            <version>${asmVersion}</version>
+            <version>${asm.version}</version>
         </dependency>
         <dependency>
             <groupId>org.ow2.asm</groupId>
             <artifactId>asm-all</artifactId>
-            <version>${asmVersion}</version>
+            <version>${asm.version}</version>
         </dependency>
         <dependency>
             <groupId>org.ow2.asm</groupId>
             <artifactId>asm-util</artifactId>
-            <version>${asmVersion}</version>
+            <version>${asm.version}</version>
         </dependency>
         <dependency>
             <groupId>org.ow2.asm</groupId>
             <artifactId>asm-commons</artifactId>
-            <version>${asmVersion}</version>
+            <version>${asm.version}</version>
         </dependency>
         <dependency>
             <groupId>org.ow2.asm</groupId>
             <artifactId>asm-tree</artifactId>
-            <version>${asmVersion}</version>
+            <version>${asm.version}</version>
         </dependency>
         <dependency>
             <groupId>org.ow2.asm</groupId>
             <artifactId>asm-analysis</artifactId>
-            <version>${asmVersion}</version>
+            <version>${asm.version}</version>
         </dependency>
         <dependency>
             <groupId>org.ow2.asm</groupId>
             <artifactId>asm-xml</artifactId>
-            <version>${asmVersion}</version>
+            <version>${asm.version}</version>
         </dependency>
 
         <dependency>
@@ -61,7 +60,7 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>${junitVersion}</version>
+            <version>${junit.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
@@ -76,7 +75,7 @@
     </dependencies>
 
     <build>
-        <sourceDirectory>src</sourceDirectory>
+        <sourceDirectory>core/src</sourceDirectory>
     </build>
 
 </project>
