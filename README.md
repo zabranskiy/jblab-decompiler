@@ -1,10 +1,10 @@
-###JBLab Decompiler
+#JBLab Decompiler
 
-Yet another one JVM byte-code decompiler in some programming languages such as Java, Kotlin, JavaScript.
+Yet another one JVM byte-code decompiler in several programming languages such as Java, Kotlin, JavaScript.
 
 Fast, easy scalable, based on ASM. Can be used as IntelliJ IDEA plugin or console application.
 
-###Running process (tricky part)
+###Usage practice (tricky part)
 
 To run decompiler from console just build it using maven from root pom.xml
 
