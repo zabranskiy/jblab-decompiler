@@ -18,7 +18,7 @@ public class MethodVisitorStub extends GeneralMethodVisitor {
         }
 
         public String getException() {
-            return Decompiler.printExceptionToString(myException);
+            return Decompiler.convertExceptionToString(myException);
         }
     }
 

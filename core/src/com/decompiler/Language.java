@@ -1,5 +1,8 @@
 package com.decompiler;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -9,25 +12,28 @@ import java.util.Map;
  * Dmitriy Zabranskiy, 2013
  */
 public class Language {
-    private String myName;
     private static final Map<String, String> myLanguageToExtensionMap;
 
+    private String myName;
+
     static {
-        Map<String, String> aMap = new HashMap<String, String>();
-        aMap.put("Java", ".java");
-        aMap.put("JavaScript", ".js");
-        aMap.put("Kotlin", ".kt");
-        myLanguageToExtensionMap = Collections.unmodifiableMap(aMap);
+        final Map<String, String> languageToExtensionMap = new HashMap<String, String>();
+        languageToExtensionMap.put("Java", ".java");
+        languageToExtensionMap.put("JavaScript", ".js");
+        languageToExtensionMap.put("Kotlin", ".kt");
+        myLanguageToExtensionMap = Collections.unmodifiableMap(languageToExtensionMap);
     }
 
-    public Language(final String name) {
+    public Language(final @NotNull String name) {
         this.myName = name;
     }
 
+    @Nullable
     public String getExtension() {
         return myLanguageToExtensionMap.get(myName);
     }
 
+    @NotNull
     public String getName() {
         return myName;
     }

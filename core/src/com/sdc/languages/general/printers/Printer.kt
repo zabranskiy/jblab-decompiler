@@ -170,7 +170,7 @@ abstract class Printer {
 
         var errorClassesCode: PrimeDoc = nil()
         for ((className, error) in errorClasses)
-            errorClassesCode = errorClassesCode / text("// Error occurred while decompiling class " + className + ": " + Decompiler.printExceptionToString(error))
+            errorClassesCode = errorClassesCode / text("// Error occurred while decompiling class " + className + ": " + Decompiler.convertExceptionToString(error))
 
         return errorClassesCode + printClasses(decompiledClass.getClassBodyInnerClasses())
     }
