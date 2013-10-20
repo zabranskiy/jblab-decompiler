@@ -5,31 +5,41 @@ import com.sdc.ast.controlflow.*;
 import com.sdc.ast.controlflow.InstanceInvocation;
 import com.sdc.ast.controlflow.Invocation;
 import com.sdc.ast.expressions.*;
-import com.sdc.cfg.constructions.*;
 import com.sdc.ast.expressions.identifiers.Variable;
+
+import com.sdc.cfg.constructions.*;
 import com.sdc.cfg.nodes.Node;
+
 import com.sdc.languages.kotlin.astUtils.KotlinNewArray;
 import com.sdc.languages.kotlin.astUtils.KotlinVariable;
 import com.sdc.languages.kotlin.printers.KotlinOperationPrinter;
 import com.sdc.languages.general.ConstructionBuilder;
+
 import com.sdc.util.DominatorTreeGenerator;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class KotlinConstructionBuilder extends ConstructionBuilder {
-    public KotlinConstructionBuilder(final List<Node> myNodes, final DominatorTreeGenerator gen) {
+    public KotlinConstructionBuilder(final @NotNull List<Node> myNodes, final @NotNull DominatorTreeGenerator gen) {
         super(myNodes, gen);
     }
 
+    @NotNull
     @Override
-    protected ConstructionBuilder createConstructionBuilder(final List<Node> myNodes, final DominatorTreeGenerator gen) {
+    protected ConstructionBuilder createConstructionBuilder(final @NotNull List<Node> myNodes,
+                                                            final @NotNull DominatorTreeGenerator gen) {
         return new KotlinConstructionBuilder(myNodes, gen);
     }
 
+    @NotNull
     @Override
     public Construction build() {
-        Construction generalConstruction = super.build();
+        final Construction generalConstruction = super.build();
 
         extractNullSafeFunctionCall(generalConstruction);
         extractWhen(generalConstruction);
@@ -40,12 +50,12 @@ public class KotlinConstructionBuilder extends ConstructionBuilder {
         return generalConstruction;
     }
 
-    private void adjustForVariable(Construction baseConstruction) {
+    private void adjustForVariable(final @NotNull Construction baseConstruction) {
         final Construction forConstruction = baseConstruction.getNextConstruction();
 
         if (forConstruction != null) {
             if (forConstruction instanceof ForEach) {
-                for (Variable variable : ((ForEach) forConstruction).getVariables()) {
+                for (final Variable variable : ((ForEach) forConstruction).getVariables()) {
                     ((KotlinVariable) variable).setIsInForDeclaration(true);
                 }
             } else if (forConstruction instanceof For) {
@@ -54,16 +64,20 @@ public class KotlinConstructionBuilder extends ConstructionBuilder {
         }
     }
 
-    protected Construction extractTupleForEach(Construction baseConstruction) {
+    @NotNull
+    protected Construction extractTupleForEach(final @NotNull Construction baseConstruction) {
         final Construction forEachStartConstruction = baseConstruction.getNextConstruction();
 
-        if (baseConstruction instanceof ElementaryBlock && forEachStartConstruction != null && forEachStartConstruction instanceof ForEach) {
-            Construction body = ((ForEach) forEachStartConstruction).getBody();
+        if (baseConstruction instanceof ElementaryBlock
+                && forEachStartConstruction != null && forEachStartConstruction instanceof ForEach) {
+            final Construction body = ((ForEach) forEachStartConstruction).getBody();
+
             if (body instanceof ElementaryBlock) {
-                List<Variable> forEachVariables = new ArrayList<Variable>();
+                final List<Variable> forEachVariables = new ArrayList<Variable>();
 
                 for (final Statement statement : ((ElementaryBlock) body).getStatements()) {
-                    if (statement instanceof Assignment && ((Assignment) statement).getRight().getBase() instanceof com.sdc.ast.expressions.InstanceInvocation
+                    if (statement instanceof Assignment
+                            && ((Assignment) statement).getRight().getBase() instanceof com.sdc.ast.expressions.InstanceInvocation
                             && ((com.sdc.ast.expressions.InstanceInvocation) ((Assignment) statement).getRight().getBase()).getFunction().startsWith("component"))
                     {
                         forEachVariables.add((Variable) ((Assignment) statement).getLeft());
@@ -84,19 +98,22 @@ public class KotlinConstructionBuilder extends ConstructionBuilder {
         return baseConstruction;
     }
 
-
+    @NotNull
     @Override
-    protected Construction extractArrayForEach(Construction baseConstruction) {
+    protected Construction extractArrayForEach(final @NotNull Construction baseConstruction) {
         final Construction forStartConstruction = baseConstruction.getNextConstruction();
 
         if (baseConstruction instanceof ElementaryBlock && forStartConstruction != null && forStartConstruction instanceof For) {
             //TODO: get first statement and check if it has in the right side array[index] same as in for header
-            if (((For) forStartConstruction).getCondition() instanceof BinaryExpression && ((BinaryExpression) ((For) forStartConstruction).getCondition()).getRight() instanceof ArrayLength) {
-                List<Variable> forEachVariables = new ArrayList<Variable>();
-                forEachVariables.add((Variable)((Assignment)((ElementaryBlock) ((For) forStartConstruction).getBody()).getFirstStatement()).getLeft());
-                ForEach forEach = new ForEach(forEachVariables, ((ArrayLength) ((BinaryExpression) ((For) forStartConstruction).getCondition()).getRight()).getOperand());
+            if (((For) forStartConstruction).getCondition() instanceof BinaryExpression
+                    && ((BinaryExpression) ((For) forStartConstruction).getCondition()).getRight() instanceof ArrayLength) {
 
-                Construction body = ((For) forStartConstruction).getBody();
+                final List<Variable> forEachVariables = new ArrayList<Variable>();
+                forEachVariables.add((Variable)((Assignment)((ElementaryBlock) ((For) forStartConstruction).getBody()).getFirstStatement()).getLeft());
+
+                final ForEach forEach = new ForEach(forEachVariables, ((ArrayLength) ((BinaryExpression) ((For) forStartConstruction).getCondition()).getRight()).getOperand());
+
+                final Construction body = ((For) forStartConstruction).getBody();
 
                 forEach.setBody(body);
 
@@ -110,7 +127,7 @@ public class KotlinConstructionBuilder extends ConstructionBuilder {
         return baseConstruction;
     }
 
-    private boolean extractNullSafeFunctionCall(Construction baseConstruction) {
+    private boolean extractNullSafeFunctionCall(final @NotNull Construction baseConstruction) {
         final Construction throwNpeIf = baseConstruction.getNextConstruction();
 
         if (throwNpeIf != null && throwNpeIf instanceof ConditionalBlock) {
@@ -148,7 +165,7 @@ public class KotlinConstructionBuilder extends ConstructionBuilder {
         return false;
     }
 
-    private boolean extractNewArrayInitialization(Construction baseConstruction) {
+    private boolean extractNewArrayInitialization(final @NotNull Construction baseConstruction) {
         final Construction newArrayInitialization = baseConstruction.getNextConstruction();
 
         if (baseConstruction instanceof ElementaryBlock && newArrayInitialization != null && newArrayInitialization instanceof While) {
@@ -169,12 +186,12 @@ public class KotlinConstructionBuilder extends ConstructionBuilder {
                         ((ElementaryBlock) baseConstruction).removeLastStatement();
                         ((ElementaryBlock) baseConstruction).removeLastStatement();
 
-                        KotlinNewArray newArray = new KotlinNewArray(1
+                        final KotlinNewArray newArray = new KotlinNewArray(1
                                 , ((NewArray) ((ArrayLength) ((Assignment) initializationStatement).getRight()).getOperand()).getType().toString(KotlinOperationPrinter.getInstance())
                                 , ((NewArray) ((ArrayLength) ((Assignment) initializationStatement).getRight()).getOperand()).getDimensions());
                         newArray.setInitializer(lambdaFunction);
 
-                        Statement statementWithArrayInitialization = ((ElementaryBlock) newArrayInitialization.getNextConstruction()).getStatements().get(0);
+                        final Statement statementWithArrayInitialization = ((ElementaryBlock) newArrayInitialization.getNextConstruction()).getStatements().get(0);
                         if (statementWithArrayInitialization instanceof Assignment) {
                             ((Assignment) statementWithArrayInitialization).setRight(newArray);
                         } else if (statementWithArrayInitialization instanceof Return) {
@@ -193,7 +210,7 @@ public class KotlinConstructionBuilder extends ConstructionBuilder {
     }
 
 
-    private boolean extractWhen(Construction baseConstruction) {
+    private boolean extractWhen(final @NotNull Construction baseConstruction) {
         final Construction whenStartConstruction = baseConstruction.getNextConstruction();
 
         if (baseConstruction instanceof ElementaryBlock && whenStartConstruction != null && whenStartConstruction instanceof ConditionalBlock) {
@@ -208,7 +225,7 @@ public class KotlinConstructionBuilder extends ConstructionBuilder {
                     if (variableAssignmentForWhen.getLeft() instanceof Variable) {
                         final int whenVariableIndex = ((Variable) variableAssignmentForWhen.getLeft()).getIndex();
 
-                        When extractedWhen = extractWhen(whenStartConstruction, whenVariableIndex);
+                        final When extractedWhen = extractWhen(whenStartConstruction, whenVariableIndex);
                         if (extractedWhen != null) {
                             extractedWhen.setCondition(variableAssignmentForWhen.getRight());
 
@@ -226,7 +243,8 @@ public class KotlinConstructionBuilder extends ConstructionBuilder {
         return false;
     }
 
-    private When extractWhen(final Construction construction, final int variableIndex) {
+    @Nullable
+    private When extractWhen(final @Nullable Construction construction, final int variableIndex) {
         if (construction == null || !(construction instanceof ConditionalBlock)) {
             return null;
         }

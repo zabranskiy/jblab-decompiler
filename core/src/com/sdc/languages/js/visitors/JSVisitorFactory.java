@@ -8,19 +8,25 @@ import com.sdc.languages.general.visitors.GeneralMethodVisitor;
 import com.sdc.languages.general.visitors.GeneralVisitorFactory;
 import com.sdc.languages.java.visitors.JavaAnnotationVisitor;
 
+import org.jetbrains.annotations.NotNull;
+
+
 public class JSVisitorFactory extends GeneralVisitorFactory {
+    @NotNull
     @Override
-    public GeneralAnnotationVisitor createAnnotationVisitor(final Annotation annotation) {
+    public GeneralAnnotationVisitor createAnnotationVisitor(final @NotNull Annotation annotation) {
         return new JavaAnnotationVisitor(annotation);
     }
 
+    @NotNull
     @Override
-    public GeneralMethodVisitor createMethodVisitor(Method method
-            , final String decompiledOwnerFullClassName, final String decompiledOwnerSuperClassName)
-    {
+    public GeneralMethodVisitor createMethodVisitor(final @NotNull Method method,
+                                                    final @NotNull String decompiledOwnerFullClassName,
+                                                    final @NotNull String decompiledOwnerSuperClassName) {
         return new JSMethodVisitor(method, decompiledOwnerFullClassName, decompiledOwnerSuperClassName);
     }
 
+    @NotNull
     @Override
     public GeneralClassVisitor createClassVisitor(final int textWidth, final int nestSize) {
         return new JSClassVisitor(textWidth, nestSize);

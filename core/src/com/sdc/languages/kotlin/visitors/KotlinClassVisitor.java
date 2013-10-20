@@ -6,9 +6,12 @@ import com.sdc.languages.general.visitors.GeneralMethodVisitor;
 import com.sdc.languages.kotlin.languageParts.KotlinClass;
 import com.sdc.languages.kotlin.languageParts.KotlinLanguagePartFactory;
 import com.sdc.util.DeclarationWorker;
+
+import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.*;
 
 import java.io.IOException;
+
 
 public class KotlinClassVisitor extends GeneralClassVisitor {
     private static final String DEFAULT_EXTENDED_CLASS = "java/lang/Object";
@@ -22,25 +25,30 @@ public class KotlinClassVisitor extends GeneralClassVisitor {
         this.myLanguage = DeclarationWorker.SupportedLanguage.KOTLIN;
     }
 
+    @NotNull
     @Override
     protected String getDefaultImplementedInterface() {
         return DEFAULT_IMPLEMENTED_INTERFACE;
     }
 
+    @NotNull
     @Override
     protected String getDefaultExtendedClass() {
         return DEFAULT_EXTENDED_CLASS;
     }
 
     @Override
-    protected boolean checkForAutomaticallyGeneratedAnnotation(String annotationName) {
+    protected boolean checkForAutomaticallyGeneratedAnnotation(final @NotNull String annotationName) {
         return annotationName.startsWith("Jet");
     }
 
     @Override
-    public void visit(final int version, final int access, final String name
-            , final String signature, final String superName, final String[] interfaces)
-    {
+    public void visit(final int version,
+                      final int access,
+                      final String name,
+                      final String signature,
+                      final String superName,
+                      final String[] interfaces) {
         super.visit(version, access, name, signature, superName, interfaces);
 
         if (name.contains("$src$") || name.endsWith("Package")) {
@@ -49,9 +57,11 @@ public class KotlinClassVisitor extends GeneralClassVisitor {
     }
 
     @Override
-    public MethodVisitor visitMethod(final int access, final String name, final String desc
-            , final String signature, final String[] exceptions)
-    {
+    public MethodVisitor visitMethod(final int access,
+                                     final String name,
+                                     final String desc,
+                                     final String signature,
+                                     final String[] exceptions) {
         if ((name.startsWith("set") || name.startsWith("get")) && myDecompiledClass.hasField(name.substring(3))) {
             return null;
         }
@@ -75,10 +85,13 @@ public class KotlinClassVisitor extends GeneralClassVisitor {
         final String decompiledClassName = getKotlinClass().getSrcClassName();
         if (myDecompiledClass.getName().equals("KotlinPackage") && decompiledClassName != null) {
             try {
-                GeneralClassVisitor cv = myVisitorFactory.createClassVisitor(myDecompiledClass.getTextWidth(), myDecompiledClass.getNestSize());
+                final GeneralClassVisitor cv = myVisitorFactory.createClassVisitor(myDecompiledClass.getTextWidth()
+                        , myDecompiledClass.getNestSize());
                 cv.setClassFilesJarPath(myClassFilesJarPath);
-                ClassReader cr = GeneralClassVisitor.getInnerClassClassReader(myClassFilesJarPath, decompiledClassName);
+
+                final ClassReader cr = GeneralClassVisitor.getInnerClassClassReader(myClassFilesJarPath, decompiledClassName);
                 cr.accept(cv, 0);
+
                 myDecompiledClass = cv.getDecompiledClass();
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -87,10 +100,13 @@ public class KotlinClassVisitor extends GeneralClassVisitor {
     }
 
     @Override
-    protected int getStartIndexForParameters(final Method method) {
-        return myDecompiledClass.isNormalClass() && !method.getName().endsWith("$default") && !method.getModifier().contains("static") ? 1 : 0;
+    protected int getStartIndexForParameters(final @NotNull Method method) {
+        return myDecompiledClass.isNormalClass()
+                && !method.getName().endsWith("$default")
+                && !method.getModifier().contains("static") ? 1 : 0;
     }
 
+    @NotNull
     private KotlinClass getKotlinClass() {
         return (KotlinClass) myDecompiledClass;
     }

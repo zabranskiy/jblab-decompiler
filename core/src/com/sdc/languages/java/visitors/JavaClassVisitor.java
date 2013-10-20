@@ -4,6 +4,9 @@ import com.sdc.languages.general.visitors.GeneralClassVisitor;
 import com.sdc.languages.java.languageParts.JavaLanguagePartFactory;
 import com.sdc.util.DeclarationWorker;
 
+import org.jetbrains.annotations.NotNull;
+
+
 public class JavaClassVisitor extends GeneralClassVisitor {
     private static final String DEFAULT_EXTENDED_CLASS = "java/lang/Object";
 
@@ -15,18 +18,20 @@ public class JavaClassVisitor extends GeneralClassVisitor {
         this.myLanguage = DeclarationWorker.SupportedLanguage.JAVA;
     }
 
+    @NotNull
     @Override
     protected String getDefaultImplementedInterface() {
         return "";
     }
 
+    @NotNull
     @Override
     protected String getDefaultExtendedClass() {
         return DEFAULT_EXTENDED_CLASS;
     }
 
     @Override
-    protected boolean checkForAutomaticallyGeneratedAnnotation(final String annotationName) {
+    protected boolean checkForAutomaticallyGeneratedAnnotation(final @NotNull String annotationName) {
         return false;
     }
 }

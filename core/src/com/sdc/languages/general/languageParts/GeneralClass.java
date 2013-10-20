@@ -65,7 +65,7 @@ public abstract class GeneralClass {
 
     protected final List<String> myImports = new ArrayList<String>();
 
-    protected final List<String> myDefaultPackages = new ArrayList<String>();
+    protected List<String> myDefaultPackages = new ArrayList<String>();
 
     protected boolean myIsNormalClass = true;
     protected boolean myIsLambdaFunctionClass = false;
