@@ -8,25 +8,28 @@ import com.sdc.ast.expressions.identifiers.Variable;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jetbrains.annotations.NotNull;
+
 import static com.sdc.ast.Type.*;
+
 
 public class Cast extends PriorityExpression {
     protected Expression myOperand;
-    private String myParam = "";     // for CHECK_CAST
+    private String myParam = ""; // for CHECK_CAST
 
 
-    public Cast(final ExpressionType expressionType, final Expression operand) {
+    public Cast(final @NotNull ExpressionType expressionType, final @NotNull Expression operand) {
         this(expressionType, operand, "");
     }
 
-    public Cast(final ExpressionType expressionType, final Expression operand, String param) {
-        super(expressionType, getMyType(expressionType, param));
+    public Cast(final @NotNull ExpressionType expressionType, final @NotNull Expression operand, final @NotNull String param) {
+        super(expressionType, getCastType(expressionType, param));
         this.myOperand = operand;
         this.myParam = param;
     }
 
-
-    public String getOperation(OperationPrinter operationPrinter) {
+    @NotNull
+    public String getOperation(final @NotNull OperationPrinter operationPrinter) {
         switch (myExpressionType) {
             case DOUBLE_CAST:
                 return operationPrinter.getDoubleCastView();
@@ -49,21 +52,24 @@ public class Cast extends PriorityExpression {
         }
     }
 
+    @NotNull
     public Expression getOperand() {
         return myOperand;
     }
 
+    @NotNull
     @Override
     public Expression getBase() {
         return myOperand.getBase();
     }
 
     @Override
-    public boolean findVariable(Variable variable) {
+    public boolean findVariable(final @NotNull Variable variable) {
         return myOperand.findVariable(variable);
     }
 
-    public static Type getMyType(ExpressionType expressionType, String param) {
+    @NotNull
+    public static Type getCastType(final @NotNull ExpressionType expressionType, final @NotNull String param) {
         switch (expressionType) {
             case DOUBLE_CAST:
                 return DOUBLE_TYPE;
@@ -83,9 +89,11 @@ public class Cast extends PriorityExpression {
                 return new Type(param);
         }
     }
+
+    @NotNull
     @Override
     public List<Expression> getSubExpressions() {
-        List<Expression> subExpressions = new ArrayList<Expression>();
+        final List<Expression> subExpressions = new ArrayList<Expression>();
         subExpressions.add(myOperand);
         return subExpressions;
     }

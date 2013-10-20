@@ -3,20 +3,27 @@ package com.sdc.ast.expressions;
 import com.sdc.ast.Type;
 import com.sdc.ast.expressions.nestedclasses.NestedClass;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.ArrayList;
 import java.util.List;
+
 
 public class InstanceInvocation extends Invocation {
     private final Expression myInstance;
     private boolean myIsNotNullCheckedCall;
 
-    public Expression getInstance() {
-        return myInstance;
-    }
-
-    public InstanceInvocation(final String function, final Type type, final List<Expression> arguments, final Expression instance) {
+    public InstanceInvocation(final @NotNull String function,
+                              final @NotNull Type type,
+                              final @NotNull List<Expression> arguments,
+                              final @NotNull Expression instance) {
         super(function, type, arguments);
         this.myInstance = instance;
+    }
+
+    @NotNull
+    public Expression getInstance() {
+        return myInstance;
     }
 
     public boolean isNotNullCheckedCall() {
@@ -27,6 +34,7 @@ public class InstanceInvocation extends Invocation {
         this.myIsNotNullCheckedCall = isNotNullCheckedCall;
     }
 
+    @NotNull
     @Override
     public Expression getBase() {
         if (myInstance instanceof Invocation || myInstance instanceof Cast) {
@@ -36,8 +44,9 @@ public class InstanceInvocation extends Invocation {
         }
     }
 
+    @NotNull
     public List<InstanceInvocation> getInstanceInvocationSequence() {
-        List<InstanceInvocation> instanceInvocations = new ArrayList<InstanceInvocation>();
+        final List<InstanceInvocation> instanceInvocations = new ArrayList<InstanceInvocation>();
         if (myInstance instanceof InstanceInvocation) {
             instanceInvocations.addAll(((InstanceInvocation) myInstance).getInstanceInvocationSequence());
         }
@@ -45,26 +54,29 @@ public class InstanceInvocation extends Invocation {
         return instanceInvocations;
     }
 
+    @NotNull
     public List<InstanceInvocation> getInstanceInvocationSequenceExceptThis() {
-        List<InstanceInvocation> instanceInvocations = getInstanceInvocationSequence();
-        instanceInvocations.remove(instanceInvocations.size()-1);
+        final List<InstanceInvocation> instanceInvocations = getInstanceInvocationSequence();
+        instanceInvocations.remove(instanceInvocations.size() - 1);
         return instanceInvocations;
     }
 
     //return empty list is not correct to transform to String summary
     //else return Expressions to sum in straight order
+    @NotNull
     public List<Expression> getAppendSequenceExpressions() {
-        List<Expression> appendExpressions = new ArrayList<Expression>();
+        final List<Expression> appendExpressions = new ArrayList<Expression>();
+
         if (isToString()) {
-            List<InstanceInvocation> instanceInvocations = getInstanceInvocationSequenceExceptThis();
-            int size = instanceInvocations.size();
-            if(size == 0) {
+            final List<InstanceInvocation> instanceInvocations = getInstanceInvocationSequenceExceptThis();
+            if (instanceInvocations.size() == 0) {
                 return appendExpressions;
             }
-            InstanceInvocation lastInvocation = instanceInvocations.get(0);
-            Expression base = lastInvocation.getInstance();
+
+            final InstanceInvocation lastInvocation = instanceInvocations.get(0);
+            final Expression base = lastInvocation.getInstance();
             if (base instanceof New && ((New) base).getConstructor().getFunction().equals("StringBuilder")) {
-                for (InstanceInvocation invocation : instanceInvocations) {
+                for (final InstanceInvocation invocation : instanceInvocations) {
                     if (!invocation.getFunction().equals("append") || invocation.getArguments().size() != 1) {
                         appendExpressions.clear();
                         break;
@@ -73,6 +85,7 @@ public class InstanceInvocation extends Invocation {
                 }
             }
         }
+
         return appendExpressions;
     }
 
@@ -80,9 +93,10 @@ public class InstanceInvocation extends Invocation {
         return getFunction().equals("toString");
     }
 
+    @NotNull
     @Override
     public List<Expression> getSubExpressions() {
-        List<Expression> subExpressions = new ArrayList<Expression>();
+        final List<Expression> subExpressions = new ArrayList<Expression>();
         subExpressions.add(myInstance);
         subExpressions.addAll(getArguments());
         return subExpressions;
@@ -91,7 +105,7 @@ public class InstanceInvocation extends Invocation {
     @Override
     public boolean hasNotStaticInvocations() {
         boolean res = super.hasNotStaticInvocations();
-        if(!(myInstance instanceof NestedClass)){
+        if (!(myInstance instanceof NestedClass)) {
             res = true;
         }
         return res;

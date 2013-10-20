@@ -4,18 +4,21 @@ import com.sdc.languages.general.languageParts.GeneralClass;
 import com.sdc.languages.general.languageParts.Method;
 import com.sdc.ast.Type;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.List;
 
-public class LambdaFunction extends NestedClass {
-    //private final String myLambdaFunctionType;
 
-    public LambdaFunction(final GeneralClass nestedClass, final String type) {
+public class LambdaFunction extends NestedClass {
+    public LambdaFunction(final @NotNull GeneralClass nestedClass, final @NotNull String type) {
         super(nestedClass);
         setType(new Type(type));
     }
 
+    @Nullable
     public Method getFunction() {
-        List<Method> methods = myNestedClass.getMethods();
+        final List<Method> methods = myNestedClass.getMethods();
         for (final Method method : methods) {
             if (!method.getModifier().contains("bridge") && method.getName().equals("invoke")) {
                 return method;
@@ -28,5 +31,4 @@ public class LambdaFunction extends NestedClass {
         final String superClass = myNestedClass.getSuperClass();
         return superClass.startsWith("FunctionImpl");
     }
-
 }

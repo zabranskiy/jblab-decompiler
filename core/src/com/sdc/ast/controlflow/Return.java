@@ -2,6 +2,10 @@ package com.sdc.ast.controlflow;
 
 import com.sdc.ast.expressions.Expression;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+
 public class Return extends Statement {
     private Expression myReturnValue;
     private boolean myNeedToPrintReturn = true;
@@ -10,15 +14,16 @@ public class Return extends Statement {
         this.myReturnValue = null;
     }
 
-    public Return(final Expression returnValue) {
+    public Return(final @NotNull Expression returnValue) {
         this.myReturnValue = returnValue;
     }
 
+    @Nullable
     public Expression getReturnValue() {
         return myReturnValue;
     }
 
-    public void setReturnValue(final Expression returnValue) {
+    public void setReturnValue(final @Nullable Expression returnValue) {
         this.myReturnValue = returnValue;
     }
 

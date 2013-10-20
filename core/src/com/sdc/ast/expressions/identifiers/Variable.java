@@ -3,7 +3,9 @@ package com.sdc.ast.expressions.identifiers;
 import com.sdc.ast.ExpressionType;
 import com.sdc.ast.Type;
 import com.sdc.ast.expressions.Constant;
-import com.sdc.ast.expressions.Expression;
+
+import org.jetbrains.annotations.NotNull;
+
 
 public class Variable extends Identifier {
     protected final int myIndex;
@@ -16,7 +18,7 @@ public class Variable extends Identifier {
     protected Variable myParentCopy;
     protected Variable myChildCopy;
 
-    public Variable(final int index, final Type type, final String name) {
+    public Variable(final int index, final @NotNull Type type, final @NotNull String name) {
         super(ExpressionType.VARIABLE, type);
         this.myIndex = index;
         this.myName = new Constant(name, false, type);
@@ -49,12 +51,13 @@ public class Variable extends Identifier {
         myParentCopy = null;
     }
 
-    public void setName(final Constant name) {
+    public void setName(final @NotNull Constant name) {
         this.myName = name;
     }
 
+    @NotNull
     public Variable createCopy() {
-        Variable copy = createVariable(myIndex, getType(), ((Constant) myName).getValue().toString());
+        final Variable copy = createVariable(myIndex, getType(), myName.getValue().toString());
         myChildCopy = copy;
         copy.setParentCopy(this);
         if (isDeclared()) {
@@ -64,6 +67,7 @@ public class Variable extends Identifier {
         return copy;
     }
 
+    @NotNull
     @Override
     public Constant getName() {
         return myName;
@@ -73,27 +77,22 @@ public class Variable extends Identifier {
         return myIndex;
     }
 
+    @NotNull
     @Override
     public String toString() {
-        Expression name;
-        try {
-            name = getName();
-        } catch (NullPointerException e) {
-            name = null;
-        }
-        return "Variable{" +
-                "myIndex=" + myIndex +
-                ", myName=" + (name != null ? name : " no myName yet") + "}";
+        return "Variable{" + "myIndex=" + myIndex + ", myName=" + getName() + "}";
     }
 
-    public String nameToString(){
-        return myName==null?"null":myName.valueToString();
+    @NotNull
+    public String nameToString() {
+        return myName.valueToString();
     }
+
     public boolean isThis() {
         return getName().isThis();
     }
 
-    protected void setParentCopy(final Variable parent) {
+    protected void setParentCopy(final @NotNull Variable parent) {
         this.myParentCopy = parent;
     }
 
@@ -101,43 +100,54 @@ public class Variable extends Identifier {
         myChildCopy = null;
     }
 
-    protected Variable createVariable(final int index, final Type type, final String name) {
+    protected Variable createVariable(final int index, final @NotNull Type type, final @NotNull String name) {
         return new Variable(index, type, name);
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         return equalsWithChildren(o) || equalsWithParents(o);
     }
 
-    public boolean equalsWithParents(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+    private boolean equalsWithParents(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
-        if (myParentCopy == null) return false;
-        else return myParentCopy.equalsWithParents(o);
+        return myParentCopy != null && myParentCopy.equalsWithParents(o);
     }
 
-    public boolean equalsWithChildren(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+    private boolean equalsWithChildren(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
-        if (myChildCopy == null) return false;
-        else return myChildCopy.equalsWithChildren(o);
+        return myChildCopy != null && myChildCopy.equalsWithChildren(o);
     }
 
     @Override
     public int hashCode() {
         return myIndex;   //todo correct
     }
-    public boolean isUndefined(){
+
+    public boolean isUndefined() {
         return myName.isNull();
     }
 
     @Override
-    public boolean findVariable(Variable variable) {
+    public boolean findVariable(final @NotNull Variable variable) {
         return equals(variable);
     }
 }

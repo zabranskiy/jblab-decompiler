@@ -1004,7 +1004,7 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
     }
 
     protected void appendInstanceInvocation(final String function, final Type returnType, final List<Expression> arguments, final Expression instance) {
-        if (returnType.isVOID()) {
+        if (returnType.isVoid()) {
             myStatements.add(new com.sdc.ast.controlflow.InstanceInvocation(new InstanceInvocation(function, returnType, arguments, instance)));
         } else {
             myBodyStack.push(new InstanceInvocation(function, returnType, arguments, instance));
@@ -1012,7 +1012,7 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
     }
 
     protected void appendInvocation(final String function, final Type returnType, final List<Expression> arguments) {
-        if (returnType.isVOID()) {
+        if (returnType.isVoid()) {
             myStatements.add(new com.sdc.ast.controlflow.Invocation(new Invocation(function, returnType, arguments)));
         } else {
             myBodyStack.push(new Invocation(function, returnType, arguments));

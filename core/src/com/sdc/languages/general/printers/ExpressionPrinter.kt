@@ -212,7 +212,7 @@ abstract class ExpressionPrinter(printer: Printer) {
                         printExpressionCheckBrackets(increment, priority, isAssociative, nestSize)
                     }
 
-            if (expression.IsIncrementSimple()) {
+            if (expression.isIncrementSimple()) {
                 return group(nest(nestSize, printExpr + text(operation)))
             } else {
                 return group(nest(nestSize, printExpr / (text(operation) + printIncrement)))

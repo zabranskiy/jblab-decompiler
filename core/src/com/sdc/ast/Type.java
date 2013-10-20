@@ -3,9 +3,14 @@ package com.sdc.ast;
 import com.sdc.languages.general.printers.OperationPrinter;
 import com.sdc.languages.java.printers.JavaOperationPrinter;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.HashSet;
+import java.util.Set;
 
 import static com.sdc.ast.Type.PrimitiveType.*;
+
 
 public class Type {
     public static final Type BOOLEAN_TYPE = new Type(BOOLEAN);
@@ -19,55 +24,59 @@ public class Type {
     public static final Type VOID = new Type((PrimitiveType) null);
 
     public enum PrimitiveType {
-        BOOLEAN, INT, CHAR, SHORT, DOUBLE, FLOAT, BYTE, LONG
+        BOOLEAN, BYTE, CHAR, INT, SHORT, LONG, FLOAT, DOUBLE
     }
 
     private final PrimitiveType myType;
     private final String myClassName;
     private String myOriginalClassName = null;
-    private final int myDimensions; //for arrays with primitives types or classes
+    private final int myDimensions; // for arrays with primitive types or classes
     private boolean myIsExtends = false;
 
-    private static  HashSet<String> myPrimitiveTypes = new HashSet<String>();
+    private static Set<String> myPrimitiveTypes = new HashSet<String>();
 
     static {
-        for( PrimitiveType type: PrimitiveType.values()){
+        for (final PrimitiveType type : PrimitiveType.values()) {
             myPrimitiveTypes.add(type.name().toLowerCase());
         }
     }
 
-    private Type(PrimitiveType type, String className, int dimensions,String originalClassName, boolean isExtends) {
-        myType = type;
-        myClassName = className;
-        myDimensions = dimensions;
-        myOriginalClassName = originalClassName;
-        myIsExtends = isExtends;
+    private Type(final @Nullable PrimitiveType type,
+                 final @Nullable String className,
+                 final int dimensions,
+                 final @Nullable String originalClassName,
+                 final boolean isExtends) {
+        this.myType = type;
+        this.myClassName = className;
+        this.myDimensions = dimensions;
+        this.myOriginalClassName = originalClassName;
+        this.myIsExtends = isExtends;
     }
 
-    public Type(PrimitiveType type) {
-        myType = type;
-        myClassName = null;
-        myDimensions = 0;
-        myOriginalClassName = null;
+    public Type(final @Nullable PrimitiveType type) {
+        this.myType = type;
+        this.myClassName = null;
+        this.myDimensions = 0;
+        this.myOriginalClassName = null;
     }
 
-    public Type(String className) {
-        this(className,0);
+    public Type(final @NotNull String className) {
+        this(className, 0);
     }
 
-    public Type(PrimitiveType type, int dimensions) {
-        myType = type;
-        myDimensions = dimensions;
-        myClassName = null;
+    public Type(final @NotNull PrimitiveType type, final int dimensions) {
+        this.myType = type;
+        this.myDimensions = dimensions;
+        this.myClassName = null;
     }
 
-    public Type(String className, int dimensions) {
-        myOriginalClassName = className;
+    public Type(final @Nullable String className, int dimensions) {
+        this.myOriginalClassName = className;
 
         if (className == null) {
-            myClassName = null;
-            myType = null;
-            myDimensions = 0;
+            this.myClassName = null;
+            this.myType = null;
+            this.myDimensions = 0;
             return;
         }
 
@@ -81,32 +90,33 @@ public class Type {
             newClassName = newClassName.substring("Array<".length(), newClassName.length() - 1);
         }
 
-        myDimensions = dimensions;
+        this.myDimensions = dimensions;
         if (myPrimitiveTypes.contains(newClassName.toLowerCase())) {
-            myType = PrimitiveType.valueOf(newClassName.toUpperCase());
-            myClassName = null;
+            this.myType = PrimitiveType.valueOf(newClassName.toUpperCase());
+            this.myClassName = null;
         } else {
-            myClassName = newClassName;
-            myType = null;
+            this.myClassName = newClassName;
+            this.myType = null;
         }
     }
 
-
-    public String toString(OperationPrinter operationPrinter) {
+    @NotNull
+    public String toString(final @NotNull OperationPrinter operationPrinter) {
         if (myOriginalClassName != null) {
             return myOriginalClassName;
         }
 
         //correct for kotlin and java
-        String res = "";
-        res = toStringWithoutBrackets(operationPrinter).trim();
+        String res = toStringWithoutBrackets(operationPrinter).trim();
         for (int i = 0; i < myDimensions; i++) {
             res = operationPrinter.getTypeWithBracketsView(res);
         }
+
         return res + operationPrinter.getSpaceAfterType();
     }
 
-    public String toStringWithoutBrackets(OperationPrinter operationPrinter) {
+    @NotNull
+    public String toStringWithoutBrackets(final @NotNull OperationPrinter operationPrinter) {
         String res = "";
         if (!isPrimitive()) {
             res += operationPrinter.getNotPrimitiveView(myClassName);
@@ -144,12 +154,17 @@ public class Type {
         return res;
     }
 
+    @NotNull
     public String toStringWithoutBrackets() {
         return toStringWithoutBrackets(JavaOperationPrinter.getInstance());
     }
+
+    @NotNull
     @Override
     public String toString() {
-        if(myOriginalClassName!=null) return myOriginalClassName;
+        if (myOriginalClassName != null) {
+            return myOriginalClassName;
+        }
         return toString(JavaOperationPrinter.getInstance());
     }
 
@@ -158,17 +173,24 @@ public class Type {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
-        Type type = (Type) o;
+        final Type type = (Type) o;
 
-        if (myDimensions != type.myDimensions) return false;
-        if (myClassName != null ? !myClassName.equals(type.myClassName) : type.myClassName != null) return false;
-        if (myType != type.myType) return false;
+        if (myDimensions != type.myDimensions) {
+            return false;
+        }
+        if (myClassName != null ? !myClassName.equals(type.myClassName) : type.myClassName != null) {
+            return false;
+        }
 
-        return true;
+        return myType == type.myType;
     }
 
     @Override
@@ -179,7 +201,8 @@ public class Type {
         return result;
     }
 
-    public static Type getStrongerType(Type type1, Type type2) {
+    @NotNull
+    public static Type getStrongerType(final @NotNull Type type1, final @NotNull Type type2) {
         if (type1.isPrimitive() && type2.isPrimitive()) {
             if (type1 == DOUBLE_TYPE || type2 == DOUBLE_TYPE) {
                 return DOUBLE_TYPE;
@@ -214,27 +237,31 @@ public class Type {
         return myDimensions;
     }
 
+    @Nullable
     public PrimitiveType getType() {
         return myType;
     }
 
+    @Nullable
     public String getClassName() {
         return myClassName;
     }
 
+    @NotNull
     public Type getTypeWithOnPairOfBrackets() {
         if (myDimensions <= 0) {
-            return new Type(myType, myClassName, 0,null,false);
+            return new Type(myType, myClassName, 0, null, false);
         } else {
-            return new Type(myType, myClassName, myDimensions - 1,null,false);
+            return new Type(myType, myClassName, myDimensions - 1, null, false);
         }
     }
 
+    @Nullable
     public Type getTypeWithoutBrackets() {
-        return new Type(myType, myClassName, 0,myOriginalClassName,myIsExtends);
+        return new Type(myType, myClassName, 0, myOriginalClassName, myIsExtends);
     }
 
-    public boolean isVOID() {
+    public boolean isVoid() {
         return myClassName == null && myType == null;
     }
 
