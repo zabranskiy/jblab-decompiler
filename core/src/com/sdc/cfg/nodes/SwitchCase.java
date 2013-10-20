@@ -1,29 +1,35 @@
 package com.sdc.cfg.nodes;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class SwitchCase implements Comparable<SwitchCase> {
-    private List<Integer> myKeys = new ArrayList<Integer>();
+    private final List<Integer> myKeys = new ArrayList<Integer>();
     private final Node myCaseBody;
 
-    public SwitchCase(final Node caseBody) {
+    public SwitchCase(final @NotNull Node caseBody) {
         this.myCaseBody = caseBody;
     }
 
-    public void addKey(final Integer key) {
+    public void addKey(final @Nullable Integer key) {
         myKeys.add(key);
     }
 
+    @NotNull
     public List<Integer> getKeys() {
         return myKeys;
     }
 
+    @NotNull
     public Node getCaseBody() {
         return myCaseBody;
     }
 
-    public int compareTo(SwitchCase switchCase) {
+    public int compareTo(final @NotNull SwitchCase switchCase) {
         final int thisIndex = this.getCaseBody().getIndex();
         final int anotherIndex = switchCase.getCaseBody().getIndex();
 

@@ -646,7 +646,7 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
                         dw.setStatements(new ArrayList<Statement>(node.getStatements().subList(0, index)));
                         dw.getInnerLabels().addAll(new ArrayList<Label>(node.getInnerLabels().subList(0, index)));
                         dw.setCondition(getConditionFromStack(opString));
-                        dw.setEmpty(true);
+                        dw.setIsEmpty(true);
                         myNodes.add(dw);
 
                         node.setStatements(new ArrayList<Statement>(node.getStatements().subList(index, node.getStatements().size())));
@@ -660,20 +660,20 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
                     Node beforeNode = new Node(null, null, myNodes.size());
                     beforeNode.setStatements(new ArrayList<Statement>(myStatements.subList(0, index)));
                     beforeNode.setInnerLabels(new ArrayList<Label>(myNodeInnerLabels.subList(0, index)));
-                    beforeNode.setEmpty(true);
+                    beforeNode.setIsEmpty(true);
                     myNodes.add(beforeNode);
 
                     Node innerNode = new Node(null, null, myNodes.size());
                     innerNode.setStatements(new ArrayList<Statement>(myStatements.subList(index, myStatements.size())));
                     innerNode.setInnerLabels(new ArrayList<Label>(myNodeInnerLabels.subList(index, myNodeInnerLabels.size())));
-                    innerNode.setEmpty(true);
+                    innerNode.setIsEmpty(true);
                     myNodes.add(innerNode);
 
                     myIfElseMap.put(myNodes.size(), label);
 
                     DoWhile dw = new DoWhile(new ArrayList<Statement>(), new ArrayList<Label>(), myNodes.size());
                     dw.setCondition(getConditionFromStack(opString));
-                    dw.setEmpty(true);
+                    dw.setIsEmpty(true);
                     myNodes.add(dw);
 
                     myStatements.clear();
@@ -685,7 +685,7 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
                 applyNode();
                 final int last = myNodes.size() - 1;
                 myNodes.get(last).setCondition(getConditionFromStack(opString));
-                myNodes.get(last).setEmpty(true);
+                myNodes.get(last).setIsEmpty(true);
             }
         } else if (opString.contains("GOTO")) {
             myLabels.add(label);
@@ -931,12 +931,12 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
             myNodes.get(i).setStatements(new ArrayList<Statement>(myStatements));
             myNodes.get(i).setInnerLabels(new ArrayList<Label>(myNodeInnerLabels));
             if (myNodes.get(i).getStatements().isEmpty()) {
-                myNodes.get(i).setEmpty(true);
+                myNodes.get(i).setIsEmpty(true);
             }
         } else {
             Node node = new Node(new ArrayList<Statement>(myStatements), new ArrayList<Label>(myNodeInnerLabels), myNodes.size());
             if (node.getStatements().isEmpty()) {
-                node.setEmpty(true);
+                node.setIsEmpty(true);
             }
             myNodes.add(node);
         }

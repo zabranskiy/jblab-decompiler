@@ -187,9 +187,9 @@ public class ConstructionBuilder {
             Construction currentConstruction = extractConstruction(node);
 
             if (node.getCondition() == null && !(node instanceof Switch)) {
-                node.setConstruction(elementaryBlock);
+                node.setOuterConstruction(elementaryBlock);
             } else {
-                node.setConstruction(currentConstruction);
+                node.setOuterConstruction(currentConstruction);
             }
 
             if (currentConstruction == null && !node.getListOfTails().isEmpty()) {
@@ -440,14 +440,14 @@ public class ConstructionBuilder {
                 final int tailIndex = tail.getIndex();
 
                 if (tailIndex != beginIndex && (tailIndex < leftBound || tailIndex > rightBound)) {
-                    node.getConstruction().setBreak("");
-                    if (node.getConstruction().hasContinue()) {
-                        node.getConstruction().setContinue(null);
+                    node.getOuterConstruction().setBreak("");
+                    if (node.getOuterConstruction().hasContinue()) {
+                        node.getOuterConstruction().setContinue(null);
                     }
                 }
 
-                if (tailIndex == beginIndex && !node.getConstruction().hasBreak()) {
-                    node.getConstruction().setContinue("");
+                if (tailIndex == beginIndex && !node.getOuterConstruction().hasBreak()) {
+                    node.getOuterConstruction().setContinue("");
                 }
             }
         }
@@ -501,8 +501,8 @@ public class ConstructionBuilder {
 
     private void addBreakToAncestors(final Node child) {
         for (final Node parent : child.getAncestors()) {
-            if (parent.getConstruction() != null) {
-                parent.getConstruction().setBreak("");
+            if (parent.getOuterConstruction() != null) {
+                parent.getOuterConstruction().setBreak("");
             }
         }
     }
@@ -514,8 +514,8 @@ public class ConstructionBuilder {
         for (final Node node : myNodes) {
             for (final Node tail : node.getListOfTails()) {
                 final int tailIndex = tail.getIndex();
-                if ((tailIndex < firstNodeIndex || tail.getIndex() > lastNodeIndex) && node.getConstruction() != null) {
-                    node.getConstruction().setBreak("");
+                if ((tailIndex < firstNodeIndex || tail.getIndex() > lastNodeIndex) && node.getOuterConstruction() != null) {
+                    node.getOuterConstruction().setBreak("");
                 }
             }
         }
