@@ -3,12 +3,16 @@ package com.sdc.languages.general.astUtils;
 import com.sdc.ast.Type;
 import com.sdc.ast.expressions.Constant;
 import com.sdc.ast.expressions.identifiers.Variable;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Label;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 
 public abstract class Frame {
     protected boolean myStackChecked = false;
@@ -26,7 +30,7 @@ public abstract class Frame {
 
     protected abstract Frame createFrame();
 
-    public boolean isMyStackChecked() {
+    public boolean isStackChecked() {
         return myStackChecked;
     }
 
@@ -34,11 +38,12 @@ public abstract class Frame {
         this.myStackChecked = stackChecked;
     }
 
+    @NotNull
     public List<Variable> getVariables() {
         return myVariables;
     }
 
-    public void setVariables(final List<Variable> variables) {
+    public void setVariables(final @NotNull List<Variable> variables) {
         int pos = 0;
         for (final Variable variable : variables) {
             myVariableIndexToArrayPosition.put(variable.getIndex(), pos);
@@ -48,11 +53,11 @@ public abstract class Frame {
         this.myVariables = variables;
     }
 
-    public void addLabel(final Label label) {
+    public void addLabel(final @NotNull Label label) {
         myLabels.add(label);
     }
 
-    public boolean hasLabel(final Label label) {
+    public boolean hasLabel(final @NotNull Label label) {
         return myLabels.contains(label);
     }
 
@@ -75,7 +80,7 @@ public abstract class Frame {
         return myLastCommonVariableIndexInList;
     }
 
-    public void setLastCommonVariableIndexInList(int lastCommonVariableIndexInList) {
+    public void setLastCommonVariableIndexInList(final int lastCommonVariableIndexInList) {
         this.myLastCommonVariableIndexInList = lastCommonVariableIndexInList;
     }
 
@@ -87,11 +92,12 @@ public abstract class Frame {
         this.myHasStack = hasStack;
     }
 
+    @Nullable
     public String getStackedVariableType() {
         return myStackedVariableType;
     }
 
-    public void setStackedVariableType(final String stackedVariableType) {
+    public void setStackedVariableType(final @NotNull String stackedVariableType) {
         this.myStackedVariableType = stackedVariableType;
         this.myHasStack = true;
     }
@@ -104,7 +110,8 @@ public abstract class Frame {
         return false;
     }
 
-    public Variable createAndInsertVariable(final int index, final Type type, final String name) {
+    @NotNull
+    public Variable createAndInsertVariable(final int index, final @NotNull Type type, final @NotNull String name) {
         if (!containsVariable(index)) {
             final Variable variable = createVariable(index, type, name);
             variable.setIsMethodParameter(index > 0 && index <= myLastMethodParameterIndex);
@@ -114,17 +121,19 @@ public abstract class Frame {
 
             return variable;
         }
-        return null;
+        return getVariable(index);
     }
 
-    public void updateVariableInformation(final int index, final Type type, final Constant name) {
-        Variable variable = getVariable(index);
+    public void updateVariableInformation(final int index, final @NotNull Type type, final @Nullable Constant name) {
+        final Variable variable = getVariable(index);
         variable.setType(type);
-        if(name!=null){
+
+        if (name != null) {
             variable.setName(name);
         }
     }
 
+    @NotNull
     public Variable getVariable(final int variableIndex) {
         if (containsVariable(variableIndex)) {
             return myVariables.get(myVariableIndexToArrayPosition.get(variableIndex));
@@ -137,8 +146,9 @@ public abstract class Frame {
         return myVariables.size();
     }
 
+    @NotNull
     public Frame createNextFrameWithAbsoluteBound(final int rightBound) {
-        Frame newFrame = createFrame();
+        final Frame newFrame = createFrame();
 
         newFrame.setVariables(getVariablesSubList(rightBound));
         newFrame.setLastCommonVariableIndexInList(rightBound - 1);
@@ -147,10 +157,12 @@ public abstract class Frame {
         return newFrame;
     }
 
+    @NotNull
     public Frame createNextFrameWithRelativeBound(final int count) {
         return createNextFrameWithAbsoluteBound(myLastCommonVariableIndexInList + count + 1);
     }
 
+    @NotNull
     public List<Variable> getMethodParameters(final int startIndex) {
         if (myLastCommonVariableIndexInList != -1) {
             return myVariables.subList(startIndex, myVariableIndexToArrayPosition.get(myLastMethodParameterIndex) + 1);
@@ -159,8 +171,9 @@ public abstract class Frame {
         }
     }
 
+    @NotNull
     protected List<Variable> getVariablesSubList(final int rightBound) {
-        List<Variable> result = new ArrayList<Variable>();
+        final List<Variable> result = new ArrayList<Variable>();
         final int actualRightBound = rightBound > myVariables.size() ? myVariables.size() : rightBound;
 
         for (final Variable variable : myVariables.subList(0, actualRightBound)) {
@@ -174,7 +187,8 @@ public abstract class Frame {
         return myVariableIndexToArrayPosition.keySet().contains(index);
     }
 
-    protected Variable createVariable(final int index, final Type type, final String name) {
+    @NotNull
+    protected Variable createVariable(final int index, final @NotNull Type type, final @NotNull String name) {
         return new Variable(index, type, name);
     }
 }

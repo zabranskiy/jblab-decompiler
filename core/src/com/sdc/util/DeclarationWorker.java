@@ -335,7 +335,7 @@ public class DeclarationWorker {
             index = (count - backupCount) == 1 ? count : count - 1;
 
             String variableType = type;
-            final String name = method.getNewTypeName( new Type(type));
+            final String name = method.getNewTypeName(new Type(type));
 
             if (language == SupportedLanguage.KOTLIN) {
                 variableType = isPrimitiveClass ? convertJavaPrimitiveClassToKotlin(type) + "?" : type;

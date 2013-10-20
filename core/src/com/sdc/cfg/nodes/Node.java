@@ -93,7 +93,7 @@ public class Node {
         return myNextNode;
     }
 
-    public void setNextNode(final @NotNull Node nextNode) {
+    public void setNextNode(final @Nullable Node nextNode) {
         this.myNextNode = nextNode;
     }
 
