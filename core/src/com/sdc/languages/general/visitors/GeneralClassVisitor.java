@@ -3,6 +3,9 @@ package com.sdc.languages.general.visitors;
 import com.sdc.ast.Type;
 import com.sdc.languages.general.languageParts.*;
 import com.sdc.util.DeclarationWorker;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
 
 import java.io.IOException;
@@ -13,6 +16,7 @@ import java.util.jar.JarFile;
 
 import static com.sdc.languages.general.languageParts.GeneralClass.ClassType.*;
 import static org.objectweb.asm.Opcodes.ASM4;
+
 
 public abstract class GeneralClassVisitor extends ClassVisitor {
     protected GeneralClass myOuterClass;
@@ -38,16 +42,20 @@ public abstract class GeneralClassVisitor extends ClassVisitor {
         this.myNestSize = nestSize;
     }
 
+    @NotNull
     protected abstract String getDefaultImplementedInterface();
 
+    @NotNull
     protected abstract String getDefaultExtendedClass();
 
-    protected abstract boolean checkForAutomaticallyGeneratedAnnotation(final String annotationName);
+    protected abstract boolean checkForAutomaticallyGeneratedAnnotation(final @NotNull String annotationName);
 
+    @NotNull
     public String getDecompiledCode() {
         return myDecompiledClass.toString();
     }
 
+    @Nullable
     public GeneralClass getDecompiledClass() {
         return myDecompiledClass;
     }
@@ -60,21 +68,25 @@ public abstract class GeneralClassVisitor extends ClassVisitor {
         this.myIsNestedClass = isNestedClass;
     }
 
-    public void setVisitedClasses(final Set<String> visitedClasses) {
+    public void setVisitedClasses(final @NotNull Set<String> visitedClasses) {
         this.myVisitedClasses = visitedClasses;
     }
 
-    public void setClassFilesJarPath(final String classFilesJarPath) {
+    public void setClassFilesJarPath(final @NotNull String classFilesJarPath) {
         this.myClassFilesJarPath = classFilesJarPath;
     }
 
-    public void setOuterClass(final GeneralClass outerClass) {
+    public void setOuterClass(final @NotNull GeneralClass outerClass) {
         this.myOuterClass = outerClass;
     }
 
     @Override
-    public void visit(final int version, final int access, final String name
-            , final String signature, final String superName, final String[] interfaces) {
+    public void visit(final int version,
+                      final int access,
+                      final String name,
+                      final String signature,
+                      final String superName,
+                      final String[] interfaces) {
         String modifier = DeclarationWorker.getAccess(access & ~Opcodes.ACC_SUPER, myLanguage);
         GeneralClass.ClassType type = SIMPLE_CLASS;
 
@@ -82,17 +94,17 @@ public abstract class GeneralClassVisitor extends ClassVisitor {
                 && (access & Opcodes.ACC_INTERFACE) == 0
                 && (access & Opcodes.ACC_ANNOTATION) == 0) {
             type = SIMPLE_CLASS;
-        } else if ((access & Opcodes.ACC_ENUM)!= 0){
-            modifier = modifier.replace("final","");
-            modifier = modifier.replace("enum","");
+        } else if ((access & Opcodes.ACC_ENUM) != 0) {
+            modifier = modifier.replace("final", "");
+            modifier = modifier.replace("enum", "");
             modifier = modifier.trim() + " ";
             type = ENUM;
-        }  else if((access & Opcodes.ACC_INTERFACE) != 0){
-            modifier = modifier.replace("abstract ","");
+        } else if ((access & Opcodes.ACC_INTERFACE) != 0) {
+            modifier = modifier.replace("abstract ", "");
             type = INTERFACE;
-        }  else if((access & Opcodes.ACC_ANNOTATION) != 0){
+        } else if ((access & Opcodes.ACC_ANNOTATION) != 0) {
             type = ANNOTATION;
-        } else if((access & Opcodes.ACC_ABSTRACT) !=0){
+        } else if ((access & Opcodes.ACC_ABSTRACT) != 0) {
             type = ABSTRACT_CLASS;
         }
 
@@ -115,8 +127,8 @@ public abstract class GeneralClassVisitor extends ClassVisitor {
             superClassImport = DeclarationWorker.decompileClassNameForImport(superName);
         }
 
-        List<String> implementedInterfaces = new ArrayList<String>();
-        List<String> implementedInterfacesImports = new ArrayList<String>();
+        final List<String> implementedInterfaces = new ArrayList<String>();
+        final List<String> implementedInterfacesImports = new ArrayList<String>();
         if (interfaces != null && interfaces.length > 0) {
             for (final String implInterface : interfaces) {
                 if (!implInterface.equals(getDefaultImplementedInterface())) {
@@ -126,13 +138,14 @@ public abstract class GeneralClassVisitor extends ClassVisitor {
             }
         }
 
-        List<String> genericTypesList = new ArrayList<String>();
-        List<String> genericIdentifiersList = new ArrayList<String>();
-        List<String> genericTypesImports = new ArrayList<String>();
-        DeclarationWorker.parseGenericDeclaration(signature, genericTypesList, genericIdentifiersList, genericTypesImports, myLanguage);
+        final List<String> genericTypesList = new ArrayList<String>();
+        final List<String> genericIdentifiersList = new ArrayList<String>();
+        final List<String> genericTypesImports = new ArrayList<String>();
+        DeclarationWorker.parseGenericDeclaration(signature, genericTypesList, genericIdentifiersList
+                , genericTypesImports, myLanguage);
 
-        myDecompiledClass = myLanguagePartFactory.createClass(modifier, type, className, packageName.toString(), implementedInterfaces
-                , superClass, genericTypesList, genericIdentifiersList, myTextWidth, myNestSize);
+        myDecompiledClass = myLanguagePartFactory.createClass(modifier, type, className, packageName.toString()
+                , implementedInterfaces, superClass, genericTypesList, genericIdentifiersList, myTextWidth, myNestSize);
 
         myDecompiledClass.setIsLambdaFunctionClass(myIsLambdaFunction);
         myDecompiledClass.setIsNestedClass(myIsNestedClass);
@@ -158,7 +171,7 @@ public abstract class GeneralClassVisitor extends ClassVisitor {
 
     @Override
     public AnnotationVisitor visitAnnotation(final String desc, final boolean visible) {
-        List<String> annotationImports = new ArrayList<String>();
+        final List<String> annotationImports = new ArrayList<String>();
         final String annotationName = getDescriptor(desc, 0, annotationImports);
 
         if (!checkForAutomaticallyGeneratedAnnotation(annotationName)) {
@@ -185,19 +198,20 @@ public abstract class GeneralClassVisitor extends ClassVisitor {
 
         if (!myVisitedClasses.contains(innerClassName)) {
             try {
-                GeneralClassVisitor cv = myVisitorFactory.createClassVisitor(myDecompiledClass.getTextWidth(), myDecompiledClass.getNestSize());
+                final GeneralClassVisitor cv = myVisitorFactory.createClassVisitor(myDecompiledClass.getTextWidth()
+                        , myDecompiledClass.getNestSize());
                 cv.setVisitedClasses(myVisitedClasses);
                 cv.setClassFilesJarPath(myClassFilesJarPath);
                 cv.setOuterClass(myDecompiledClass);
                 cv.setIsNestedClass(true);
 
-                ClassReader cr = getInnerClassClassReader(myClassFilesJarPath, name);
+                final ClassReader cr = getInnerClassClassReader(myClassFilesJarPath, name);
                 cr.accept(cv, 0);
 
-                GeneralClass decompiledClass = cv.getDecompiledClass();
+                final GeneralClass decompiledClass = cv.getDecompiledClass();
 
                 if (innerName != null) {
-                    GeneralClass outerClass = myDecompiledClass.getOuterClass(outerClassName);
+                    final GeneralClass outerClass = myDecompiledClass.getOuterClass(outerClassName);
                     if (outerClass != null) {
                         outerClass.addInnerClass(innerClassName, decompiledClass);
                         if (outerClassName != null) {
@@ -214,8 +228,12 @@ public abstract class GeneralClassVisitor extends ClassVisitor {
     }
 
     @Override
-    public FieldVisitor visitField(final int access, final String name, final String desc, final String signature, final Object value) {
-        List<String> fieldDeclarationImports = new ArrayList<String>();
+    public FieldVisitor visitField(final int access,
+                                   final String name,
+                                   final String desc,
+                                   final String signature,
+                                   final Object value) {
+        final List<String> fieldDeclarationImports = new ArrayList<String>();
         final String description = signature != null ? signature : desc;
         final String accessString = DeclarationWorker.getAccess(access, myLanguage);
 
@@ -232,25 +250,29 @@ public abstract class GeneralClassVisitor extends ClassVisitor {
     }
 
     @Override
-    public MethodVisitor visitMethod(final int access, final String name, final String desc
-            , final String signature, final String[] exceptions) {
+    public MethodVisitor visitMethod(final int access,
+                                     final String name,
+                                     final String desc,
+                                     final String signature,
+                                     final String[] exceptions) {
         final String description = signature != null ? signature : desc;
         String modifier = DeclarationWorker.getAccess(access, myLanguage);
-        if(myDecompiledClass.getType()==INTERFACE){
-            modifier = modifier.replace("abstract ","");
+        if (myDecompiledClass.getType() == INTERFACE) {
+            modifier = modifier.replace("abstract ", "");
         }
 
-        List<String> throwedExceptions = new ArrayList<String>();
+        final List<String> thrownExceptions = new ArrayList<String>();
         if (exceptions != null) {
             for (final String exception : exceptions) {
-                throwedExceptions.add(decompileClassNameWithOuterClasses(exception));
+                thrownExceptions.add(decompileClassNameWithOuterClasses(exception));
             }
         }
 
-        List<String> genericTypesList = new ArrayList<String>();
-        List<String> genericIdentifiersList = new ArrayList<String>();
-        List<String> genericTypesImports = new ArrayList<String>();
-        DeclarationWorker.parseGenericDeclaration(description, genericTypesList, genericIdentifiersList, genericTypesImports, myLanguage);
+        final List<String> genericTypesList = new ArrayList<String>();
+        final List<String> genericIdentifiersList = new ArrayList<String>();
+        final List<String> genericTypesImports = new ArrayList<String>();
+        DeclarationWorker.parseGenericDeclaration(description, genericTypesList, genericIdentifiersList
+                , genericTypesImports, myLanguage);
 
         String returnType;
         String methodName;
@@ -258,7 +280,7 @@ public abstract class GeneralClassVisitor extends ClassVisitor {
             returnType = "";
             methodName = myDecompiledClass.getName();
         } else {
-            List<String> methodReturnTypeImports = new ArrayList<String>();
+            final List<String> methodReturnTypeImports = new ArrayList<String>();
             final int returnTypeIndex = description.indexOf(')') + 1;
             returnType = getDescriptor(description, returnTypeIndex, methodReturnTypeImports);
             methodName = name;
@@ -266,7 +288,7 @@ public abstract class GeneralClassVisitor extends ClassVisitor {
         }
 
         final Method method = myLanguagePartFactory.createMethod(modifier, returnType, methodName, desc
-                , throwedExceptions.toArray(new String[throwedExceptions.size()])
+                , thrownExceptions.toArray(new String[thrownExceptions.size()])
                 , myDecompiledClass, genericTypesList, genericIdentifiersList
                 , myTextWidth, myNestSize);
 
@@ -284,7 +306,8 @@ public abstract class GeneralClassVisitor extends ClassVisitor {
 
         myDecompiledClass.appendMethod(method);
 
-        GeneralMethodVisitor methodVisitor = myVisitorFactory.createMethodVisitor(method, myDecompiledClass.getFullClassName(), myDecompiledClass.getSuperClass());
+        final GeneralMethodVisitor methodVisitor = myVisitorFactory.createMethodVisitor(method
+                , myDecompiledClass.getFullClassName(), myDecompiledClass.getSuperClass());
         methodVisitor.setClassFilesJarPath(myClassFilesJarPath);
 
         return new MethodVisitorStub(methodVisitor);
@@ -297,19 +320,23 @@ public abstract class GeneralClassVisitor extends ClassVisitor {
         }
     }
 
-    protected int getStartIndexForParameters(final Method method) {
+    protected int getStartIndexForParameters(final @NotNull Method method) {
         return myDecompiledClass.isNormalClass() && !method.getModifier().contains("static") ? 1 : 0;
     }
 
-    protected String decompileClassNameWithOuterClasses(final String fullClassName) {
+    @NotNull
+    protected String decompileClassNameWithOuterClasses(final @NotNull String fullClassName) {
         return myDecompiledClass.decompileClassNameWithOuterClasses(fullClassName);
     }
 
-    protected String getDescriptor(final String descriptor, final int pos, List<String> imports) {
+    @NotNull
+    protected String getDescriptor(final @NotNull String descriptor, final int pos, final @NotNull List<String> imports) {
         return myDecompiledClass.getDescriptor(descriptor, pos, imports, myLanguage);
     }
 
-    public static ClassReader getInnerClassClassReader(final String jarPath, final String fullClassName) throws IOException {
+    @NotNull
+    public static ClassReader getInnerClassClassReader(final @NotNull String jarPath,
+                                                       final @NotNull String fullClassName) throws IOException {
         if (jarPath.isEmpty()) {
             return new ClassReader(fullClassName);
         } else {
@@ -317,14 +344,17 @@ public abstract class GeneralClassVisitor extends ClassVisitor {
         }
     }
 
-    private static InputStream getInnerClassInputStreamFromJarFile(final String jarPath, final String fullClassName) throws IOException {
-        JarFile jarFile = new JarFile(jarPath);
-        Enumeration<JarEntry> jarFileEntries = jarFile.entries();
+    @Nullable
+    private static InputStream getInnerClassInputStreamFromJarFile(final @NotNull String jarPath,
+                                                                   final @NotNull String fullClassName) throws IOException {
+        final JarFile jarFile = new JarFile(jarPath);
+        final Enumeration<JarEntry> jarFileEntries = jarFile.entries();
 
         InputStream is = null;
         while (jarFileEntries.hasMoreElements()) {
-            JarEntry file = jarFileEntries.nextElement();
+            final JarEntry file = jarFileEntries.nextElement();
             final String insideJarClassName = file.getName();
+
             if (insideJarClassName.equals(fullClassName + ".class")) {
                 is = jarFile.getInputStream(file);
             }

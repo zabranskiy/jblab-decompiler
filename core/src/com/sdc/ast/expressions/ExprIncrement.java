@@ -5,6 +5,7 @@ import com.sdc.ast.ExpressionType;
 import com.sdc.ast.Type;
 import com.sdc.ast.controlflow.Increment;
 import com.sdc.ast.expressions.identifiers.Variable;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,35 +17,39 @@ public class ExprIncrement extends PriorityExpression {
     private final Expression myIncrement;
     private final boolean myIsIncrementSimple;
 
-    public ExprIncrement(Increment increment) {
+    public ExprIncrement(final @NotNull Increment increment) {
         this(increment.getVariable(), increment.getIncrementExpression(), increment.getOperationType());
     }
 
-    public ExprIncrement(final Variable variable, final Expression increment, final ExpressionType type) {
-        super(getMyExpressionType(increment, type), variable.getType());
-        myVariable = variable;
-        myIncrement = increment;
+    public ExprIncrement(final @NotNull Variable variable,
+                         final @NotNull Expression increment,
+                         final @NotNull ExpressionType type) {
+        super(geIncrementExpressionType(increment, type), variable.getType());
+        this.myVariable = variable;
+        this.myIncrement = increment;
         switch (myExpressionType) {
             case INC:
             case INC_REV:
             case DEC:
             case DEC_REV:
-                myIsIncrementSimple = true;
+                this.myIsIncrementSimple = true;
                 break;
             default:
-                myIsIncrementSimple = false;
+                this.myIsIncrementSimple = false;
         }
 
     }
 
-    public ExprIncrement(final Variable variable, final int increment) {
-        super(checkExpressionType(increment),variable.getType());
+    public ExprIncrement(final @NotNull Variable variable, final int increment) {
+        super(checkExpressionType(increment), variable.getType());
         myVariable = variable;
         myIncrement = new Constant(increment, false, Type.INT_TYPE);
         myIsIncrementSimple = increment == 1 || increment == -1;
     }
 
-    private static ExpressionType getMyExpressionType(Expression increment, ExpressionType type) {
+    @NotNull
+    private static ExpressionType geIncrementExpressionType(final @NotNull Expression increment,
+                                                            final @NotNull ExpressionType type) {
         switch (type) {
             case INC:
                 return INC;
@@ -93,19 +98,21 @@ public class ExprIncrement extends PriorityExpression {
         }
     }
 
-    private static ExpressionType checkExpressionType(int increment) {
+    @NotNull
+    private static ExpressionType checkExpressionType(final int increment) {
         if (increment == 1) {
             return INC;
         } else if (increment == -1) {
             return DEC;
         } else if (increment >= 0) {
             return ADD_INC;
-        } else  {
+        } else {
             return SUB_INC;
         }
     }
 
-    public String getOperation(OperationPrinter operationPrinter) {
+    @NotNull
+    public String getOperation(final @NotNull OperationPrinter operationPrinter) {
         switch (myExpressionType) {
             case INC:
                 return operationPrinter.getIncView();
@@ -142,38 +149,44 @@ public class ExprIncrement extends PriorityExpression {
         }
     }
 
+    @NotNull
     public Variable getVariable() {
         return myVariable;
     }
 
+    @NotNull
     public Expression getIncrementExpression() {
         return myIncrement;
     }
 
-    public boolean IsIncrementSimple() {
+    public boolean isIncrementSimple() {
         return myIsIncrementSimple;
     }
 
+    @NotNull
     @Override
     public String toString() {
-        return "ExprIncrement{" +
-                "myExpressionType=" + myExpressionType +
-                ", myVariable=" + myVariable +
-                ", myIncrement=" + myIncrement +
-                '}';
+        return "ExprIncrement{"
+                + "myExpressionType=" + myExpressionType
+                + ", myVariable=" + myVariable
+                + ", myIncrement=" + myIncrement
+                + '}';
     }
 
+    @NotNull
     public Expression getVariableName() {
         return myVariable.getName();
     }
+
     @Override
-    public boolean findVariable(Variable variable) {
+    public boolean findVariable(final @NotNull Variable variable) {
         return myIncrement.findVariable(variable) || myVariable.equals(variable);
     }
 
+    @NotNull
     @Override
     public List<Expression> getSubExpressions() {
-        List<Expression> subExpressions = new ArrayList<Expression>();
+        final List<Expression> subExpressions = new ArrayList<Expression>();
         subExpressions.add(myVariable);
         subExpressions.add(myIncrement);
         return subExpressions;

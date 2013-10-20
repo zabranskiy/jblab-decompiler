@@ -7,38 +7,48 @@ import com.sdc.ast.expressions.ArrayLength;
 import com.sdc.ast.expressions.InstanceInvocation;
 import com.sdc.ast.expressions.UnaryExpression;
 import com.sdc.ast.expressions.identifiers.Variable;
+
 import com.sdc.cfg.constructions.*;
 import com.sdc.cfg.nodes.DoWhile;
 import com.sdc.cfg.nodes.Node;
 import com.sdc.cfg.nodes.Switch;
 import com.sdc.cfg.nodes.SwitchCase;
+
 import com.sdc.util.DominatorTreeGenerator;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class ConstructionBuilder {
-    private List<Node> myNodes;
+    private final List<Node> myNodes;
     private final DominatorTreeGenerator gen;
     private final int size;
     private final int[] domi;
 
-    public ConstructionBuilder(final List<Node> myNodes, final DominatorTreeGenerator gen) {
+    public ConstructionBuilder(final @NotNull List<Node> myNodes, final @NotNull DominatorTreeGenerator gen) {
         this.myNodes = myNodes;
         this.gen = gen;
         this.domi = gen.getDomi();
         this.size = myNodes.size();
     }
 
-    protected ConstructionBuilder createConstructionBuilder(final List<Node> myNodes, final DominatorTreeGenerator gen) {
+    @NotNull
+    protected ConstructionBuilder createConstructionBuilder(final @NotNull List<Node> myNodes,
+                                                            final @NotNull DominatorTreeGenerator gen) {
         return new ConstructionBuilder(myNodes, gen);
     }
 
+    @NotNull
     public Construction build() {
         return extractArrayForEach(extractIteratorForEach(extractFor(build(myNodes.get(0)))));
     }
 
-    protected Construction extractArrayForEach(Construction baseConstruction) {
+    @NotNull
+    protected Construction extractArrayForEach(final @NotNull Construction baseConstruction) {
         final Construction forStartConstruction = baseConstruction.getNextConstruction();
 
         if (baseConstruction instanceof ElementaryBlock && forStartConstruction != null && forStartConstruction instanceof For) {
@@ -53,13 +63,15 @@ public class ConstructionBuilder {
                     final Assignment containerLengthAssignment = (Assignment) containerLengthDeclaration;
 
                     if ((containerAssignmentForFor.getLeft().getType().isArray())
-                            && containerLengthAssignment.getRight() instanceof ArrayLength)
-                    {
-                        List<Variable> forEachVariables = new ArrayList<Variable>();
-                        forEachVariables.add((Variable)((Assignment)((ElementaryBlock) ((For) forStartConstruction).getBody()).getFirstStatement()).getLeft());
-                        ForEach forEach = new ForEach(forEachVariables, containerAssignmentForFor.getRight());
+                            && containerLengthAssignment.getRight() instanceof ArrayLength) {
+                        final List<Variable> forEachVariables = new ArrayList<Variable>();
 
-                        Construction body = ((For) forStartConstruction).getBody();
+                        final Statement firstStatement = ((ElementaryBlock) ((For) forStartConstruction).getBody()).getFirstStatement();
+                        forEachVariables.add((Variable) ((Assignment) (firstStatement)).getLeft());
+
+                        final ForEach forEach = new ForEach(forEachVariables, containerAssignmentForFor.getRight());
+
+                        final Construction body = ((For) forStartConstruction).getBody();
 
                         forEach.setBody(body);
 
@@ -77,8 +89,8 @@ public class ConstructionBuilder {
         return baseConstruction;
     }
 
-    private Construction extractIteratorForEach(Construction baseConstruction) {
-
+    @NotNull
+    private Construction extractIteratorForEach(final @NotNull Construction baseConstruction) {
         final Construction whileStartConstruction = baseConstruction.getNextConstruction();
 
         if (baseConstruction instanceof ElementaryBlock && whileStartConstruction != null && whileStartConstruction instanceof While) {
@@ -90,23 +102,27 @@ public class ConstructionBuilder {
                 if (variableDeclarationForWhile instanceof Assignment) {
                     final Assignment variableAssignmentForWhen = (Assignment) variableDeclarationForWhile;
 
-                     if (variableAssignmentForWhen.getLeft().getType().toString().toLowerCase().replace("?", "").trim().equals("iterator")
-                             && ((While) whileStartConstruction).getCondition() instanceof UnaryExpression
-                             && ((InstanceInvocation) ((UnaryExpression) ((While) whileStartConstruction).getCondition()).getOperand()).getFunction().equals("hasNext"))
-                     {
-                         List<Variable> forEachVariables = new ArrayList<Variable>();
-                         forEachVariables.add((Variable)((Assignment)((ElementaryBlock) ((While) whileStartConstruction).getBody()).getFirstStatement()).getLeft());
-                         ForEach forEach = new ForEach(forEachVariables, ((InstanceInvocation) variableAssignmentForWhen.getRight()).getInstance());
+                    if (variableAssignmentForWhen.getLeft().getType()
+                            .toString().toLowerCase().replace("?", "").trim().equals("iterator")
+                            && ((While) whileStartConstruction).getCondition() instanceof UnaryExpression
+                            && ((InstanceInvocation) ((UnaryExpression) ((While) whileStartConstruction).getCondition()).getOperand()).getFunction().equals("hasNext")) {
 
-                         Construction body = ((While) whileStartConstruction).getBody();
+                        final List<Variable> forEachVariables = new ArrayList<Variable>();
+                        final Statement firstStatement = ((ElementaryBlock) ((While) whileStartConstruction).getBody()).getFirstStatement();
+                        forEachVariables.add((Variable) ((Assignment) firstStatement).getLeft());
 
-                         forEach.setBody(body);
-                         ((ElementaryBlock) body).removeFirstStatement();
-                         blockBeforeWhileConstruction.removeLastStatement();
+                        final ForEach forEach = new ForEach(forEachVariables
+                                , ((InstanceInvocation) variableAssignmentForWhen.getRight()).getInstance());
 
-                         forEach.setNextConstruction(whileStartConstruction.getNextConstruction());
-                         blockBeforeWhileConstruction.setNextConstruction(forEach);
-                     }
+                        final Construction body = ((While) whileStartConstruction).getBody();
+
+                        forEach.setBody(body);
+                        ((ElementaryBlock) body).removeFirstStatement();
+                        blockBeforeWhileConstruction.removeLastStatement();
+
+                        forEach.setNextConstruction(whileStartConstruction.getNextConstruction());
+                        blockBeforeWhileConstruction.setNextConstruction(forEach);
+                    }
                 }
             }
         }
@@ -114,8 +130,8 @@ public class ConstructionBuilder {
         return baseConstruction;
     }
 
-    private Construction extractFor(Construction baseConstruction) {
-
+    @NotNull
+    private Construction extractFor(final @NotNull Construction baseConstruction) {
         final Construction whileStartConstruction = baseConstruction.getNextConstruction();
 
         if (baseConstruction instanceof ElementaryBlock && whileStartConstruction != null && whileStartConstruction instanceof While) {
@@ -134,16 +150,19 @@ public class ConstructionBuilder {
                         while (currentConstruction.getNextConstruction() != null) {
                             currentConstruction = currentConstruction.getNextConstruction();
                         }
+
                         if (currentConstruction instanceof ElementaryBlock) {
-                            ElementaryBlock forAfterThoughtBlock = (ElementaryBlock) currentConstruction;
+                            final ElementaryBlock forAfterThoughtBlock = (ElementaryBlock) currentConstruction;
                             final Statement forAfterThought = forAfterThoughtBlock.getLastStatement();
 
                             if (forAfterThought instanceof Assignment) {
                                 final Assignment afterThoughtAssignment = (Assignment) forAfterThought;
+
                                 if (afterThoughtAssignment.getLeft() instanceof Variable) {
                                     final int afterThoughtVariableIndex = ((Variable) afterThoughtAssignment.getLeft()).getIndex();
                                     if (afterThoughtVariableIndex == forVariableIndex) {
-                                        For forConstruction = new For(variableAssignmentForWhen, ((While) whileStartConstruction).getCondition(), afterThoughtAssignment);
+                                        final For forConstruction = new For(variableAssignmentForWhen
+                                                , ((While) whileStartConstruction).getCondition(), afterThoughtAssignment);
                                         forConstruction.setBody(((While) whileStartConstruction).getBody());
 
                                         blockBeforeWhileConstruction.removeLastStatement();
@@ -159,7 +178,8 @@ public class ConstructionBuilder {
                                 final int afterThoughtVariableIndex = afterThoughtIncrement.getVariable().getIndex();
 
                                 if (afterThoughtVariableIndex == forVariableIndex) {
-                                    For forConstruction = new For(variableAssignmentForWhen, ((While) whileStartConstruction).getCondition(), afterThoughtIncrement);
+                                    final For forConstruction = new For(variableAssignmentForWhen
+                                            , ((While) whileStartConstruction).getCondition(), afterThoughtIncrement);
                                     forConstruction.setBody(((While) whileStartConstruction).getBody());
 
                                     blockBeforeWhileConstruction.removeLastStatement();
@@ -176,24 +196,26 @@ public class ConstructionBuilder {
 
             }
         }
+
         return baseConstruction;
     }
 
-    private Construction build(Node node) {
+    @NotNull
+    private Construction build(final @NotNull Node node) {
         final Node doWhileNode = checkForDoWhileLoop(node);
 
         if (doWhileNode == null) {
-            Construction elementaryBlock = extractElementaryBlock(node);
-            Construction currentConstruction = extractConstruction(node);
+            final Construction elementaryBlock = extractElementaryBlock(node);
+            final Construction currentConstruction = extractConstruction(node);
 
             if (node.getCondition() == null && !(node instanceof Switch)) {
-                node.setConstruction(elementaryBlock);
+                node.setOuterConstruction(elementaryBlock);
             } else {
-                node.setConstruction(currentConstruction);
+                node.setOuterConstruction(currentConstruction);
             }
 
             if (currentConstruction == null && !node.getListOfTails().isEmpty()) {
-                Node myNextNode = node.getListOfTails().get(0);
+                final Node myNextNode = node.getListOfTails().get(0);
                 if (checkForIndexOutOfBound(myNextNode)) {
                     node.setNextNode(myNextNode);
                     extractNextConstruction(elementaryBlock, node);
@@ -208,11 +230,11 @@ public class ConstructionBuilder {
         }
     }
 
-    private boolean checkForIndexOutOfBound(Node node) {
+    private boolean checkForIndexOutOfBound(final @NotNull Node node) {
         return getRelativeIndex(node.getIndex()) < size && getRelativeIndex(node.getIndex()) >= 0;
     }
 
-    private Construction extractConstruction(Node node) {
+    private Construction extractConstruction(final @NotNull Node node) {
         Construction result;
 
         result = extractConditionBlock(node);
@@ -228,7 +250,8 @@ public class ConstructionBuilder {
         return null;
     }
 
-    private Node checkForDoWhileLoop(final Node node) {
+    @Nullable
+    private Node checkForDoWhileLoop(final @NotNull Node node) {
         for (int i = node.getAncestors().size() - 1; i >= 0; i--) {
             Node ancestor = node.getAncestors().get(i);
             if (ancestor instanceof DoWhile && node.getIndex() < ancestor.getIndex() && checkForIndexOutOfBound(ancestor)) {
@@ -238,11 +261,12 @@ public class ConstructionBuilder {
         return null;
     }
 
-    private Construction extractDoWhile(Node begin, Node node) {
-        ElementaryBlock elementaryBlock = new ElementaryBlock();
+    @NotNull
+    private Construction extractDoWhile(final @NotNull Node begin, final @NotNull Node node) {
+        final ElementaryBlock elementaryBlock = new ElementaryBlock();
         elementaryBlock.setStatements(node.getStatements());
 
-        com.sdc.cfg.constructions.DoWhile doWhileConstruction = new com.sdc.cfg.constructions.DoWhile(node.getCondition());
+        final com.sdc.cfg.constructions.DoWhile doWhileConstruction = new com.sdc.cfg.constructions.DoWhile(node.getCondition());
 
         begin.removeAncestor(node);
 
@@ -264,16 +288,18 @@ public class ConstructionBuilder {
         return elementaryBlock;
     }
 
-    private Construction extractElementaryBlock(final Node node) {
-        ElementaryBlock elementaryBlock = new ElementaryBlock();
+    @NotNull
+    private Construction extractElementaryBlock(final @NotNull Node node) {
+        final ElementaryBlock elementaryBlock = new ElementaryBlock();
         elementaryBlock.setStatements(node.getStatements());
         return elementaryBlock;
     }
 
-    private Construction extractSwitch(Node node) {
+    @Nullable
+    private Construction extractSwitch(final @NotNull Node node) {
         if (node instanceof Switch) {
-            Switch switchNode = (Switch) node;
-            com.sdc.cfg.constructions.Switch switchConstruction = new com.sdc.cfg.constructions.Switch(switchNode.getExpr());
+            final Switch switchNode = (Switch) node;
+            final com.sdc.cfg.constructions.Switch switchConstruction = new com.sdc.cfg.constructions.Switch(switchNode.getExpr());
 
             Node nextNode = findNextNodeToSwitchWithDefaultCase(switchNode);
 
@@ -314,7 +340,8 @@ public class ConstructionBuilder {
         return null;
     }
 
-    private Node findNextNode(final Node node) {
+    @Nullable
+    private Node findNextNode(final @NotNull Node node) {
         Node result = null;
 
         for (int i = 0; i < domi.length; i++) {
@@ -338,12 +365,14 @@ public class ConstructionBuilder {
         return result;
     }
 
-    private Node findNextNodeToSwitchWithDefaultCase(Switch switchNode) {
+    @Nullable
+    private Node findNextNodeToSwitchWithDefaultCase(final @NotNull Switch switchNode) {
         return findNextNode(switchNode);
     }
 
-    private Node findNextNodeToSwitchWithoutDefaultCase(Switch switchNode) {
-        Node defaultBranch = switchNode.getNodeByKeyIndex(-1);
+    @Nullable
+    private Node findNextNodeToSwitchWithoutDefaultCase(final @NotNull Switch switchNode) {
+        final Node defaultBranch = switchNode.getNodeByKeyIndex(-1);
 
         switchNode.removeChild(defaultBranch);
         defaultBranch.removeAncestor(switchNode);
@@ -351,19 +380,23 @@ public class ConstructionBuilder {
         return defaultBranch;
     }
 
-    private Construction extractConditionBlock(Node node) {
+    @Nullable
+    private Construction extractConditionBlock(final @NotNull Node node) {
         if (node.getCondition() != null) {
-            for (Node ancestor : node.getAncestors()) {
+            for (final Node ancestor : node.getAncestors()) {
                 if (node.getIndex() < ancestor.getIndex()) {
                     if (domi[node.getIndex()] != domi[node.getListOfTails().get(1).getIndex()] && checkForIndexOutOfBound(node)) {
                         node.setNextNode(node.getListOfTails().get(1));
                     }
-                    com.sdc.cfg.constructions.While whileConstruction = new com.sdc.cfg.constructions.While(node.getCondition());
+                    final com.sdc.cfg.constructions.While whileConstruction = new com.sdc.cfg.constructions.While(node.getCondition());
 
 
-                    int relativeIndexOfLeftTail = getRelativeIndex(node.getListOfTails().get(0));
-                    int relativeIndexOfLoop = getRelativeIndex(gen.getRightIndexForLoop(node.getIndex()));
-                    List<Node> whileBody = myNodes.subList(relativeIndexOfLeftTail, relativeIndexOfLeftTail > relativeIndexOfLoop ? getRelativeIndex(node.getListOfTails().get(1)) : relativeIndexOfLoop);
+                    final int relativeIndexOfLeftTail = getRelativeIndex(node.getListOfTails().get(0));
+                    final int relativeIndexOfLoop = getRelativeIndex(gen.getRightIndexForLoop(node.getIndex()));
+                    final List<Node> whileBody = myNodes.subList(relativeIndexOfLeftTail
+                            , relativeIndexOfLeftTail > relativeIndexOfLoop
+                            ? getRelativeIndex(node.getListOfTails().get(1))
+                            : relativeIndexOfLoop);
 
                     whileConstruction.setBody(createConstructionBuilder(whileBody, gen).build());
                     if (node.getNextNode() != null && checkForIndexOutOfBound(node.getNextNode())) {
@@ -378,10 +411,10 @@ public class ConstructionBuilder {
             }
 
             /// IF
-            com.sdc.cfg.constructions.ConditionalBlock conditionalBlock = new ConditionalBlock(node.getCondition());
+            final com.sdc.cfg.constructions.ConditionalBlock conditionalBlock = new ConditionalBlock(node.getCondition());
 
             boolean fl = false;
-            for (Node ancestor : node.getAncestors()) {
+            for (final Node ancestor : node.getAncestors()) {
                 if (ancestor.getIndex() > node.getIndex()) {
                     fl = true;
                     break;
@@ -389,36 +422,47 @@ public class ConstructionBuilder {
             }
 
             if (!fl) {
-                Node nextNode = findNextNode(node);
+                final Node nextNode = findNextNode(node);
                 node.setNextNode(nextNode);
 
-                Node leftNode = node.getListOfTails().get(0);
-                Node rightNode = node.getListOfTails().get(1);
-                int rightIndex = getRelativeIndex(rightNode);
+                final Node leftNode = node.getListOfTails().get(0);
+                final Node rightNode = node.getListOfTails().get(1);
+                final int rightIndex = getRelativeIndex(rightNode);
 
                 if (node.getNextNode() == null) {
                     if (hasNotElse(rightNode) || checkRightTail(node)) {
                         if (rightNode.getIndex() <= myNodes.get(size - 1).getIndex()) {
                             node.setNextNode(checkForIndexOutOfBound(rightNode) ? rightNode : null);
                         }
-                        conditionalBlock.setThenBlock(createConstructionBuilder(myNodes.subList(getRelativeIndex(leftNode), checkForIndexOutOfBound(rightNode) ? rightIndex : size), gen).build());
+                        conditionalBlock.setThenBlock(
+                                createConstructionBuilder(myNodes.subList(
+                                        getRelativeIndex(leftNode)
+                                        , checkForIndexOutOfBound(rightNode) ? rightIndex : size), gen).build());
                     } else {
-                        conditionalBlock.setThenBlock(createConstructionBuilder(myNodes.subList(getRelativeIndex(leftNode), rightIndex), gen).build());
+                        conditionalBlock.setThenBlock(
+                                createConstructionBuilder(myNodes.subList(
+                                        getRelativeIndex(leftNode), rightIndex), gen).build());
                         if (rightIndex < size) {
-                            List<Node> elseBody = myNodes.subList(rightIndex, size);
+                            final List<Node> elseBody = myNodes.subList(rightIndex, size);
+
                             if (elseBody.size() > 1 || !elseBody.get(0).getStatements().isEmpty()) {
-                                conditionalBlock.setElseBlock(createConstructionBuilder(myNodes.subList(rightIndex, size), gen).build());
+                                conditionalBlock.setElseBlock(
+                                        createConstructionBuilder(myNodes.subList(rightIndex, size), gen).build());
                             }
                         } else {
-                            ElementaryBlock block = new ElementaryBlock();
+                            final ElementaryBlock block = new ElementaryBlock();
                             block.setBreak("");
                             conditionalBlock.setElseBlock(block);
                             node.getAncestors().get(0).setNextNode(node.getListOfTails().get(1));
                         }
                     }
                 } else {
-                    conditionalBlock.setThenBlock(createConstructionBuilder(myNodes.subList(getRelativeIndex(leftNode), rightIndex), gen).build());
-                    conditionalBlock.setElseBlock(createConstructionBuilder(myNodes.subList(rightIndex, getRelativeIndex(node.getNextNode())), gen).build());
+                    conditionalBlock.setThenBlock(
+                            createConstructionBuilder(myNodes.subList(
+                                    getRelativeIndex(leftNode), rightIndex), gen).build());
+                    conditionalBlock.setElseBlock(
+                            createConstructionBuilder(myNodes.subList(
+                                    rightIndex, getRelativeIndex(node.getNextNode())), gen).build());
                 }
             }
             // TODO: test second condition for switch with if in a case
@@ -430,7 +474,7 @@ public class ConstructionBuilder {
         return null;
     }
 
-    private void placeBreakAndContinue(final Node begin, final List<Node> nodes) {
+    private void placeBreakAndContinue(final @NotNull Node begin, final @NotNull List<Node> nodes) {
         final int leftBound = nodes.get(0).getIndex();
         final int rightBound = nodes.get(nodes.size() - 1).getIndex();
         final int beginIndex = begin.getIndex();
@@ -440,20 +484,20 @@ public class ConstructionBuilder {
                 final int tailIndex = tail.getIndex();
 
                 if (tailIndex != beginIndex && (tailIndex < leftBound || tailIndex > rightBound)) {
-                    node.getConstruction().setBreak("");
-                    if (node.getConstruction().hasContinue()) {
-                        node.getConstruction().setContinue(null);
+                    node.getOuterConstruction().setBreak("");
+                    if (node.getOuterConstruction().hasContinue()) {
+                        node.getOuterConstruction().setContinue(null);
                     }
                 }
 
-                if (tailIndex == beginIndex && !node.getConstruction().hasBreak()) {
-                    node.getConstruction().setContinue("");
+                if (tailIndex == beginIndex && !node.getOuterConstruction().hasBreak()) {
+                    node.getOuterConstruction().setContinue("");
                 }
             }
         }
     }
 
-    private void removeBreakAndContinueFromLastConstruction(Construction start) {
+    private void removeBreakAndContinueFromLastConstruction(@NotNull Construction start) {
         while (start.getNextConstruction() != null) {
             start = start.getNextConstruction();
         }
@@ -462,14 +506,14 @@ public class ConstructionBuilder {
         start.setContinue(null);
 
         if (start instanceof ConditionalBlock) {
-            ConditionalBlock conditionalBlock = (ConditionalBlock) start;
+            final ConditionalBlock conditionalBlock = (ConditionalBlock) start;
             if (conditionalBlock.getElseBlock() != null && conditionalBlock.getThenBlock().hasBreak()) {
                 removeBreakAndContinueFromLastConstruction(conditionalBlock.getElseBlock());
             }
         }
     }
 
-    private boolean hasNotElse(final Node node) {
+    private boolean hasNotElse(final @NotNull Node node) {
         int count = 0;
         // ????
         for (final Node ancestor : node.getAncestors()) {
@@ -481,28 +525,28 @@ public class ConstructionBuilder {
         return count > 1;
     }
 
-    private boolean checkRightTail(final Node node) {
+    private boolean checkRightTail(final @NotNull Node node) {
         return node.getListOfTails().get(1).getIndex() < node.getIndex();
     }
 
-    private int getRelativeIndex(Node node) {
+    private int getRelativeIndex(final @NotNull Node node) {
         return getRelativeIndex(node.getIndex());
     }
 
-    private int getRelativeIndex(int index) {
+    private int getRelativeIndex(final int index) {
         return index - myNodes.get(0).getIndex();
     }
 
-    private void extractNextConstruction(Construction construction, final Node currentNode) {
+    private void extractNextConstruction(final @NotNull Construction construction, final @NotNull Node currentNode) {
         final int leftBound = getRelativeIndex(currentNode.getNextNode());
 
         construction.setNextConstruction(createConstructionBuilder(myNodes.subList(leftBound, size), gen).build());
     }
 
-    private void addBreakToAncestors(final Node child) {
+    private void addBreakToAncestors(final @NotNull Node child) {
         for (final Node parent : child.getAncestors()) {
-            if (parent.getConstruction() != null) {
-                parent.getConstruction().setBreak("");
+            if (parent.getOuterConstruction() != null) {
+                parent.getOuterConstruction().setBreak("");
             }
         }
     }
@@ -514,8 +558,8 @@ public class ConstructionBuilder {
         for (final Node node : myNodes) {
             for (final Node tail : node.getListOfTails()) {
                 final int tailIndex = tail.getIndex();
-                if ((tailIndex < firstNodeIndex || tail.getIndex() > lastNodeIndex) && node.getConstruction() != null) {
-                    node.getConstruction().setBreak("");
+                if ((tailIndex < firstNodeIndex || tail.getIndex() > lastNodeIndex) && node.getOuterConstruction() != null) {
+                    node.getOuterConstruction().setBreak("");
                 }
             }
         }

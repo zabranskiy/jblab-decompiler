@@ -4,25 +4,25 @@ import com.sdc.ast.ExpressionType;
 import com.sdc.ast.Type;
 import com.sdc.ast.expressions.identifiers.Variable;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class Constant extends PriorityExpression {
-    private final Object myValue;
-    private final boolean myIsStringValue;
     public static Constant NULL = new Constant("null", false, new Type("Object"));
 
+    private final Object myValue;
+    private final boolean myIsStringValue;
 
-/*    public Constant(final Object value, final boolean isStringValue) {
-        this(value, isStringValue, false);
-    }*/
-
-    public Constant(final Object value, final boolean isStringValue, Type type) {
-        super(ExpressionType.CONST,type);
+    public Constant(final @NotNull Object value, final boolean isStringValue, final @NotNull Type type) {
+        super(ExpressionType.CONST, type);
         this.myValue = value;
         this.myIsStringValue = isStringValue;
     }
 
+    @NotNull
     public Object getValue() {
         return myValue;
     }
@@ -31,30 +31,31 @@ public class Constant extends PriorityExpression {
         return myIsStringValue;
     }
 
+    @NotNull
     @Override
     public String toString() {
-        return "Constant{" +
-                "myValue=" + myValue +
-                '}';
+        return "Constant{" + "myValue=" + myValue + '}';
     }
 
-    public String valueToString(){
+    @NotNull
+    public String valueToString() {
         return myValue.toString();
     }
 
-    public boolean isThis(){
+    public boolean isThis() {
         return myValue.equals("this") && !myIsStringValue;
     }
 
-    public boolean isNull(){
-        return ((myValue==null) || myValue.toString().contains("null")) && !myIsStringValue;
+    public boolean isNull() {
+        return myValue.toString().contains("null") && !myIsStringValue;
     }
 
     @Override
-    public boolean findVariable(Variable variable) {
+    public boolean findVariable(final @NotNull Variable variable) {
         return false;
     }
 
+    @NotNull
     @Override
     public List<Expression> getSubExpressions() {
         return new ArrayList<Expression>();

@@ -20,9 +20,12 @@ import com.sdc.ast.expressions.SquareBrackets
 import com.sdc.ast.expressions.Cast
 import com.sdc.ast.expressions.Invocation
 import com.sdc.ast.expressions.New
-import com.sdc.languages.general.languageParts.GeneralClass
 import com.sdc.ast.expressions.InstanceInvocation
+
+import com.sdc.languages.general.languageParts.GeneralClass
+
 import org.apache.commons.lang3.StringEscapeUtils
+
 
 abstract class ExpressionPrinter(printer: Printer) {
     val myPrinter: Printer = printer
@@ -56,7 +59,7 @@ abstract class ExpressionPrinter(printer: Printer) {
             if (!expression.isStringValue())
                 text(expression.getValue().toString())
             else
-                text("\"" + StringEscapeUtils.escapeJava(expression.getValue()!!.toString()) + "\"")
+                text("\"" + StringEscapeUtils.escapeJava(expression.getValue().toString()) + "\"")
 
     open fun printBinaryExpression(expression: BinaryExpression, nestSize: Int): PrimeDoc {
         val l = expression.getLeft()
@@ -118,7 +121,7 @@ abstract class ExpressionPrinter(printer: Printer) {
         val isAssociative = expression.isAssociative();
 
         if (expression is InstanceInvocation) {
-            val appendExpressions: MutableList<Expression> = expression.getAppendSequenceExpressions() as MutableList<Expression>
+            val appendExpressions: MutableList<Expression> = expression.getAppendSequenceExpressions()
             if (appendExpressions.isEmpty()) {
                 val instance = expression.getInstance()
                 if (!(instance is Field && (instance.getName() as Constant).getValue().toString().startsWith("this$"))) {
@@ -148,7 +151,7 @@ abstract class ExpressionPrinter(printer: Printer) {
             newArray = group(newArray + text("{"))
 
             val values = expression.getInitializationValues()
-            val lastValue = values!!.remove(values.size() - 1)
+            val lastValue = values.remove(values.size() - 1)
 
             for (value in values) {
                 newArray = group(newArray + printExpression(value, nestSize) + text(", "))
@@ -158,7 +161,7 @@ abstract class ExpressionPrinter(printer: Printer) {
         } else {
             newArray = group(text("new") + nest(nestSize, line() + printType(expression.getType(), nestSize)))
 
-            for (dimension in expression.getDimensions()!!.toList()) {
+            for (dimension in expression.getDimensions().toList()) {
                 newArray = group(newArray + text("[") + printExpression(dimension, nestSize) + text("]"))
             }
         }
@@ -212,7 +215,7 @@ abstract class ExpressionPrinter(printer: Printer) {
                         printExpressionCheckBrackets(increment, priority, isAssociative, nestSize)
                     }
 
-            if (expression.IsIncrementSimple()) {
+            if (expression.isIncrementSimple()) {
                 return group(nest(nestSize, printExpr + text(operation)))
             } else {
                 return group(nest(nestSize, printExpr / (text(operation) + printIncrement)))
@@ -325,7 +328,7 @@ abstract class ExpressionPrinter(printer: Printer) {
 
         if (expression.hasInitialization()) {
             val values = expression.getInitializationValues()
-            val lastValue = values!!.remove(values.size() - 1)
+            val lastValue = values.remove(values.size() - 1)
 
             for (value in values){
                 newArray = group(newArray + printExpression(value, nestSize) + text(", "))
@@ -352,10 +355,10 @@ abstract class ExpressionPrinter(printer: Printer) {
             printExpression(UnaryExpression(ExpressionType.NOT, expression.invert()), nestSize)
 
     open fun printAnonymousClassDeclaration(anonymousClass: GeneralClass?, arguments: List<Expression>?): PrimeDoc =
-            if (anonymousClass!!.getSuperClass()!!.isEmpty()) {
+            if (anonymousClass!!.getSuperClass().isEmpty()) {
                 val implementedInterfaces = anonymousClass.getImplementedInterfaces()
                 val declaration =
-                        if (implementedInterfaces!!.isEmpty())
+                        if (implementedInterfaces.isEmpty())
                             myPrinter.printBaseClass()
                         else
                             text(implementedInterfaces.get(0))
@@ -369,10 +372,10 @@ abstract class ExpressionPrinter(printer: Printer) {
 
         var anonClassCode: PrimeDoc = declaration + nest(anonymousClass!!.getNestSize(), myPrinter.printClassBodyInnerClasses(anonymousClass))
 
-        for (classField in anonymousClass.getFields()!!.toList())
+        for (classField in anonymousClass.getFields().toList())
             anonClassCode = anonClassCode + nest(anonymousClass.getNestSize(), line() + myPrinter.printField(classField))
 
-        for (classMethod in anonymousClass.getMethods()!!.toList())
+        for (classMethod in anonymousClass.getMethods().toList())
             anonClassCode = anonClassCode + nest(anonymousClass.getNestSize(), line() + myPrinter.printMethod(classMethod))
 
         return anonClassCode / text("}")

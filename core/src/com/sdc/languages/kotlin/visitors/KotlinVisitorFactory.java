@@ -7,19 +7,25 @@ import com.sdc.languages.general.visitors.GeneralClassVisitor;
 import com.sdc.languages.general.visitors.GeneralMethodVisitor;
 import com.sdc.languages.general.visitors.GeneralVisitorFactory;
 
+import org.jetbrains.annotations.NotNull;
+
+
 public class KotlinVisitorFactory extends GeneralVisitorFactory {
+    @NotNull
     @Override
-    public GeneralAnnotationVisitor createAnnotationVisitor(final Annotation annotation) {
+    public GeneralAnnotationVisitor createAnnotationVisitor(final @NotNull Annotation annotation) {
         return new KotlinAnnotationVisitor(annotation);
     }
 
+    @NotNull
     @Override
-    public GeneralMethodVisitor createMethodVisitor(Method method
-            , final String decompiledOwnerFullClassName, final String decompiledOwnerSuperClassName)
-    {
+    public GeneralMethodVisitor createMethodVisitor(final @NotNull Method method,
+                                                    final @NotNull String decompiledOwnerFullClassName,
+                                                    final @NotNull String decompiledOwnerSuperClassName) {
         return new KotlinMethodVisitor(method, decompiledOwnerFullClassName, decompiledOwnerSuperClassName);
     }
 
+    @NotNull
     @Override
     public GeneralClassVisitor createClassVisitor(final int textWidth, final int nestSize) {
         return new KotlinClassVisitor(textWidth, nestSize);

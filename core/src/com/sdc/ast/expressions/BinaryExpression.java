@@ -8,27 +8,35 @@ import com.sdc.ast.expressions.identifiers.Variable;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jetbrains.annotations.NotNull;
+
 import static com.sdc.ast.ExpressionType.*;
+
 
 public class BinaryExpression extends PriorityExpression {
     protected final Expression myLeft;
     protected final Expression myRight;
 
-    public BinaryExpression(final ExpressionType expressionType, final Expression left, final Expression right) {
-        super(expressionType, getMyType(expressionType,left,right));
+    public BinaryExpression(final @NotNull ExpressionType expressionType,
+                            final @NotNull Expression left,
+                            final @NotNull Expression right) {
+        super(expressionType, getBinaryExpressionType(expressionType, left, right));
         this.myLeft = left;
         this.myRight = right;
     }
 
+    @NotNull
     public Expression getLeft() {
         return myLeft;
     }
 
+    @NotNull
     public Expression getRight() {
         return myRight;
     }
 
-    public String getOperation(OperationPrinter operationPrinter) {
+    @NotNull
+    public String getOperation(final @NotNull OperationPrinter operationPrinter) {
         switch (myExpressionType) {
             case ADD:
                 return operationPrinter.getAddView();
@@ -69,63 +77,72 @@ public class BinaryExpression extends PriorityExpression {
         }
     }
 
+    @NotNull
     public Expression invert() {
         switch (myExpressionType) {
             case AND:
-                return new BinaryExpression(OR,myLeft.invert(),myRight.invert());
+                return new BinaryExpression(OR, myLeft.invert(), myRight.invert());
             case OR:
-                return new BinaryExpression(AND, myLeft.invert(),myRight.invert());
+                return new BinaryExpression(AND, myLeft.invert(), myRight.invert());
             case EQ:
-                return new BinaryExpression(NE, myLeft,myRight);
+                return new BinaryExpression(NE, myLeft, myRight);
             case NE:
-                return new BinaryExpression(EQ, myLeft,myRight);
+                return new BinaryExpression(EQ, myLeft, myRight);
             case GE:
-                return new BinaryExpression(LT, myLeft,myRight);
+                return new BinaryExpression(LT, myLeft, myRight);
             case LT:
-                return new BinaryExpression(GE, myLeft,myRight);
+                return new BinaryExpression(GE, myLeft, myRight);
             case LE:
-                return new BinaryExpression(GT, myLeft,myRight);
+                return new BinaryExpression(GT, myLeft, myRight);
             case GT:
-                return new BinaryExpression(LE, myLeft,myRight);
+                return new BinaryExpression(LE, myLeft, myRight);
             default:
                 return super.invert();
         }
     }
 
+    @NotNull
     @Override
     public String toString() {
-        return "BinaryExpression{" +
-                "myExpressionType=" + myExpressionType +
-                ", myLeft=" + myLeft +
-                ", myRight=" + myRight +
-                '}';
+        return "BinaryExpression{"
+                + "myExpressionType=" + myExpressionType
+                + ", myLeft=" + myLeft
+                + ", myRight=" + myRight
+                + '}';
     }
 
     public boolean isIncrementCastableType() {
-        return myExpressionType == ADD || myExpressionType == SUB || myExpressionType == MUL || myExpressionType == DIV || myExpressionType == REM ||
-                myExpressionType == USHR || myExpressionType == SHR || myExpressionType == SHL ||
-                myExpressionType == BITWISE_AND || myExpressionType == BITWISE_OR || myExpressionType == BITWISE_XOR;
+        return myExpressionType == ADD || myExpressionType == SUB
+                || myExpressionType == MUL || myExpressionType == DIV || myExpressionType == REM
+                || myExpressionType == USHR || myExpressionType == SHR || myExpressionType == SHL
+                || myExpressionType == BITWISE_AND || myExpressionType == BITWISE_OR || myExpressionType == BITWISE_XOR;
     }
 
     public boolean isLogicType() {
         return BinaryExpression.isLogicType(myExpressionType);
     }
-    public static boolean isLogicType(ExpressionType expressionType) {
-        return expressionType == EQ || expressionType == NE ||
-                expressionType == GE || expressionType == LE || expressionType == LT || expressionType == GT ||
-                expressionType == AND || expressionType == OR;
+
+    public static boolean isLogicType(final @NotNull ExpressionType expressionType) {
+        return expressionType == EQ || expressionType == NE
+                || expressionType == GE || expressionType == LE || expressionType == LT || expressionType == GT
+                || expressionType == AND || expressionType == OR;
     }
 
-    public static Type getMyType(final ExpressionType expressionType, final Expression left, final Expression right) {
+    public static Type getBinaryExpressionType(final @NotNull ExpressionType expressionType,
+                                               final @NotNull Expression left,
+                                               final @NotNull Expression right) {
         return isLogicType(expressionType) ? Type.BOOLEAN_TYPE : Type.getStrongerType(left.getType(), right.getType());
     }
+
     @Override
-    public boolean findVariable(Variable variable) {
+    public boolean findVariable(final @NotNull Variable variable) {
         return myLeft.findVariable(variable) || myRight.findVariable(variable);
     }
+
+    @NotNull
     @Override
     public List<Expression> getSubExpressions() {
-        List<Expression> subExpressions = new ArrayList<Expression>();
+        final List<Expression> subExpressions = new ArrayList<Expression>();
         subExpressions.add(myLeft);
         subExpressions.add(myRight);
         return subExpressions;

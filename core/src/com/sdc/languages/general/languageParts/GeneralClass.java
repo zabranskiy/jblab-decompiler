@@ -3,10 +3,14 @@ package com.sdc.languages.general.languageParts;
 import com.sdc.ast.expressions.Expression;
 import com.sdc.util.DeclarationWorker;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 
 public abstract class GeneralClass {
     public enum ClassType {
@@ -18,20 +22,25 @@ public abstract class GeneralClass {
         private final String myName;
         private final String myDescriptor;
 
-        public InnerClassIdentifier(final String owner, final String name, final String descriptor) {
+        public InnerClassIdentifier(final @NotNull String owner,
+                                    final @Nullable String name,
+                                    final @Nullable String descriptor) {
             this.myOwner = owner;
             this.myName = name;
             this.myDescriptor = descriptor;
         }
 
+        @NotNull
         public String getOwner() {
             return myOwner;
         }
 
+        @Nullable
         public String getName() {
             return myName;
         }
 
+        @Nullable
         public String getDescriptor() {
             return myDescriptor;
         }
@@ -49,12 +58,12 @@ public abstract class GeneralClass {
     protected final List<String> myGenericTypes;
     protected final List<String> myGenericIdentifiers;
 
-    protected List<ClassField> myFields = new ArrayList<ClassField>();
-    protected List<Method> myMethods = new ArrayList<Method>();
+    protected final List<ClassField> myFields = new ArrayList<ClassField>();
+    protected final List<Method> myMethods = new ArrayList<Method>();
 
-    protected List<Annotation> myAnnotations = new ArrayList<Annotation>();
+    protected final List<Annotation> myAnnotations = new ArrayList<Annotation>();
 
-    protected List<String> myImports = new ArrayList<String>();
+    protected final List<String> myImports = new ArrayList<String>();
 
     protected List<String> myDefaultPackages = new ArrayList<String>();
 
@@ -77,10 +86,16 @@ public abstract class GeneralClass {
     protected final int myTextWidth;
     protected final int myNestSize;
 
-    public GeneralClass(final String modifier, final ClassType type, final String name, final String packageName,
-                        final List<String> implementedInterfaces, final String superClass,
-                        final List<String> genericTypes, final List<String> genericIdentifiers,
-                        final int textWidth, final int nestSize) {
+    public GeneralClass(final @NotNull String modifier,
+                        final @NotNull ClassType type,
+                        final @NotNull String name,
+                        final @NotNull String packageName,
+                        final @NotNull List<String> implementedInterfaces,
+                        final @NotNull String superClass,
+                        final @NotNull List<String> genericTypes,
+                        final @NotNull List<String> genericIdentifiers,
+                        final int textWidth,
+                        final int nestSize) {
         this.myModifier = modifier;
         this.myType = type;
         this.myName = name;
@@ -95,10 +110,12 @@ public abstract class GeneralClass {
 
     protected abstract String getInheritanceIdentifier();
 
+    @NotNull
     public String getModifier() {
         return myModifier;
     }
 
+    @NotNull
     public String getTypeToString() {
         switch (myType) {
             case ENUM:
@@ -112,34 +129,42 @@ public abstract class GeneralClass {
         }
     }
 
+    @NotNull
     public ClassType getType() {
         return myType;
     }
 
+    @NotNull
     public String getName() {
         return myName;
     }
 
+    @NotNull
     public String getPackage() {
         return myPackage;
     }
 
+    @NotNull
     public List<String> getImports() {
         return myImports;
     }
 
+    @NotNull
     public List<String> getImplementedInterfaces() {
         return myImplementedInterfaces;
     }
 
+    @NotNull
     public String getSuperClass() {
         return mySuperClass;
     }
 
+    @NotNull
     public List<ClassField> getFields() {
         return myFields;
     }
 
+    @NotNull
     public List<Method> getMethods() {
         return myMethods;
     }
@@ -152,39 +177,41 @@ public abstract class GeneralClass {
         return myTextWidth;
     }
 
-    public void setFullClassName(final String fullClassName) {
-        this.myFullClassName = fullClassName;
-    }
-
+    @Nullable
     public String getFullClassName() {
         return myFullClassName;
     }
 
-    public void setIsNormalClass(final boolean isNormalClass) {
-        this.myIsNormalClass = isNormalClass;
+    public void setFullClassName(final @NotNull String fullClassName) {
+        this.myFullClassName = fullClassName;
     }
 
     public boolean isNormalClass() {
         return myIsNormalClass;
     }
 
-    public void setIsLambdaFunctionClass(final boolean isLambdaFunctionClass) {
-        this.myIsLambdaFunctionClass = isLambdaFunctionClass;
-    }
-
-    public void setIsNestedClass(final boolean isNestedClass) {
-        this.myIsNestedClass = isNestedClass;
-    }
-
-    public boolean isNestedClass() {
-        return myIsNestedClass;
+    public void setIsNormalClass(final boolean isNormalClass) {
+        this.myIsNormalClass = isNormalClass;
     }
 
     public boolean isLambdaFunctionClass() {
         return myIsLambdaFunctionClass;
     }
 
-    public GeneralClass getOuterClass(final String name) {
+    public void setIsLambdaFunctionClass(final boolean isLambdaFunctionClass) {
+        this.myIsLambdaFunctionClass = isLambdaFunctionClass;
+    }
+
+    public boolean isNestedClass() {
+        return myIsNestedClass;
+    }
+
+    public void setIsNestedClass(final boolean isNestedClass) {
+        this.myIsNestedClass = isNestedClass;
+    }
+
+    @Nullable
+    public GeneralClass getOuterClass(final @Nullable String name) {
         if (myName.equals(name) || name == null) {
             return this;
         }
@@ -199,56 +226,64 @@ public abstract class GeneralClass {
         return null;
     }
 
-    public void setOuterClass(final GeneralClass outerClass) {
+    public void setOuterClass(final @Nullable GeneralClass outerClass) {
         this.myOuterClass = outerClass;
     }
 
-    public void appendField(final ClassField field) {
+    public void appendField(final @NotNull ClassField field) {
         myFields.add(field);
     }
 
-    public void appendMethod(final Method method) {
+    public void appendMethod(final @NotNull Method method) {
         myMethods.add(method);
     }
 
-    public void appendImports(final List<String> imports) {
+    public void appendImports(final @NotNull List<String> imports) {
         for (final String importName : imports) {
             appendImport(importName);
         }
     }
 
-    public void appendImport(final String importName) {
+    public void appendImport(final @NotNull String importName) {
         if (!hasImport(importName) && !checkImportNameForBeingInPackages(importName, myDefaultPackages)
-                && !importName.contains("." + myName + ".") && !importName.contains("..") && !importName.equals(myName))
-        {
+                && !importName.contains("." + myName + ".")
+                && !importName.contains("..")
+                && !importName.equals(myName)) {
             myImports.add(importName);
         }
     }
 
-    public void appendAnnotation(final Annotation annotation) {
+    public void appendAnnotation(final @NotNull Annotation annotation) {
         myAnnotations.add(annotation);
     }
 
+    @NotNull
     public List<Annotation> getAnnotations() {
         return myAnnotations;
     }
 
-    public boolean isGenericType(final String className) {
+    public boolean isGenericType(final @NotNull String className) {
         return myGenericTypes.contains(className);
     }
 
-    public String getGenericIdentifier(final String className) {
+    @Nullable
+    public String getGenericIdentifier(final @NotNull String className) {
         return myGenericIdentifiers.get(myGenericTypes.indexOf(className));
     }
 
-    public void addInitializerToField(final String fieldName, final Expression initializer, Method method) {
-        ClassField field = getField(fieldName);
-        field.setInitializer(initializer);
-        field.addConstructor(method);
+    public void addInitializerToField(final @NotNull String fieldName,
+                                      final @NotNull Expression initializer,
+                                      final @NotNull Method method) {
+        final ClassField field = getField(fieldName);
+        if (field != null) {
+            field.setInitializer(initializer);
+            field.addConstructor(method);
+        }
     }
 
-    public ClassField getField(final String fieldName) {
-        for (ClassField field : myFields) {
+    @Nullable
+    public ClassField getField(final @NotNull String fieldName) {
+        for (final ClassField field : myFields) {
             if (field.getName().equals(fieldName)) {
                 return field;
             }
@@ -256,8 +291,8 @@ public abstract class GeneralClass {
         return null;
     }
 
-    public boolean hasField(final String fieldName) {
-        for (ClassField field : myFields) {
+    public boolean hasField(final @NotNull String fieldName) {
+        for (final ClassField field : myFields) {
             if (field.getName().equalsIgnoreCase(fieldName)) {
                 return true;
             }
@@ -265,13 +300,14 @@ public abstract class GeneralClass {
         return false;
     }
 
-    public boolean hasFieldInitializer(final String fieldName, final Method method) {
-        ClassField field = getField(fieldName);
-        return field.getInitializer() != null && field.hasInitializer(method);
+    public boolean hasFieldInitializer(final @NotNull String fieldName, final @NotNull Method method) {
+        final ClassField field = getField(fieldName);
+        return field != null && field.getInitializer() != null && field.hasInitializer(method);
     }
 
+    @NotNull
     public List<String> getGenericDeclaration() {
-        List<String> result = new ArrayList<String>();
+        final List<String> result = new ArrayList<String>();
         for (int i = 0; i < myGenericTypes.size(); i++) {
             final String genericType = myGenericTypes.get(i);
             if (!genericType.equals("Object ") && !genericType.equals("Any?")) {
@@ -283,37 +319,42 @@ public abstract class GeneralClass {
         return result;
     }
 
-    public void addAnonymousClass(final String className, final GeneralClass decompiledClass) {
+    public void addAnonymousClass(final @NotNull String className, final @NotNull GeneralClass decompiledClass) {
         myAnonymousClasses.put(className, decompiledClass);
     }
 
-    public void addInnerClass(final String innerClassName, final GeneralClass decompiledClass) {
+    public void addInnerClass(final @NotNull String innerClassName, final @NotNull GeneralClass decompiledClass) {
         myInnerClasses.put(innerClassName, decompiledClass);
-    }
-
-    public void setInnerClassIdentifier(final String owner, final String name, final String descriptor) {
-        myInnerClassIdentifier = new InnerClassIdentifier(owner, name, descriptor);
     }
 
     public InnerClassIdentifier getInnerClassIdentifier() {
         return myInnerClassIdentifier;
     }
 
-    public List<GeneralClass> getMethodInnerClasses(final String methodName, final String descriptor) {
-        List<GeneralClass> result = new ArrayList<GeneralClass>();
+    public void setInnerClassIdentifier(final @NotNull String owner,
+                                        final @Nullable String name,
+                                        final @Nullable String descriptor) {
+        myInnerClassIdentifier = new InnerClassIdentifier(owner, name, descriptor);
+    }
+
+    @NotNull
+    public List<GeneralClass> getMethodInnerClasses(final @NotNull String methodName, final @Nullable String descriptor) {
+        final List<GeneralClass> result = new ArrayList<GeneralClass>();
         for (final Map.Entry<String, GeneralClass> innerClass : myInnerClasses.entrySet()) {
             final String name = innerClass.getValue().getInnerClassIdentifier().getName();
             final String desc = innerClass.getValue().getInnerClassIdentifier().getDescriptor();
 
-            if (name != null && name.equals(methodName) && desc.equals(descriptor)) {
+            if (name != null && name.equals(methodName)
+                    && (desc == null && descriptor == null || desc != null && desc.equals(descriptor))) {
                 result.add(innerClass.getValue());
             }
         }
         return result;
     }
 
+    @NotNull
     public List<GeneralClass> getClassBodyInnerClasses() {
-        List<GeneralClass> result = new ArrayList<GeneralClass>();
+        final List<GeneralClass> result = new ArrayList<GeneralClass>();
         for (final Map.Entry<String, GeneralClass> innerClass : myInnerClasses.entrySet()) {
             final InnerClassIdentifier innerClassIdentifier = innerClass.getValue().getInnerClassIdentifier();
             if (innerClassIdentifier.getName() == null && innerClassIdentifier.getOwner().equals(myName)) {
@@ -323,27 +364,48 @@ public abstract class GeneralClass {
         return result;
     }
 
-    public boolean hasAnonymousClass(final String name) {
+    public boolean hasAnonymousClass(final @NotNull String name) {
         return myAnonymousClasses.containsKey(name);
     }
 
-    public GeneralClass getAnonymousClass(final String name) {
+    @Nullable
+    public GeneralClass getAnonymousClass(final @NotNull String name) {
         return myAnonymousClasses.get(name);
     }
 
-    public void addInnerClassError(final String className, final Exception exception) {
+    public void addInnerClassError(final @NotNull String className, final @NotNull Exception exception) {
         myInnerClassesErrors.put(className, exception);
     }
 
+    @NotNull
     public Map<String, Exception> getInnerClassesErrors() {
         return myInnerClassesErrors;
     }
 
-    protected boolean checkImportNameForBeingInPackage(final String importName, final String packageName) {
+    @NotNull
+    public String decompileClassNameWithOuterClasses(final @NotNull String fullClassName) {
+        final String className = DeclarationWorker.decompileClassNameWithOuterClasses(fullClassName);
+
+        return removeClassPrefix(className);
+    }
+
+    @NotNull
+    public String getDescriptor(final @NotNull String descriptor,
+                                final int pos,
+                                final @NotNull List<String> imports,
+                                final @NotNull DeclarationWorker.SupportedLanguage language) {
+        final String decompiledDescriptor = DeclarationWorker.getDescriptor(descriptor, pos, imports, language);
+
+        return removeClassPrefix(decompiledDescriptor);
+    }
+
+    protected boolean checkImportNameForBeingInPackage(final @NotNull String importName,
+                                                       final @NotNull String packageName) {
         return importName.indexOf(packageName) == 0 && importName.lastIndexOf(".") == packageName.length();
     }
 
-    protected boolean checkImportNameForBeingInPackages(final String importName, final List<String> packageNames) {
+    protected boolean checkImportNameForBeingInPackages(final @NotNull String importName,
+                                                        final @NotNull List<String> packageNames) {
         boolean result = false;
         for (final String packageName : packageNames) {
             result |= checkImportNameForBeingInPackage(importName, packageName);
@@ -351,24 +413,12 @@ public abstract class GeneralClass {
         return result;
     }
 
-    protected boolean hasImport(final String importName) {
+    protected boolean hasImport(final @NotNull String importName) {
         return myImports.contains(importName);
     }
 
-    public String decompileClassNameWithOuterClasses(final String fullClassName) {
-        final String className = DeclarationWorker.decompileClassNameWithOuterClasses(fullClassName);
-
-        return removeClassPrefix(className);
-    }
-
-    public String getDescriptor(final String descriptor, final int pos, List<String> imports
-            , final DeclarationWorker.SupportedLanguage language) {
-        final String decompiledDescriptor = DeclarationWorker.getDescriptor(descriptor, pos, imports, language);
-
-        return removeClassPrefix(decompiledDescriptor);
-    }
-
-    private String removeClassPrefix(final String className) {
+    @NotNull
+    private String removeClassPrefix(final @NotNull String className) {
         final String pattern1 = myName + ".";
         final String pattern2 = "." + pattern1;
 

@@ -6,16 +6,22 @@ import com.sdc.ast.controlflow.Statement;
 import com.sdc.ast.expressions.Constant;
 import com.sdc.ast.expressions.Expression;
 import com.sdc.ast.expressions.identifiers.Variable;
+
 import com.sdc.cfg.constructions.Construction;
 import com.sdc.cfg.constructions.ElementaryBlock;
+
 import com.sdc.languages.general.astUtils.Frame;
 import com.sdc.languages.general.visitors.MethodVisitorStub;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Label;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 
 public abstract class Method {
     protected final String myModifier;
@@ -45,9 +51,16 @@ public abstract class Method {
     protected final int myTextWidth;
     protected final int myNestSize;
 
-    public Method(final String modifier, final String returnType, final String name, final String signature, final String[] exceptions,
-                  final GeneralClass generalClass, final List<String> genericTypes, final List<String> genericIdentifiers,
-                  final int textWidth, final int nestSize) {
+    public Method(final @NotNull String modifier,
+                  final @NotNull String returnType,
+                  final @NotNull String name,
+                  final @NotNull String signature,
+                  final @Nullable String[] exceptions,
+                  final @NotNull GeneralClass generalClass,
+                  final @NotNull List<String> genericTypes,
+                  final @NotNull List<String> genericIdentifiers,
+                  final int textWidth,
+                  final int nestSize) {
         this.myModifier = modifier;
         this.myReturnType = returnType;
         this.myName = name;
@@ -62,36 +75,44 @@ public abstract class Method {
         this.myFrames.add(createFrame());
     }
 
+    @NotNull
     protected abstract String getInheritanceIdentifier();
 
     protected abstract int getParametersStartIndex();
 
+    @NotNull
     public abstract Frame createFrame();
 
+    @NotNull
     public String getModifier() {
         return myModifier;
     }
 
+    @NotNull
     public String getReturnType() {
         return myReturnType;
     }
 
+    @NotNull
     public String getName() {
         return myName;
     }
 
+    @NotNull
     public String getSignature() {
         return mySignature;
     }
 
-    public void setName(final String name) {
+    public void setName(final @NotNull String name) {
         this.myName = name;
     }
 
+    @Nullable
     public String[] getExceptions() {
         return myExceptions;
     }
 
+    @NotNull
     public List<String> getImports() {
         return myImports;
     }
@@ -108,18 +129,20 @@ public abstract class Method {
         return myTextWidth;
     }
 
+    @Nullable
     public MethodVisitorStub.DecompilerException getError() {
         return myError;
     }
 
-    public void setError(final MethodVisitorStub.DecompilerException error) {
+    public void setError(final @Nullable MethodVisitorStub.DecompilerException error) {
         this.myError = error;
     }
 
-    public void setLastLocalVariableIndex(int lastLocalVariableIndex) {
+    public void setLastLocalVariableIndex(final int lastLocalVariableIndex) {
         this.myLastLocalVariableIndex = lastLocalVariableIndex;
     }
 
+    @NotNull
     public GeneralClass getDecompiledClass() {
         return myGeneralClass;
     }
@@ -128,37 +151,37 @@ public abstract class Method {
         return myGeneralClass.isNormalClass();
     }
 
-    public void addImport(final String importClassName) {
+    public void addImport(final @NotNull String importClassName) {
         myImports.add(importClassName);
     }
 
+    @NotNull
     public Frame getCurrentFrame() {
-        if (!myFrames.isEmpty()) {
-            return myFrames.get(myFrames.size() - 1);
-        }
-        return null;
+        return myFrames.get(myFrames.size() - 1);
     }
 
+    @NotNull
     public Frame getRootFrame() {
-        if (!myFrames.isEmpty()) {
-            return myFrames.get(0);
-        }
-        return null;
+        return myFrames.get(0);
     }
 
-    public void addNewFrame(final Frame frame) {
+    public void addNewFrame(final @NotNull Frame frame) {
         myFrames.add(frame);
     }
 
-    public void addThisVariable(final Type type) {
+    public void addThisVariable(final @NotNull Type type) {
         getCurrentFrame().createAndInsertVariable(0, type, "this");
     }
 
-    public void updateVariableInformation(final int index, final Type type, final Constant name) {
+    public void updateVariableInformation(final int index, final @NotNull Type type, final @Nullable Constant name) {
         getCurrentFrame().updateVariableInformation(index, type, name);
     }
 
-    public void updateVariableInformationFromDebugInfo(final int index, final Type type, final Constant name, final Label start, final Label end) {
+    public void updateVariableInformationFromDebugInfo(final int index,
+                                                       final @NotNull Type type,
+                                                       final @NotNull Constant name,
+                                                       final @NotNull Label start,
+                                                       final @NotNull Label end) {
         boolean started = false;
 
         for (final Frame frame : myFrames) {
@@ -176,7 +199,10 @@ public abstract class Method {
         }
     }
 
-    public void updateVariableNameFromDebugInfo(final int index, final Constant name, final Label start, final Label end) {
+    public void updateVariableNameFromDebugInfo(final int index,
+                                                final @NotNull Constant name,
+                                                final @NotNull Label start,
+                                                final @NotNull Label end) {
         for (final Frame frame : myFrames) {
             if (frame.hasLabel(start)) {
                 Variable variable = frame.getVariable(index);
@@ -189,15 +215,17 @@ public abstract class Method {
         getCurrentFrame().getVariable(0).declare();
     }
 
+    @NotNull
     public List<Variable> getParameters() {
         return getRootFrame().getMethodParameters(getParametersStartIndex());
     }
 
-    public boolean isGenericType(final String className) {
+    public boolean isGenericType(final @NotNull String className) {
         return myGenericTypes.contains(className) || myGeneralClass.isGenericType(className);
     }
 
-    public String getGenericIdentifier(final String className) {
+    @Nullable
+    public String getGenericIdentifier(final @NotNull String className) {
         if (!myGenericTypes.contains(className)) {
             return myGeneralClass.getGenericIdentifier(className);
         } else {
@@ -205,8 +233,9 @@ public abstract class Method {
         }
     }
 
+    @NotNull
     public List<String> getGenericDeclaration() {
-        List<String> result = new ArrayList<String>();
+        final List<String> result = new ArrayList<String>();
         for (int i = 0; i < myGenericTypes.size(); i++) {
             final String genericType = myGenericTypes.get(i);
             if (!genericType.equals("Object ") && !genericType.equals("Any?")) {
@@ -218,15 +247,16 @@ public abstract class Method {
         return result;
     }
 
-    public void appendAnnotation(final Annotation annotation) {
+    public void appendAnnotation(final @NotNull Annotation annotation) {
         myAnnotations.add(annotation);
     }
 
+    @NotNull
     public List<Annotation> getAnnotations() {
         return myAnnotations;
     }
 
-    public void appendParameterAnnotation(final int index, final Annotation annotation) {
+    public void appendParameterAnnotation(final int index, final @NotNull Annotation annotation) {
         if (!myParameterAnnotations.containsKey(index)) {
             myParameterAnnotations.put(index, new ArrayList<Annotation>());
         }
@@ -237,30 +267,35 @@ public abstract class Method {
         return myParameterAnnotations.containsKey(index);
     }
 
+    @Nullable
     public List<Annotation> getParameterAnnotations(final int index) {
         return myParameterAnnotations.get(index);
     }
 
-    public void addInitializerToField(final String fieldName, final Expression initializer) {
+    public void addInitializerToField(final @NotNull String fieldName, final @NotNull Expression initializer) {
         myGeneralClass.addInitializerToField(fieldName, initializer, this);
     }
 
-    public boolean hasFieldInitializer(final String fieldName) {
+    public boolean hasFieldInitializer(final @NotNull String fieldName) {
         return myGeneralClass.hasFieldInitializer(fieldName, this);
     }
 
-    public void setBegin(Construction myBegin) {
-        this.myBegin = myBegin;
-    }
-
+    @Nullable
     public Construction getBegin() {
         return myBegin;
+    }
+
+    public void setBegin(final @NotNull Construction myBegin) {
+        this.myBegin = myBegin;
     }
 
     public boolean hasEmptyBody() {
         if (myBegin instanceof ElementaryBlock) {
             final List<Statement> statements = ((ElementaryBlock) myBegin).getStatements();
-            return statements.isEmpty() || statements.size() == 1 && statements.get(0) instanceof Return && ((Return) statements.get(0)).getReturnValue() == null;
+            return statements.isEmpty()
+                    || statements.size() == 1
+                    && statements.get(0) instanceof Return
+                    && ((Return) statements.get(0)).getReturnValue() == null;
         }
         return false;
     }
@@ -269,21 +304,27 @@ public abstract class Method {
         return myName.equals(myGeneralClass.getName());
     }
 
-    public String getNewTypeName(Type type) {
-        String variableType = type.toStringWithoutBrackets().trim().replace(".", "");
-        String suffix="";
+    @NotNull
+    public String getNewTypeName(final @NotNull Type type) {
+        final String variableType = type.toStringWithoutBrackets().trim().replace(".", "");
+
+        String suffix = "";
         for (int i = 0; i < type.getDimensions(); i++) {
-            suffix+="Arr";
+            suffix += "Arr";
         }
-        char firstChar = variableType.charAt(0);
+
+        final char firstChar = variableType.charAt(0);
         String name = Character.toLowerCase(firstChar) + ""; //primitive type
         Integer index;
+
         if (!type.isPrimitive()) {
             //for Classes
-            String prefix = charIsVowel(firstChar) ? "an" : "a";
+            final String prefix = charIsVowel(firstChar) ? "an" : "a";
             name = prefix + variableType;
         }
-        name+=suffix;
+
+        name += suffix;
+
         index = myTypeNameIndices.get(name);
         if (index == null) {
             myTypeNameIndices.put(name, 1);
@@ -291,10 +332,11 @@ public abstract class Method {
             myTypeNameIndices.put(name, index + 1);
             name += index;
         }
+
         return name;
     }
 
-    public static boolean charIsVowel(char c) {
+    public static boolean charIsVowel(final char c) {
         switch (Character.toLowerCase(c)) {
             case 'a':
             case 'e':
@@ -309,7 +351,7 @@ public abstract class Method {
     }
 /*
     public void drawCFG() {
-        GraphDrawer graphDrawer = new GraphDrawer(myNodes, myNestSize, myTextWidth);
+        final GraphDrawer graphDrawer = new GraphDrawer(myNodes, myNestSize, myTextWidth);
         graphDrawer.draw();
         graphDrawer.simplyDraw();
     }

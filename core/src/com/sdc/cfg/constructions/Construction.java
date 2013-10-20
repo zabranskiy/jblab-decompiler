@@ -1,5 +1,8 @@
 package com.sdc.cfg.constructions;
 
+import org.jetbrains.annotations.Nullable;
+
+
 public abstract class Construction {
     protected Construction myNextConstruction;
 
@@ -7,11 +10,12 @@ public abstract class Construction {
     protected String myBreak;
     protected String myContinue;
 
+    @Nullable
     public Construction getNextConstruction() {
         return myNextConstruction;
     }
 
-    public void setNextConstruction(final Construction nextConstruction) {
+    public void setNextConstruction(final @Nullable Construction nextConstruction) {
         this.myNextConstruction = nextConstruction;
     }
 
@@ -19,27 +23,30 @@ public abstract class Construction {
         return myNextConstruction != null;
     }
 
+    @Nullable
     public String getBreak() {
         return myBreak;
     }
 
-    public void setBreak(final String breakLabel) {
+    public void setBreak(final @Nullable String breakLabel) {
         this.myBreak = breakLabel;
     }
 
+    @Nullable
     public String getContinue() {
         return myContinue;
     }
 
-    public void setContinue(final String continueLabel) {
+    public void setContinue(final @Nullable String continueLabel) {
         this.myContinue = continueLabel;
     }
 
+    @Nullable
     public String getLabel() {
         return myLabel;
     }
 
-    public void setLabel(final String label) {
+    public void setLabel(final @Nullable String label) {
         this.myLabel = label;
     }
 

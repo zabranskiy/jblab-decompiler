@@ -5,24 +5,29 @@ import com.sdc.ast.Type;
 import com.sdc.ast.expressions.identifiers.Variable;
 import com.sdc.languages.general.printers.OperationPrinter;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.ArrayList;
 import java.util.List;
+
 
 import static com.sdc.ast.ExpressionType.NOT;
 
 public class UnaryExpression extends PriorityExpression {
     protected final Expression myOperand;
 
-    public UnaryExpression(final ExpressionType expressionType, final Expression operand) {
+    public UnaryExpression(final @NotNull ExpressionType expressionType, final @NotNull Expression operand) {
         super(expressionType,expressionType == NOT ? Type.BOOLEAN_TYPE : operand.getType());
         this.myOperand = operand;
     }
 
+    @NotNull
     public Expression getOperand() {
         return myOperand;
     }
 
-    public String getOperation(OperationPrinter operationPrinter) {
+    @NotNull
+    public String getOperation(final @NotNull OperationPrinter operationPrinter) {
         switch (myExpressionType) {
             case NOT:
                 return operationPrinter.getNotView();
@@ -33,6 +38,7 @@ public class UnaryExpression extends PriorityExpression {
         }
     }
 
+    @NotNull
     @Override
     public Expression invert() {
         switch (myExpressionType) {
@@ -43,6 +49,7 @@ public class UnaryExpression extends PriorityExpression {
         }
     }
 
+    @NotNull
     @Override
     public String toString() {
         return "UnaryExpression{" +
@@ -52,13 +59,14 @@ public class UnaryExpression extends PriorityExpression {
     }
 
     @Override
-      public boolean findVariable(Variable variable) {
+    public boolean findVariable(final @NotNull Variable variable) {
         return myOperand.findVariable(variable);
     }
 
+    @NotNull
     @Override
     public List<Expression> getSubExpressions() {
-        List<Expression> subExpressions = new ArrayList<Expression>();
+        final List<Expression> subExpressions = new ArrayList<Expression>();
         subExpressions.add(myOperand);
         return subExpressions;
     }

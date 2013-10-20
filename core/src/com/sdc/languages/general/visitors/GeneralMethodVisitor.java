@@ -10,16 +10,22 @@ import com.sdc.ast.expressions.New;
 import com.sdc.ast.expressions.identifiers.Field;
 import com.sdc.ast.expressions.identifiers.Identifier;
 import com.sdc.ast.expressions.identifiers.Variable;
+
 import com.sdc.cfg.nodes.DoWhile;
 import com.sdc.cfg.nodes.Node;
 import com.sdc.cfg.nodes.Switch;
+
 import com.sdc.languages.general.astUtils.Frame;
 import com.sdc.languages.general.languageParts.Annotation;
+import com.sdc.languages.general.languageParts.GeneralClass;
 import com.sdc.languages.general.languageParts.LanguagePartFactory;
 import com.sdc.languages.general.languageParts.Method;
 import com.sdc.languages.general.ConstructionBuilder;
+
 import com.sdc.util.DeclarationWorker;
 import com.sdc.util.DominatorTreeGenerator;
+
+import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.*;
 import org.objectweb.asm.util.Printer;
 
@@ -29,20 +35,21 @@ import static com.sdc.ast.ExpressionType.*;
 import static com.sdc.ast.expressions.IntConstant.*;
 import static org.objectweb.asm.Opcodes.ASM4;
 
+
 public abstract class GeneralMethodVisitor extends MethodVisitor {
     protected Method myDecompiledMethod;
 
     protected final String myDecompiledOwnerFullClassName;
     protected final String myDecompiledOwnerSuperClassName;
 
-    protected Stack<Expression> myBodyStack = new Stack<Expression>();
-    protected List<Statement> myStatements = new ArrayList<Statement>();
+    protected final Stack<Expression> myBodyStack = new Stack<Expression>();
+    protected final List<Statement> myStatements = new ArrayList<Statement>();
 
-    protected List<Node> myNodes = new ArrayList<Node>();
-    protected List<Label> myLabels = new ArrayList<Label>();
-    protected Map<Label, List<Integer>> myGoToMap = new HashMap<Label, List<Integer>>();  // for GOTO
-    protected Map<Integer, Label> myIfElseMap = new HashMap<Integer, Label>(); // for IF ELSE Branch
-    protected List<Label> myNodeInnerLabels = new ArrayList<Label>();
+    protected final List<Node> myNodes = new ArrayList<Node>();
+    protected final List<Label> myLabels = new ArrayList<Label>();
+    protected final Map<Label, List<Integer>> myGoToMap = new HashMap<Label, List<Integer>>();  // for GOTO
+    protected final Map<Integer, Label> myIfElseMap = new HashMap<Integer, Label>(); // for IF ELSE Branch
+    protected final List<Label> myNodeInnerLabels = new ArrayList<Label>();
 
     protected boolean myHasDebugInformation = false;
 
@@ -53,37 +60,43 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
 
     protected DeclarationWorker.SupportedLanguage myLanguage;
 
-    public GeneralMethodVisitor(final Method method, final String decompiledOwnerFullClassName, final String decompiledOwnerSuperClassName) {
+    public GeneralMethodVisitor(final @NotNull Method method,
+                                final @NotNull String decompiledOwnerFullClassName,
+                                final @NotNull String decompiledOwnerSuperClassName) {
         super(ASM4);
         this.myDecompiledMethod = method;
         this.myDecompiledOwnerFullClassName = decompiledOwnerFullClassName;
         this.myDecompiledOwnerSuperClassName = decompiledOwnerSuperClassName;
     }
 
-    protected abstract boolean checkForAutomaticallyGeneratedAnnotation(final String annotationName);
+    protected abstract boolean checkForAutomaticallyGeneratedAnnotation(final @NotNull String annotationName);
 
+    @NotNull
     protected Frame getCurrentFrame() {
         return myDecompiledMethod.getCurrentFrame();
     }
 
+    @NotNull
     public Method getDecompiledMethod() {
         return myDecompiledMethod;
     }
 
-    public void setClassFilesJarPath(final String classFilesJarPath) {
+    public void setClassFilesJarPath(final @NotNull String classFilesJarPath) {
         this.myClassFilesJarPath = classFilesJarPath;
     }
 
+    @NotNull
     public String getDecompiledOwnerFullClassName() {
         return myDecompiledOwnerFullClassName;
     }
 
+    @NotNull
     public String getDecompiledOwnerSuperClassName() {
         return myDecompiledOwnerSuperClassName;
     }
 
     protected AnnotationVisitor visitAnnotation(final int parameter, final String desc, final boolean visible) {
-        List<String> annotationsImports = new ArrayList<String>();
+        final List<String> annotationsImports = new ArrayList<String>();
         final String annotationName = getDescriptor(desc, 0, annotationsImports);
         if (!checkForAutomaticallyGeneratedAnnotation(annotationName)) {
             Annotation annotation = myLanguagePartFactory.createAnnotation();
@@ -125,7 +138,7 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
 
     @Override
     public void visitFrame(final int type, final int nLocal, final Object[] local, final int nStack, final Object[] stack) {
-        Frame currentFrame = getCurrentFrame();
+        final Frame currentFrame = getCurrentFrame();
 
         Frame newFrame = null;
 
@@ -138,8 +151,8 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
         } else if (type == 2) {
             // F_CHOP
             newFrame = currentFrame.createNextFrameWithRelativeBound(-nLocal);
-        } else if (type == 3 || type == 4) {
-            // F_SAME F_SAME1
+        } else {
+            // F_SAME (type 3), F_SAME1 (type 4)
             newFrame = currentFrame.createNextFrameWithRelativeBound(0);
         }
 
@@ -162,23 +175,25 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
     @Override
     public void visitInsn(final int opcode) {
         int size = myBodyStack.size();
+
         final String opString = Printer.OPCODES[opcode];
+
         if (opString.contains("ADD") || opString.contains("SUB")
                 || opString.contains("MUL") || opString.contains("DIV") || opString.contains("REM")
                 || opString.contains("USHR") || opString.contains("SHL")
                 || opString.contains("XOR") || opString.contains("SHR")
                 || opString.contains("IOR") || opString.contains("LOR") || opString.contains("AND")) {
-            Expression e1 = getTopOfBodyStack();
-            Expression e2 = getTopOfBodyStack();
+            final Expression e1 = getTopOfBodyStack();
+            final Expression e2 = getTopOfBodyStack();
+
             String type = opString.substring(1);
             if (opString.contains("OR") || opString.contains("AND")) {
                 type = "BITWISE_" + type;
             }
-            Expression res;
-            res = new BinaryExpression(ExpressionType.valueOf(type), e2, e1);
-            myBodyStack.push(res);
+
+            myBodyStack.push(new BinaryExpression(ExpressionType.valueOf(type), e2, e1));
         } else if (opString.contains("NEG")) {
-            Expression e = getTopOfBodyStack();
+            final Expression e = getTopOfBodyStack();
             myBodyStack.push(new UnaryExpression(NEGATE, e));
         } else if (opString.contains("CONST_M1")) {
             myBodyStack.push(M_ONE);
@@ -188,34 +203,39 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
             if (opString.contains("ICONST_")) {
                 myBodyStack.push(new IntConstant(Integer.valueOf(opString.substring(7).toLowerCase())));
             } else {
-                String descriptor = DeclarationWorker.getJavaDescriptor(opString, 0, null);
+                final String descriptor = getDescriptor(opString, 0, myDecompiledMethod.getImports());
                 myBodyStack.push(new Constant(opString.substring(7).toLowerCase(), false, new Type(descriptor)));
             }
         } else if (opString.equals("RETURN")) {
             replaceInvocationsFromExpressionsToStatements();
-            Return returnStatement = new Return();
+
+            final Return returnStatement = new Return();
             returnStatement.setNeedToPrintReturn(!myDecompiledMethod.getDecompiledClass().isLambdaFunctionClass());
+
             myStatements.add(returnStatement);
         } else if (opString.contains("RETURN")) {
-            Expression expression = replaceBooleanConstant(getTopOfBodyStack());
+            final Expression expression = replaceBooleanConstant(getTopOfBodyStack());
             replaceInvocationsFromExpressionsToStatements();
-            Return returnStatement = new Return(expression);
+
+            final Return returnStatement = new Return(expression);
             returnStatement.setNeedToPrintReturn(!myDecompiledMethod.getDecompiledClass().isLambdaFunctionClass());
+
             myStatements.add(returnStatement);
         } else if (opString.contains("CMP")) {
-            Expression b = getTopOfBodyStack();
-            Expression a = getTopOfBodyStack();
-            myBodyStack.push(new TernaryExpression(
-                    new BinaryExpression(EQ, a, b),
-                    ZERO,
-                    new TernaryExpression(new BinaryExpression(LT, a, b), M_ONE, ONE)
-            ));
+            final Expression b = getTopOfBodyStack();
+            final Expression a = getTopOfBodyStack();
+            myBodyStack.push(new TernaryExpression(new BinaryExpression(EQ, a, b)
+                    , ZERO, new TernaryExpression(new BinaryExpression(LT, a, b), M_ONE, ONE)));
         } else if (opString.contains("ATHROW")) {
             myStatements.add(new Throw(getTopOfBodyStack()));
         } else if (opString.equals("SWAP")) {
-            if (size < 2) return;
-            Expression expr1 = myBodyStack.pop();
-            Expression expr2 = myBodyStack.pop();
+            if (size < 2) {
+                return;
+            }
+
+            final Expression expr1 = myBodyStack.pop();
+            final Expression expr2 = myBodyStack.pop();
+
             if (expr1.hasDoubleLength() || expr2.hasDoubleLength()) {
                 //There is a wrong condition, we return elements of stack as they were there
                 multiPush(expr2, expr1);
@@ -223,13 +243,20 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
                 multiPush(expr1, expr2);
             }
         } else if (opString.equals("DUP") && !myBodyStack.isEmpty()) {
-            Expression expr = myBodyStack.peek();
-            if (expr.hasDoubleLength()) return;
+            final Expression expr = myBodyStack.peek();
+
+            if (expr.hasDoubleLength()) {
+                return;
+            }
+
             myBodyStack.push(expr);
         } else if (opString.equals("DUP_X1")) {
-            if (size < 2) return;
-            Expression expr1 = myBodyStack.pop();
-            Expression expr2 = myBodyStack.pop();
+            if (size < 2) {
+                return;
+            }
+
+            final Expression expr1 = myBodyStack.pop();
+            final Expression expr2 = myBodyStack.pop();
             if (expr1.hasDoubleLength() || expr2.hasDoubleLength()) {
                 //There is a wrong condition, we return elements of stack as they were there
                 multiPush(expr2, expr1);
@@ -237,9 +264,12 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
             }
             multiPush(expr1, expr2, expr1);
         } else if (opString.equals("DUP_X2")) {
-            if (size < 2) return;
-            Expression expr1 = myBodyStack.pop();
-            Expression expr2 = myBodyStack.pop();
+            if (size < 2) {
+                return;
+            }
+
+            final Expression expr1 = myBodyStack.pop();
+            final Expression expr2 = myBodyStack.pop();
             if (expr1.hasDoubleLength()) {
                 //There is a wrong condition, we return elements of stack as they were there
                 multiPush(expr2, expr1);
@@ -254,13 +284,16 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
                     multiPush(expr2, expr1);
                     return;
                 }
-                Expression expr3 = myBodyStack.pop();
+                final Expression expr3 = myBodyStack.pop();
                 //Form 1
                 multiPush(expr1, expr3, expr2, expr1);
             }
         } else if (opString.equals("DUP2")) {
-            if (size < 1) return;
-            Expression expr1 = myBodyStack.pop();
+            if (size < 1) {
+                return;
+            }
+
+            final Expression expr1 = myBodyStack.pop();
             if (expr1.hasDoubleLength()) {
                 //Form 2
                 multiPush(expr1, expr1);
@@ -270,14 +303,17 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
                     multiPush(expr1);
                     return;
                 }
-                Expression expr2 = myBodyStack.pop();
+                final Expression expr2 = myBodyStack.pop();
                 //Form 1
                 multiPush(expr2, expr1, expr2, expr1);
             }
         } else if (opString.equals("DUP2_X1")) {
-            if (size < 2) return;
-            Expression expr1 = myBodyStack.pop();
-            Expression expr2 = myBodyStack.pop();
+            if (size < 2) {
+                return;
+            }
+
+            final Expression expr1 = myBodyStack.pop();
+            final Expression expr2 = myBodyStack.pop();
             if (expr1.hasDoubleLength() && !expr2.hasDoubleLength()) {
                 //Form 2
                 multiPush(expr1, expr2, expr1);
@@ -288,21 +324,24 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
                     multiPush(expr2, expr1);
                     return;
                 }
-                Expression expr3 = myBodyStack.pop();
+                final Expression expr3 = myBodyStack.pop();
                 //Form 1
                 multiPush(expr2, expr1, expr3, expr2, expr1);
             }
         } else if (opString.equals("DUP2_X2")) {
-            if (size < 2) return;
-            Expression expr1 = myBodyStack.pop();
-            Expression expr2 = myBodyStack.pop();
+            if (size < 2) {
+                return;
+            }
+
+            final Expression expr1 = myBodyStack.pop();
+            final Expression expr2 = myBodyStack.pop();
             if (!expr1.hasDoubleLength() && !expr2.hasDoubleLength()) {
                 if (size < 3) {
                     //There is a wrong condition, we return elements of stack as they were there
                     multiPush(expr2, expr1);
                     return;
                 }
-                Expression expr3 = myBodyStack.pop();
+                final Expression expr3 = myBodyStack.pop();
                 if (expr3.hasDoubleLength()) {
                     //Form 3
                     multiPush(expr2, expr1, expr3, expr2, expr1);
@@ -313,7 +352,7 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
                     multiPush(expr3, expr2, expr1);
                     return;
                 }
-                Expression expr4 = myBodyStack.pop();
+                final Expression expr4 = myBodyStack.pop();
                 //Form 1
                 multiPush(expr2, expr1, expr4, expr3, expr2, expr1);
             } else if (expr1.hasDoubleLength() && !expr2.hasDoubleLength()) {
@@ -322,7 +361,7 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
                     multiPush(expr2, expr1);
                     return;
                 }
-                Expression expr3 = myBodyStack.pop();
+                final Expression expr3 = myBodyStack.pop();
                 //Form 2
                 multiPush(expr1, expr3, expr2, expr1);
             } else if (expr1.hasDoubleLength() && expr2.hasDoubleLength()) {
@@ -342,8 +381,11 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
                 myBodyStack.pop();
             }
         } else if (opString.equals("POP2")) {
-            if (size < 1) return;
-            Expression expr1 = myBodyStack.pop();
+            if (size < 1) {
+                return;
+            }
+
+            final Expression expr1 = myBodyStack.pop();
             if (expr1.hasDoubleLength()) {
                 //Form 2
             } else {
@@ -357,12 +399,14 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
             }
         } else if (opString.contains("ALOAD")) {
             final Expression arrayIndex = getTopOfBodyStack();
-            Expression ref = getTopOfBodyStack();
+            final Expression ref = getTopOfBodyStack();
+
             myBodyStack.push(new SquareBrackets(ref, arrayIndex));
         } else if (opString.contains("ASTORE")) {
             final Expression expr = getTopOfBodyStack();
             final Expression arrayIndex = getTopOfBodyStack();
-            Expression ref = getTopOfBodyStack();
+
+            final Expression ref = getTopOfBodyStack();
             if (ref instanceof NewArray) {
                 ((NewArray) ref).addNewInitializationValue(expr);
             } else {
@@ -370,7 +414,7 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
             }
         } else if (opString.equals("NOP")) {
             //do nothing
-        } else if ((opString.contains("I2L") || opString.contains("F2L") || opString.contains("D2L")) && !myBodyStack.empty()) {
+        } else if ((opString.contains("I2L") || opString.contains("F2L")|| opString.contains("D2L")) && !myBodyStack.empty()) {
             myBodyStack.push(new Cast(LONG_CAST, getTopOfBodyStack()));
         } else if ((opString.contains("I2D") || opString.contains("F2D") || opString.contains("L2D")) && !myBodyStack.isEmpty()) {
             myBodyStack.push(new Cast(DOUBLE_CAST, getTopOfBodyStack()));
@@ -388,15 +432,15 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
             Expression e = getTopOfBodyStack();
             myBodyStack.push(new ArrayLength(e));
         }
-        // All opcodes :
-        //  +NOP, +ACONST_NULL, +ICONST_M1, +CONST_0, +ICONST_1, +ICONST_2, +ICONST_3, +ICONST_4, +ICONST_5,
-        //  +LCONST_0, +LCONST_1, +FCONST_0, +FCONST_1, +FCONST_2, +DCONST_0, +DCONST_1, +IALOAD, +LALOAD, +FALOAD, +DALOAD,
-        //  +AALOAD, +BALOAD, +CALOAD, +SALOAD, +IASTORE, +LASTORE, +FASTORE, +DASTORE, +AASTORE, +BASTORE, +CASTORE, +SASTORE,
-        //  +POP, +POP2, +DUP, +DUP_X1, +DUP_X2, +DUP2, +DUP2_X1, +DUP2_X2, +SWAP, +IADD, +LADD, +FADD, +DADD, +ISUB, +LSUB, +FSUB,
-        //  +DSUB, +IMUL, +LMUL, +FMUL, +DMUL, +IDIV, +LDIV, +FDIV, +DDIV, +IREM, +LREM, +FREM, +DREM, +INEG, +LNEG, +FNEG, +DNEG,
-        //  +ISHL, +LSHL, +ISHR, +LSHR, +IUSHR, +LUSHR, +IAND, +LAND, +IOR, +LOR, +IXOR, +LXOR, +I2L, +I2F, +I2D, +L2I, +L2F, +L2D,
-        //  +F2I, +F2L, +F2D, +D2I, +D2L, +D2F, +I2B, +I2C, +I2S, LCMP, FCMPL, FCMPG, DCMPL, DCMPG, +IRETURN, +LRETURN, +FRETURN,
-        //  +DRETURN, +ARETURN, +RETURN, ARRAYLENGTH, +ATHROW, MONITORENTER, or MONITOREXIT.
+//        All opcodes :
+//          +NOP, +ACONST_NULL, +ICONST_M1, +CONST_0, +ICONST_1, +ICONST_2, +ICONST_3, +ICONST_4, +ICONST_5,
+//          +LCONST_0, +LCONST_1, +FCONST_0, +FCONST_1, +FCONST_2, +DCONST_0, +DCONST_1, +IALOAD, +LALOAD, +FALOAD, +DALOAD,
+//          +AALOAD, +BALOAD, +CALOAD, +SALOAD, +IASTORE, +LASTORE, +FASTORE, +DASTORE, +AASTORE, +BASTORE, +CASTORE, +SASTORE,
+//          +POP, +POP2, +DUP, +DUP_X1, +DUP_X2, +DUP2, +DUP2_X1, +DUP2_X2, +SWAP, +IADD, +LADD, +FADD, +DADD, +ISUB, +LSUB, +FSUB,
+//          +DSUB, +IMUL, +LMUL, +FMUL, +DMUL, +IDIV, +LDIV, +FDIV, +DDIV, +IREM, +LREM, +FREM, +DREM, +INEG, +LNEG, +FNEG, +DNEG,
+//          +ISHL, +LSHL, +ISHR, +LSHR, +IUSHR, +LUSHR, +IAND, +LAND, +IOR, +LOR, +IXOR, +LXOR, +I2L, +I2F, +I2D, +L2I, +L2F, +L2D,
+//          +F2I, +F2L, +F2D, +D2I, +D2L, +D2F, +I2B, +I2C, +I2S, LCMP, FCMPL, FCMPG, DCMPL, DCMPG, +IRETURN, +LRETURN, +FRETURN,
+//          +DRETURN, +ARETURN, +RETURN, ARRAYLENGTH, +ATHROW, MONITORENTER, or MONITOREXIT.
     }
 
     @Override
@@ -406,7 +450,7 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
         if (opString.contains("IPUSH")) {
             myBodyStack.push(new IntConstant(operand));
         } else if (opString.contains("NEWARRAY")) {
-            List<Expression> dimensions = new ArrayList<Expression>();
+            final List<Expression> dimensions = new ArrayList<Expression>();
             dimensions.add(getTopOfBodyStack());
             myBodyStack.push(createNewArray(1, Printer.TYPES[operand].substring(2).toLowerCase(), dimensions));
         }
@@ -425,12 +469,14 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
             if (myStatements.isEmpty()) {
                 myBodyStack.push(currentFrame.getVariable(var));
             } else {
-                int lastStatementIndex = myStatements.size() - 1;
-                Statement lastStatement = myStatements.get(lastStatementIndex);
+                final int lastStatementIndex = myStatements.size() - 1;
+                final Statement lastStatement = myStatements.get(lastStatementIndex);
+
                 if (opString.contains("ILOAD") && lastStatement instanceof Increment
                         && ((Increment) lastStatement).getVariable().getIndex() == var) {
-                    Increment increment = (Increment) lastStatement;
+                    final Increment increment = (Increment) lastStatement;
                     myStatements.remove(lastStatementIndex);
+
                     ExpressionType type = increment.getOperationType();
                     switch (type) {
                         case INC:
@@ -447,16 +493,16 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
                 }
             }
         } else if (opString.contains("STORE") && !currentFrameHasStack) {
-            Identifier v = currentFrame.getVariable(var);
+            final Identifier v = currentFrame.getVariable(var);
             final Expression expr = getTopOfBodyStack();
+
             myStatements.add(new Assignment(v, expr));
+
             variableType = expr.getType();
             checkIncrements(var, expr);
         }
 
         if (!opString.contains("LOAD") && var > myDecompiledMethod.getLastLocalVariableIndex()) {
-
-
             String descriptorType;
             if (currentFrameHasStack) {
                 descriptorType = currentFrame.getStackedVariableType();
@@ -467,24 +513,28 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
             if (!descriptorType.equals("Object ") && !descriptorType.equals("Any") || variableType == null) {
                 variableType = new Type(descriptorType);
             }
-            Variable variable = currentFrame.getVariable(var);
+
+            final Variable variable = currentFrame.getVariable(var);
             Constant name = null;
+
             if (variable.isUndefined()) {
                 name = new Constant(myDecompiledMethod.getNewTypeName(variableType), false, Type.VOID);
             }
-            currentFrame.updateVariableInformation(var, variableType, name);
 
+            currentFrame.updateVariableInformation(var, variableType, name);
         }
     }
 
-    private void checkIncrements(int var, Expression expr) {
-        int lastIndex = myStatements.size() - 1;
-        Expression expr2 = (myBodyStack.empty() ? null : myBodyStack.peek());
+    private void checkIncrements(final int var, final @NotNull Expression expr) {
+        final int lastIndex = myStatements.size() - 1;
+        final Expression expr2 = (myBodyStack.empty() ? null : myBodyStack.peek());
+
         if (expr instanceof BinaryExpression && ((BinaryExpression) expr).isIncrementCastableType()) {
-            BinaryExpression binaryExpression = (BinaryExpression) expr;
-            Expression left = binaryExpression.getLeft();
-            Expression right = binaryExpression.getRight();
-            ExpressionType type = binaryExpression.getExpressionType();
+            final BinaryExpression binaryExpression = (BinaryExpression) expr;
+            final Expression left = binaryExpression.getLeft();
+            final Expression right = binaryExpression.getRight();
+            final ExpressionType type = binaryExpression.getExpressionType();
+
             if (left instanceof Variable && ((Variable) left).getIndex() == var) {
                 myStatements.remove(lastIndex);
                 if (expr.equals(expr2)) {
@@ -529,10 +579,12 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
     public void visitTypeInsn(final int opcode, final String type) {
         final String opString = Printer.OPCODES[opcode];
         final boolean needToGetDescriptor = type.contains("[") || type.contains(";");
-        final String actualType = needToGetDescriptor ? getDescriptor(type, 0, myDecompiledMethod.getImports()) : decompileClassNameWithOuterClasses(type);
+        final String actualType = needToGetDescriptor
+                ? getDescriptor(type, 0, myDecompiledMethod.getImports())
+                : decompileClassNameWithOuterClasses(type);
 
         if (opString.contains("NEWARRAY")) {
-            List<Expression> dimensions = new ArrayList<Expression>();
+            final List<Expression> dimensions = new ArrayList<Expression>();
             dimensions.add(getTopOfBodyStack());
             myBodyStack.push(createNewArray(1, actualType, dimensions));
         } else if (opString.contains("INSTANCEOF")) {
@@ -540,16 +592,18 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
         } else if (opString.contains("CHECKCAST") && !myBodyStack.empty()) {
             myBodyStack.push(new Cast(CHECK_CAST, myBodyStack.pop(), actualType));
         } else if (opString.equals("NEW")) {
-            myBodyStack.push(new New(null));
+            myBodyStack.push(new Constant("stub", true, new Type("String")));
         }
     }
 
     @Override
     public void visitFieldInsn(final int opcode, final String owner, final String name, final String desc) {
         final String opString = Printer.OPCODES[opcode];
-        final String fieldName = (myDecompiledMethod.getDecompiledClass().isLambdaFunctionClass() || myDecompiledMethod.getDecompiledClass().isNestedClass())
-                && name.startsWith("$") ? name.substring(1) : name;
-        Field field = new Field(fieldName, new Type(getDescriptor(desc, 0, myDecompiledMethod.getImports())));
+        final String fieldName = (myDecompiledMethod.getDecompiledClass().isLambdaFunctionClass()
+                        || myDecompiledMethod.getDecompiledClass().isNestedClass()) && name.startsWith("$")
+                ? name.substring(1)
+                : name;
+        final Field field = new Field(fieldName, new Type(getDescriptor(desc, 0, myDecompiledMethod.getImports())));
 
         Expression e = null;
         if (opString.contains("PUTFIELD") || opString.contains("PUTSTATIC")) {
@@ -565,9 +619,9 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
         }
 
         if (opString.contains("PUTFIELD") || opString.contains("PUTSTATIC")) {
-            if ((myDecompiledMethod.getName().equals("<clinit>") || myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName()))
-                    && isInitializationValueCorrect(e) && !myDecompiledMethod.hasFieldInitializer(name))
-            {
+            if ((myDecompiledMethod.getName().equals("<clinit>")
+                    || myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName()))
+                    && isInitializationValueCorrect(e) && !myDecompiledMethod.hasFieldInitializer(name)) {
                 myDecompiledMethod.addInitializerToField(name, e);
             } else if (!name.startsWith("this$")) {
                 myStatements.add(new Assignment(field, e));
@@ -577,12 +631,12 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
         }
     }
 
-    private boolean isInitializationValueCorrect(Expression value) {
-        //todo
+    private boolean isInitializationValueCorrect(final @NotNull Expression value) {
+        //TODO
         boolean res;
-        List<Variable> params = myDecompiledMethod.getParameters();
+        final List<Variable> params = myDecompiledMethod.getParameters();
         res = true;
-        for (Variable v : params) {
+        for (final Variable v : params) {
             res = res && !value.findVariable(v);
         }
         //res = res && !value.hasNotStaticInvocations();
@@ -596,7 +650,7 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
         final String decompiledOwnerFullClassName = DeclarationWorker.decompileFullClassName(owner);
         final String ownerClassName = decompileClassNameWithOuterClasses(owner);
 
-        List<Expression> arguments = getInvocationArguments(desc);
+        final List<Expression> arguments = getInvocationArguments(desc);
         String returnType = getInvocationReturnType(desc);
         final boolean hasVoidReturnType = hasVoidReturnType(desc);
         String invocationName = name;
@@ -604,7 +658,8 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
         boolean isStaticInvocation = false;
 
         if (opString.contains("INVOKEVIRTUAL") || opString.contains("INVOKEINTERFACE")
-                || (!opString.contains("INVOKESTATIC") && decompiledOwnerFullClassName.equals(myDecompiledOwnerFullClassName) && !name.equals("<init>"))) {
+                || (!opString.contains("INVOKESTATIC")
+                && decompiledOwnerFullClassName.equals(myDecompiledOwnerFullClassName) && !name.equals("<init>"))) {
             appendInstanceInvocation(name, hasVoidReturnType ? Type.VOID : new Type(returnType), arguments, getTopOfBodyStack());
             return;
         }
@@ -625,7 +680,8 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
             isStaticInvocation = true;
         }
 
-        appendInvocationOrConstructor(isStaticInvocation, name, invocationName, hasVoidReturnType ? Type.VOID : new Type(returnType), arguments, decompiledOwnerFullClassName);
+        appendInvocationOrConstructor(isStaticInvocation, name, invocationName
+                , hasVoidReturnType ? Type.VOID : new Type(returnType), arguments, decompiledOwnerFullClassName);
     }
 
     @Override
@@ -635,18 +691,27 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
     @Override
     public void visitJumpInsn(final int opcode, final Label label) {
         final String opString = Printer.OPCODES[opcode];
+
         if (opString.contains("IF")) {
             final Label myLastIFLabel = label;
-            if (myNodes.isEmpty() || !myNodeInnerLabels.isEmpty() || (myNodes.get(getLeftEmptyNodeIndex() - 1).getCondition() == null)) {
-                for (Node node : myNodes) {
-                    if (!(node instanceof DoWhile) && node.getInnerLabels().contains(label) && myNodes.get(myNodes.size() - 1).getCondition() == null) {
+
+            if (myNodes.isEmpty() || !myNodeInnerLabels.isEmpty()
+                    || (myNodes.get(getLeftEmptyNodeIndex() - 1).getCondition() == null)) {
+
+                for (final Node node : myNodes) {
+                    if (!(node instanceof DoWhile)
+                            && node.getInnerLabels().contains(label)
+                            && myNodes.get(myNodes.size() - 1).getCondition() == null) {
+
                         myIfElseMap.put(myNodes.size(), label);
-                        int index = node.getInnerLabels().indexOf(label);
-                        DoWhile dw = new DoWhile(null, new ArrayList<Label>(myNodeInnerLabels), myNodes.size());
+
+                        final int index = node.getInnerLabels().indexOf(label);
+
+                        final DoWhile dw = new DoWhile(null, new ArrayList<Label>(myNodeInnerLabels), myNodes.size());
                         dw.setStatements(new ArrayList<Statement>(node.getStatements().subList(0, index)));
                         dw.getInnerLabels().addAll(new ArrayList<Label>(node.getInnerLabels().subList(0, index)));
                         dw.setCondition(getConditionFromStack(opString));
-                        dw.setEmpty(true);
+                        dw.setIsEmpty(true);
                         myNodes.add(dw);
 
                         node.setStatements(new ArrayList<Statement>(node.getStatements().subList(index, node.getStatements().size())));
@@ -655,43 +720,48 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
                         return;
                     }
                 }
+
                 if (myNodeInnerLabels.contains(label)) {
-                    int index = myNodeInnerLabels.indexOf(label);
-                    Node beforeNode = new Node(null, null, myNodes.size());
+                    final int index = myNodeInnerLabels.indexOf(label);
+                    final Node beforeNode = new Node(null, null, myNodes.size());
                     beforeNode.setStatements(new ArrayList<Statement>(myStatements.subList(0, index)));
                     beforeNode.setInnerLabels(new ArrayList<Label>(myNodeInnerLabels.subList(0, index)));
-                    beforeNode.setEmpty(true);
+                    beforeNode.setIsEmpty(true);
                     myNodes.add(beforeNode);
 
-                    Node innerNode = new Node(null, null, myNodes.size());
+                    final Node innerNode = new Node(null, null, myNodes.size());
                     innerNode.setStatements(new ArrayList<Statement>(myStatements.subList(index, myStatements.size())));
                     innerNode.setInnerLabels(new ArrayList<Label>(myNodeInnerLabels.subList(index, myNodeInnerLabels.size())));
-                    innerNode.setEmpty(true);
+                    innerNode.setIsEmpty(true);
                     myNodes.add(innerNode);
 
                     myIfElseMap.put(myNodes.size(), label);
 
-                    DoWhile dw = new DoWhile(new ArrayList<Statement>(), new ArrayList<Label>(), myNodes.size());
+                    final DoWhile dw = new DoWhile(new ArrayList<Statement>(), new ArrayList<Label>(), myNodes.size());
                     dw.setCondition(getConditionFromStack(opString));
-                    dw.setEmpty(true);
+                    dw.setIsEmpty(true);
                     myNodes.add(dw);
 
                     myStatements.clear();
                     myNodeInnerLabels.clear();
                     return;
                 }
+
                 myLabels.add(myLastIFLabel);
                 myIfElseMap.put(myNodes.size(), label);
+
                 applyNode();
+
                 final int last = myNodes.size() - 1;
                 myNodes.get(last).setCondition(getConditionFromStack(opString));
-                myNodes.get(last).setEmpty(true);
+                myNodes.get(last).setIsEmpty(true);
             }
         } else if (opString.contains("GOTO")) {
             myLabels.add(label);
             final int value = getLeftEmptyNodeIndex();
+
             if (!myGoToMap.containsKey(label)) {
-                List<Integer> list = new ArrayList<Integer>();
+                final List<Integer> list = new ArrayList<Integer>();
                 list.add(value);
                 myGoToMap.put(label, list);
             } else {
@@ -720,7 +790,7 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
     @Override
     public void visitIincInsn(final int var, final int increment) {
         if (!myBodyStack.empty()) {
-            Expression expr = myBodyStack.peek();
+            final Expression expr = myBodyStack.peek();
             if (expr != null && expr instanceof Variable && ((Variable) expr).getIndex() == var) {
                 myBodyStack.pop();
                 myBodyStack.push(new ExprIncrement((Variable) expr, increment));
@@ -732,35 +802,40 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
 
     @Override
     public void visitTableSwitchInsn(final int min, final int max, final Label dflt, final Label... labels) {
-        int[] keys = new int[max - min + 1];
-        List<Label> list = new ArrayList<Label>();
+        final int[] keys = new int[max - min + 1];
+        final List<Label> list = new ArrayList<Label>();
+
         for (int i = 0; i < labels.length; i++) {
             myLabels.add(labels[i]);
             keys[i] = min + i;
             list.add(labels[i]);
         }
+
         list.add(dflt);
         myLabels.add(dflt);
-        Node switch_node = new Switch(myBodyStack.pop(), keys, list, myNodes.size());
+
+        final Node switch_node = new Switch(myBodyStack.pop(), keys, list, myNodes.size());
         myNodes.add(switch_node);
     }
 
     @Override
     public void visitLookupSwitchInsn(final Label dflt, final int[] keys, final Label[] labels) {
-        List<Label> list = new ArrayList<Label>();
-        for (Label label : labels) {
+        final List<Label> list = new ArrayList<Label>();
+        for (final Label label : labels) {
             myLabels.add(label);
             list.add(label);
         }
+
         list.add(dflt);
         myLabels.add(dflt);
-        Node switch_node = new Switch(myBodyStack.pop(), keys, list, myNodes.size());
+
+        final Node switch_node = new Switch(myBodyStack.pop(), keys, list, myNodes.size());
         myNodes.add(switch_node);
     }
 
     @Override
     public void visitMultiANewArrayInsn(final String desc, final int dims) {
-        List<Expression> dimensions = new ArrayList<Expression>();
+        final List<Expression> dimensions = new ArrayList<Expression>();
         for (int i = 0; i < dims; i++) {
             dimensions.add(0, getTopOfBodyStack());
         }
@@ -794,8 +869,11 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
     }*/
 
     @Override
-    public void visitLocalVariable(final String name, final String desc,
-                                   final String signature, final Label start, final Label end,
+    public void visitLocalVariable(final String name,
+                                   final String desc,
+                                   final String signature,
+                                   final Label start,
+                                   final Label end,
                                    final int index) {
         if (!myHasDebugInformation) {
             myHasDebugInformation = true;
@@ -804,7 +882,8 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
         final String description = signature != null ? signature : desc;
 
         String descriptor = getDescriptor(description, 0, myDecompiledMethod.getImports());
-        myDecompiledMethod.updateVariableInformationFromDebugInfo(index, new Type(descriptor), new Constant(name, false, Type.VOID), start, end);
+        myDecompiledMethod.updateVariableInformationFromDebugInfo(index, new Type(descriptor)
+                , new Constant(name, false, Type.VOID), start, end);
     }
 
     @Override
@@ -822,22 +901,21 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
         placeEdges();
 //        printDebugInfo();
 
-        DominatorTreeGenerator gen = new DominatorTreeGenerator(myNodes);
-        ConstructionBuilder cb = createConstructionBuilder(myNodes, gen);
+        final DominatorTreeGenerator gen = new DominatorTreeGenerator(myNodes);
+        final ConstructionBuilder cb = createConstructionBuilder(myNodes, gen);
 
         myDecompiledMethod.setBegin(cb.build());
     }
 
     private void printDebugInfo() {
-        for (Node node : myNodes) {
+        for (final Node node : myNodes) {
             System.out.print(node.getIndex() + ": ");
-            for (Node tail : node.getListOfTails()) {
+            for (final Node tail : node.getListOfTails()) {
                 System.out.print(tail.getIndex() + " ");
             }
             System.out.println();
         }
     }
-
 
     private void placeEdges() {
         // GOTO
@@ -854,6 +932,7 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
                 }
             }
         }
+
         // Switch + sequence
         for (int i = 0; i < myNodes.size(); i++) {
             final Node node = myNodes.get(i);
@@ -872,6 +951,7 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
                 myNodes.get(i + 1).addAncestor(node);
             }
         }
+
         // IF ELSE Branch
         for (final Integer index : myIfElseMap.keySet()) {
             for (final Node node : myNodes) {
@@ -882,8 +962,9 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
                 }
             }
         }
+
         // Remove last return
-        List<Statement> lastNodeStatements = myNodes.get(myNodes.size() - 1).getStatements();
+        final List<Statement> lastNodeStatements = myNodes.get(myNodes.size() - 1).getStatements();
         if (lastNodeStatements.size() != 0) {
             final Statement lastStatement = lastNodeStatements.get(lastNodeStatements.size() - 1);
             if (lastStatement instanceof Return && ((Return) lastStatement).getReturnValue() == null) {
@@ -892,13 +973,14 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
         }
     }
 
-    private Expression getConditionFromStack(final String opString) {
+    @NotNull
+    private Expression getConditionFromStack(final @NotNull String opString) {
         if (opString.contains("IF_")) {
-            Expression e1 = getTopOfBodyStack();
-            Expression e2 = getTopOfBodyStack();
+            final Expression e1 = getTopOfBodyStack();
+            final Expression e2 = getTopOfBodyStack();
             return new BinaryExpression(ExpressionType.valueOf(opString.substring(7)), e2, e1);
         } else {
-            Expression e = getTopOfBodyStack();
+            final Expression e = getTopOfBodyStack();
             if (opString.contains("NONNULL")) {
                 return new BinaryExpression(ExpressionType.NE, e, Constant.NULL);
             } else if (opString.contains("NULL")) {
@@ -916,8 +998,9 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
         }
     }
 
+    @NotNull
     protected Integer getLeftEmptyNodeIndex() {
-        for (Node node : myNodes) {
+        for (final Node node : myNodes) {
             if (node.statementsIsEmpty() && !node.isEmpty()) {
                 return myNodes.indexOf(node);
             }
@@ -926,28 +1009,32 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
     }
 
     protected void applyNode() {
-        Integer i = getLeftEmptyNodeIndex();
+        final Integer i = getLeftEmptyNodeIndex();
         if (i != myNodes.size()) {
             myNodes.get(i).setStatements(new ArrayList<Statement>(myStatements));
             myNodes.get(i).setInnerLabels(new ArrayList<Label>(myNodeInnerLabels));
             if (myNodes.get(i).getStatements().isEmpty()) {
-                myNodes.get(i).setEmpty(true);
+                myNodes.get(i).setIsEmpty(true);
             }
         } else {
             Node node = new Node(new ArrayList<Statement>(myStatements), new ArrayList<Label>(myNodeInnerLabels), myNodes.size());
             if (node.getStatements().isEmpty()) {
-                node.setEmpty(true);
+                node.setIsEmpty(true);
             }
             myNodes.add(node);
         }
+
         myNodeInnerLabels.clear();
         myStatements.clear();
     }
 
-    protected ConstructionBuilder createConstructionBuilder(final List<Node> myNodes, final DominatorTreeGenerator gen) {
+    @NotNull
+    protected ConstructionBuilder createConstructionBuilder(final @NotNull List<Node> myNodes,
+                                                            final @NotNull DominatorTreeGenerator gen) {
         return new ConstructionBuilder(myNodes, gen);
     }
 
+    @NotNull
     protected Expression getTopOfBodyStack() {
         if (myBodyStack.isEmpty()) {
             final int lastIndex = myStatements.size() - 1;
@@ -983,7 +1070,10 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
     }
 
     protected boolean isThisVariableOnTopOfStack() {
-        return myDecompiledMethod.isNormalClassMethod() && !myBodyStack.isEmpty() && myBodyStack.peek() instanceof Variable && ((Variable) myBodyStack.peek()).isThis();
+        return myDecompiledMethod.isNormalClassMethod()
+                && !myBodyStack.isEmpty()
+                && myBodyStack.peek() instanceof Variable
+                && ((Variable) myBodyStack.peek()).isThis();
     }
 
     protected void replaceInvocationsFromExpressionsToStatements() {
@@ -994,7 +1084,7 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
         }
     }
 
-    protected com.sdc.ast.controlflow.Invocation convertInvocationFromExpressionToStatement(final Invocation expression) {
+    protected com.sdc.ast.controlflow.Invocation convertInvocationFromExpressionToStatement(final @NotNull Invocation expression) {
         if (expression instanceof InstanceInvocation) {
             final InstanceInvocation invocation = (InstanceInvocation) expression;
             return new com.sdc.ast.controlflow.InstanceInvocation(invocation);
@@ -1003,55 +1093,70 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
         }
     }
 
-    protected void appendInstanceInvocation(final String function, final Type returnType, final List<Expression> arguments, final Expression instance) {
-        if (returnType.isVOID()) {
-            myStatements.add(new com.sdc.ast.controlflow.InstanceInvocation(new InstanceInvocation(function, returnType, arguments, instance)));
+    protected void appendInstanceInvocation(final @NotNull String function,
+                                            final @NotNull Type returnType,
+                                            final @NotNull List<Expression> arguments,
+                                            final @NotNull Expression instance) {
+        if (returnType.isVoid()) {
+            myStatements.add(new com.sdc.ast.controlflow.InstanceInvocation(new InstanceInvocation(function
+                    , returnType, arguments, instance)));
         } else {
             myBodyStack.push(new InstanceInvocation(function, returnType, arguments, instance));
         }
     }
 
-    protected void appendInvocation(final String function, final Type returnType, final List<Expression> arguments) {
-        if (returnType.isVOID()) {
+    protected void appendInvocation(final @NotNull String function,
+                                    final @NotNull Type returnType,
+                                    final @NotNull List<Expression> arguments) {
+        if (returnType.isVoid()) {
             myStatements.add(new com.sdc.ast.controlflow.Invocation(new Invocation(function, returnType, arguments)));
         } else {
             myBodyStack.push(new Invocation(function, returnType, arguments));
         }
     }
 
-    protected List<Expression> getInvocationArguments(final String descriptor) {
-        List<Expression> arguments = new ArrayList<Expression>();
+    @NotNull
+    protected List<Expression> getInvocationArguments(final @NotNull String descriptor) {
+        final List<Expression> arguments = new ArrayList<Expression>();
         for (int i = 0; i < DeclarationWorker.getParametersCount(descriptor); i++) {
             arguments.add(0, getTopOfBodyStack());
         }
         return arguments;
     }
 
-    protected String getInvocationReturnType(final String descriptor) {
+    @NotNull
+    protected String getInvocationReturnType(final @NotNull String descriptor) {
         final int returnTypeIndex = descriptor.indexOf(')') + 1;
         return getDescriptor(descriptor, returnTypeIndex, myDecompiledMethod.getImports());
     }
 
-    protected boolean hasVoidReturnType(final String descriptor) {
+    protected boolean hasVoidReturnType(final @NotNull String descriptor) {
         final int returnTypeIndex = descriptor.indexOf(')') + 1;
         return descriptor.charAt(returnTypeIndex) == 'V';
     }
 
-    protected boolean checkForSuperClassConstructor(final String invocationName, final String decompiledOwnerFullClassName) {
+    protected boolean checkForSuperClassConstructor(final @NotNull String invocationName,
+                                                    final @NotNull String decompiledOwnerFullClassName) {
         return isThisVariableOnTopOfStack()
-                && (myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName()) && myDecompiledOwnerSuperClassName.endsWith(invocationName)
+                && (myDecompiledOwnerFullClassName.endsWith(myDecompiledMethod.getName())
+                && myDecompiledOwnerSuperClassName.endsWith(invocationName)
                 || myDecompiledOwnerSuperClassName.isEmpty() && decompiledOwnerFullClassName.equals("java.lang.Object"));
     }
 
-    protected void processSuperClassConstructorInvocation(final String invocationName, final Type returnType, final List<Expression> arguments) {
+    protected void processSuperClassConstructorInvocation(final @NotNull String invocationName,
+                                                          final @NotNull Type returnType,
+                                                          final @NotNull List<Expression> arguments) {
         if (!arguments.isEmpty()) {
             myStatements.add(new com.sdc.ast.controlflow.Invocation(new Invocation("super", returnType, arguments)));
         }
     }
 
-    protected void appendInvocationOrConstructor(final boolean isStaticInvocation, final String visitMethodName,
-                                                 final String invocationName, final Type returnType, final List<Expression> arguments, final String decompiledOwnerFullClassName) {
-
+    protected void appendInvocationOrConstructor(final boolean isStaticInvocation,
+                                                 final @NotNull String visitMethodName,
+                                                 final @NotNull String invocationName,
+                                                 final @NotNull Type returnType,
+                                                 final @NotNull List<Expression> arguments,
+                                                 final @NotNull String decompiledOwnerFullClassName) {
         if (visitMethodName.equals("<init>")) {
             if (checkForSuperClassConstructor(invocationName, decompiledOwnerFullClassName)) {
                 removeThisVariableFromStack();
@@ -1063,7 +1168,10 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
 
                     myBodyStack.push(new New(new com.sdc.ast.expressions.Invocation(invocationName, returnType, arguments)));
                 } else {
-                    myBodyStack.push(new com.sdc.ast.expressions.nestedclasses.AnonymousClass(myDecompiledMethod.getDecompiledClass().getAnonymousClass(invocationName), arguments));
+                    final GeneralClass anonymousClass = myDecompiledMethod.getDecompiledClass().getAnonymousClass(invocationName);
+                    if (anonymousClass != null) {
+                        myBodyStack.push(new com.sdc.ast.expressions.nestedclasses.AnonymousClass(anonymousClass, arguments));
+                    }
                 }
             }
         } else {
@@ -1079,17 +1187,21 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
         }
     }
 
-    protected NewArray createNewArray(final int dimensionsCount, final String type, final List<Expression> dimensions) {
+    @NotNull
+    protected NewArray createNewArray(final int dimensionsCount,
+                                      final @NotNull String type,
+                                      final @NotNull List<Expression> dimensions) {
         return new NewArray(dimensionsCount, type, dimensions);
     }
 
-    private void multiPush(Expression... expressions) {
-        for (Expression expr : expressions) {
+    private void multiPush(final @NotNull Expression... expressions) {
+        for (final Expression expr : expressions) {
             myBodyStack.push(expr);
         }
     }
 
-    protected Expression replaceBooleanConstant(final Expression expression) {
+    @NotNull
+    protected Expression replaceBooleanConstant(final @NotNull Expression expression) {
         if (expression instanceof Constant && myDecompiledMethod.getReturnType().toLowerCase().contains("boolean")) {
             return new Constant(((Constant) expression).getValue().toString().equals("1"), false, Type.BOOLEAN_TYPE);
         } else {
@@ -1097,7 +1209,8 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
         }
     }
 
-    protected String decompileClassNameWithOuterClasses(final String fullClassName) {
+    @NotNull
+    protected String decompileClassNameWithOuterClasses(final @NotNull String fullClassName) {
         if (fullClassName.contains(myDecompiledMethod.getName())) {
             return DeclarationWorker.decompileSimpleClassName(fullClassName);
         }
@@ -1105,9 +1218,13 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
         return myDecompiledMethod.getDecompiledClass().decompileClassNameWithOuterClasses(fullClassName);
     }
 
-    protected String getDescriptor(final String descriptor, final int pos, List<String> imports) {
-        final String decompiledDescriptor = myDecompiledMethod.getDecompiledClass().getDescriptor(descriptor, pos, imports, myLanguage);
+    @NotNull
+    protected String getDescriptor(final @NotNull String descriptor, final int pos, final @NotNull List<String> imports) {
+        final String decompiledDescriptor = myDecompiledMethod.getDecompiledClass()
+                .getDescriptor(descriptor, pos, imports, myLanguage);
 
-        return decompiledDescriptor.contains(myDecompiledMethod.getName()) ? DeclarationWorker.decompileSimpleClassName(decompiledDescriptor) : decompiledDescriptor;
+        return decompiledDescriptor.contains(myDecompiledMethod.getName())
+                ? DeclarationWorker.decompileSimpleClassName(decompiledDescriptor)
+                : decompiledDescriptor;
     }
 }

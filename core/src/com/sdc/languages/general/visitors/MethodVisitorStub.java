@@ -1,42 +1,47 @@
 package com.sdc.languages.general.visitors;
 
 import com.decompiler.Decompiler;
+
+import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.*;
+
 
 public class MethodVisitorStub extends GeneralMethodVisitor {
     public class DecompilerException {
         private final String myErrorLocation;
         private final Exception myException;
 
-        public DecompilerException(final String errorLocation, final Exception exception) {
+        public DecompilerException(final @NotNull String errorLocation, final @NotNull Exception exception) {
             this.myErrorLocation = errorLocation;
             this.myException = exception;
         }
 
+        @NotNull
         public String getErrorLocation() {
             return myErrorLocation;
         }
 
+        @NotNull
         public String getException() {
-            return Decompiler.printExceptionToString(myException);
+            return Decompiler.convertExceptionToString(myException);
         }
     }
 
     private boolean myHasDecompilingError = false;
     private DecompilerException myError = null;
 
-    public MethodVisitorStub(final GeneralMethodVisitor mv) {
+    public MethodVisitorStub(final @NotNull GeneralMethodVisitor mv) {
         super(mv.getDecompiledMethod(), mv.getDecompiledOwnerFullClassName(), mv.getDecompiledOwnerSuperClassName());
         this.mv = mv;
     }
 
-    private void processOccurredError(final String errorLocation, final Exception exception) {
+    private void processOccurredError(final @NotNull String errorLocation, final @NotNull Exception exception) {
         myHasDecompilingError = true;
         myError = new DecompilerException(errorLocation, exception);
     }
 
     @Override
-    protected boolean checkForAutomaticallyGeneratedAnnotation(final String annotationName) {
+    protected boolean checkForAutomaticallyGeneratedAnnotation(final @NotNull String annotationName) {
         return false;
     }
 
@@ -127,7 +132,8 @@ public class MethodVisitorStub extends GeneralMethodVisitor {
                 mv.visitIntInsn(opcode, operand);
             }
         } catch (RuntimeException e) {
-            processOccurredError("Error occurred while visiting int instruction { opcode = " + opcode + ", operand = " + operand + " }", e);
+            processOccurredError("Error occurred while visiting int instruction { opcode = " + opcode
+                    + ", operand = " + operand + " }", e);
         }
     }
 
@@ -138,7 +144,8 @@ public class MethodVisitorStub extends GeneralMethodVisitor {
                 mv.visitVarInsn(opcode, var);
             }
         } catch (RuntimeException e) {
-            processOccurredError("Error occurred while visiting var instruction { opcode = " + opcode + ", var = " + var + " }", e);
+            processOccurredError("Error occurred while visiting var instruction { opcode = " + opcode
+                    + ", var = " + var + " }", e);
         }
     }
 
@@ -149,7 +156,8 @@ public class MethodVisitorStub extends GeneralMethodVisitor {
                 mv.visitTypeInsn(opcode, type);
             }
         } catch (RuntimeException e) {
-            processOccurredError("Error occurred while visiting type instruction { opcode = " + opcode + ", type = \"" + type + "\" }", e);
+            processOccurredError("Error occurred while visiting type instruction { opcode = " + opcode
+                    + ", type = \"" + type + "\" }", e);
         }
     }
 
@@ -160,7 +168,8 @@ public class MethodVisitorStub extends GeneralMethodVisitor {
                 mv.visitFieldInsn(opcode, owner, name, desc);
             }
         } catch (RuntimeException e) {
-            processOccurredError("Error occurred while visiting field instruction { opcode = " + opcode + ", owner = \"" + owner + ", name = \"" + name + "\" }", e);
+            processOccurredError("Error occurred while visiting field instruction { opcode = " + opcode
+                    + ", owner = \"" + owner + ", name = \"" + name + "\" }", e);
         }
     }
 
@@ -171,7 +180,8 @@ public class MethodVisitorStub extends GeneralMethodVisitor {
                 mv.visitMethodInsn(opcode, owner, name, desc);
             }
         } catch (RuntimeException e) {
-            processOccurredError("Error occurred while visiting method instruction { opcode = " + opcode + ", owner = \"" + owner + ", name = \"" + name + "\" }", e);
+            processOccurredError("Error occurred while visiting method instruction { opcode = " + opcode
+                    + ", owner = \"" + owner + ", name = \"" + name + "\" }", e);
         }
     }
 

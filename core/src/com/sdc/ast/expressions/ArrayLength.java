@@ -5,22 +5,27 @@ import com.sdc.ast.ExpressionType;
 import com.sdc.ast.Type;
 import com.sdc.ast.expressions.identifiers.Variable;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.ArrayList;
 import java.util.List;
 
-public class ArrayLength extends PriorityExpression {
-    Expression myOperand;
 
-    public ArrayLength(Expression myOperand) {
+public class ArrayLength extends PriorityExpression {
+    private Expression myOperand;
+
+    public ArrayLength(final @NotNull Expression myOperand) {
         super(ExpressionType.ARRAYLENGTH, Type.INT_TYPE);
         this.myOperand = myOperand;
     }
 
+    @NotNull
     public Expression getOperand() {
         return myOperand;
     }
 
-    public String getOperation(OperationPrinter operationPrinter) {
+    @NotNull
+    public String getOperation(final @NotNull OperationPrinter operationPrinter) {
         switch (myExpressionType) {
             case ARRAYLENGTH:
                 return operationPrinter.getArrayLengthView();
@@ -30,13 +35,14 @@ public class ArrayLength extends PriorityExpression {
     }
 
     @Override
-    public boolean findVariable(Variable variable) {
+    public boolean findVariable(final @NotNull Variable variable) {
         return myOperand.findVariable(variable);
     }
 
+    @NotNull
     @Override
     public List<Expression> getSubExpressions() {
-        List<Expression> subExpressions = new ArrayList<Expression>();
+        final List<Expression> subExpressions = new ArrayList<Expression>();
         subExpressions.add(myOperand);
         return subExpressions;
     }

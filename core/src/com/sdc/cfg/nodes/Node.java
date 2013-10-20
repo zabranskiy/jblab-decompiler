@@ -4,119 +4,118 @@ import com.sdc.ast.controlflow.Return;
 import com.sdc.ast.controlflow.Statement;
 import com.sdc.ast.expressions.Expression;
 import com.sdc.cfg.constructions.Construction;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Label;
 
 import java.util.ArrayList;
 import java.util.List;
+
 
 public class Node {
     protected List<Statement> myStatements = new ArrayList<Statement>();
     protected Expression myCondition;
     protected List<Label> myInnerLabels;
     protected Node myNextNode;
-    protected int index;
-    protected Construction construction;
+    protected int myIndex;
+    protected Construction myOuterConstruction;
     protected List<Node> myNodeTails = new ArrayList<Node>();
-    protected List<Node> myAncestors = new ArrayList<Node>();  // Fathers of a vertex
+    protected List<Node> myAncestors = new ArrayList<Node>(); // Fathers of a vertex
 
-    protected boolean isEmpty = false;
+    protected boolean myIsEmpty = false;
     protected boolean myIsCaseEndNode = false;
 
     public Node() {
     }
 
-    public Node(List<Statement> myStatements, List<Label> myInnerLabels, int index) {
+    public Node(final @Nullable List<Statement> myStatements, final @Nullable List<Label> myInnerLabels, final int index) {
         this.myStatements = myStatements;
         this.myInnerLabels = myInnerLabels;
-        this.index = index;
+        this.myIndex = index;
     }
 
-    public void addTail(Node node) {
+    public void addTail(final @NotNull Node node) {
         myNodeTails.add(node);
     }
 
-    public void addAncestor(Node node) {
+    public void addAncestor(final @NotNull Node node) {
         myAncestors.add(node);
     }
 
+    @NotNull
     public List<Node> getListOfTails() {
         return myNodeTails;
     }
 
+    @NotNull
     public List<Node> getAncestors() {
         return myAncestors;
     }
 
+    @Nullable
     public List<Statement> getStatements() {
         return myStatements;
+    }
+
+    public void setStatements(final @NotNull List<Statement> myStatements) {
+        this.myStatements = myStatements;
     }
 
     public boolean statementsIsEmpty() {
         return myStatements.isEmpty();
     }
 
-    public void setStatements(List<Statement> myStatements) {
-        this.myStatements = myStatements;
-    }
-
-    public void setCondition(Expression condition) {
-        this.myCondition = condition;
-    }
-
-    public void setInnerLabels(List<Label> myInnerLabels) {
-        this.myInnerLabels = myInnerLabels;
-    }
-
-    public boolean containsLabel(Label label) {
-        return myInnerLabels.contains(label);
-    }
-
+    @Nullable
     public Expression getCondition() {
         return myCondition;
     }
 
+    public void setCondition(final @NotNull Expression condition) {
+        this.myCondition = condition;
+    }
+
+    @Nullable
     public List<Label> getInnerLabels() {
         return myInnerLabels;
     }
 
-    public boolean isLastStatementReturn() {
-        return (myStatements.size() != 0) && (myStatements.get(myStatements.size() - 1) instanceof Return);
+    public void setInnerLabels(final @NotNull List<Label> myInnerLabels) {
+        this.myInnerLabels = myInnerLabels;
     }
 
+    public boolean containsLabel(final @NotNull Label label) {
+        return myInnerLabels.contains(label);
+    }
+
+    @Nullable
     public Node getNextNode() {
         return myNextNode;
     }
 
+    public void setNextNode(final @Nullable Node nextNode) {
+        this.myNextNode = nextNode;
+    }
+
+    @Nullable
+    public Construction getOuterConstruction() {
+        return myOuterConstruction;
+    }
+
+    public void setOuterConstruction(final @NotNull Construction outerConstruction) {
+        this.myOuterConstruction = outerConstruction;
+    }
+
     public int getIndex() {
-        return index;
-    }
-
-    public void setNextNode(Node myNextNode) {
-        this.myNextNode = myNextNode;
-    }
-
-    public void setConstruction(Construction construction) {
-        this.construction = construction;
-    }
-
-    public Construction getConstruction() {
-        return construction;
+        return myIndex;
     }
 
     public boolean isEmpty() {
-        return isEmpty;
+        return myIsEmpty;
     }
 
-    public void setEmpty(boolean empty) {
-        isEmpty = empty;
-    }
-
-    public void removeChild(final Node child) {
-        myNodeTails.remove(child);
-    }
-
-    public void removeAncestor(final Node ancestor) {
-        myAncestors.remove(ancestor);
+    public void setIsEmpty(final boolean isEmpty) {
+        this.myIsEmpty = isEmpty;
     }
 
     public boolean isCaseEndNode() {
@@ -125,5 +124,17 @@ public class Node {
 
     public void setIsCaseEndNode(final boolean isCaseEndNode) {
         this.myIsCaseEndNode = myIsCaseEndNode || isCaseEndNode;
+    }
+
+    public boolean isLastStatementReturn() {
+        return (myStatements.size() != 0) && (myStatements.get(myStatements.size() - 1) instanceof Return);
+    }
+
+    public void removeChild(final @NotNull Node child) {
+        myNodeTails.remove(child);
+    }
+
+    public void removeAncestor(final @NotNull Node ancestor) {
+        myAncestors.remove(ancestor);
     }
 }

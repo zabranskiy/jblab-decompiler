@@ -1,9 +1,12 @@
 package com.sdc.cfg.nodes;
 
-public class ExceptionHandler extends Node {
-    private String exceptionType;
+import org.jetbrains.annotations.NotNull;
 
-    public ExceptionHandler(String type) {
+
+public class ExceptionHandler extends Node {
+    private final String exceptionType;
+
+    public ExceptionHandler(final @NotNull String type) {
         this.exceptionType = type;
     }
 }

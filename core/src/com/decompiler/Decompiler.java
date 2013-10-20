@@ -1,10 +1,12 @@
 package com.decompiler;
 
-import com.beust.jcommander.JCommander;
 import com.sdc.languages.general.visitors.GeneralClassVisitor;
 import com.sdc.languages.java.visitors.JavaClassVisitor;
 import com.sdc.languages.js.visitors.JSClassVisitor;
 import com.sdc.languages.kotlin.visitors.KotlinClassVisitor;
+
+import com.beust.jcommander.JCommander;
+import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.util.TraceClassVisitor;
@@ -17,7 +19,7 @@ import java.io.StringWriter;
 
 public class Decompiler {
     public static void main(String[] args) throws IOException {
-        DecompilerParameters decompilerParameters = new DecompilerParameters();
+        final DecompilerParameters decompilerParameters = new DecompilerParameters();
         final JCommander jCommander = new JCommander(decompilerParameters, args);
 
         if (decompilerParameters.isHelp()) {
@@ -45,26 +47,34 @@ public class Decompiler {
         System.out.println(getDecompiledCode(language, cr, "", textWidth, tabSize));
     }
 
-    public static String printExceptionToString(final Exception exception) {
-        StringBuilder sb = new StringBuilder("\n//\t");
+    @NotNull
+    public static String convertExceptionToString(final @NotNull Exception exception) {
+        final StringBuilder sb = new StringBuilder("\n//\t");
 
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
+        final StringWriter sw = new StringWriter();
+        final PrintWriter pw = new PrintWriter(sw);
         exception.printStackTrace(pw);
+
         sb.append(sw.toString().replace("\n\t", "\n//\t"));
 
         return sb.toString();
     }
 
-    public static String getDecompiledCode(final String languageName, final ClassReader cr, final String classFilesJarPath, final Integer textWidth, final Integer tabSize) throws IOException {
+    @NotNull
+    public static String getDecompiledCode(final @NotNull String languageName,
+                                           final @NotNull ClassReader cr,
+                                           final @NotNull String classFilesJarPath,
+                                           final int textWidth,
+                                           final int tabSize) throws IOException {
         ClassVisitor specifiedLanguageClassVisitor;
-        StringWriter sw = new StringWriter();
+        final StringWriter sw = new StringWriter();
 
-        if (languageName.toLowerCase().equals("javascript")) {
+        final String lowerCaseName = languageName.toLowerCase();
+        if (lowerCaseName.equals("javascript")) {
             specifiedLanguageClassVisitor = new JSClassVisitor(textWidth, tabSize);
-        } else if (languageName.toLowerCase().equals("kotlin")) {
+        } else if (lowerCaseName.equals("kotlin")) {
             specifiedLanguageClassVisitor = new KotlinClassVisitor(textWidth, tabSize);
-        } else if (languageName.toLowerCase().equals("java")) {
+        } else if (lowerCaseName.equals("java")) {
             specifiedLanguageClassVisitor = new JavaClassVisitor(textWidth, tabSize);
         } else {
             specifiedLanguageClassVisitor = new TraceClassVisitor(new PrintWriter(sw));
@@ -82,7 +92,7 @@ public class Decompiler {
                 return sw.toString();
             }
         } catch (RuntimeException e) {
-            return "General class decompiling error occurred:" + printExceptionToString(e);
+            return "General class decompiling error occurred:" + convertExceptionToString(e);
         }
     }
 }

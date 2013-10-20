@@ -1,24 +1,34 @@
 package com.sdc.languages.java.languageParts;
 
 import JavaPrinters.JavaPrinter;
+import pretty.PrettyPackage;
+
 import com.sdc.languages.general.astUtils.Frame;
 import com.sdc.languages.general.languageParts.Method;
 import com.sdc.languages.java.astUtils.JavaFrame;
-import pretty.PrettyPackage;
-
 import com.sdc.languages.general.languageParts.GeneralClass;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
+
 public class JavaMethod extends Method {
-    public JavaMethod(final String modifier, final String returnType, final String name, final String signature, final String[] exceptions,
-                      final GeneralClass generalClass,
-                      final List<String> genericTypes, final List<String> genericIdentifiers,
-                      final int textWidth, final int nestSize)
-    {
-        super(modifier, returnType, name, signature, exceptions, generalClass, genericTypes, genericIdentifiers, textWidth, nestSize);
+    public JavaMethod(final @NotNull String modifier,
+                      final @NotNull String returnType,
+                      final @NotNull String name,
+                      final @NotNull String signature,
+                      final String[] exceptions,
+                      final @NotNull GeneralClass generalClass,
+                      final @NotNull List<String> genericTypes,
+                      final @NotNull List<String> genericIdentifiers,
+                      final int textWidth,
+                      final int nestSize) {
+        super(modifier, returnType, name, signature, exceptions, generalClass
+                , genericTypes, genericIdentifiers, textWidth, nestSize);
     }
 
+    @NotNull
     @Override
     protected String getInheritanceIdentifier() {
         return JavaClass.INHERITANCE_IDENTIFIER;
@@ -29,13 +39,15 @@ public class JavaMethod extends Method {
         return myModifier.contains("static") ? 0 : 1;
     }
 
+    @NotNull
     @Override
     public Frame createFrame() {
         return new JavaFrame();
     }
 
+    @NotNull
     @Override
     public String toString() {
-          return PrettyPackage.pretty(myTextWidth, (new JavaPrinter()).printMethod(this));
+        return PrettyPackage.pretty(myTextWidth, (new JavaPrinter()).printMethod(this));
     }
 }

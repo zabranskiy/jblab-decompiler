@@ -4,40 +4,42 @@ import com.sdc.ast.ExpressionType;
 import com.sdc.ast.Type;
 import com.sdc.ast.expressions.identifiers.Variable;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created with IntelliJ IDEA.
- * User: 1
- * Date: 04.05.13
- * Time: 15:47
- * To change this template use File | Settings | File Templates.
- */
+
 public class TernaryExpression extends PriorityExpression {
     private final Expression myCondition;
     private final Expression myLeft;
     private final Expression myRight;
 
-    public TernaryExpression(Expression myCondition, Expression myLeft, Expression myRight) {
+    public TernaryExpression(final @NotNull Expression myCondition,
+                             final @NotNull Expression myLeft,
+                             final @NotNull Expression myRight) {
         super(ExpressionType.TERNARY_IF, Type.getStrongerType(myLeft.getType(), myRight.getType()));
         this.myCondition = myCondition;
         this.myLeft = myLeft;
         this.myRight = myRight;
     }
 
+    @NotNull
     public Expression getLeft() {
         return myLeft;
     }
 
+    @NotNull
     public Expression getRight() {
         return myRight;
     }
 
+    @NotNull
     public Expression getCondition() {
         return myCondition;
     }
 
+    @NotNull
     @Override
     public String toString() {
         return "TernaryExpression{" +
@@ -47,15 +49,14 @@ public class TernaryExpression extends PriorityExpression {
                 '}';
     }
     @Override
-    public boolean findVariable(Variable variable) {
-        return myCondition.findVariable(variable)
-        || myLeft.findVariable(variable)
-        || myRight.findVariable(variable);
+    public boolean findVariable(final @NotNull Variable variable) {
+        return myCondition.findVariable(variable) || myLeft.findVariable(variable) || myRight.findVariable(variable);
     }
 
+    @NotNull
     @Override
     public List<Expression> getSubExpressions() {
-        List<Expression> subExpressions = new ArrayList<Expression>();
+        final List<Expression> subExpressions = new ArrayList<Expression>();
         subExpressions.add(myLeft);
         subExpressions.add(myRight);
         subExpressions.add(myCondition);

@@ -1,14 +1,17 @@
 package com.sdc.languages.general.visitors;
 
 import com.sdc.languages.general.languageParts.Annotation;
+
+import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.AnnotationVisitor;
 
 import static org.objectweb.asm.Opcodes.ASM4;
 
-public class GeneralAnnotationVisitor extends AnnotationVisitor {
-    protected Annotation myAnnotation;
 
-    public GeneralAnnotationVisitor(final Annotation annotation) {
+public class GeneralAnnotationVisitor extends AnnotationVisitor {
+    protected final Annotation myAnnotation;
+
+    public GeneralAnnotationVisitor(final @NotNull Annotation annotation) {
         super(ASM4);
         this.myAnnotation = annotation;
     }

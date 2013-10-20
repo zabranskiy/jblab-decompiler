@@ -2,16 +2,17 @@ package com.sdc.ast.expressions;
 
 import com.sdc.ast.Type;
 
-public class IntConstant extends Constant {
-    private int myIntValue = 0;
 
+public class IntConstant extends Constant {
     public static final Constant ZERO = new IntConstant(0);
     public static final Constant ONE = new IntConstant(1);
     public static final Constant M_ONE = new IntConstant(-1);
 
-    public IntConstant(int value) {
+    private int myIntValue = 0;
+
+    public IntConstant(final int value) {
         super(value, false, Type.INT_TYPE);
-        myIntValue = value;
+        this.myIntValue = value;
     }
 
     @Override
@@ -19,7 +20,7 @@ public class IntConstant extends Constant {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        IntConstant that = (IntConstant) o;
+        final IntConstant that = (IntConstant) o;
 
         if (myIntValue != that.myIntValue) return false;
 
