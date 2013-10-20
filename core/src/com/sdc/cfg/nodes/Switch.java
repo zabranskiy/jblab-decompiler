@@ -1,11 +1,14 @@
 package com.sdc.cfg.nodes;
 
 import com.sdc.ast.expressions.Expression;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
 import org.objectweb.asm.Label;
 
 import java.util.*;
+
 
 public class Switch extends Node {
     private final Expression myExpr;
