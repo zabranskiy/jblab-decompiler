@@ -29,7 +29,7 @@ public class Node {
     public Node() {
     }
 
-    public Node(final @NotNull List<Statement> myStatements, final @NotNull List<Label> myInnerLabels, final int index) {
+    public Node(final @Nullable List<Statement> myStatements, final @Nullable List<Label> myInnerLabels, final int index) {
         this.myStatements = myStatements;
         this.myInnerLabels = myInnerLabels;
         this.myIndex = index;
@@ -53,7 +53,7 @@ public class Node {
         return myAncestors;
     }
 
-    @NotNull
+    @Nullable
     public List<Statement> getStatements() {
         return myStatements;
     }

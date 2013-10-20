@@ -45,7 +45,7 @@ abstract class Printer {
         if (!decompiledClass!!.isNestedClass()) {
             val packageCode = text("package " + decompiledClass.getPackage() + ";") + line()
             var imports = group(nil())
-            for (importName in decompiledClass.getImports()!!.toList())
+            for (importName in decompiledClass.getImports().toList())
                 imports = group(imports + text("import " + importName + ";") + line())
             packageCode / imports
         } else {
@@ -63,7 +63,7 @@ abstract class Printer {
         var annotationCode = group(printAnnotationIdentifier() + text(annotation.getName()))
 
         val properties = annotation.getProperties()
-        if (!properties!!.isEmpty()) {
+        if (!properties.isEmpty()) {
             annotationCode = group(annotationCode + text("("))
 
             var counter = 1
@@ -85,11 +85,11 @@ abstract class Printer {
     open fun printMethodParameters(method: Method?): PrimeDoc {
         var arguments: PrimeDoc = nil()
 
-        if (method!!.getLastLocalVariableIndex() > 0 || ((!method.isNormalClassMethod() || method.getModifier()!!.contains("static")) && method.getLastLocalVariableIndex() >= 0)) {
-            val allVariables = method.getParameters()!!.toList()
+        if (method!!.getLastLocalVariableIndex() > 0 || ((!method.isNormalClassMethod() || method.getModifier().contains("static")) && method.getLastLocalVariableIndex() >= 0)) {
+            val allVariables = method.getParameters().toList()
 
             val variables =
-                if (method.getDecompiledClass()!!.isNestedClass() && method.isConstructor()) {
+                if (method.getDecompiledClass().isNestedClass() && method.isConstructor()) {
                     allVariables.head!!.declare()
                     allVariables.tail
                 } else {
@@ -125,7 +125,7 @@ abstract class Printer {
     open fun printLastMethodParameter(variable: Variable, nestSize: Int): PrimeDoc {
         val myType = variable.getType()
 
-        if (myType?.isArray() as Boolean) {
+        if (myType.isArray()) {
             return printVarArgMethodParameter(variable, nestSize)
         } else {
             return myExpressionPrinter.printExpression(variable, nestSize)
@@ -175,7 +175,7 @@ abstract class Printer {
         return errorClassesCode + printClasses(decompiledClass.getClassBodyInnerClasses())
     }
 
-    open fun printMethodInnerClasses(decompiledClass: GeneralClass?, methodName: String?, descriptor: String?): PrimeDoc {
+    open fun printMethodInnerClasses(decompiledClass: GeneralClass?, methodName: String, descriptor: String?): PrimeDoc {
         return printClasses(decompiledClass!!.getMethodInnerClasses(methodName, descriptor))
     }
 

@@ -14,11 +14,11 @@ public class When extends Construction {
     private Map<Expression, Construction> myCases = new HashMap<Expression, Construction>();
     private Construction myDefaultCase;
 
-    public When(final @NotNull Expression condition) {
+    public When(final @Nullable Expression condition) {
         this.myCondition = condition;
     }
 
-    @NotNull
+    @Nullable
     public Expression getCondition() {
         return myCondition;
     }

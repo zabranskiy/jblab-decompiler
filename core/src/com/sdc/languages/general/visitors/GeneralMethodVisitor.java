@@ -592,7 +592,7 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
         } else if (opString.contains("CHECKCAST") && !myBodyStack.empty()) {
             myBodyStack.push(new Cast(CHECK_CAST, myBodyStack.pop(), actualType));
         } else if (opString.equals("NEW")) {
-            myBodyStack.push(new New(null));
+            myBodyStack.push(new Constant("stub", true, new Type("String")));
         }
     }
 

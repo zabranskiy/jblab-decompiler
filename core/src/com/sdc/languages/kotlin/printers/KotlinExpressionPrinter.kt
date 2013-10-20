@@ -38,11 +38,11 @@ class KotlinExpressionPrinter(printer : Printer) : ExpressionPrinter(printer) {
                 if (expression.getInitializer() != null) {
                     var newArray : PrimeDoc = text("Array<" + expression.getType() + ">(")
 
-                    newArray = newArray + printExpression(expression.getDimensions()!!.get(0), nestSize) + text(", ") + printExpression(expression.getInitializer(), nestSize) + text(")")
+                    newArray = newArray + printExpression(expression.getDimensions().get(0), nestSize) + text(", ") + printExpression(expression.getInitializer(), nestSize) + text(")")
 
                     newArray
                 } else {
-                    text("Array<" + expression.getType() + ">(") + printExpression(expression.getDimensions()!!.get(0), nestSize) + text(", i -> null)")
+                    text("Array<" + expression.getType() + ">(") + printExpression(expression.getDimensions().get(0), nestSize) + text(", i -> null)")
                 }
             }
 
@@ -65,7 +65,7 @@ class KotlinExpressionPrinter(printer : Printer) : ExpressionPrinter(printer) {
         }
 
     override fun printVariable(expression: Variable, nestSize: Int): PrimeDoc =
-        if (expression.getName() is Constant && (expression.getName() as Constant).getValue().toString().equals("this$"))
+        if (expression.getName() is Constant && expression.getName().getValue().toString().equals("this$"))
             text("this")
         else
             super.printVariable(expression, nestSize)
@@ -109,14 +109,14 @@ class KotlinExpressionPrinter(printer : Printer) : ExpressionPrinter(printer) {
     override fun printAnonymousClassDeclaration(anonymousClass: GeneralClass?, arguments: List<Expression>?): PrimeDoc {
         var declaration : PrimeDoc = nil()
 
-        val hasDefaultSuperClass = anonymousClass!!.getSuperClass()!!.isEmpty()
+        val hasDefaultSuperClass = anonymousClass!!.getSuperClass().isEmpty()
         if (!hasDefaultSuperClass) {
             declaration = declaration + text(anonymousClass.getSuperClass()) + printInvocationArguments(arguments, anonymousClass.getNestSize())
         }
 
         val implementedInterfaces = anonymousClass.getImplementedInterfaces()
 
-        if (!implementedInterfaces!!.isEmpty()) {
+        if (!implementedInterfaces.isEmpty()) {
             declaration = declaration + (if (!hasDefaultSuperClass) text(", ") else nil()) + text(implementedInterfaces.get(0))
             for (interface in implementedInterfaces.drop(1))
                 declaration = declaration + text(", ") + text(interface)
@@ -128,6 +128,6 @@ class KotlinExpressionPrinter(printer : Printer) : ExpressionPrinter(printer) {
     }
 
     fun checkForSharedVar(expression : Expression?): Boolean =
-        expression is Field && KotlinVariable.isSharedVar(expression.getType()?.toString(KotlinOperationPrinter.getInstance()))
-            || expression is KotlinVariable && KotlinVariable.isSharedVar(expression.getActualType()?.toString(KotlinOperationPrinter.getInstance()))
+        expression is Field && KotlinVariable.isSharedVar(expression.getType().toString(KotlinOperationPrinter.getInstance()))
+            || expression is KotlinVariable && KotlinVariable.isSharedVar(expression.getActualType().toString(KotlinOperationPrinter.getInstance()))
 }

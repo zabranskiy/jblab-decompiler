@@ -102,11 +102,11 @@ public class ConstructionBuilder {
                 if (variableDeclarationForWhile instanceof Assignment) {
                     final Assignment variableAssignmentForWhen = (Assignment) variableDeclarationForWhile;
 
-                    final UnaryExpression condition = ((UnaryExpression) ((While) whileStartConstruction).getCondition());
                     if (variableAssignmentForWhen.getLeft().getType()
                             .toString().toLowerCase().replace("?", "").trim().equals("iterator")
                             && ((While) whileStartConstruction).getCondition() instanceof UnaryExpression
-                            && ((InstanceInvocation) condition.getOperand()).getFunction().equals("hasNext")) {
+                            && ((InstanceInvocation) ((UnaryExpression) ((While) whileStartConstruction).getCondition()).getOperand()).getFunction().equals("hasNext")) {
+
                         final List<Variable> forEachVariables = new ArrayList<Variable>();
                         final Statement firstStatement = ((ElementaryBlock) ((While) whileStartConstruction).getBody()).getFirstStatement();
                         forEachVariables.add((Variable) ((Assignment) firstStatement).getLeft());

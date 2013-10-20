@@ -134,7 +134,7 @@ public abstract class Method {
         return myError;
     }
 
-    public void setError(final @NotNull MethodVisitorStub.DecompilerException error) {
+    public void setError(final @Nullable MethodVisitorStub.DecompilerException error) {
         this.myError = error;
     }
 
