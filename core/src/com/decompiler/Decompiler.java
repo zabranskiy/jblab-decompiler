@@ -1,20 +1,16 @@
 package com.decompiler;
 
+import com.beust.jcommander.JCommander;
 import com.sdc.languages.general.visitors.GeneralClassVisitor;
 import com.sdc.languages.java.visitors.JavaClassVisitor;
 import com.sdc.languages.js.visitors.JSClassVisitor;
 import com.sdc.languages.kotlin.visitors.KotlinClassVisitor;
-
-import com.beust.jcommander.JCommander;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.util.TraceClassVisitor;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.*;
 
 
 public class Decompiler {
@@ -25,6 +21,14 @@ public class Decompiler {
         if (decompilerParameters.isHelp()) {
             jCommander.usage();
             return;
+        }
+
+        if (decompilerParameters.isGraphDrawer()) {
+            Settings.getInstance().enableGraphDrawer();
+            if (decompilerParameters.getClassPath() != null) {
+                final File f = new File(decompilerParameters.getClassPath());
+                Settings.getInstance().setPath(f.getParent());
+            }
         }
 
         if (decompilerParameters.getClassName() == null && decompilerParameters.getClassPath() == null) {

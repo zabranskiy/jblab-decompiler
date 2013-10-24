@@ -1,5 +1,6 @@
 package com.sdc.util.graph;
 
+import com.decompiler.Settings;
 import com.sdc.cfg.nodes.Node;
 
 import java.io.File;
@@ -30,7 +31,8 @@ public class GraphDrawer {
         }
         gv.addln(gv.end_graph());
 
-        final String folder = "graphs\\";
+        final String path = Settings.getInstance().getPath();
+        final String folder = (path == null) ? "graphs\\" : path + "\\graphs\\";
         final File dir = new File(folder);
         dir.mkdir();
         final String type = "png";

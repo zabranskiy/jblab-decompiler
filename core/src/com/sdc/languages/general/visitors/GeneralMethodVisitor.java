@@ -1,5 +1,6 @@
 package com.sdc.languages.general.visitors;
 
+import com.decompiler.Settings;
 import com.sdc.ast.ExpressionType;
 import com.sdc.ast.Type;
 import com.sdc.ast.controlflow.*;
@@ -889,7 +890,9 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
         applyNode();
 
         placeEdges();
-        //printGraphInfo();
+        if (Settings.getInstance().isGraphDrawerEnable()) {
+            printGraphInfo();
+        }
 
         final DominatorTreeGenerator gen = new DominatorTreeGenerator(myNodes);
         final ConstructionBuilder cb = createConstructionBuilder(myNodes, gen);

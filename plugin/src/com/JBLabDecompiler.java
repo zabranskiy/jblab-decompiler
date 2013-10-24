@@ -4,6 +4,7 @@ import com.actions.DecompilationChoiceListener;
 import com.actions.NavigationListener;
 import com.config.PluginConfigComponent;
 import com.decompiler.Language;
+import com.decompiler.Settings;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ApplicationComponent;
 import com.intellij.openapi.fileEditor.FileEditorManager;
@@ -80,6 +81,7 @@ public class JBLabDecompiler implements ApplicationComponent, DecompilationChoic
     @Override
     public void projectOpened(final Project project) {
         this.myCurrentProject = project;
+        Settings.getInstance().setPath(myCurrentProject.getBasePath());
         NavigationListener navigationListener = new NavigationListener(this);
         project.getMessageBus().connect().subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, navigationListener);
     }
