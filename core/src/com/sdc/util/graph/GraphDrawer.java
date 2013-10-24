@@ -7,96 +7,34 @@ import java.util.List;
 
 public class GraphDrawer {
     private final List<Node> myNodes;
-    private GraphViz myGraphViz;
+    private final String myFileName;
 
-    private final int myNestSize;
-    private final int myTextWidth;
-
-    public GraphDrawer(final List<Node> myNodes, final int nestSize, final int textWidth) {
+    public GraphDrawer(final List<Node> myNodes, String myFileName) {
         this.myNodes = myNodes;
-        //this.myEdges = myEdges;
-        this.myNestSize = nestSize;
-        this.myTextWidth = textWidth;
-    }
-
-    public void simplyDraw() {
-        myGraphViz = new GraphViz();
-
-        myGraphViz.addln(myGraphViz.start_graph());
-        drawEdges();
-        myGraphViz.addln(myGraphViz.end_graph());
-
-        final String type = "gif";
-        final File out = new File("simple." + type);
-        myGraphViz.writeGraphToFile(myGraphViz.getGraph(myGraphViz.getDotSource(), type), out);
+        this.myFileName = myFileName;
     }
 
     public void draw() {
-        myGraphViz = new GraphViz();
+        final GraphViz gv = new GraphViz();
 
-        myGraphViz.addln(myGraphViz.start_graph());
-        myGraphViz.addln("graph [splines=ortho];");
-        myGraphViz.addln("node [shape=record];");
-
- /*       for (int i = 0; i < myNodes.size(); i++) {
-            StringBuilder stringBuilder = new StringBuilder();
-            for (Statement statement : myNodes.get(i).getStatements()) {
-                stringBuilder.append(
-                        PrettyPackage.pretty(
-                                myTextWidth
-                                , JavaClassPrinterPackage.printStatement(statement, myNestSize)
-                        )
-                ).append(";\\l");
-            }
-            myGraphViz.addln(i + " [label=" + '"' + stringBuilder + '"' + "];");
-        }
-*/
-        drawEdges();
-        myGraphViz.addln(myGraphViz.end_graph());
-    //    System.out.println(myGraphViz.getDotSource());
-
-        final String type = "gif";
-        final File out = new File("extended." + type);
-        myGraphViz.writeGraphToFile(myGraphViz.getGraph(myGraphViz.getDotSource(), type), out);
-    }
-
-    private void drawEdges() {
-        for (int i = 0; i < myNodes.size(); i++) {
-            for (Node node : myNodes.get(i).getListOfTails()) {
+        gv.addln(gv.start_graph());
+        for (final Node node : myNodes) {
+            for (final Node tail : node.getListOfTails()) {
                 StringBuilder sb = new StringBuilder("");
-                myGraphViz.addln(sb.append(i)
+                gv.addln(sb.append(node.getIndex())
                         .append(" -> ")
-                        .append(myNodes.indexOf(node))
+                        .append(tail.getIndex())
                         .append(";").toString());
             }
+            System.out.println();
         }
+        gv.addln(gv.end_graph());
 
-    /*    for (Node node : myNodes) {
-            String sl;
-           *//**//* switch (edge.getEdgeType()) {
-                case TRUEEXIT: {
-                    sl = "[color=azure4]";
-                    break;
-                }
-                case FALSEEXIT: {
-                    sl = "[color=navy]";
-                    break;
-                }
-                case GOTO: {
-                    sl = "[color=red2]";
-                    break;
-                }
-                default: {
-                    sl = "";
-                    break;
-                }*//**//*
-            }
-            StringBuilder sb = new StringBuilder("");
-            myGraphViz.addln(sb.append(String.valueOf(edge.getSource()))
-                    .append(" -> ")
-                    .append(edge.getDestination())
-                    .append(sl)
-                    .append(";").toString());
-        }*/
+        final String folder = "graphs\\";
+        final File dir = new File(folder);
+        dir.mkdir();
+        final String type = "png";
+        final File out = new File(folder + myFileName + "." + type);
+        gv.writeGraphToFile(gv.getGraph(gv.getDotSource(), type), out);
     }
 }

@@ -10,21 +10,18 @@ import com.sdc.ast.expressions.New;
 import com.sdc.ast.expressions.identifiers.Field;
 import com.sdc.ast.expressions.identifiers.Identifier;
 import com.sdc.ast.expressions.identifiers.Variable;
-
 import com.sdc.cfg.nodes.DoWhile;
 import com.sdc.cfg.nodes.Node;
 import com.sdc.cfg.nodes.Switch;
-
+import com.sdc.languages.general.ConstructionBuilder;
 import com.sdc.languages.general.astUtils.Frame;
 import com.sdc.languages.general.languageParts.Annotation;
 import com.sdc.languages.general.languageParts.GeneralClass;
 import com.sdc.languages.general.languageParts.LanguagePartFactory;
 import com.sdc.languages.general.languageParts.Method;
-import com.sdc.languages.general.ConstructionBuilder;
-
 import com.sdc.util.DeclarationWorker;
 import com.sdc.util.DominatorTreeGenerator;
-
+import com.sdc.util.graph.GraphDrawer;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.*;
 import org.objectweb.asm.util.Printer;
@@ -37,27 +34,20 @@ import static org.objectweb.asm.Opcodes.ASM4;
 
 
 public abstract class GeneralMethodVisitor extends MethodVisitor {
-    protected Method myDecompiledMethod;
-
     protected final String myDecompiledOwnerFullClassName;
     protected final String myDecompiledOwnerSuperClassName;
-
     protected final Stack<Expression> myBodyStack = new Stack<Expression>();
     protected final List<Statement> myStatements = new ArrayList<Statement>();
-
     protected final List<Node> myNodes = new ArrayList<Node>();
     protected final List<Label> myLabels = new ArrayList<Label>();
     protected final Map<Label, List<Integer>> myGoToMap = new HashMap<Label, List<Integer>>();  // for GOTO
     protected final Map<Integer, Label> myIfElseMap = new HashMap<Integer, Label>(); // for IF ELSE Branch
     protected final List<Label> myNodeInnerLabels = new ArrayList<Label>();
-
+    protected Method myDecompiledMethod;
     protected boolean myHasDebugInformation = false;
-
     protected String myClassFilesJarPath = "";
-
     protected LanguagePartFactory myLanguagePartFactory;
     protected GeneralVisitorFactory myVisitorFactory;
-
     protected DeclarationWorker.SupportedLanguage myLanguage;
 
     public GeneralMethodVisitor(final @NotNull Method method,
@@ -414,7 +404,7 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
             }
         } else if (opString.equals("NOP")) {
             //do nothing
-        } else if ((opString.contains("I2L") || opString.contains("F2L")|| opString.contains("D2L")) && !myBodyStack.empty()) {
+        } else if ((opString.contains("I2L") || opString.contains("F2L") || opString.contains("D2L")) && !myBodyStack.empty()) {
             myBodyStack.push(new Cast(LONG_CAST, getTopOfBodyStack()));
         } else if ((opString.contains("I2D") || opString.contains("F2D") || opString.contains("L2D")) && !myBodyStack.isEmpty()) {
             myBodyStack.push(new Cast(DOUBLE_CAST, getTopOfBodyStack()));
@@ -600,7 +590,7 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
     public void visitFieldInsn(final int opcode, final String owner, final String name, final String desc) {
         final String opString = Printer.OPCODES[opcode];
         final String fieldName = (myDecompiledMethod.getDecompiledClass().isLambdaFunctionClass()
-                        || myDecompiledMethod.getDecompiledClass().isNestedClass()) && name.startsWith("$")
+                || myDecompiledMethod.getDecompiledClass().isNestedClass()) && name.startsWith("$")
                 ? name.substring(1)
                 : name;
         final Field field = new Field(fieldName, new Type(getDescriptor(desc, 0, myDecompiledMethod.getImports())));
@@ -899,12 +889,20 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
         applyNode();
 
         placeEdges();
-//        printDebugInfo();
+        //printGraphInfo();
 
         final DominatorTreeGenerator gen = new DominatorTreeGenerator(myNodes);
         final ConstructionBuilder cb = createConstructionBuilder(myNodes, gen);
 
         myDecompiledMethod.setBegin(cb.build());
+    }
+
+    private void printGraphInfo() {
+        if (myNodes.size() > 2) {
+            GraphDrawer gd = new GraphDrawer(myNodes
+                    , myDecompiledMethod.getDecompiledClass().getName() + "_" + myDecompiledMethod.getName());
+            gd.draw();
+        }
     }
 
     private void printDebugInfo() {

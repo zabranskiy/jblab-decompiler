@@ -60,12 +60,10 @@ public class GraphViz {
      * The dir. where temporary files will be created.
      */
     private static String TEMP_DIR;
-
     /**
      * Where is your dot program located? It will be called externally.
      */
     private static String DOT;
-
     /**
      * The source of the graph written in dot language.
      */
@@ -79,8 +77,8 @@ public class GraphViz {
         final String operatingSystem = System.getProperty("os.name").toLowerCase();
 
         if (operatingSystem.contains("win")) {
-            TEMP_DIR = "c:/temp";
-            DOT = "C:/Program Files (x86)/Graphviz2.30/bin/dot.exe";
+            TEMP_DIR = "C:/Program Files (x86)/Graphviz2.34/temp";
+            DOT = "C:/Program Files (x86)/Graphviz2.34/bin/dot.exe";
         } else if (operatingSystem.contains("nix")
                 || operatingSystem.contains("nux")
                 || operatingSystem.contains("aix"))
