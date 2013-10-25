@@ -1,10 +1,12 @@
 package com;
 
+import com.decompiler.Language;
+import com.decompiler.Settings;
+
 import com.actions.DecompilationChoiceListener;
 import com.actions.NavigationListener;
 import com.config.PluginConfigComponent;
-import com.decompiler.Language;
-import com.decompiler.Settings;
+
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ApplicationComponent;
 import com.intellij.openapi.fileEditor.FileEditorManager;
@@ -13,10 +15,13 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.project.ProjectManagerListener;
 import com.intellij.openapi.vfs.VirtualFile;
+
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.codeStyle.CodeStyleManager;
+
 import com.intellij.testFramework.LightVirtualFile;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.ClassReader;
@@ -30,15 +35,17 @@ public class JBLabDecompiler implements ApplicationComponent, DecompilationChoic
     private Project myCurrentProject;
 
     @Nullable
-    public static VirtualFile decompile(final PluginConfigComponent config, final VirtualFile virtualFile) {
+    public static VirtualFile decompile(final @NotNull PluginConfigComponent config,
+                                        final @Nullable VirtualFile virtualFile) {
         //Number of bytes CAFEBABE
         final int CAFEBABE = 4;
 
         LightVirtualFile decompiledFile = null;
 
         try {
-            InputStream is = virtualFile.getInputStream();
-            byte[] bytes = new byte[CAFEBABE];
+            assert virtualFile != null;
+            final InputStream is = virtualFile.getInputStream();
+            final byte[] bytes = new byte[CAFEBABE];
             is.mark(CAFEBABE);
             is.read(bytes);
             final int magic = ByteBuffer.wrap(bytes).getInt();
@@ -61,7 +68,12 @@ public class JBLabDecompiler implements ApplicationComponent, DecompilationChoic
         return decompiledFile;
     }
 
-    private static String getDecompiledCode(final String languageName, final InputStream is, final String classFilesJarPath, final Integer textWidth, final Integer tabSize) throws IOException {
+    @NotNull
+    private static String getDecompiledCode(final String languageName,
+                                            final InputStream is,
+                                            final String classFilesJarPath,
+                                            final Integer textWidth,
+                                            final Integer tabSize) throws IOException {
         return com.decompiler.Decompiler.getDecompiledCode(languageName, new ClassReader(is), classFilesJarPath, textWidth, tabSize);
     }
 
@@ -82,7 +94,7 @@ public class JBLabDecompiler implements ApplicationComponent, DecompilationChoic
     public void projectOpened(final Project project) {
         this.myCurrentProject = project;
         Settings.getInstance().setPath(myCurrentProject.getBasePath());
-        NavigationListener navigationListener = new NavigationListener(this);
+        final NavigationListener navigationListener = new NavigationListener(this);
         project.getMessageBus().connect().subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, navigationListener);
     }
 
@@ -102,10 +114,12 @@ public class JBLabDecompiler implements ApplicationComponent, DecompilationChoic
     }
 
     @Override
-    public void treatFile(final FileEditorManager manager, final VirtualFile file) {
-        PluginConfigComponent config = ApplicationManager.getApplication().getComponent(PluginConfigComponent.class);
+    public void treatFile(final @NotNull FileEditorManager manager, final @NotNull VirtualFile file) {
+        // TODO: fix me, code-formatter!
+        final PluginConfigComponent config =
+                ApplicationManager.getApplication().getComponent(PluginConfigComponent.class);
 
-        VirtualFile decompiledFile = decompile(config, file);
+        final VirtualFile decompiledFile = decompile(config, file);
 
         if (decompiledFile != null) {
             if (!config.isShowPrettyEnabled()) {

@@ -4,7 +4,9 @@ import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent;
 import com.intellij.openapi.fileEditor.FileEditorManagerListener;
 import com.intellij.openapi.vfs.VirtualFile;
+
 import org.jetbrains.annotations.NotNull;
+
 
 public class NavigationListener implements FileEditorManagerListener {
 

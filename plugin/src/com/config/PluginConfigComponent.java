@@ -1,23 +1,25 @@
 package com.config;
 
 import com.decompiler.Language;
+
 import com.intellij.openapi.components.ApplicationComponent;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
-import org.apache.commons.lang.StringUtils;
-import org.jdom.Element;
-import org.jetbrains.annotations.Nls;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.apache.commons.lang.StringUtils;
+import org.jdom.Element;
 
 import javax.swing.*;
 
 /**
  * The component for the application-level configuration.
  */
+
 @State(
         name = PluginConfigurationPane.COMPONENT_NAME,
         storages = {@Storage(id = "other", file = "$APP_CONFIG$/jblab.decompiler.xml")}
@@ -49,7 +51,6 @@ public class PluginConfigComponent implements ApplicationComponent, Configurable
         return COMPONENT_NAME;
     }
 
-    @Nls
     @Override
     public String getDisplayName() {
         return DISPLAY_NAME;
