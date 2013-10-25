@@ -33,7 +33,7 @@ public class DecompilerParameters {
     private int myTextWidth = 100;
 
     @Parameter(names = {"-g", "--graph"}, description = "Draws decompiled class method graphs.")
-    private boolean myGraphDrawer = false;
+    private boolean myEnableGraphDrawing = false;
 
     public boolean isHelp() {
         return myHelp;
@@ -62,7 +62,7 @@ public class DecompilerParameters {
         return myTabSize;
     }
 
-    public boolean isGraphDrawer() {
-        return myGraphDrawer;
+    public boolean isEnableGraphDrawing() {
+        return myEnableGraphDrawing;
     }
 }

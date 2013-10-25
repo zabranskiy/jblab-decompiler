@@ -3,6 +3,8 @@ package com.sdc.util.graph;
 import com.decompiler.Settings;
 import com.sdc.cfg.nodes.Node;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.File;
 import java.util.List;
 
@@ -10,7 +12,7 @@ public class GraphDrawer {
     private final List<Node> myNodes;
     private final String myFileName;
 
-    public GraphDrawer(final List<Node> myNodes, String myFileName) {
+    public GraphDrawer(final @NotNull List<Node> myNodes, final @NotNull String myFileName) {
         this.myNodes = myNodes;
         this.myFileName = myFileName;
     }

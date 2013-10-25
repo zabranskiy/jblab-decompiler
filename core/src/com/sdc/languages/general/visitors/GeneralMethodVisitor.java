@@ -11,18 +11,22 @@ import com.sdc.ast.expressions.New;
 import com.sdc.ast.expressions.identifiers.Field;
 import com.sdc.ast.expressions.identifiers.Identifier;
 import com.sdc.ast.expressions.identifiers.Variable;
+
 import com.sdc.cfg.nodes.DoWhile;
 import com.sdc.cfg.nodes.Node;
 import com.sdc.cfg.nodes.Switch;
+
 import com.sdc.languages.general.ConstructionBuilder;
 import com.sdc.languages.general.astUtils.Frame;
 import com.sdc.languages.general.languageParts.Annotation;
 import com.sdc.languages.general.languageParts.GeneralClass;
 import com.sdc.languages.general.languageParts.LanguagePartFactory;
 import com.sdc.languages.general.languageParts.Method;
+
 import com.sdc.util.DeclarationWorker;
 import com.sdc.util.DominatorTreeGenerator;
 import com.sdc.util.graph.GraphDrawer;
+
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.*;
 import org.objectweb.asm.util.Printer;
@@ -35,20 +39,27 @@ import static org.objectweb.asm.Opcodes.ASM4;
 
 
 public abstract class GeneralMethodVisitor extends MethodVisitor {
+    protected Method myDecompiledMethod;
+
     protected final String myDecompiledOwnerFullClassName;
     protected final String myDecompiledOwnerSuperClassName;
+
     protected final Stack<Expression> myBodyStack = new Stack<Expression>();
     protected final List<Statement> myStatements = new ArrayList<Statement>();
+
     protected final List<Node> myNodes = new ArrayList<Node>();
     protected final List<Label> myLabels = new ArrayList<Label>();
     protected final Map<Label, List<Integer>> myGoToMap = new HashMap<Label, List<Integer>>();  // for GOTO
     protected final Map<Integer, Label> myIfElseMap = new HashMap<Integer, Label>(); // for IF ELSE Branch
     protected final List<Label> myNodeInnerLabels = new ArrayList<Label>();
-    protected Method myDecompiledMethod;
+
     protected boolean myHasDebugInformation = false;
+
     protected String myClassFilesJarPath = "";
+
     protected LanguagePartFactory myLanguagePartFactory;
     protected GeneralVisitorFactory myVisitorFactory;
+
     protected DeclarationWorker.SupportedLanguage myLanguage;
 
     public GeneralMethodVisitor(final @NotNull Method method,
@@ -890,7 +901,7 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
         applyNode();
 
         placeEdges();
-        if (Settings.getInstance().isGraphDrawerEnable()) {
+        if (Settings.getInstance().isGraphDrawingEnabled()) {
             printGraphInfo();
         }
 
@@ -902,7 +913,7 @@ public abstract class GeneralMethodVisitor extends MethodVisitor {
 
     private void printGraphInfo() {
         if (myNodes.size() > 2) {
-            GraphDrawer gd = new GraphDrawer(myNodes
+            final GraphDrawer gd = new GraphDrawer(myNodes
                     , myDecompiledMethod.getDecompiledClass().getName() + "_" + myDecompiledMethod.getName());
             gd.draw();
         }

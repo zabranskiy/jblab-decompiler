@@ -1,31 +1,36 @@
 package com.decompiler;
 
-public class Settings {
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+
+public class Settings {
     private static Settings instance;
     private String myPathToCurrentProject;
-    private boolean myEnableGD;
+    private boolean myEnableGraphDrawing;
 
     private Settings() {
     }
 
+    @NotNull
     public static Settings getInstance() {
         return instance = (instance == null) ? new Settings() : instance;
     }
 
+    @Nullable
     public String getPath() {
         return myPathToCurrentProject;
     }
 
-    public void setPath(String path) {
+    public void setPath(final @NotNull String path) {
         this.myPathToCurrentProject = path;
     }
 
-    public void enableGraphDrawer() {
-        this.myEnableGD = true;
+    public void enableGraphDrawing() {
+        this.myEnableGraphDrawing = true;
     }
 
-    public boolean isGraphDrawerEnable() {
-        return myEnableGD;
+    public boolean isGraphDrawingEnabled() {
+        return myEnableGraphDrawing;
     }
 }
