@@ -2,9 +2,14 @@ package com.sdc.util;
 
 import com.sdc.cfg.nodes.Node;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.*;
 
+
 public class DominatorTreeGenerator {
+    private final int size;
     private List<Node> myNodes;
     private ArrayList<ArrayList<Integer>> myGraph;
     private ArrayList<ArrayList<Integer>> myDomiTree;
@@ -12,11 +17,10 @@ public class DominatorTreeGenerator {
     private ArrayList<ArrayList<Boolean>> myMarkEdge;
     private boolean[] mark;
     private int[] id, semi, domi, post;
-    private final int size;
     private int index;
     private int max;
 
-    public DominatorTreeGenerator(List<Node> myNodes) {
+    public DominatorTreeGenerator(final @NotNull List<Node> myNodes) {
         this.myNodes = myNodes;
         this.size = myNodes.size();
         if (size > 1) {
@@ -28,7 +32,7 @@ public class DominatorTreeGenerator {
     }
 
     // walk graph
-    private void dfs(int v) {
+    private void dfs(final int v) {
         id[v] = index++;
         mark[v] = true;
 
@@ -40,7 +44,7 @@ public class DominatorTreeGenerator {
         }
     }
 
-    private void FindSemi(int curVertex, int waypoint) {
+    private void findSemi(final int curVertex, final int waypoint) {
         if (mark[curVertex]) return;
         mark[curVertex] = true;
 
@@ -53,29 +57,29 @@ public class DominatorTreeGenerator {
         for (int i = 0; i < size; i++) {
             for (int tail : myGraph.get(i))
                 if (tail == curVertex) {
-                    FindSemi(i, waypoint);
+                    findSemi(i, waypoint);
                 }
         }
     }
 
-    private void FindSemi() {
+    private void findSemi() {
         int[] indexes = new int[size];
         for (int i = 0; i < size; i++) {
             indexes[id[i]] = i;
         }
         for (int i = size - 1; i > 0; i--) {
             Arrays.fill(mark, false);
-            FindSemi(indexes[i], indexes[i]);
+            findSemi(indexes[i], indexes[i]);
         }
     }
 
-    private boolean FindDomi(int from, int to) {
+    private boolean findDomi(final int from, final int to) {
         if (from == to) return true;
         boolean res = false;
 
         for (int i = 0; i < size; i++) {
             for (int j : myGraph.get(i)) {
-                if (myMarkEdge.get(i).get(myGraph.get(i).indexOf(j)) && i == from && FindDomi(j, to)) {
+                if (myMarkEdge.get(i).get(myGraph.get(i).indexOf(j)) && i == from && findDomi(j, to)) {
                     res = true;
                     if (id[semi[j]] < id[semi[to]]) {
                         semi[to] = semi[j];
@@ -86,13 +90,13 @@ public class DominatorTreeGenerator {
         return res;
     }
 
-    private void FindDomi() {
+    private void findDomi() {
         for (int i = 0; i < size; i++) {
-            FindDomi(semi[i], i);
+            findDomi(semi[i], i);
         }
     }
 
-    private void build(boolean isPostDominatorTree) {
+    private void build(final boolean isPostDominatorTree) {
         index = 0;
         mark = new boolean[size];
         id = new int[size];
@@ -134,24 +138,27 @@ public class DominatorTreeGenerator {
                 }
             }
         }
-        FindSemi();
-        FindDomi();
+        findSemi();
+        findDomi();
     }
 
+    @NotNull
     private int[] getDominators() {
         return getTree(false);
     }
 
+    @NotNull
     private int[] getPostDominators() {
         return getTree(true);
     }
 
-    private int[] getTree(boolean isPostDominatorTree) {
+    @NotNull
+    private int[] getTree(final boolean isPostDominatorTree) {
         build(isPostDominatorTree);
         return semi;
     }
 
-    public int getRightIndexForLoop(int index) {
+    public int getRightIndexForLoop(final int index) {
         Set<Integer> set = new HashSet<Integer>();
         max = -1;
 
@@ -167,6 +174,7 @@ public class DominatorTreeGenerator {
         return max + 1;
     }
 
+    @NotNull
     private ArrayList<ArrayList<Integer>> getDomiTree() {
         ArrayList<ArrayList<Integer>> domiTree = new ArrayList<ArrayList<Integer>>();
 
@@ -181,6 +189,7 @@ public class DominatorTreeGenerator {
         return domiTree;
     }
 
+    @NotNull
     private ArrayList<ArrayList<Integer>> getPostTree() {
         ArrayList<ArrayList<Integer>> postTree = new ArrayList<ArrayList<Integer>>();
 
@@ -197,7 +206,9 @@ public class DominatorTreeGenerator {
         return postTree;
     }
 
-    private void dfsDomiTree(ArrayList<ArrayList<Integer>> tree, int v, Set<Integer> set) {
+    private void dfsDomiTree(final @NotNull ArrayList<ArrayList<Integer>> tree,
+                             final int v,
+                             final @NotNull Set<Integer> set) {
         mark[v] = true;
 
         for (Integer tail : tree.get(v)) {
@@ -208,7 +219,9 @@ public class DominatorTreeGenerator {
         }
     }
 
-    private void dfsPostTree(ArrayList<ArrayList<Integer>> tree, int v, Set<Integer> set) {
+    private void dfsPostTree(final @NotNull ArrayList<ArrayList<Integer>> tree,
+                             final int v,
+                             final @NotNull Set<Integer> set) {
         mark[v] = true;
 
         for (Integer tail : tree.get(v)) {
@@ -221,6 +234,7 @@ public class DominatorTreeGenerator {
         }
     }
 
+    @Nullable
     public int[] getDomi() {
         return domi;
     }

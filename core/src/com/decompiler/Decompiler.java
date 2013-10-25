@@ -1,11 +1,10 @@
 package com.decompiler;
 
+import com.beust.jcommander.JCommander;
 import com.sdc.languages.general.visitors.GeneralClassVisitor;
 import com.sdc.languages.java.visitors.JavaClassVisitor;
 import com.sdc.languages.js.visitors.JSClassVisitor;
 import com.sdc.languages.kotlin.visitors.KotlinClassVisitor;
-
-import com.beust.jcommander.JCommander;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
@@ -46,7 +45,9 @@ public class Decompiler {
         if (decompilerParameters.getClassName() != null) {
             cr = new ClassReader(decompilerParameters.getClassName());
         } else {
-            cr = new ClassReader(new FileInputStream(decompilerParameters.getClassPath()));
+            final String classPath = decompilerParameters.getClassPath();
+            assert classPath != null;
+            cr = new ClassReader(new FileInputStream(classPath));
         }
 
         System.out.println(getDecompiledCode(language, cr, "", textWidth, tabSize));
