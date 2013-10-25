@@ -58,19 +58,19 @@ class JavaPrinter: Printer() {
     override fun printMethod(decompiledMethod: Method): PrimeDoc {
         val parameters = decompiledMethod.getParameters()
         if (decompiledMethod.isConstructor() && decompiledMethod.hasEmptyBody()
-            && (parameters!!.isEmpty() || decompiledMethod.getDecompiledClass()!!.isNestedClass() && parameters.size() == 1))
+            && (parameters.isEmpty() || decompiledMethod.getDecompiledClass().isNestedClass() && parameters.size() == 1))
         {
             return nil()
         }
 
-        val isStaticBlock = decompiledMethod.getName()!!.contains("<clinit>");
+        val isStaticBlock = decompiledMethod.getName().contains("<clinit>");
         val classMethod : JavaMethod = decompiledMethod as JavaMethod
 
         var declaration : PrimeDoc;
         if (isStaticBlock) {
               declaration = text("static")
         } else {
-            declaration = group(printAnnotations(classMethod.getAnnotations()!!.toList()) + text(classMethod.getModifier()))
+            declaration = group(printAnnotations(classMethod.getAnnotations().toList()) + text(classMethod.getModifier()))
 
             val genericsCode = printGenerics(classMethod.getGenericDeclaration())
 
@@ -99,8 +99,8 @@ class JavaPrinter: Printer() {
                    ) / text("}")
 
         return declaration +
-            if (decompiledMethod.getModifier()?.contains("abstract") as Boolean ||
-                decompiledMethod.getDecompiledClass()?.getType() == GeneralClass.ClassType.INTERFACE)
+            if (decompiledMethod.getModifier().contains("abstract") ||
+                decompiledMethod.getDecompiledClass().getType() == GeneralClass.ClassType.INTERFACE)
             {
                  text(";")
             } else {
@@ -122,9 +122,9 @@ class JavaPrinter: Printer() {
         variable.declare()
 
         val myType = variable.getType()
-        val typeWithoutOnePairOfBrackets = myType?.getTypeWithOnPairOfBrackets()?.toString(myExpressionPrinter.getOperationPrinter())
+        val typeWithoutOnePairOfBrackets = myType.getTypeWithOnPairOfBrackets().toString(myExpressionPrinter.getOperationPrinter())
 
-        return text(typeWithoutOnePairOfBrackets?.trim() + " ... ") + myExpressionPrinter.printExpression(variable.getName(), nestSize)
+        return text(typeWithoutOnePairOfBrackets.trim() + " ... ") + myExpressionPrinter.printExpression(variable.getName(), nestSize)
     }
 
     fun printSimpleClass(decompiledClass: GeneralClass): PrimeDoc {
@@ -132,16 +132,16 @@ class JavaPrinter: Printer() {
 
         var headerCode : PrimeDoc = printPackageAndImports(decompiledClass)
 
-        var declaration : PrimeDoc = group(printAnnotations(javaClass.getAnnotations()!!.toList()) + text(javaClass.getModifier() + javaClass.getTypeToString() + javaClass.getName()))
+        var declaration : PrimeDoc = group(printAnnotations(javaClass.getAnnotations().toList()) + text(javaClass.getModifier() + javaClass.getTypeToString() + javaClass.getName()))
 
         val genericsCode = printGenerics(javaClass.getGenericDeclaration())
         declaration = declaration + genericsCode
 
         val superClass = javaClass.getSuperClass()
-        if (!superClass!!.isEmpty())
+        if (!superClass.isEmpty())
             declaration = group(declaration + nest(javaClass.getNestSize(), line() + text("extends " + superClass)))
 
-        val implementedInterfaces = javaClass.getImplementedInterfaces()!!.toList()
+        val implementedInterfaces = javaClass.getImplementedInterfaces().toList()
         if (!implementedInterfaces.isEmpty())
             declaration = group(
                     declaration
@@ -156,10 +156,10 @@ class JavaPrinter: Printer() {
 
         var javaClassCode : PrimeDoc = headerCode / group(declaration + text(" {")) + nest(javaClass.getNestSize(), printClassBodyInnerClasses(javaClass))
 
-        for (classField in javaClass.getFields()!!.toList())
+        for (classField in javaClass.getFields().toList())
             javaClassCode = javaClassCode + nest(javaClass.getNestSize(), line() + printField(classField))
 
-        for (classMethod in javaClass.getMethods()!!.toList())
+        for (classMethod in javaClass.getMethods().toList())
             javaClassCode = javaClassCode / nest(javaClass.getNestSize(), line() + printMethod(classMethod))
 
 
@@ -169,11 +169,11 @@ class JavaPrinter: Printer() {
     fun printEnum(decompiledClass: GeneralClass): PrimeDoc {
         val javaClass: JavaClass = decompiledClass as JavaClass
 
-        var declaration : PrimeDoc = group(printAnnotations(javaClass.getAnnotations()!!.toList()) + text( javaClass.getModifier()+  javaClass.getTypeToString() + javaClass.getName()))
+        var declaration : PrimeDoc = group(printAnnotations(javaClass.getAnnotations().toList()) + text( javaClass.getModifier()+  javaClass.getTypeToString() + javaClass.getName()))
 
         val nestSize = javaClass.getNestSize()
 
-        var fieldList = javaClass.getFields()!!.toList()
+        var fieldList = javaClass.getFields().toList()
         val lastIndex = fieldList.size() - 1
 
         var argsDocs = fieldList.take(fieldList.size - 1).map { arg -> text(arg.getName() + ", ") }

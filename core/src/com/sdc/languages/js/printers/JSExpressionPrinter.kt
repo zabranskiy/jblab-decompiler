@@ -11,7 +11,7 @@ import com.sdc.ast.expressions.identifiers.Variable
 
 class JSExpressionPrinter(printer : Printer) : ExpressionPrinter(printer) {
     override fun getOperationPrinter(): OperationPrinter {
-        return JSOperationPrinter.getInstance() as OperationPrinter;
+        return JSOperationPrinter.getInstance();
     }
 
     override fun printUndeclaredVariable(expression: Variable, nestSize: Int): PrimeDoc =

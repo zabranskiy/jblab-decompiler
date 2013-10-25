@@ -7,6 +7,6 @@ import com.sdc.languages.general.printers.OperationPrinter
 
 class JavaExpressionPrinter(printer : Printer) : ExpressionPrinter(printer) {
     override fun getOperationPrinter(): OperationPrinter {
-        return JavaOperationPrinter.getInstance() as OperationPrinter;
+        return JavaOperationPrinter.getInstance();
     }
 }

@@ -74,20 +74,20 @@ abstract class ConstructionPrinter(expressionPrinter : ExpressionPrinter, statem
             elsePart = text(" else ")
             val elseBlock = conditionalBlock.getElseBlock()
 
-            if (elseBlock is ElementaryBlock && elseBlock.getStatements()!!.isEmpty() && elseBlock.getNextConstruction() is ConditionalBlock) {
+            if (elseBlock is ElementaryBlock && elseBlock.getStatements().isEmpty() && elseBlock.getNextConstruction() is ConditionalBlock) {
                 elsePart = elsePart + printConstructionOnCurrentLine(elseBlock.getNextConstruction(), nestSize)
             } else {
                 elsePart = elsePart + text("{") + nest(nestSize, printConstruction(elseBlock, nestSize)) / text("}")
             }
         }
 
-        return text("if (") + myExpressionPrinter.printExpression(conditionalBlock.getCondition()?.invert(), nestSize) + text(") {") + nest(nestSize, thenPart) / text("}") + elsePart
+        return text("if (") + myExpressionPrinter.printExpression(conditionalBlock.getCondition().invert(), nestSize) + text(") {") + nest(nestSize, thenPart) / text("}") + elsePart
     }
 
     open fun printWhile(whileBlock: While, nestSize: Int): PrimeDoc {
         val body = printConstruction(whileBlock.getBody(), nestSize)
 
-        return text("while (") + myExpressionPrinter.printExpression(whileBlock.getCondition()?.invert(), nestSize) + text(") {") + nest(nestSize, body) / text("}")
+        return text("while (") + myExpressionPrinter.printExpression(whileBlock.getCondition().invert(), nestSize) + text(") {") + nest(nestSize, body) / text("}")
     }
 
     open fun printDoWhile(doWhileBlock: DoWhile, nestSize: Int): PrimeDoc {
@@ -101,13 +101,13 @@ abstract class ConstructionPrinter(expressionPrinter : ExpressionPrinter, statem
         val body = printConstruction(forBlock.getBody(), nestSize)
         val afterThought = myStatementPrinter.printStatement(forBlock.getAfterThought(), nestSize)
 
-        return text("for (") + initialization + text("; ") + myExpressionPrinter.printExpression(forBlock.getCondition()?.invert(), nestSize) + text("; ") + afterThought + text(") {") + nest(nestSize, body) / text("}")
+        return text("for (") + initialization + text("; ") + myExpressionPrinter.printExpression(forBlock.getCondition().invert(), nestSize) + text("; ") + afterThought + text(") {") + nest(nestSize, body) / text("}")
     }
 
     open fun printForEach(forEachBlock: ForEach, nestSize: Int): PrimeDoc {
         val tupleVariables = forEachBlock.getVariables()
 
-        val tuplePrintedVariables = tupleVariables!!.map { arg -> myExpressionPrinter.printExpression(arg, nestSize) }
+        val tuplePrintedVariables = tupleVariables.map { arg -> myExpressionPrinter.printExpression(arg, nestSize) }
 
         var tupleCode : PrimeDoc = tuplePrintedVariables.get(0)
 
@@ -129,7 +129,7 @@ abstract class ConstructionPrinter(expressionPrinter : ExpressionPrinter, statem
         val body = printConstruction(tryCatchBlock.getTryBody(), nestSize)
 
         var catchBlockCode: PrimeDoc = nil()
-        for ((variable, catchBody) in tryCatchBlock.getCatches()!!.entrySet()) {
+        for ((variable, catchBody) in tryCatchBlock.getCatches().entrySet()) {
             catchBlockCode = catchBlockCode / text("catch (") + myExpressionPrinter.printExpression(variable, nestSize) + text(") {") + nest(nestSize, printConstruction(catchBody, nestSize)) + text("}")
         }
 
@@ -156,7 +156,7 @@ abstract class ConstructionPrinter(expressionPrinter : ExpressionPrinter, statem
         var switchCode: PrimeDoc = text("switch (") + myExpressionPrinter.printExpression(switchBlock.getCondition(), nestSize) + text(") {")
 
         var casesCode: PrimeDoc = nil()
-        for (switchCase in switchBlock.getCases()!!.toList()) {
+        for (switchCase in switchBlock.getCases().toList()) {
             casesCode = casesCode + nest(nestSize, printConstruction(switchCase, nestSize))
         }
 
@@ -167,7 +167,7 @@ abstract class ConstructionPrinter(expressionPrinter : ExpressionPrinter, statem
         var whenCode: PrimeDoc = text("when (") + myExpressionPrinter.printExpression(whenBlock.getCondition(), nestSize) + text(") {")
 
         var keysCode: PrimeDoc = nil()
-        for ((key, caseBody) in whenBlock.getCases()!!.entrySet()) {
+        for ((key, caseBody) in whenBlock.getCases().entrySet()) {
             keysCode = keysCode / myExpressionPrinter.printExpression(key, nestSize) + text(" -> ") + nest(nestSize, printConstruction(caseBody, nestSize))
         }
 

@@ -25,7 +25,7 @@ import KotlinPrinters.KotlinPrinter
 
 class KotlinExpressionPrinter(printer : Printer) : ExpressionPrinter(printer) {
     override fun getOperationPrinter(): OperationPrinter {
-        return KotlinOperationPrinter.getInstance() as OperationPrinter;
+        return KotlinOperationPrinter.getInstance();
     }
 
 

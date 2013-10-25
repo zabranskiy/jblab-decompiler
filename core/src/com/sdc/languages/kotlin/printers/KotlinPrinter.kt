@@ -65,7 +65,7 @@ class KotlinPrinter: Printer() {
         var headerCode : PrimeDoc = printPackageAndImports(decompiledClass) + line()
 
         if (kotlinClass.isNormalClass()) {
-            var declaration : PrimeDoc = printAnnotations(kotlinClass.getAnnotations()!!.toList()) + text(kotlinClass.getModifier() + kotlinClass.getTypeToString() + kotlinClass.getName())
+            var declaration : PrimeDoc = printAnnotations(kotlinClass.getAnnotations().toList()) + text(kotlinClass.getModifier() + kotlinClass.getTypeToString() + kotlinClass.getName())
 
             val genericsCode = printGenerics(kotlinClass.getGenericDeclaration())
             declaration = declaration + genericsCode
@@ -75,35 +75,35 @@ class KotlinPrinter: Printer() {
                 declaration = declaration + printPrimaryConstructorParameters(constructor)
 
             val superClass = kotlinClass.getSuperClass()
-            if (!superClass!!.isEmpty()) {
+            if (!superClass.isEmpty()) {
                 declaration = declaration + group(nest(2 * kotlinClass.getNestSize(), line() + text(": " ) + printSuperClassConstructor(kotlinClass.getSuperClassConstructor(), kotlinClass.getNestSize())))
-                val traits = kotlinClass.getImplementedInterfaces()!!.toList()
+                val traits = kotlinClass.getImplementedInterfaces().toList()
                 for (singleTrait in traits)
                     declaration = declaration + text(",") + group(nest(2 * kotlinClass.getNestSize(), line() + text(singleTrait)))
             } else {
                 var traits = kotlinClass.getImplementedInterfaces()
-                if (!traits!!.isEmpty()) {
-                    declaration = declaration + text(": ") + text(traits!!.get(0))
-                    for (singleTrait in traits!!.drop(1))
+                if (!traits.isEmpty()) {
+                    declaration = declaration + text(": ") + text(traits.get(0))
+                    for (singleTrait in traits.drop(1))
                         declaration = declaration + text(",") + group(nest(2 * kotlinClass.getNestSize(), line() + text(singleTrait)))
                 }
             }
 
             var kotlinClassCode : PrimeDoc = headerCode + declaration + text(" {") + nest(kotlinClass.getNestSize(), printClassBodyInnerClasses(kotlinClass))
 
-            for (classField in kotlinClass.getFields()!!.toList())
+            for (classField in kotlinClass.getFields().toList())
                 kotlinClassCode = kotlinClassCode + nest(kotlinClass.getNestSize(), line() + printField(classField))
 
             if (constructor != null && !(constructor as KotlinMethod).hasEmptyBody())
                 kotlinClassCode = kotlinClassCode + nest(kotlinClass.getNestSize(), line() + printInitialConstructor(kotlinClass.getConstructor()))
 
-            for (classMethod in kotlinClass.getMethods()!!.toList())
+            for (classMethod in kotlinClass.getMethods().toList())
                 kotlinClassCode = kotlinClassCode + nest(kotlinClass.getNestSize(), line() + printMethod(classMethod))
 
             return kotlinClassCode / text("}")
         } else {
             var kotlinCode : PrimeDoc = headerCode
-            for (method in kotlinClass.getMethods()!!.toList())
+            for (method in kotlinClass.getMethods().toList())
                 kotlinCode = kotlinCode / printMethod(method)
 
             return kotlinCode
@@ -113,7 +113,7 @@ class KotlinPrinter: Printer() {
     override fun printMethod(decompiledMethod: Method): PrimeDoc {
         val kotlinMethod: KotlinMethod = decompiledMethod as KotlinMethod
 
-        var declaration : PrimeDoc = printAnnotations(kotlinMethod.getAnnotations()!!.toList()) + text(kotlinMethod.getModifier() + "fun ")
+        var declaration : PrimeDoc = printAnnotations(kotlinMethod.getAnnotations().toList()) + text(kotlinMethod.getModifier() + "fun ")
 
         val genericsCode = printGenerics(kotlinMethod.getGenericDeclaration())
 
@@ -152,9 +152,9 @@ class KotlinPrinter: Printer() {
         variable.declare()
 
         val myType = variable.getType()
-        val typeWithoutOnePairOfBrackets = myType?.getTypeWithOnPairOfBrackets()?.toString(myExpressionPrinter.getOperationPrinter())
+        val typeWithoutOnePairOfBrackets = myType.getTypeWithOnPairOfBrackets().toString(myExpressionPrinter.getOperationPrinter())
 
-        return text("vararg ") + myExpressionPrinter.printExpression(variable.getName(), nestSize) + text(" : " + typeWithoutOnePairOfBrackets?.trim())
+        return text("vararg ") + myExpressionPrinter.printExpression(variable.getName(), nestSize) + text(" : " + typeWithoutOnePairOfBrackets.trim())
     }
 
 
@@ -180,7 +180,7 @@ class KotlinPrinter: Printer() {
         var returnTypeCode = text(" ")
 
         val returnType = method!!.getReturnType()
-        if (!returnType!!.equals("Unit"))
+        if (!returnType.equals("Unit"))
             returnTypeCode = text(": " + returnType + " ")
 
         return returnTypeCode

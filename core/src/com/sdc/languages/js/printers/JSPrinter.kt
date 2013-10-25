@@ -49,12 +49,12 @@ class JSPrinter : Printer() {
 
         val superClass = javaClass.getSuperClass()
         var declaration = group(nil())
-        if (!superClass!!.isEmpty())
+        if (!superClass.isEmpty())
             declaration = group(declaration + nest(javaClass.getNestSize(), line() + text("extends " + superClass)))
 
         var javaClassCode : PrimeDoc = group(text("function " + javaClass.getName() + "() {"))
 
-        for (classMethod in javaClass.getMethods()!!.toList())
+        for (classMethod in javaClass.getMethods().toList())
             javaClassCode = javaClassCode + nest(javaClass.getNestSize(), line() + printMethod(classMethod))
 
         return group(javaClassCode / text("}"))
@@ -72,10 +72,10 @@ class JSPrinter : Printer() {
         var arguments: PrimeDoc = nil()
         if (classMethod.getLastLocalVariableIndex() != 0) {
             var variables = classMethod.getParameters()
-            var variablesDocs = variables!!.take(variables!!.size - 1)
+            var variablesDocs = variables.take(variables.size - 1)
                     .map { variable -> myExpressionPrinter.printExpression(variable, decompiledMethod.getNestSize()) + text(", ") }
 
-            arguments = nest(2 * classMethod.getNestSize(), fill(variablesDocs + myExpressionPrinter.printExpression(variables!!.last, decompiledMethod.getNestSize())))
+            arguments = nest(2 * classMethod.getNestSize(), fill(variablesDocs + myExpressionPrinter.printExpression(variables.last, decompiledMethod.getNestSize())))
         }
 
         val body = nest(
